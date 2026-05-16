@@ -85,10 +85,11 @@ export function ObsCard({
   className?: string
   onClick?: () => void
 }) {
+  // Photon Drift: translucent surface + Aurora rim. ガラス感は backdrop-blur で表現。
   const bg =
-    depth === 'low' ? 'var(--color-obs-surface-low)' :
-    depth === 'highest' ? 'var(--color-obs-surface-highest)' :
-    'var(--color-obs-surface-high)'
+    depth === 'low' ? 'rgba(36,36,38,0.55)' :
+    depth === 'highest' ? 'rgba(27,27,29,0.72)' :
+    'rgba(53,52,55,0.55)'
   const pad =
     padding === 'none' ? '' :
     padding === 'sm' ? 'p-4' :
@@ -106,10 +107,16 @@ export function ObsCard({
       className={cx(
         rad,
         pad,
+        'fo-glass-rim',
         onClick && 'cursor-pointer transition-colors duration-200',
         className,
       )}
-      style={{ backgroundColor: bg, transitionTimingFunction: 'var(--ease-liquid)' }}
+      style={{
+        backgroundColor: bg,
+        backdropFilter: 'blur(28px) saturate(140%)',
+        WebkitBackdropFilter: 'blur(28px) saturate(140%)',
+        transitionTimingFunction: 'var(--ease-liquid)',
+      }}
     >
       {children}
     </div>
@@ -155,7 +162,7 @@ export function ObsButton({
           background: 'linear-gradient(140deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
           color: 'var(--color-obs-on-primary)',
           transitionTimingFunction: 'var(--ease-liquid)',
-          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.18), 0 0 0 1px rgba(171,199,255,0.08)',
+          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.22), 0 0 0 1px rgba(171,199,255,0.18), 0 0 24px rgba(171,199,255,0.32)',
         }}
       >
         {children}
@@ -208,24 +215,29 @@ export function ObsChip({
 }) {
   const toneStyle: Record<string, React.CSSProperties> = {
     neutral: {
-      backgroundColor: 'var(--color-obs-secondary-container)',
+      backgroundColor: 'rgba(53,52,55,0.55)',
       color: 'var(--color-obs-on-secondary)',
+      boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.10)',
     },
     hot: {
       backgroundColor: 'rgba(255,107,107,0.14)',
       color: 'var(--color-obs-hot)',
+      boxShadow: 'inset 0 0 0 1px rgba(255,107,107,0.28)',
     },
     middle: {
       backgroundColor: 'rgba(255,184,107,0.14)',
       color: 'var(--color-obs-middle)',
+      boxShadow: 'inset 0 0 0 1px rgba(255,184,107,0.28)',
     },
     low: {
       backgroundColor: 'rgba(126,198,255,0.14)',
       color: 'var(--color-obs-low)',
+      boxShadow: 'inset 0 0 0 1px rgba(126,198,255,0.28)',
     },
     primary: {
       backgroundColor: 'rgba(171,199,255,0.12)',
       color: 'var(--color-obs-primary)',
+      boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.32)',
     },
   }
   return (
@@ -252,8 +264,7 @@ export function ObsSectionHeader({
     <div className="flex items-end justify-between gap-6 mb-5">
       <div className="flex flex-col gap-1">
         <h3
-          className="font-[family-name:var(--font-display)] text-lg font-semibold tracking-[-0.02em]"
-          style={{ color: 'var(--color-obs-text)' }}
+          className="fo-gradient-text-soft font-[family-name:var(--font-display)] text-lg font-semibold tracking-[-0.02em]"
         >
           {title}
         </h3>
@@ -309,7 +320,7 @@ export function ObsGlass({
 }) {
   return (
     <div
-      className={cx('rounded-[var(--radius-obs-xl)]', className)}
+      className={cx('rounded-[var(--radius-obs-xl)] fo-glass-rim', className)}
       style={{
         backgroundColor: 'rgba(53,52,55,0.6)',
         backdropFilter: 'blur(20px) saturate(180%)',
@@ -334,12 +345,13 @@ export const ObsInput = React.forwardRef<
         'w-full h-10 px-4 rounded-[var(--radius-obs-md)] text-sm',
         'transition-all duration-150 outline-none',
         'focus:ring-2 focus:ring-[var(--color-obs-primary)]/40',
+        'fo-glass-rim',
         className,
       )}
       style={{
-        backgroundColor: 'var(--color-obs-surface-lowest)',
+        backgroundColor: 'rgba(36,36,38,0.6)',
+        backdropFilter: 'blur(8px)',
         color: 'var(--color-obs-text)',
-        boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.12)',
       }}
     />
   )
