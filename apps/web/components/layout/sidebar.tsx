@@ -19,23 +19,28 @@ import {
   Send,
   Target,
   BookOpen,
+  LifeBuoy,
   MoreHorizontal,
   Pin,
   Pencil,
   Trash2,
   PanelLeft,
+  Activity,
+  ShieldAlert,
+  Wrench,
 } from 'lucide-react'
 import { MOCK_CHAT_HISTORY } from '@/lib/chat-history/mock-data'
 
 // ─── ワークスペースナビ項目 ─────────────────────────────────────────────────
 type NavItemDef = { href: string; label: string; icon: React.ElementType }
 const NAV_ITEMS: NavItemDef[] = [
-  { href: '/companies', label: '企業',           icon: Building2 },
+  { href: '/companies', label: '290万社DB',     icon: Building2 },
   { href: '/pipeline',  label: 'パイプライン',   icon: Columns3 },
   { href: '/contacts',  label: 'コンタクト',     icon: Users },
   { href: '/deals',     label: '取引',           icon: Briefcase },
   { href: '/lists',     label: 'ISリスト',       icon: List },
   { href: '/tasks',     label: 'タスク一覧',     icon: CheckSquare },
+  { href: '/tickets',   label: 'チケット',       icon: LifeBuoy },
   { href: '/dashboard', label: 'アクションボード', icon: LayoutDashboard },
   { href: '/mail',      label: 'メール配信',     icon: Send },
   { href: '/priority',  label: '開発優先度',     icon: Target },
@@ -374,15 +379,46 @@ function ChatItem({
 
 // ─── User menu (drop-up) ────────────────────────────────────────────────────
 type MenuItem = { href: string; icon: React.ElementType; label: string }
-const USER_MENU_ITEMS: MenuItem[] = [
-  { href: '/subscription',          icon: CreditCard, label: 'プラン・クレジット' },
-  { href: '/settings/integrations', icon: Plug,       label: '連携設定' },
+type MenuSection = { title?: string; items: MenuItem[] }
+
+const USER_MENU_SECTIONS: MenuSection[] = [
+  {
+    items: [
+      { href: '/subscription',              icon: CreditCard, label: 'プラン・クレジット' },
+      { href: '/subscription?tab=members',  icon: Users,      label: 'メンバー管理' },
+      { href: '/subscription?tab=requests', icon: Wrench,     label: '機能リクエスト' },
+      { href: '/settings/integrations',     icon: Plug,       label: '連携設定' },
+    ],
+  },
+  {
+    title: 'コンプライアンス',
+    items: [
+      { href: '/settings/billing',         icon: CreditCard, label: '支払い履歴' },
+      { href: '/settings/audit-log',       icon: Activity,   label: '監査ログ' },
+    ],
+  },
 ]
+
+// BGM テナント (開発者) のみに表示する管理者メニュー
+// 本番では NEXT_PUBLIC_BGM_TENANT_ID とログイン中テナントの一致でガード
+const ADMIN_MENU_SECTION: MenuSection = {
+  title: '開発者専用',
+  items: [
+    { href: '/admin/customer-ops',       icon: ShieldAlert, label: 'Customer Operations' },
+    { href: '/admin/feature-requests',   icon: Wrench,      label: '機能リクエスト管理' },
+  ],
+}
+
+// MVP: モック (本番ではauth context + env でテナントID判定)
+function useIsBGMTenant(): boolean {
+  return true
+}
 
 function UserMenu({ userName, userInitial }: { userName: string; userInitial: string }) {
   const [open, setOpen] = useState(false)
   const [hover, setHover] = useState(false)
   const wrapRef = useRef<HTMLDivElement | null>(null)
+  const isBGMTenant = useIsBGMTenant()
 
   // 外側クリックで閉じる
   useEffect(() => {
@@ -395,39 +431,65 @@ function UserMenu({ userName, userInitial }: { userName: string; userInitial: st
     return () => document.removeEventListener('mousedown', onDocClick)
   }, [open])
 
+  // BGMテナントの場合は管理者メニューを末尾に追加
+  const sections: MenuSection[] = isBGMTenant
+    ? [...USER_MENU_SECTIONS, ADMIN_MENU_SECTION]
+    : USER_MENU_SECTIONS
+
   return (
     <div ref={wrapRef} className="mx-2 mb-3 relative">
       {/* Drop-up menu */}
       {open && (
         <div
-          className="absolute left-0 right-0 bottom-full mb-2 rounded-[var(--radius-obs-md)] py-1.5 z-50"
+          className="absolute left-0 right-0 bottom-full mb-2 rounded-[var(--radius-obs-md)] py-1.5 z-50 max-h-[420px] overflow-y-auto"
           style={{
             backgroundColor: 'var(--color-obs-surface-highest)',
             boxShadow: '0 10px 30px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(109,106,111,0.14)',
           }}
         >
-          {USER_MENU_ITEMS.map((m) => (
-            <Link
-              key={m.href}
-              href={m.href}
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-2.5 px-3 py-[7px] mx-1 rounded-[6px] transition-colors duration-100"
-              style={{ color: 'var(--color-obs-text)' }}
-              onMouseOver={(e) => {
-                ;(e.currentTarget as HTMLAnchorElement).style.backgroundColor =
-                  'var(--color-obs-surface-low)'
-              }}
-              onMouseOut={(e) => {
-                ;(e.currentTarget as HTMLAnchorElement).style.backgroundColor = 'transparent'
-              }}
-            >
-              <m.icon
-                size={14}
-                strokeWidth={1.9}
-                style={{ color: 'var(--color-obs-text-muted)', flexShrink: 0 }}
-              />
-              <span className="text-[13px] tracking-[-0.01em]">{m.label}</span>
-            </Link>
+          {sections.map((section, i) => (
+            <div key={i}>
+              {/* セクション区切り線 */}
+              {i > 0 && (
+                <div
+                  className="mx-3 my-1.5 h-px"
+                  style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
+                />
+              )}
+              {/* セクションタイトル */}
+              {section.title && (
+                <div
+                  className="px-3 pt-1 pb-0.5 text-[10px] font-medium uppercase tracking-[0.1em]"
+                  style={{ color: 'var(--color-obs-text-subtle)' }}
+                >
+                  {section.title}
+                </div>
+              )}
+              {/* セクション内のアイテム */}
+              {section.items.map((m) => (
+                <Link
+                  key={m.href}
+                  href={m.href}
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-2.5 px-3 py-[7px] mx-1 rounded-[6px] transition-colors duration-100"
+                  style={{ color: 'var(--color-obs-text)' }}
+                  onMouseOver={(e) => {
+                    ;(e.currentTarget as HTMLAnchorElement).style.backgroundColor =
+                      'var(--color-obs-surface-low)'
+                  }}
+                  onMouseOut={(e) => {
+                    ;(e.currentTarget as HTMLAnchorElement).style.backgroundColor = 'transparent'
+                  }}
+                >
+                  <m.icon
+                    size={14}
+                    strokeWidth={1.9}
+                    style={{ color: 'var(--color-obs-text-muted)', flexShrink: 0 }}
+                  />
+                  <span className="text-[13px] tracking-[-0.01em]">{m.label}</span>
+                </Link>
+              ))}
+            </div>
           ))}
         </div>
       )}
@@ -608,7 +670,7 @@ export function Sidebar() {
         {/* ── ロゴ ── (折りたたみ時はトグルボタンの背面を通り抜けて画面外へ消える) */}
         <div className="h-[56px] shrink-0 flex items-center pl-14 pr-3">
           <Link
-            href="/dashboard"
+            href="/"
             className="transition-opacity duration-150 hover:opacity-80"
             aria-label="Front Office ホーム"
           >

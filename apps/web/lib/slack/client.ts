@@ -65,6 +65,33 @@ export const slack = {
   chatGetPermalink: (token: string, channel: string, message_ts: string) =>
     call<{ permalink?: string }>('chat.getPermalink', token, { channel, message_ts }),
 
+  chatPostMessage: async (
+    token: string,
+    body: {
+      channel: string
+      text: string
+      thread_ts?: string
+      blocks?: unknown[]
+    },
+  ) => {
+    const r = await fetch(`${SLACK_API}/chat.postMessage`, {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${token}`,
+        'content-type': 'application/json; charset=utf-8',
+      },
+      body: JSON.stringify(body),
+    })
+    const json = (await r.json()) as { ok: boolean; ts?: string; channel?: string; error?: string }
+    if (!json.ok) throw new SlackApiError('chat.postMessage', json)
+    return json
+  },
+
+  conversationsRepliesText: async (token: string, channel: string, ts: string) =>
+    call<{
+      messages: Array<{ ts: string; user?: string; text?: string; bot_id?: string }>
+    }>('conversations.replies', token, { channel, ts, limit: '20' }),
+
   oauthV2Access: async (params: {
     client_id: string
     client_secret: string

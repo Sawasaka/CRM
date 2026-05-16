@@ -10,8 +10,11 @@ import {
   ChevronRight,
   ChevronUp,
   Filter,
+  List,
   Plus,
   Search,
+  Square,
+  CheckSquare,
   X,
 } from 'lucide-react'
 import {
@@ -22,9 +25,11 @@ import {
   ObsInput,
   ObsPageShell,
 } from '@/components/obsidian'
+import { SignalBadge, type Signal as FirstPartySignal } from '@/components/crm/SignalBadge'
+import { getCompanyFirstPartySignal } from '@/lib/mock-data/firstPartySignals'
 
 type Signal = 'Hot' | 'Middle' | 'Low' | 'None'
-type IntentFilter = 'all' | 'hot' | 'middle' | 'low'
+type IntentLevel = 'hot' | 'middle' | 'low'
 type DepartmentType =
   | 'SALES'
   | 'MARKETING'
@@ -86,6 +91,7 @@ interface CompanyRow {
   officeCount: number
   serviceTags: string[]
   intents: IntentEntry[]
+  enrichmentStatus: string  // 'COMPLETED' | 'PENDING' | etc
 }
 
 interface ApiResponse {
@@ -121,7 +127,7 @@ interface ApiResponse {
   total: number
 }
 
-const PAGE_SIZE = 50
+const PAGE_SIZE = 100
 
 // 従業員数レンジ
 const EMP_BUCKETS = [
@@ -148,13 +154,13 @@ function bucketOfEmployee(n: number | null): Exclude<EmpBucketKey, 'all'> | null
   return null
 }
 
-// 売上レンジ（単位: 億円）
+// 売上フィルタ（単位: 億円） — 各バケットは閾値フィルタ。
+// 「以下」「以上」のため範囲は重なる（500億の会社は「10億以上」「100億以上」両方にマッチ）。
 const REV_BUCKETS = [
-  { key: '-10b', label: '〜10億円', min: 0, max: 10 },
-  { key: '10-100b', label: '10〜100億円', min: 10, max: 100 },
-  { key: '100-1000b', label: '100〜1,000億円', min: 100, max: 1000 },
-  { key: '1000b-1t', label: '1,000億〜1兆円', min: 1000, max: 10000 },
-  { key: '1t+', label: '1兆円以上', min: 10000, max: Infinity },
+  { key: 'lte-1b', label: '1億以下', min: 0, max: 1 },
+  { key: 'gte-10b', label: '10億以上', min: 10, max: Infinity },
+  { key: 'gte-100b', label: '100億以上', min: 100, max: Infinity },
+  { key: 'gte-1000b', label: '1,000億以上', min: 1000, max: Infinity },
 ] as const
 type RevBucketKey = (typeof REV_BUCKETS)[number]['key'] | 'all'
 
@@ -170,12 +176,18 @@ function parseRevenueOku(raw: string | null): number | null {
   return oku > 0 ? oku : null
 }
 
-function bucketOfRevenue(oku: number | null): Exclude<RevBucketKey, 'all'> | null {
-  if (oku === null) return null
-  for (const b of REV_BUCKETS) {
-    if (oku >= b.min && oku < b.max) return b.key
-  }
-  return null
+// 1社の売上が、選択された売上フィルタのいずれかにマッチするかを判定。
+// 「1億以下」「10億以上」など重なるバケットを許容するため、配列に対する some() で評価。
+function revenueMatchesAnyBucket(
+  oku: number | null,
+  keys: ReadonlyArray<Exclude<RevBucketKey, 'all'>>,
+): boolean {
+  if (oku === null || keys.length === 0) return false
+  return keys.some((k) => {
+    const b = REV_BUCKETS.find((x) => x.key === k)
+    if (!b) return false
+    return oku >= b.min && oku <= b.max
+  })
 }
 
 // 拠点数レンジ
@@ -227,17 +239,7 @@ function toggleInArray<T>(arr: T[], v: T): T[] {
   return arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]
 }
 
-// 期間ベースの色分け: 3ヶ月以内=HOT(赤) / 6ヶ月以内=MIDDLE(緑) / 1年以内=LOW(青)
-const MONTH_MS = 30 * 24 * 60 * 60 * 1000
-function levelByAge(iso: string | null): Signal {
-  if (!iso) return 'None'
-  const months = (Date.now() - new Date(iso).getTime()) / MONTH_MS
-  if (months < 0) return 'Hot' // 未来日時は HOT 扱い
-  if (months <= 3) return 'Hot'
-  if (months <= 6) return 'Middle'
-  if (months <= 12) return 'Low'
-  return 'None'
-}
+// (旧 levelByAge は サーバ提供の intentLevel を信頼する方式に切替えたため削除)
 
 // レベル見た目トークン
 const LEVEL_STYLE: Record<
@@ -285,19 +287,48 @@ interface ComputedIntent {
   breakdown: DeptBreakdown[]
 }
 
-// 部門フィルタに応じて行のインテントを算出（期間ベース）
+// サーバ提供の intentLevel ('HOT' / 'MIDDLE' / 'LOW' / 'NONE') を Signal 型へ変換。
+// クライアント側で Date.now() ベースに再計算するとブラウザ時刻のズレで全社 None になる
+// バグが発生するため、サーバの権威的な分類を信頼する。
+function serverLevelToSignal(level: 'HOT' | 'MIDDLE' | 'LOW' | 'NONE' | string): Signal {
+  if (level === 'HOT') return 'Hot'
+  if (level === 'MIDDLE') return 'Middle'
+  if (level === 'LOW') return 'Low'
+  return 'None'
+}
+
+// 部門フィルタに応じて行のインテントを算出（サーバ分類を採用）
 // deptFilter が空配列なら全部門対象
 function computeIntent(intents: IntentEntry[], deptFilter: DepartmentType[]): ComputedIntent {
   const pool =
     deptFilter.length === 0 ? intents : intents.filter((i) => deptFilter.includes(i.departmentType))
+
+  // 同じ departmentType (IT など) が複数回現れる可能性があるためマージ
+  // (API 側で 25 細分 → トップレベル 'IT' / 'SALES' 等に集約しているため)
+  const merged = new Map<DepartmentType, DeptBreakdown>()
+  for (const p of pool) {
+    const lvl = serverLevelToSignal(p.intentLevel)
+    const existing = merged.get(p.departmentType)
+    if (!existing) {
+      merged.set(p.departmentType, {
+        departmentType: p.departmentType,
+        level: lvl,
+        latestAt: p.latestSignalAt,
+        signalCount: p.signalCount ?? 0,
+      })
+    } else {
+      const curPriority = INTENT_PRIORITY[levelKey(existing.level)] ?? 0
+      const newPriority = INTENT_PRIORITY[levelKey(lvl)] ?? 0
+      if (newPriority > curPriority) existing.level = lvl
+      if (p.latestSignalAt && (!existing.latestAt || p.latestSignalAt > existing.latestAt)) {
+        existing.latestAt = p.latestSignalAt
+      }
+      existing.signalCount += p.signalCount ?? 0
+    }
+  }
+
   // 部門別ブレイクダウン（新しい順）
-  const breakdown: DeptBreakdown[] = pool
-    .map((p) => ({
-      departmentType: p.departmentType,
-      level: levelByAge(p.latestSignalAt),
-      latestAt: p.latestSignalAt,
-      signalCount: p.signalCount,
-    }))
+  const breakdown: DeptBreakdown[] = Array.from(merged.values())
     .sort((a, b) => {
       const ap = INTENT_PRIORITY[levelKey(a.level)] ?? 0
       const bp = INTENT_PRIORITY[levelKey(b.level)] ?? 0
@@ -365,9 +396,11 @@ function getAvatarColor(name: string): string {
   return `hsl(${hue}, 35%, 22%)`
 }
 
-// グリッドテンプレート — 企業 / インテント / 業種 / 都道府県 / 従業員数 / 売上 / サービスタグ / 拠点
+// グリッドテンプレート — チェックボックス / 企業 / 求人インテント / 1stシグナル / 都道府県 / 業種 / 従業員数 / 売上 / 拠点
+// 求人インテントは「HOT 3部門」程度のチップで十分なため 130px に絞り、隣の 1st シグナルとの距離を縮める
+// 都道府県・業種は固定幅にして従業員数の左に寄せる（余ったスペースは企業列が吸収）
 const GRID_TEMPLATE =
-  'grid-cols-[minmax(240px,1.3fr)_minmax(240px,1.2fr)_minmax(130px,1fr)_96px_112px_128px_minmax(180px,1.2fr)_72px]'
+  'grid-cols-[28px_minmax(280px,2fr)_130px_140px_88px_140px_112px_128px_72px]'
 
 export default function CompaniesPage() {
   const router = useRouter()
@@ -375,10 +408,19 @@ export default function CompaniesPage() {
   const [total, setTotal] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const [query, setQuery] = useState('')
+  // 表示モード: 'enriched' = エンリッチ済 6,967社 (デフォルト) / 'all' = 290万社全件
+  const [scopeMode, setScopeMode] = useState<'enriched' | 'all'>('enriched')
   const [sort, setSort] = useState<{ key: SortKey; dir: SortDir }>({ key: 'intent', dir: 'desc' })
   const toggleSort = (key: SortKey) =>
     setSort((s) => (s.key === key ? { key, dir: s.dir === 'asc' ? 'desc' : 'asc' } : { key, dir: 'desc' }))
-  const [intentFilter, setIntentFilter] = useState<IntentFilter>('all')
+  // 企業追加モーダル
+  const [addOpen, setAddOpen] = useState(false)
+  // 企業選択 (将来の一括操作用に残置)
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  // 複数選択可能なインテントフィルタ。デフォルトは HOT のみ。空配列 = 全件表示。
+  const [intentFilter, setIntentFilter] = useState<IntentLevel[]>(['hot'])
+  const toggleIntent = (lvl: IntentLevel) =>
+    setIntentFilter((prev) => (prev.includes(lvl) ? prev.filter((x) => x !== lvl) : [...prev, lvl]))
   // 以下のフィルタは「選択された値のリスト」。空配列=指定なし（全件）。
   const [deptFilter, setDeptFilter] = useState<DepartmentType[]>([])
   const [industryFilter, setIndustryFilter] = useState<string[]>([])
@@ -386,9 +428,10 @@ export default function CompaniesPage() {
   const [empFilter, setEmpFilter] = useState<Exclude<EmpBucketKey, 'all'>[]>([])
   const [revFilter, setRevFilter] = useState<Exclude<RevBucketKey, 'all'>[]>([])
   const [officeFilter, setOfficeFilter] = useState<Exclude<OfficeBucketKey, 'all'>[]>([])
-  const [tagFilter, setTagFilter] = useState<string[]>([])
+  // 1stパーティーシグナル絞り込み: 'hot' / 'middle' / 'low' / 'none'(シグナルなし)
+  const [signalFilter, setSignalFilter] = useState<Array<'hot' | 'middle' | 'low' | 'none'>>([])
   const [openMenu, setOpenMenu] = useState<
-    'industry' | 'prefecture' | 'employee' | 'department' | 'revenue' | 'office' | 'tag' | null
+    'industry' | 'prefecture' | 'employee' | 'department' | 'revenue' | 'office' | 'signal' | null
   >(null)
   const [page, setPage] = useState(1)
   const menuRef = useRef<HTMLDivElement | null>(null)
@@ -396,9 +439,12 @@ export default function CompaniesPage() {
 
   useEffect(() => {
     let cancelled = false
+    setIsLoading(true)
     ;(async () => {
       try {
-        const res = await fetch('/api/company-master?take=5000')
+        // エンリッチ済モード: onlyEnriched=true (デフォルト) / 全件モード: onlyEnriched=false
+        const onlyEnriched = scopeMode === 'enriched'
+        const res = await fetch(`/api/abm-companies?take=5000&onlyEnriched=${onlyEnriched}`)
         if (!res.ok) {
           if (!cancelled) setIsLoading(false)
           return
@@ -420,6 +466,7 @@ export default function CompaniesPage() {
           officeCount: c._count?.offices ?? 0,
           serviceTags: c.serviceTags.map((t) => t.tag.name),
           intents: c.companyIntents,
+          enrichmentStatus: c.enrichmentStatus,
         }))
         setRows(mapped)
         setTotal(json.total)
@@ -431,7 +478,7 @@ export default function CompaniesPage() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [scopeMode])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -480,23 +527,36 @@ export default function CompaniesPage() {
     return Array.from(s).sort((a, b) => a.localeCompare(b, 'ja'))
   }, [rows])
 
+  // 47都道府県を地域順に並べる(関東→関西→東海→北海道東北→北陸甲信越→中国→四国→九州沖縄)
   const prefectures = useMemo(() => {
-    const s = new Set<string>()
-    for (const r of rows) if (r.prefecture && r.prefecture !== '—') s.add(r.prefecture)
-    return Array.from(s).sort((a, b) => a.localeCompare(b, 'ja'))
-  }, [rows])
-
-  const serviceTagList = useMemo(() => {
-    const s = new Set<string>()
-    for (const r of rows) r.serviceTags.forEach((t) => s.add(t))
-    return Array.from(s).sort((a, b) => a.localeCompare(b, 'ja'))
-  }, [rows])
+    return [
+      // 関東
+      '東京都', '神奈川県', '埼玉県', '千葉県', '茨城県', '栃木県', '群馬県',
+      // 関西(近畿)
+      '大阪府', '京都府', '兵庫県', '奈良県', '滋賀県', '和歌山県',
+      // 東海(名古屋エリア)
+      '愛知県', '静岡県', '岐阜県', '三重県',
+      // 北海道・東北
+      '北海道', '宮城県', '福島県', '青森県', '岩手県', '秋田県', '山形県',
+      // 北陸・甲信越
+      '新潟県', '長野県', '石川県', '富山県', '福井県', '山梨県',
+      // 中国
+      '広島県', '岡山県', '山口県', '島根県', '鳥取県',
+      // 四国
+      '香川県', '愛媛県', '徳島県', '高知県',
+      // 九州・沖縄
+      '福岡県', '熊本県', '鹿児島県', '長崎県', '大分県', '宮崎県', '佐賀県', '沖縄県',
+    ]
+  }, [])
 
   const filtered = useMemo(() => {
     let list = resolvedRows
-    if (intentFilter !== 'all') {
-      const target = intentFilter === 'hot' ? 'Hot' : intentFilter === 'middle' ? 'Middle' : 'Low'
-      list = list.filter(({ intent }) => intent.level === target)
+    if (intentFilter.length > 0) {
+      // 複数選択時は OR 条件 (HOT も MID もどちらかにマッチで通す)
+      const targetLevels = new Set<Signal>(
+        intentFilter.map((f) => (f === 'hot' ? 'Hot' : f === 'middle' ? 'Middle' : 'Low')),
+      )
+      list = list.filter(({ intent }) => targetLevels.has(intent.level))
     }
     if (industryFilter.length > 0)
       list = list.filter(({ row }) => industryFilter.includes(row.industry))
@@ -509,10 +569,9 @@ export default function CompaniesPage() {
       })
     }
     if (revFilter.length > 0) {
-      list = list.filter(({ row }) => {
-        const b = bucketOfRevenue(parseRevenueOku(row.revenue))
-        return b !== null && revFilter.includes(b)
-      })
+      list = list.filter(({ row }) =>
+        revenueMatchesAnyBucket(parseRevenueOku(row.revenue), revFilter),
+      )
     }
     if (officeFilter.length > 0) {
       list = list.filter(({ row }) => {
@@ -520,9 +579,14 @@ export default function CompaniesPage() {
         return b !== null && officeFilter.includes(b)
       })
     }
-    if (tagFilter.length > 0) {
-      // いずれかのタグを含めば一致（OR）
-      list = list.filter(({ row }) => row.serviceTags.some((t) => tagFilter.includes(t)))
+    if (signalFilter.length > 0) {
+      // 1st パーティーシグナル：行のシグナル(または無し)が選択集合に含まれるかで絞り込む
+      list = list.filter(({ row }) => {
+        const sig = getCompanyFirstPartySignal(row.name)
+        const key: 'hot' | 'middle' | 'low' | 'none' =
+          sig === 'Hot' ? 'hot' : sig === 'Middle' ? 'middle' : sig === 'Low' ? 'low' : 'none'
+        return signalFilter.includes(key)
+      })
     }
     if (query.trim()) {
       const q = query.trim().toLowerCase()
@@ -532,8 +596,7 @@ export default function CompaniesPage() {
           row.domain.toLowerCase().includes(q) ||
           row.industry.toLowerCase().includes(q) ||
           row.prefecture.toLowerCase().includes(q) ||
-          (row.city ?? '').toLowerCase().includes(q) ||
-          row.serviceTags.some((t) => t.toLowerCase().includes(q)),
+          (row.city ?? '').toLowerCase().includes(q),
       )
     }
     const mult = sort.dir === 'asc' ? 1 : -1
@@ -578,18 +641,18 @@ export default function CompaniesPage() {
     empFilter,
     revFilter,
     officeFilter,
-    tagFilter,
+    signalFilter,
   ])
 
   const hasActiveFilter =
-    intentFilter !== 'all' ||
+    intentFilter.length > 0 ||
     deptFilter.length > 0 ||
     industryFilter.length > 0 ||
     prefectureFilter.length > 0 ||
     empFilter.length > 0 ||
     revFilter.length > 0 ||
     officeFilter.length > 0 ||
-    tagFilter.length > 0 ||
+    signalFilter.length > 0 ||
     query.trim() !== ''
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   useEffect(
@@ -604,22 +667,34 @@ export default function CompaniesPage() {
       empFilter,
       revFilter,
       officeFilter,
-      tagFilter,
+      signalFilter,
     ],
   )
   const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   const clearFilters = () => {
-    setIntentFilter('all')
+    setIntentFilter([])
     setDeptFilter([])
     setIndustryFilter([])
     setPrefectureFilter([])
     setEmpFilter([])
     setRevFilter([])
     setOfficeFilter([])
-    setTagFilter([])
+    setSignalFilter([])
     setQuery('')
   }
+
+  // 1stシグナルの選択肢
+  const SIGNAL_CHOICES: Array<{ key: 'hot' | 'middle' | 'low' | 'none'; label: string }> = [
+    { key: 'hot',    label: '強' },
+    { key: 'middle', label: '中' },
+    { key: 'low',    label: '弱' },
+    { key: 'none',   label: 'シグナルなし' },
+  ]
+  const signalSelectedLabels: string[] = signalFilter.flatMap((k) => {
+    const found = SIGNAL_CHOICES.find((c) => c.key === k)
+    return found ? [found.label] : []
+  })
 
   // トリガーボタンのラベル: 選択なしは baseLabel / 1件は label / 2件以上は "先頭 +N"
   function summarizeSelection(selectedLabels: string[], baseLabel: string): string {
@@ -651,34 +726,104 @@ export default function CompaniesPage() {
       <div className="w-full px-8 xl:px-12 2xl:px-16 pb-16">
         <ObsHero
           eyebrow="Company Master"
-          title="企業DB"
-          caption={`上場企業 ${total.toLocaleString()} 社。求人インテント × ファーストパーティシグナルで優先度を可視化。`}
+          title="290万社DB"
+          caption={
+            scopeMode === 'enriched' ? (
+              <>
+                エンリッチ済 {total.toLocaleString()} 社 ／ 対象条件: 従業員30人以上
+                <br />
+                取得項目: 求人インテント(25部門) ・ 業種 ・ 売上 ・ 拠点
+              </>
+            ) : (
+              <>
+                登記台帳 290万社全件 ／ 対象条件: 国税庁法人番号DB + 経産省 gBizINFO
+                <br />
+                取得項目: 社名 ・ 所在地 ・ 法人番号 ・ 設立日 ・ 資本金。リッチデータが必要な企業はカード右の「エンリッチ予約」で取り込み
+              </>
+            )
+          }
           action={
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
+              {/* 表示スコープ トグル */}
+              <div
+                className="inline-flex items-center rounded-full p-0.5"
+                style={{
+                  background: 'var(--color-obs-surface-high)',
+                  boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.18)',
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setScopeMode('enriched')}
+                  className="px-3 h-7 rounded-full text-[11.5px] font-semibold transition-all"
+                  style={{
+                    background: scopeMode === 'enriched' ? 'var(--color-obs-primary-container)' : 'transparent',
+                    color: scopeMode === 'enriched' ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
+                  }}
+                >
+                  エンリッチ済
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setScopeMode('all')}
+                  className="px-3 h-7 rounded-full text-[11.5px] font-semibold transition-all"
+                  style={{
+                    background: scopeMode === 'all' ? 'var(--color-obs-primary-container)' : 'transparent',
+                    color: scopeMode === 'all' ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
+                  }}
+                  title="290万社の登記台帳全件 (未エンリッチ含む)"
+                >
+                  290万社全件
+                </button>
+              </div>
+              <div
+                className="inline-flex items-center gap-1.5 px-2 py-1.5 rounded-full"
+                style={{
+                  background: 'var(--color-obs-surface-high)',
+                  boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.18)',
+                }}
+                title="クリックでインテント別に絞り込み"
+              >
+                <Filter
+                  size={11}
+                  strokeWidth={2.2}
+                  style={{ color: 'var(--color-obs-text-subtle)' }}
+                  className="ml-1"
+                />
                 <IntentFilterChip
-                  active={intentFilter === 'hot'}
+                  active={intentFilter.includes('hot')}
                   tone="hot"
                   label="HOT"
                   count={intentCounts.Hot}
-                  onClick={() => setIntentFilter((f) => (f === 'hot' ? 'all' : 'hot'))}
+                  onClick={() => toggleIntent('hot')}
                 />
                 <IntentFilterChip
-                  active={intentFilter === 'middle'}
+                  active={intentFilter.includes('middle')}
                   tone="middle"
                   label="MID"
                   count={intentCounts.Middle}
-                  onClick={() => setIntentFilter((f) => (f === 'middle' ? 'all' : 'middle'))}
+                  onClick={() => toggleIntent('middle')}
                 />
                 <IntentFilterChip
-                  active={intentFilter === 'low'}
+                  active={intentFilter.includes('low')}
                   tone="low"
                   label="LOW"
                   count={intentCounts.Low}
-                  onClick={() => setIntentFilter((f) => (f === 'low' ? 'all' : 'low'))}
+                  onClick={() => toggleIntent('low')}
                 />
+                {intentFilter.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setIntentFilter([])}
+                    className="inline-flex items-center justify-center w-5 h-5 rounded-full transition-colors hover:bg-[var(--color-obs-surface-highest)]"
+                    title="フィルタをクリア(全件表示)"
+                    style={{ color: 'var(--color-obs-text-muted)' }}
+                  >
+                    <X size={10} strokeWidth={2.4} />
+                  </button>
+                )}
               </div>
-              <ObsButton variant="primary" size="md">
+              <ObsButton variant="primary" size="md" onClick={() => setAddOpen(true)}>
                 <Plus size={14} className="mr-1.5 inline" strokeWidth={2.5} />
                 企業を追加
               </ObsButton>
@@ -722,6 +867,12 @@ export default function CompaniesPage() {
                 onClick={() => setOpenMenu((m) => (m === 'department' ? null : 'department'))}
               />
               <FilterTrigger
+                active={signalFilter.length > 0}
+                label={summarizeSelection(signalSelectedLabels, '1st シグナル')}
+                count={signalFilter.length}
+                onClick={() => setOpenMenu((m) => (m === 'signal' ? null : 'signal'))}
+              />
+              <FilterTrigger
                 active={industryFilter.length > 0}
                 label={summarizeSelection(industryFilter, '業種')}
                 count={industryFilter.length}
@@ -744,12 +895,6 @@ export default function CompaniesPage() {
                 label={summarizeSelection(revSelectedLabels, '売上')}
                 count={revFilter.length}
                 onClick={() => setOpenMenu((m) => (m === 'revenue' ? null : 'revenue'))}
-              />
-              <FilterTrigger
-                active={tagFilter.length > 0}
-                label={summarizeSelection(tagFilter, 'サービスタグ')}
-                count={tagFilter.length}
-                onClick={() => setOpenMenu((m) => (m === 'tag' ? null : 'tag'))}
               />
               <FilterTrigger
                 active={officeFilter.length > 0}
@@ -804,15 +949,6 @@ export default function CompaniesPage() {
                 allLabel="すべての売上"
               />
             )}
-            {openMenu === 'tag' && (
-              <MultiSelectDropdown
-                items={serviceTagList.map((name) => ({ key: name, label: name }))}
-                selected={tagFilter}
-                onToggle={(key) => setTagFilter((arr) => toggleInArray(arr, key))}
-                onClear={() => setTagFilter([])}
-                allLabel="すべてのタグ"
-              />
-            )}
             {openMenu === 'office' && (
               <MultiSelectDropdown
                 items={OFFICE_BUCKETS.map((b) => ({ key: b.key, label: b.label }))}
@@ -820,6 +956,15 @@ export default function CompaniesPage() {
                 onToggle={(key) => setOfficeFilter((arr) => toggleInArray(arr, key))}
                 onClear={() => setOfficeFilter([])}
                 allLabel="すべての拠点数"
+              />
+            )}
+            {openMenu === 'signal' && (
+              <MultiSelectDropdown
+                items={SIGNAL_CHOICES}
+                selected={signalFilter}
+                onToggle={(key) => setSignalFilter((arr) => toggleInArray(arr, key))}
+                onClear={() => setSignalFilter([])}
+                allLabel="すべての1stシグナル"
               />
             )}
           </div>
@@ -844,7 +989,74 @@ export default function CompaniesPage() {
         </div>
 
         {!isLoading && (
-          <div className="mb-3 flex items-center gap-2 text-[12px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
+          <div className="mb-3 flex items-center gap-3 text-[12px] flex-wrap" style={{ color: 'var(--color-obs-text-subtle)' }}>
+            {/* 一括選択アクション（左端に固定） */}
+            <div className="flex items-center gap-2">
+              {selected.size > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setSelected(new Set())}
+                  className="inline-flex items-center gap-1 px-2 h-6 rounded-full text-[11px] font-semibold tabular-nums transition-colors"
+                  style={{
+                    background: 'rgba(171,199,255,0.14)',
+                    color: 'var(--color-obs-primary)',
+                    boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.42)',
+                  }}
+                  onMouseOver={(e) => {
+                    ;(e.currentTarget as HTMLButtonElement).style.background =
+                      'rgba(171,199,255,0.22)'
+                    ;(e.currentTarget as HTMLButtonElement).style.boxShadow =
+                      'inset 0 0 0 1px rgba(171,199,255,0.55)'
+                  }}
+                  onMouseOut={(e) => {
+                    ;(e.currentTarget as HTMLButtonElement).style.background =
+                      'rgba(171,199,255,0.14)'
+                    ;(e.currentTarget as HTMLButtonElement).style.boxShadow =
+                      'inset 0 0 0 1px rgba(171,199,255,0.42)'
+                  }}
+                  title="クリックで選択をすべて解除"
+                >
+                  <CheckSquare size={11} strokeWidth={2.4} />
+                  <span>{selected.size.toLocaleString()}社選択中</span>
+                </button>
+              )}
+              {/* 全選択（既に全件選択済みなら非表示） */}
+              {selected.size < filtered.length && (
+                <button
+                  type="button"
+                  onClick={() => setSelected(new Set(filtered.map((p) => p.row.id)))}
+                  className="inline-flex items-center gap-1 px-2.5 h-6 rounded-full text-[11px] font-medium transition-colors"
+                  style={{
+                    color: 'var(--color-obs-text-muted)',
+                    background: 'transparent',
+                    boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.22)',
+                  }}
+                  onMouseOver={(e) => {
+                    ;(e.currentTarget as HTMLButtonElement).style.background =
+                      'var(--color-obs-surface-high)'
+                    ;(e.currentTarget as HTMLButtonElement).style.color =
+                      'var(--color-obs-text)'
+                  }}
+                  onMouseOut={(e) => {
+                    ;(e.currentTarget as HTMLButtonElement).style.background = 'transparent'
+                    ;(e.currentTarget as HTMLButtonElement).style.color =
+                      'var(--color-obs-text-muted)'
+                  }}
+                  title={`絞り込み結果 ${filtered.length.toLocaleString()}社をすべて選択`}
+                >
+                  {selected.size > 0 ? (
+                    <CheckSquare size={11} strokeWidth={2.2} />
+                  ) : (
+                    <Square size={11} strokeWidth={2.2} />
+                  )}
+                  {selected.size > 0
+                    ? `残り${(filtered.length - selected.size).toLocaleString()}社も選択`
+                    : `${filtered.length.toLocaleString()}社すべて選択`}
+                </button>
+              )}
+            </div>
+
+            {/* 件数（全選択ボタンの右側に表示） */}
             <span>
               {hasActiveFilter ? (
                 <>
@@ -862,6 +1074,7 @@ export default function CompaniesPage() {
                 </>
               )}
             </span>
+
             <span className="opacity-60">
               ・インテント=求人(部門別): <span style={{ color: LEVEL_STYLE.Hot.color }}>●</span>3ヶ月以内{' '}
               <span style={{ color: LEVEL_STYLE.Middle.color }}>●</span>6ヶ月以内{' '}
@@ -880,13 +1093,35 @@ export default function CompaniesPage() {
                   backgroundColor: 'var(--color-obs-surface-low)',
                 }}
               >
+                {/* 全選択 (現ページ100件) ヘッダ */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const ids = paged.map((p) => p.row.id)
+                    const allSelected = ids.every((id) => selected.has(id))
+                    setSelected((prev) => {
+                      const next = new Set(prev)
+                      if (allSelected) ids.forEach((id) => next.delete(id))
+                      else ids.forEach((id) => next.add(id))
+                      return next
+                    })
+                  }}
+                  className="inline-flex items-center justify-center w-5 h-5 rounded transition-colors hover:bg-[var(--color-obs-surface-high)]"
+                  title="このページの全件を選択 / 解除"
+                >
+                  {paged.length > 0 && paged.every((p) => selected.has(p.row.id)) ? (
+                    <CheckSquare size={13} style={{ color: 'var(--color-obs-primary)' }} />
+                  ) : (
+                    <Square size={13} style={{ color: 'var(--color-obs-text-subtle)' }} />
+                  )}
+                </button>
                 <SortHeader label="企業" k="name" sort={sort} onSort={toggleSort} />
                 <SortHeader label="求人インテント" k="intent" sort={sort} onSort={toggleSort} />
-                <span>業種</span>
+                <span className="text-[11px] font-medium tracking-[0.1em] uppercase" style={{ color: 'var(--color-obs-text-subtle)' }}>1st シグナル</span>
                 <span>都道府県</span>
+                <span>業種</span>
                 <SortHeader label="従業員数" k="employee" sort={sort} onSort={toggleSort} />
                 <SortHeader label="売上" k="revenue" sort={sort} onSort={toggleSort} />
-                <span>サービスタグ</span>
                 <SortHeader label="拠点" k="office" sort={sort} onSort={toggleSort} align="right" />
               </div>
 
@@ -899,6 +1134,15 @@ export default function CompaniesPage() {
                   <CompanyRowItem
                     key={row.id}
                     row={row}
+                    isSelected={selected.has(row.id)}
+                    onToggleSelect={() => {
+                      setSelected((prev) => {
+                        const next = new Set(prev)
+                        if (next.has(row.id)) next.delete(row.id)
+                        else next.add(row.id)
+                        return next
+                      })
+                    }}
                     intent={intent}
                     onClick={() => router.push(`/companies/${row.id}`)}
                     onHover={() => router.prefetch(`/companies/${row.id}`)}
@@ -915,10 +1159,31 @@ export default function CompaniesPage() {
               {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)}件 /{' '}
               {filtered.length.toLocaleString()}件
             </span>
-            <Pagination page={page} totalPages={totalPages} onChange={setPage} />
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              onChange={(p) => {
+                setPage(p)
+                // ページ切替時は即座に最上部へ（スムースなし）
+                if (typeof window !== 'undefined') {
+                  window.scrollTo({ top: 0, behavior: 'auto' })
+                }
+              }}
+            />
           </div>
         )}
       </div>
+
+      {/* 企業を追加モーダル */}
+      {addOpen && (
+        <AddCompanyModal
+          onClose={() => setAddOpen(false)}
+          onAdded={(c) => {
+            setRows((prev) => [c, ...prev])
+            setAddOpen(false)
+          }}
+        />
+      )}
     </ObsPageShell>
   )
 }
@@ -962,17 +1227,44 @@ function IntentFilterChip({
 
   return (
     <button
+      type="button"
       onClick={onClick}
-      className="inline-flex items-center gap-1.5 px-2.5 h-7 rounded-full text-[11px] font-medium tracking-[-0.005em] transition-all duration-150"
+      onMouseEnter={(e) => {
+        if (!active) (e.currentTarget as HTMLButtonElement).style.backgroundColor = toneBgActive
+      }}
+      onMouseLeave={(e) => {
+        if (!active) (e.currentTarget as HTMLButtonElement).style.backgroundColor = toneBg
+      }}
+      className="inline-flex items-center gap-1.5 px-2.5 h-7 rounded-full text-[11px] font-medium tracking-[-0.005em] transition-all duration-150 cursor-pointer"
       style={{
         backgroundColor: active ? toneBgActive : toneBg,
         color: toneColor,
-        boxShadow: active ? `inset 0 0 0 1px ${toneColor}40` : 'none',
+        boxShadow: active
+          ? `inset 0 0 0 1.5px ${toneColor}, 0 0 0 2px ${toneColor}26`
+          : `inset 0 0 0 1px ${toneColor}30`,
       }}
+      title={active ? `${label} フィルタを解除` : `${label} で絞り込む`}
+      aria-pressed={active}
     >
       <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: toneColor }} />
-      {label}
-      <span className="tabular-nums opacity-80">{count.toLocaleString()}</span>
+      <span className="font-semibold">{label}</span>
+      <span
+        className="tabular-nums px-1 rounded-full text-[10px]"
+        style={{
+          color: toneColor,
+          backgroundColor: active ? `${toneColor}26` : 'transparent',
+        }}
+      >
+        {count.toLocaleString()}
+      </span>
+      {active && (
+        <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full ml-0.5"
+          style={{ backgroundColor: toneColor, color: 'white' }}>
+          <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        </span>
+      )}
     </button>
   )
 }
@@ -1102,21 +1394,49 @@ function CompanyRowItem({
   intent,
   onClick,
   onHover,
+  isSelected,
+  onToggleSelect,
 }: {
   row: CompanyRow
   intent: { level: Signal; latestAt: string | null; signalCount: number; activeDepts: DepartmentType[] }
   onClick: () => void
   onHover: () => void
+  isSelected: boolean
+  onToggleSelect: () => void
 }) {
-  const topTags = row.serviceTags.slice(0, 3)
-  const restTags = row.serviceTags.length - topTags.length
+  const isEnriched = row.enrichmentStatus === 'COMPLETED' || row.enrichmentStatus === 'completed'
+  const [reserving, setReserving] = useState(false)
+  const [reserved, setReserved] = useState(false)
+  const firstPartySignal: FirstPartySignal | null = getCompanyFirstPartySignal(row.name)
+
+  async function handleReserve(e: React.MouseEvent) {
+    e.stopPropagation()
+    if (reserving || reserved) return
+    setReserving(true)
+    try {
+      const res = await fetch('/api/abm/reserve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: [row.id], priority: 'high' }),
+      })
+      if (res.ok) setReserved(true)
+    } catch {
+      // 静かに失敗
+    } finally {
+      setReserving(false)
+    }
+  }
 
   return (
     <div
       onClick={onClick}
       onMouseEnter={onHover}
-      className={`grid ${GRID_TEMPLATE} gap-4 px-6 py-4 items-center cursor-pointer transition-colors duration-150`}
-      style={{ transitionTimingFunction: 'var(--ease-liquid)' }}
+      className={`grid ${GRID_TEMPLATE} gap-4 px-6 py-4 items-center cursor-pointer transition-colors duration-150 group`}
+      style={{
+        transitionTimingFunction: 'var(--ease-liquid)',
+        opacity: isEnriched ? 1 : 0.72,
+        boxShadow: 'inset 0 -1px 0 0 var(--color-obs-surface)',
+      }}
       onMouseOver={(e) => {
         ;(e.currentTarget as HTMLDivElement).style.backgroundColor = 'var(--color-obs-surface-high)'
       }}
@@ -1124,6 +1444,23 @@ function CompanyRowItem({
         ;(e.currentTarget as HTMLDivElement).style.backgroundColor = 'transparent'
       }}
     >
+      {/* チェックボックス (行クリックで遷移しないよう stopPropagation) */}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation()
+          onToggleSelect()
+        }}
+        className="inline-flex items-center justify-center w-5 h-5 rounded transition-colors hover:bg-[var(--color-obs-surface-highest)]"
+        title={isSelected ? '選択を解除' : '選択'}
+      >
+        {isSelected ? (
+          <CheckSquare size={14} style={{ color: 'var(--color-obs-primary)' }} />
+        ) : (
+          <Square size={14} style={{ color: 'var(--color-obs-text-subtle)' }} />
+        )}
+      </button>
+
       {/* 企業 */}
       <div className="flex items-center gap-3 min-w-0">
         <div
@@ -1136,12 +1473,27 @@ function CompanyRowItem({
           {getInitial(row.name)}
         </div>
         <div className="flex flex-col gap-0.5 min-w-0">
-          <span
-            className="font-medium text-[14.5px] tracking-[-0.01em] truncate"
-            style={{ color: 'var(--color-obs-text)' }}
-          >
-            {row.name}
-          </span>
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span
+              className="font-medium text-[14.5px] tracking-[-0.01em] truncate"
+              style={{ color: 'var(--color-obs-text)' }}
+            >
+              {row.name}
+            </span>
+            {!isEnriched && (
+              <span
+                className="inline-flex items-center gap-0.5 px-1.5 h-[18px] rounded-full text-[9.5px] font-bold whitespace-nowrap shrink-0"
+                style={{
+                  background: 'rgba(143,140,144,0.14)',
+                  color: 'var(--color-obs-text-muted)',
+                  boxShadow: 'inset 0 0 0 1px rgba(143,140,144,0.32)',
+                }}
+                title="登記台帳データのみ。詳細項目は未取得"
+              >
+                登記台帳のみ
+              </span>
+            )}
+          </div>
           {row.domain ? (
             <span
               className="text-[12px] truncate"
@@ -1160,17 +1512,48 @@ function CompanyRowItem({
         </div>
       </div>
 
-      {/* インテント (求人) — プルダウン */}
-      <IntentCell intent={intent} />
+      {/* インテント (求人) — プルダウン (未エンリッチは予約ボタン) */}
+      {isEnriched ? (
+        <IntentCell intent={intent} />
+      ) : (
+        <button
+          type="button"
+          onClick={handleReserve}
+          disabled={reserving || reserved}
+          className="inline-flex items-center gap-1 h-7 px-2.5 rounded-full text-[11px] font-semibold transition-all whitespace-nowrap w-fit"
+          style={{
+            background: reserved
+              ? 'rgba(74,217,138,0.14)'
+              : 'rgba(171,199,255,0.10)',
+            color: reserved ? '#4ad98a' : 'var(--color-obs-primary)',
+            boxShadow: reserved
+              ? 'inset 0 0 0 1px rgba(74,217,138,0.32)'
+              : 'inset 0 0 0 1px rgba(171,199,255,0.32)',
+            cursor: reserving || reserved ? 'default' : 'pointer',
+          }}
+          title="この企業をエンリッチ対象として予約"
+        >
+          {reserved ? '✓ 予約済み' : reserving ? '予約中...' : '★ エンリッチ予約'}
+        </button>
+      )}
 
-      {/* 業種 */}
-      <span className="text-[13px] truncate" style={{ color: 'var(--color-obs-text-muted)' }}>
-        {row.industry}
-      </span>
+      {/* 1st パーティーシグナル — 取引(/deals)に紐づく企業のみ表示 */}
+      <div onClick={(e) => e.stopPropagation()}>
+        {firstPartySignal ? (
+          <SignalBadge signal={firstPartySignal} />
+        ) : (
+          <span className="text-[12px]" style={{ color: 'var(--color-obs-text-subtle)', opacity: 0.55 }}>—</span>
+        )}
+      </div>
 
       {/* 都道府県 */}
       <span className="text-[12.5px] truncate" style={{ color: 'var(--color-obs-text-muted)' }}>
         {row.prefecture}
+      </span>
+
+      {/* 業種 */}
+      <span className="text-[13px] truncate" style={{ color: 'var(--color-obs-text-muted)' }}>
+        {row.industry}
       </span>
 
       {/* 従業員数 */}
@@ -1182,32 +1565,6 @@ function CompanyRowItem({
       <span className="text-[12.5px] truncate tabular-nums" style={{ color: 'var(--color-obs-text-muted)' }}>
         {formatRevenue(row.revenue)}
       </span>
-
-      {/* サービスタグ */}
-      <div className="flex items-center gap-1 flex-wrap min-w-0 overflow-hidden">
-        {topTags.length === 0 ? (
-          <span className="text-[11px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
-            —
-          </span>
-        ) : (
-          <>
-            {topTags.map((t) => (
-              <ServiceTagPill key={t} label={t} />
-            ))}
-            {restTags > 0 && (
-              <span
-                className="text-[10.5px] tabular-nums px-1.5 py-0.5 rounded-full"
-                style={{
-                  color: 'var(--color-obs-text-subtle)',
-                  backgroundColor: 'var(--color-obs-surface-high)',
-                }}
-              >
-                +{restTags}
-              </span>
-            )}
-          </>
-        )}
-      </div>
 
       {/* 拠点数 */}
       <span
@@ -1274,9 +1631,6 @@ function IntentCell({ intent }: { intent: ComputedIntent }) {
   // 募集ありの部門だけをレベル別に独立チップ化
   const activeBreakdown = intent.breakdown.filter((b) => b.level !== 'None')
   const hasData = activeBreakdown.length > 0
-  const MAX_CHIPS = 2
-  const shown = activeBreakdown.slice(0, MAX_CHIPS)
-  const rest = activeBreakdown.length - shown.length
 
   if (!hasData) {
     return (
@@ -1286,6 +1640,11 @@ function IntentCell({ intent }: { intent: ComputedIntent }) {
     )
   }
 
+  // 最高レベルだけのチップを1つ表示。クリックで全部門の内訳をポップオーバーで開く。
+  const topLevel = intent.level
+  const topStyle = LEVEL_STYLE[topLevel]
+  const totalDepts = activeBreakdown.length
+
   return (
     <div className="relative min-w-0" ref={ref} onClick={(e) => e.stopPropagation()}>
       <button
@@ -1293,41 +1652,30 @@ function IntentCell({ intent }: { intent: ComputedIntent }) {
           e.stopPropagation()
           setOpen((v) => !v)
         }}
-        className="w-full flex items-center gap-1 flex-wrap text-left"
+        className="w-full flex items-center gap-1.5 text-left"
+        title={`${topStyle.label} / ${totalDepts}部門で求人 — クリックで内訳`}
       >
-        {shown.map((b) => {
-          const s = LEVEL_STYLE[b.level]
-          return (
-            <span
-              key={b.departmentType}
-              className="inline-flex items-center gap-1.5 h-7 px-2 rounded-full text-[11px] font-medium tracking-[-0.005em]"
-              style={{
-                backgroundColor: s.bg,
-                color: s.color,
-                boxShadow: `inset 0 0 0 1px ${s.border}`,
-              }}
-            >
-              <span
-                className="w-1.5 h-1.5 rounded-full shrink-0"
-                style={{ backgroundColor: s.color }}
-              />
-              <span className="shrink-0">{s.label}</span>
-              <span className="opacity-90">{DEPT_LABEL[b.departmentType] ?? b.departmentType}</span>
-            </span>
-          )
-        })}
-        {rest > 0 && (
+        <span
+          className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full text-[11px] font-medium tracking-[-0.005em]"
+          style={{
+            backgroundColor: topStyle.bg,
+            color: topStyle.color,
+            boxShadow: `inset 0 0 0 1px ${topStyle.border}`,
+          }}
+        >
           <span
-            className="inline-flex items-center h-7 px-2 rounded-full text-[11px] font-medium tabular-nums"
-            style={{
-              color: 'var(--color-obs-text-muted)',
-              backgroundColor: 'var(--color-obs-surface-high)',
-            }}
+            className="w-1.5 h-1.5 rounded-full shrink-0"
+            style={{ backgroundColor: topStyle.color }}
+          />
+          <span className="shrink-0 font-semibold">{topStyle.label}</span>
+          <span
+            className="text-[10.5px] tabular-nums opacity-80"
+            style={{ color: topStyle.color }}
           >
-            +{rest}
+            {totalDepts}部門
           </span>
-        )}
-        <ChevronDown size={12} className="shrink-0 opacity-60 ml-0.5" />
+        </span>
+        <ChevronDown size={12} className="shrink-0 opacity-60" />
       </button>
 
       {open && (
@@ -1399,17 +1747,137 @@ function IntentCell({ intent }: { intent: ComputedIntent }) {
   )
 }
 
-function ServiceTagPill({ label }: { label: string }) {
+// 企業を手動追加するモーダル (社名・ドメイン・所在地のみの最低限)
+function AddCompanyModal({
+  onClose,
+  onAdded,
+}: {
+  onClose: () => void
+  onAdded: (c: CompanyRow) => void
+}) {
+  const [name, setName] = useState('')
+  const [domain, setDomain] = useState('')
+  const [prefecture, setPrefecture] = useState('')
+  const [industry, setIndustry] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+
+  const submit = () => {
+    if (!name.trim() || submitting) return
+    setSubmitting(true)
+    const newRow: CompanyRow = {
+      id: `manual-${Date.now()}`,
+      name: name.trim(),
+      domain: domain.trim(),
+      industry: industry.trim() || 'その他',
+      prefecture: prefecture.trim() || '—',
+      city: null,
+      employeeCount: null,
+      revenue: null,
+      representative: null,
+      corporateType: '株式会社',
+      corporateNumber: '',
+      officeCount: 0,
+      serviceTags: [],
+      intents: [],
+      enrichmentStatus: 'PENDING',
+    }
+    onAdded(newRow)
+  }
+
   return (
-    <span
-      className="inline-flex items-center px-2 h-5 rounded-full text-[10.5px] font-medium tracking-[-0.005em] whitespace-nowrap"
-      style={{
-        color: 'var(--color-obs-text-muted)',
-        backgroundColor: 'var(--color-obs-surface-high)',
-      }}
-    >
-      {label}
-    </span>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => !submitting && onClose()}>
+      <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }} />
+      <div
+        className="relative w-full max-w-[480px] rounded-[var(--radius-obs-xl)] overflow-hidden"
+        style={{
+          background: 'var(--color-obs-surface-highest)',
+          boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="px-5 py-4" style={{ boxShadow: 'inset 0 -1px 0 var(--color-obs-surface-low)' }}>
+          <h2 className="text-[16px] font-bold" style={{ color: 'var(--color-obs-text)' }}>企業を追加</h2>
+          <p className="text-[12px] mt-1" style={{ color: 'var(--color-obs-text-muted)' }}>
+            手動で企業を追加します。後でエンリッチ予約すると詳細データが自動取得されます
+          </p>
+        </div>
+        <div className="px-5 py-4 space-y-3">
+          <label className="block">
+            <span className="text-[11px] font-bold uppercase tracking-[0.06em]" style={{ color: 'var(--color-obs-text-subtle)' }}>
+              企業名 <span style={{ color: 'var(--color-obs-hot)' }}>*</span>
+            </span>
+            <input
+              autoFocus
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="株式会社○○"
+              className="mt-1.5 w-full px-3 py-2 rounded-[8px] text-[13px] outline-none"
+              style={{
+                background: 'var(--color-obs-surface-lowest)',
+                color: 'var(--color-obs-text)',
+                boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.18)',
+              }}
+            />
+          </label>
+          <div className="grid grid-cols-2 gap-3">
+            <label className="block">
+              <span className="text-[11px] font-bold uppercase tracking-[0.06em]" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                ドメイン
+              </span>
+              <input
+                value={domain}
+                onChange={(e) => setDomain(e.target.value)}
+                placeholder="example.co.jp"
+                className="mt-1.5 w-full px-3 py-2 rounded-[8px] text-[13px] outline-none"
+                style={{
+                  background: 'var(--color-obs-surface-lowest)',
+                  color: 'var(--color-obs-text)',
+                  boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.18)',
+                }}
+              />
+            </label>
+            <label className="block">
+              <span className="text-[11px] font-bold uppercase tracking-[0.06em]" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                都道府県
+              </span>
+              <input
+                value={prefecture}
+                onChange={(e) => setPrefecture(e.target.value)}
+                placeholder="東京都"
+                className="mt-1.5 w-full px-3 py-2 rounded-[8px] text-[13px] outline-none"
+                style={{
+                  background: 'var(--color-obs-surface-lowest)',
+                  color: 'var(--color-obs-text)',
+                  boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.18)',
+                }}
+              />
+            </label>
+          </div>
+          <label className="block">
+            <span className="text-[11px] font-bold uppercase tracking-[0.06em]" style={{ color: 'var(--color-obs-text-subtle)' }}>
+              業種
+            </span>
+            <input
+              value={industry}
+              onChange={(e) => setIndustry(e.target.value)}
+              placeholder="IT・ソフトウェア"
+              className="mt-1.5 w-full px-3 py-2 rounded-[8px] text-[13px] outline-none"
+              style={{
+                background: 'var(--color-obs-surface-lowest)',
+                color: 'var(--color-obs-text)',
+                boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.18)',
+              }}
+            />
+          </label>
+        </div>
+        <div className="flex justify-end gap-2 px-5 py-4" style={{ boxShadow: 'inset 0 1px 0 var(--color-obs-surface-low)' }}>
+          <ObsButton variant="ghost" onClick={onClose} disabled={submitting}>キャンセル</ObsButton>
+          <ObsButton variant="primary" onClick={submit} disabled={!name.trim() || submitting}>
+            {submitting ? '追加中...' : '追加'}
+          </ObsButton>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -1422,6 +1890,10 @@ function LoadingSkeleton() {
           className={`grid ${GRID_TEMPLATE} gap-4 px-6 py-4 items-center`}
           style={{ opacity: 1 - i * 0.08 }}
         >
+          <div
+            className="w-5 h-5 rounded animate-pulse"
+            style={{ backgroundColor: 'var(--color-obs-surface-high)' }}
+          />
           <div className="flex items-center gap-3">
             <div
               className="w-9 h-9 rounded-[var(--radius-obs-md)] animate-pulse"
@@ -1438,7 +1910,7 @@ function LoadingSkeleton() {
               />
             </div>
           </div>
-          {Array.from({ length: 8 }).map((_, j) => (
+          {Array.from({ length: 6 }).map((_, j) => (
             <div
               key={j}
               className="h-3 rounded animate-pulse"

@@ -2,23 +2,11 @@
 
 import { useMemo, useState } from 'react'
 import {
-  Activity,
-  CalendarCheck,
-  CalendarDays,
-  CheckCircle2,
-  FileText,
-  Inbox,
   Mail,
-  MailOpen,
   PhoneCall,
-  Target,
-  TrendingDown,
-  TrendingUp,
-  Users,
 } from 'lucide-react'
 import {
   ObsCard,
-  ObsChip,
   ObsHero,
   ObsPageShell,
   ObsSectionHeader,
@@ -89,33 +77,9 @@ const MOCK_MARKETING: Record<Period, MarketingStats> = {
   last_quarter: { mailSent: 31220, mailDelivered: 30620, mailOpened: 11104, mailClicked: 1612, docOpened: 4380, docDownloaded:  610 },
 }
 
-// ─── Mock data: 全体進捗 ─────────────────────────────────────────────────────
-type OverallStats = {
-  appointments: number          // アポ取得数
-  meetingsHeld: number          // 商談実施
-  proposals: number             // 提案
-  poc: number                   // POC
-  closedWon: number             // 受注
-  pipelineYen: number           // 進行中パイプライン金額
-  closedYen: number             // 受注金額
-}
-
-const MOCK_OVERALL: Record<Period, OverallStats> = {
-  this_month:   { appointments:  52, meetingsHeld:  41, proposals: 28, poc: 12, closedWon: 15, pipelineYen:  68_500_000, closedYen: 22_800_000 },
-  last_month:   { appointments:  42, meetingsHeld:  35, proposals: 24, poc:  9, closedWon: 12, pipelineYen:  60_200_000, closedYen: 18_400_000 },
-  this_quarter: { appointments: 141, meetingsHeld: 117, proposals: 79, poc: 36, closedWon: 45, pipelineYen: 198_400_000, closedYen: 67_200_000 },
-  last_quarter: { appointments: 128, meetingsHeld: 105, proposals: 71, poc: 30, closedWon: 38, pipelineYen: 178_300_000, closedYen: 56_100_000 },
-}
-
 function pct(part: number, total: number): number {
   if (!total) return 0
   return Math.round((part / total) * 1000) / 10
-}
-
-function formatYen(n: number): string {
-  if (n >= 100_000_000) return `${(n / 100_000_000).toFixed(1)}億円`
-  if (n >= 10_000) return `${Math.round(n / 10_000).toLocaleString()}万円`
-  return `¥${n.toLocaleString()}`
 }
 
 export default function DashboardPage() {
@@ -123,7 +87,6 @@ export default function DashboardPage() {
 
   const ownerRows = MOCK_OWNER_ROWS[period]
   const marketing = MOCK_MARKETING[period]
-  const overall = MOCK_OVERALL[period]
 
   const totals = useMemo(() => {
     return ownerRows.reduce(
@@ -131,17 +94,14 @@ export default function DashboardPage() {
         acc.callCount += r.callCount
         acc.mailSent += r.mailSent
         acc.appointments += r.appointments
-        acc.deals += r.deals
         return acc
       },
-      { callCount: 0, mailSent: 0, appointments: 0, deals: 0 },
+      { callCount: 0, mailSent: 0, appointments: 0 },
     )
   }, [ownerRows])
 
   const openRate = pct(marketing.mailOpened, marketing.mailDelivered)
-  const clickRate = pct(marketing.mailClicked, marketing.mailDelivered)
   const docOpenRate = pct(marketing.docOpened, marketing.mailDelivered)
-  const docDownloadRate = pct(marketing.docDownloaded, marketing.docOpened)
 
   // 担当者別の最大値（バーの正規化用）
   const maxCall = Math.max(...ownerRows.map((r) => r.callCount), 1)
@@ -181,66 +141,6 @@ export default function DashboardPage() {
           }
         />
 
-        {/* ── 全体KPI ── */}
-        <div className="mt-6">
-          <ObsSectionHeader title="全体の進捗" caption="期間中のチーム合計値" />
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
-            <KpiCard
-              icon={CalendarCheck}
-              label="アポ取得"
-              value={overall.appointments}
-              unit="件"
-              tint="primary"
-            />
-            <KpiCard
-              icon={Users}
-              label="商談実施"
-              value={overall.meetingsHeld}
-              unit="件"
-              tint="primary"
-            />
-            <KpiCard
-              icon={FileText}
-              label="提案"
-              value={overall.proposals}
-              unit="件"
-              tint="middle"
-            />
-            <KpiCard
-              icon={Target}
-              label="POC"
-              value={overall.poc}
-              unit="件"
-              tint="middle"
-            />
-            <KpiCard
-              icon={CheckCircle2}
-              label="受注"
-              value={overall.closedWon}
-              unit="件"
-              tint="success"
-            />
-            <KpiCard
-              icon={Activity}
-              label="進行中パイプライン"
-              value={formatYen(overall.pipelineYen)}
-              tint="primary"
-            />
-            <KpiCard
-              icon={TrendingUp}
-              label="受注金額"
-              value={formatYen(overall.closedYen)}
-              tint="success"
-            />
-            <KpiCard
-              icon={CalendarDays}
-              label="期間"
-              value={PERIOD_OPTIONS.find((o) => o.value === period)?.label ?? '—'}
-              tint="muted"
-            />
-          </div>
-        </div>
-
         {/* ── 担当者別パフォーマンス ── */}
         <div className="mt-8">
           <ObsSectionHeader
@@ -251,7 +151,7 @@ export default function DashboardPage() {
             <div
               className="grid items-center px-5 py-3 text-[10.5px] font-medium tracking-[0.1em] uppercase"
               style={{
-                gridTemplateColumns: '1.3fr 1.4fr 1.4fr 0.8fr 0.8fr',
+                gridTemplateColumns: '1.3fr 1.4fr 1.4fr 0.8fr',
                 color: 'var(--color-obs-text-subtle)',
                 backgroundColor: 'var(--color-obs-surface-low)',
               }}
@@ -259,8 +159,7 @@ export default function DashboardPage() {
               <span>担当者</span>
               <span>コール数</span>
               <span>メール送信数</span>
-              <span className="text-right">アポ</span>
-              <span className="text-right">受注</span>
+              <span className="text-right">商談実施</span>
             </div>
 
             {ownerRows.map((row, i) => (
@@ -268,7 +167,7 @@ export default function DashboardPage() {
                 key={row.name}
                 className="grid items-center px-5 py-3.5"
                 style={{
-                  gridTemplateColumns: '1.3fr 1.4fr 1.4fr 0.8fr 0.8fr',
+                  gridTemplateColumns: '1.3fr 1.4fr 1.4fr 0.8fr',
                   borderTop: i === 0 ? 'none' : '1px solid rgba(65,71,83,0.12)',
                 }}
               >
@@ -293,7 +192,6 @@ export default function DashboardPage() {
                   icon={PhoneCall}
                   value={row.callCount}
                   max={maxCall}
-                  trend={row.callTrend}
                   tint="primary"
                 />
 
@@ -302,7 +200,6 @@ export default function DashboardPage() {
                   icon={Mail}
                   value={row.mailSent}
                   max={maxMail}
-                  trend={row.mailTrend}
                   tint="low"
                 />
 
@@ -310,21 +207,72 @@ export default function DashboardPage() {
                 <span className="text-[13px] tabular-nums text-right" style={{ color: 'var(--color-obs-text)' }}>
                   {row.appointments}
                 </span>
-
-                {/* 受注 */}
-                <span className="text-[13px] tabular-nums text-right font-semibold" style={{ color: '#6ee7a1' }}>
-                  {row.deals}
-                </span>
               </div>
             ))}
+
+            {/* 全体(合計)行 — 直前の行と十分な余白を確保 */}
+            <div
+              className="grid items-center px-5 py-5 mt-2"
+              style={{
+                gridTemplateColumns: '1.3fr 1.4fr 1.4fr 0.8fr',
+                borderTop: '1px solid rgba(171,199,255,0.18)',
+                background: 'rgba(171,199,255,0.04)',
+              }}
+            >
+              {/* 担当者欄: "全体" ラベル */}
+              <div className="flex items-center gap-2 min-w-0">
+                <div
+                  className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0"
+                  style={{
+                    background: 'rgba(171,199,255,0.16)',
+                    color: 'var(--color-obs-primary)',
+                    boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.32)',
+                  }}
+                >
+                  Σ
+                </div>
+                <span
+                  className="text-[13px] font-bold tracking-[0.02em]"
+                  style={{ color: 'var(--color-obs-primary)' }}
+                >
+                  全体
+                </span>
+              </div>
+
+              {/* コール合計 */}
+              <MetricBar
+                icon={PhoneCall}
+                value={totals.callCount}
+                max={totals.callCount}
+                tint="primary"
+              />
+
+              {/* メール合計 */}
+              <MetricBar
+                icon={Mail}
+                value={totals.mailSent}
+                max={totals.mailSent}
+                tint="low"
+              />
+
+              {/* アポ合計 */}
+              <span
+                className="text-[14px] tabular-nums text-right font-bold"
+                style={{ color: 'var(--color-obs-primary)' }}
+              >
+                {totals.appointments}
+              </span>
+            </div>
           </ObsCard>
         </div>
 
-        {/* ── マーケティング指標 ── */}
-        <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-3">
+        {/* ── メール配信 (マーケ施策) ── */}
+        <div className="mt-8">
+          <ObsSectionHeader title="メール配信" caption="マーケ施策のパフォーマンス" />
+          <div className="mt-3 grid grid-cols-1 lg:grid-cols-3 gap-3">
           {/* メール配信全体 */}
           <ObsCard depth="high" padding="lg" radius="xl">
-            <ObsSectionHeader title="メール送信" caption="マーケ施策" />
+            <ObsSectionHeader title="メール送信" caption="送信通数" />
             <div className="mt-3 flex items-baseline gap-2">
               <span
                 className="font-[family-name:var(--font-display)] text-[34px] font-bold tabular-nums tracking-[-0.03em]"
@@ -334,15 +282,11 @@ export default function DashboardPage() {
               </span>
               <span className="text-[13px]" style={{ color: 'var(--color-obs-text-muted)' }}>通</span>
             </div>
-            <div className="mt-2 flex items-center gap-2 text-[11px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
-              <Inbox size={11} />
-              到達 {marketing.mailDelivered.toLocaleString()} 通 ({pct(marketing.mailDelivered, marketing.mailSent)}%)
-            </div>
           </ObsCard>
 
           {/* メール開封率 */}
           <ObsCard depth="high" padding="lg" radius="xl">
-            <ObsSectionHeader title="メール開封率" caption={`開封 ${marketing.mailOpened.toLocaleString()} / 到達 ${marketing.mailDelivered.toLocaleString()}`} />
+            <ObsSectionHeader title="メール開封率" caption={`開封 ${marketing.mailOpened.toLocaleString()}`} />
             <div className="mt-3 flex items-baseline gap-2">
               <span
                 className="font-[family-name:var(--font-display)] text-[34px] font-bold tabular-nums tracking-[-0.03em]"
@@ -361,15 +305,11 @@ export default function DashboardPage() {
                 }}
               />
             </div>
-            <div className="mt-2.5 flex items-center gap-2 text-[11px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
-              <MailOpen size={11} />
-              クリック率 {clickRate}%
-            </div>
           </ObsCard>
 
           {/* 資料開封率 */}
           <ObsCard depth="high" padding="lg" radius="xl">
-            <ObsSectionHeader title="資料開封率" caption={`開封 ${marketing.docOpened.toLocaleString()} / 配信先 ${marketing.mailDelivered.toLocaleString()}`} />
+            <ObsSectionHeader title="資料開封率" caption={`開封 ${marketing.docOpened.toLocaleString()}`} />
             <div className="mt-3 flex items-baseline gap-2">
               <span
                 className="font-[family-name:var(--font-display)] text-[34px] font-bold tabular-nums tracking-[-0.03em]"
@@ -388,65 +328,11 @@ export default function DashboardPage() {
                 }}
               />
             </div>
-            <div className="mt-2.5 flex items-center gap-2 text-[11px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
-              <FileText size={11} />
-              ダウンロード {docDownloadRate}%（開封者ベース）
-            </div>
           </ObsCard>
+          </div>
         </div>
       </div>
     </ObsPageShell>
-  )
-}
-
-// ─── Sub: KPI Card ───────────────────────────────────────────────────────────
-function KpiCard({
-  icon: Icon,
-  label,
-  value,
-  unit,
-  tint,
-}: {
-  icon: React.ElementType
-  label: string
-  value: number | string
-  unit?: string
-  tint: 'primary' | 'middle' | 'success' | 'muted'
-}) {
-  const TINT: Record<typeof tint, { fg: string; bg: string }> = {
-    primary: { fg: 'var(--color-obs-primary)',    bg: 'rgba(171,199,255,0.12)' },
-    middle:  { fg: 'var(--color-obs-middle)',     bg: 'rgba(255,184,107,0.14)' },
-    success: { fg: '#6ee7a1',                     bg: 'rgba(110,231,161,0.14)' },
-    muted:   { fg: 'var(--color-obs-text-muted)', bg: 'rgba(143,140,144,0.14)' },
-  }
-  const t = TINT[tint]
-  return (
-    <ObsCard depth="high" padding="md" radius="lg">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-[10.5px] font-medium uppercase tracking-[0.08em]" style={{ color: 'var(--color-obs-text-subtle)' }}>
-          {label}
-        </span>
-        <span
-          className="w-6 h-6 rounded-full flex items-center justify-center"
-          style={{ backgroundColor: t.bg, color: t.fg }}
-        >
-          <Icon size={12} strokeWidth={2.2} />
-        </span>
-      </div>
-      <div className="flex items-baseline gap-1.5">
-        <span
-          className="font-[family-name:var(--font-display)] text-[24px] font-bold tabular-nums tracking-[-0.02em]"
-          style={{ color: 'var(--color-obs-text)' }}
-        >
-          {typeof value === 'number' ? value.toLocaleString() : value}
-        </span>
-        {unit && (
-          <span className="text-[11px]" style={{ color: 'var(--color-obs-text-muted)' }}>
-            {unit}
-          </span>
-        )}
-      </div>
-    </ObsCard>
   )
 }
 
@@ -455,13 +341,11 @@ function MetricBar({
   icon: Icon,
   value,
   max,
-  trend,
   tint,
 }: {
   icon: React.ElementType
   value: number
   max: number
-  trend: number
   tint: 'primary' | 'low'
 }) {
   const TINT: Record<typeof tint, { fg: string; bar: string; bg: string }> = {
@@ -478,8 +362,6 @@ function MetricBar({
   }
   const t = TINT[tint]
   const widthPct = Math.max(4, (value / max) * 100)
-  const trendUp = trend >= 0
-  const TrendIcon = trendUp ? TrendingUp : TrendingDown
   return (
     <div className="flex items-center gap-2.5 pr-3">
       <Icon size={12} strokeWidth={2} style={{ color: t.fg, flexShrink: 0 }} />
@@ -488,12 +370,6 @@ function MetricBar({
           <span className="text-[13px] font-semibold tabular-nums" style={{ color: 'var(--color-obs-text)' }}>
             {value.toLocaleString()}
           </span>
-          <ObsChip tone={trendUp ? 'low' : 'hot'}>
-            <span className="inline-flex items-center gap-0.5">
-              <TrendIcon size={9} strokeWidth={2.4} />
-              {trendUp ? '+' : ''}{trend}%
-            </span>
-          </ObsChip>
         </div>
         <div
           className="h-1.5 rounded-full overflow-hidden"

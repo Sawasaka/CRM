@@ -10,7 +10,7 @@ export const FinalCTA = () => (
           <Eyebrow color="#abc7ff">FRONT OFFICE</Eyebrow>
         </div>
         <h2 className="font-display font-bold tracking-[-0.025em] text-[2.8rem] sm:text-[3.6rem] md:text-[5rem] leading-[1.04] mt-6 fo-gradient-text">
-          Front Office を、
+          KikuCRM を、
           <br />
           あなたのチームへ。
         </h2>

@@ -11,22 +11,30 @@ export const AgenticEra = () => {
     { agent: 'support',   x: '90%' },
   ]
   return (
-    <Section tone="pitch" screenLabel="05 Agentic">
+    <Section tone="pitch" screenLabel="05 Agent Fabric">
       <div className="relative mx-auto max-w-6xl px-6 py-32 md:py-44">
         <NebulaBG intensity={0.7} />
-        <div className="relative max-w-3xl">
-          <Eyebrow color="#d3a5ff">THE AGENTIC ERA</Eyebrow>
-          <h2 className="font-display font-bold tracking-[-0.025em] text-[2.4rem] md:text-[3.4rem] leading-[1.06] mt-5">
-            人がタブを切り替える時代から、
+
+        {/* Heading block — Pricing の直下、AgentFabric への入口 */}
+        <div className="relative text-center max-w-4xl mx-auto">
+          <div className="flex justify-center">
+            <Eyebrow color="#abc7ff">AGENT FABRIC</Eyebrow>
+          </div>
+          <h2 className="font-display font-bold tracking-[-0.025em] text-[2.4rem] md:text-[3.6rem] leading-[1.04] mt-5">
+            <span className="fo-gradient-text-soft">5体のエージェントが、</span>
             <br />
-            <span className="fo-gradient-text-soft">エージェントが働き合う時代へ。</span>
+            <span className="fo-gradient-text">あなたの代わりに、働く。</span>
           </h2>
-          <p className="mt-6 text-[#c7c5c9] text-[1.05rem] leading-relaxed max-w-2xl">
-            Front Office では、5体のドメイン特化エージェントが、データ連携を介して互いにタスクを引き継ぎます。
-            人は、彼らの仕事をレビューし、判断するだけ。
+          <p className="mt-7 text-[#c7c5c9] text-[1.05rem] leading-relaxed mx-auto max-w-3xl">
+            KikuCRMには、5つのドメイン特化エージェントが標準搭載されています。
+            <br />
+            それぞれが自律的に動き、必要に応じて互いを呼び出し、人間に確認・承認を求める。
+            <br />
+            <span className="text-[#9b99a0]">「人がツールを使う」のではなく、「エージェントが働き、人が判断する」が、新しい働き方です。</span>
           </p>
         </div>
 
+        {/* Visual — 5体のオーブ + データストリーム */}
         <div className="relative mt-16 h-[260px] md:h-[320px]">
           <svg viewBox="0 0 1000 320" className="absolute inset-0 w-full h-full" preserveAspectRatio="none">
             <defs>

@@ -1,8 +1,9 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { ResearchChatPanel } from '@/components/research/ResearchChatPanel'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ChevronLeft,
@@ -34,10 +35,17 @@ import {
   StickyNote,
   Cpu,
   Headphones,
+  Globe,
+  MapPin,
+  ExternalLink,
+  LifeBuoy,
 } from 'lucide-react'
-import { useCallStore } from '@/lib/stores/callStore'
 import { ObsPageShell } from '@/components/obsidian'
-import { GoogleTimeline } from '@/components/google/google-timeline'
+// コンタクト詳細と同じアクティビティ仕様を再利用 (タブ: すべて / コール / メール / 会議)
+import { ContactHistoryTimeline } from '@/app/(app)/contacts/[id]/page'
+import { CreateTicketModal } from '@/app/(app)/tickets/_components/CreateTicketModal'
+import { StatusBadge as TicketStatusBadge } from '@/app/(app)/tickets/_components/StatusBadge'
+import type { TicketListItem } from '@/app/(app)/tickets/_types'
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Types
@@ -45,13 +53,13 @@ import { GoogleTimeline } from '@/components/google/google-timeline'
 
 // パイプライン側 (app/(app)/pipeline/page.tsx) の StageKey と一致させる
 type DealStage =
-  | 'IS' | 'NURTURING' | 'MEETING_PLANNED' | 'MEETING_DONE'
+  | 'IS' | 'MEETING_PLANNED' | 'MEETING_DONE'
   | 'PROJECT_PLANNED' | 'MULTI_MEETING' | 'POC'
   | 'CLOSED_WON' | 'LOST_DEAL' | 'CHURN' | 'LOST'
 
 type DealStatus = 'アクティブ' | '優先対応' | '保留'
 
-type ISContactStatus = '未着手' | '不通' | '不在' | '接続済み' | 'コール不可' | 'アポ獲得' | 'Next Action'
+type ISContactStatus = '未着手' | '不通' | '不在' | '接続済み' | 'コール不可' | 'アポ獲得' | 'その他'
 
 interface ISContact {
   id: string
@@ -201,16 +209,10 @@ interface MeetingRecord {
   keyPoints: string[]
 }
 
-// 議事録 集約サマリー（過去の流れ / 現在 の2軸）
-interface MeetingAggregation {
-  history: string
-  current: string
-}
+// 取引タスク (コンタクト詳細でも再利用するため export)
+export type DealTaskType = 'call' | 'email' | 'meeting' | 'proposal' | 'followup' | 'other'
 
-// 取引タスク
-type DealTaskType = 'call' | 'email' | 'meeting' | 'proposal' | 'followup' | 'other'
-
-interface DealTask {
+export interface DealTask {
   id: string
   type: DealTaskType
   title: string
@@ -270,13 +272,201 @@ const MOCK_DEALS: Record<string, DealDetail> = {
   },
 }
 
+// ─── 紐付け企業情報（取引に紐付く企業の基本プロファイル） ─────────────
+interface LinkedCompanyInfo {
+  industry: string
+  employees: string
+  address: string
+  phone: string
+  websiteUrl: string
+  representative?: string
+}
+
+const DEAL_LINKED_COMPANIES: Record<string, LinkedCompanyInfo> = {
+  'd1': {
+    industry: 'SaaS / 業務システム',
+    employees: '120名',
+    address: '東京都港区赤坂1-2-3',
+    phone: '03-1234-5600',
+    websiteUrl: 'https://techno-lead.co.jp',
+    representative: '高橋 正人',
+  },
+  'd2': {
+    industry: 'IT / コンサルティング',
+    employees: '350名',
+    address: '東京都千代田区丸の内2-3-4',
+    phone: '03-5678-9000',
+    websiteUrl: 'https://innovation.co.jp',
+    representative: '佐々木 拓也',
+  },
+  'd3': {
+    industry: '物流テック / 3PL',
+    employees: '60名',
+    address: '東京都新宿区西新宿3-4-5',
+    phone: '03-2345-6700',
+    websiteUrl: 'https://future-llc.jp',
+    representative: '山田 健一',
+  },
+  'd4': {
+    industry: 'HR Tech / 採用支援',
+    employees: '85名',
+    address: '東京都渋谷区恵比寿4-5-6',
+    phone: '03-3456-7800',
+    websiteUrl: 'https://growth-inc.jp',
+    representative: '小林 翔',
+  },
+}
+
+// ─── インテント（部門別の採用動向集約）──────────────────────────────
+interface DealIntentRow {
+  intentLevel: 'HOT' | 'MIDDLE' | 'LOW' | 'NONE'
+  departmentType: string
+  signalCount: number
+  latestSignalAt: string | null
+}
+
+const DEAL_INTENTS: Record<string, DealIntentRow[]> = {
+  'd1': [
+    { intentLevel: 'HOT',    departmentType: 'it_engineer', signalCount: 8, latestSignalAt: '2026-04-23' },
+    { intentLevel: 'HOT',    departmentType: 'sales_is',    signalCount: 5, latestSignalAt: '2026-04-22' },
+    { intentLevel: 'MIDDLE', departmentType: 'cs_success',  signalCount: 3, latestSignalAt: '2026-04-12' },
+  ],
+  'd2': [
+    { intentLevel: 'HOT',    departmentType: 'it_dx',     signalCount: 6, latestSignalAt: '2026-04-25' },
+    { intentLevel: 'MIDDLE', departmentType: 'pdm',       signalCount: 2, latestSignalAt: '2026-04-10' },
+  ],
+  'd3': [
+    { intentLevel: 'MIDDLE', departmentType: 'operations',   signalCount: 4, latestSignalAt: '2026-04-20' },
+    { intentLevel: 'LOW',    departmentType: 'engineering',  signalCount: 1, latestSignalAt: '2026-03-30' },
+  ],
+  'd4': [
+    { intentLevel: 'HOT',    departmentType: 'hr_recruit',  signalCount: 7, latestSignalAt: '2026-04-24' },
+    { intentLevel: 'MIDDLE', departmentType: 'sales_fs',    signalCount: 3, latestSignalAt: '2026-04-15' },
+  ],
+}
+
+// ─── 採用シグナル履歴（求人ボックス等のクロール結果） ────────────────
+interface DealIntentSignal {
+  id: string
+  title: string
+  signalType: string
+  source: string
+  sourceUrl: string
+  publishedAt: string | null
+  departmentType: string | null
+}
+
+const DEAL_INTENT_SIGNALS: Record<string, DealIntentSignal[]> = {
+  'd1': [
+    { id: 's1-1', title: '【東京/赤坂】SaaSエンジニア / Go・TypeScript / 基盤強化フェーズ',           signalType: 'job_posting', source: '求人ボックス', sourceUrl: 'https://xn--pckua2a7gp15o89zb.com/?q=' + encodeURIComponent('株式会社テクノリード SaaSエンジニア'),  publishedAt: '2026-04-23', departmentType: 'it_engineer' },
+    { id: 's1-2', title: 'インサイドセールス（SDR/BDR） / アウトバウンド比率高め / リーダー候補',      signalType: 'job_posting', source: '求人ボックス', sourceUrl: 'https://xn--pckua2a7gp15o89zb.com/?q=' + encodeURIComponent('株式会社テクノリード インサイドセールス'),  publishedAt: '2026-04-22', departmentType: 'sales_is' },
+    { id: 's1-3', title: 'カスタマーサクセス（オンボーディング担当） / SaaS提案経験者歓迎',           signalType: 'job_posting', source: '求人ボックス', sourceUrl: 'https://xn--pckua2a7gp15o89zb.com/?q=' + encodeURIComponent('株式会社テクノリード カスタマーサクセス'),  publishedAt: '2026-04-12', departmentType: 'cs_success' },
+    { id: 's1-4', title: 'バックエンドエンジニア / マイクロサービス基盤刷新',                          signalType: 'job_posting', source: '求人ボックス', sourceUrl: 'https://xn--pckua2a7gp15o89zb.com/?q=' + encodeURIComponent('株式会社テクノリード バックエンドエンジニア'), publishedAt: '2026-04-09', departmentType: 'it_engineer' },
+    { id: 's1-5', title: 'SRE/プラットフォームエンジニア / Kubernetes・Terraform',                    signalType: 'job_posting', source: '求人ボックス', sourceUrl: 'https://xn--pckua2a7gp15o89zb.com/?q=' + encodeURIComponent('株式会社テクノリード SRE'),                publishedAt: '2026-04-05', departmentType: 'it_engineer' },
+  ],
+  'd2': [
+    { id: 's2-1', title: 'DXコンサルタント / 製造業向け / 大手案件リーダー候補',  signalType: 'job_posting', source: '求人ボックス', sourceUrl: 'https://xn--pckua2a7gp15o89zb.com/?q=' + encodeURIComponent('株式会社イノベーション DXコンサルタント'),  publishedAt: '2026-04-25', departmentType: 'it_dx' },
+    { id: 's2-2', title: 'プロダクトマネージャー / 自社SaaSプロダクト / 拡大フェーズ', signalType: 'job_posting', source: '求人ボックス', sourceUrl: 'https://xn--pckua2a7gp15o89zb.com/?q=' + encodeURIComponent('株式会社イノベーション プロダクトマネージャー'),  publishedAt: '2026-04-10', departmentType: 'pdm' },
+  ],
+  'd3': [
+    { id: 's3-1', title: '物流オペレーションマネージャー / 倉庫DX推進',  signalType: 'job_posting', source: '求人ボックス', sourceUrl: 'https://xn--pckua2a7gp15o89zb.com/?q=' + encodeURIComponent('合同会社フューチャー 物流オペレーション'), publishedAt: '2026-04-20', departmentType: 'operations' },
+    { id: 's3-2', title: 'システムエンジニア / 在庫管理SaaS連携',          signalType: 'job_posting', source: '求人ボックス', sourceUrl: 'https://xn--pckua2a7gp15o89zb.com/?q=' + encodeURIComponent('合同会社フューチャー システムエンジニア'), publishedAt: '2026-03-30', departmentType: 'engineering' },
+  ],
+  'd4': [
+    { id: 's4-1', title: '採用コンサルタント（SMB領域） / RPO経験者歓迎',  signalType: 'job_posting', source: '求人ボックス', sourceUrl: 'https://xn--pckua2a7gp15o89zb.com/?q=' + encodeURIComponent('株式会社グロース 採用コンサルタント'), publishedAt: '2026-04-24', departmentType: 'hr_recruit' },
+    { id: 's4-2', title: 'フィールドセールス / HR Tech / 中堅企業担当',     signalType: 'job_posting', source: '求人ボックス', sourceUrl: 'https://xn--pckua2a7gp15o89zb.com/?q=' + encodeURIComponent('株式会社グロース フィールドセールス'), publishedAt: '2026-04-15', departmentType: 'sales_fs' },
+  ],
+}
+
+// 25部門細分化ラベル（CompanyDetailClient と同じ）
+const DEAL_DEPT_LABELS: Record<string, string> = {
+  sales_is: '営業 IS', sales_fs: '営業 FS', sales_ae: '営業 AE', sales_bdr: '営業 BDR',
+  sales_legal: '営業 法人/エンプラ', sales: '営業',
+  it_corp: 'IT コーポレート', it_engineer: 'IT エンジニア', it_security: 'IT セキュリティ',
+  it_dx: 'IT DX', it_data: 'IT データ', it_dev: 'IT 開発', it: 'IT',
+  hr_recruit: '人事 採用', hr_lnd: '人事 教育研修', hr_labor: '人事 労務',
+  hr_planning: '人事 企画', hr: '人事',
+  fin_acct: '経理', fin_treasury: '財務', fin_audit: '監査', fin_tax: '税務', finance: '財務全般',
+  mkt_digital: 'マーケ デジタル', mkt_pr: '広報', mkt_brand: 'ブランド', marketing: 'マーケ',
+  cs_success: 'CS Success', cs_support: 'CS Support', pdm: 'PdM', cs: 'CS',
+  legal: '法務', management: '経営', rd: 'R&D', operations: '運用', engineering: '技術', other: 'その他',
+}
+function dealDeptLabel(t: string | null | undefined): string {
+  if (!t) return '—'
+  return DEAL_DEPT_LABELS[t] ?? t
+}
+
+// ─── 提案内容（取引で提案中のサービス・契約条件） ─────────────────────
+type ProposalPaymentCycle = '月額' | '年額一括' | '半年一括' | '一括買い切り'
+
+interface ProposalContent {
+  service: string             // 提案サービス・プラン名
+  amount: number              // 提案金額（税抜）
+  paymentCycle: ProposalPaymentCycle
+  contractMonths: number      // 契約期間（月）
+  licenseCount: number | null // ライセンス数（null=該当なし）
+  startAt: string | null      // 開始予定日 (ISO)
+  initialFee: number | null   // 初期費用 (null=なし)
+  notes: string               // 提案メモ
+}
+
+const DEAL_PROPOSALS: Record<string, ProposalContent> = {
+  'd1': {
+    service: 'BGM Front Office Pro / Slack連携アドオン',
+    amount: 4800000,
+    paymentCycle: '年額一括',
+    contractMonths: 12,
+    licenseCount: 30,
+    startAt: '2026-04-01',
+    initialFee: 300000,
+    notes: 'Slack連携+AI議事録要約をフルで含む構成。CTO同席デモ後に最終調整予定。',
+  },
+  'd2': {
+    service: 'BGM Front Office Enterprise',
+    amount: 6000000,
+    paymentCycle: '年額一括',
+    contractMonths: 24,
+    licenseCount: 80,
+    startAt: '2026-04-15',
+    initialFee: 500000,
+    notes: '24ヶ月契約で20%値引き適用済み。契約書ドラフトを法務レビュー中。',
+  },
+  'd3': {
+    service: 'BGM Front Office Standard',
+    amount: 2400000,
+    paymentCycle: '月額',
+    contractMonths: 12,
+    licenseCount: 15,
+    startAt: '2026-05-01',
+    initialFee: null,
+    notes: '初期費用なし・月額固定で提案。決裁者特定後に再見積り想定。',
+  },
+  'd4': {
+    service: 'BGM Front Office Lite (HR導入特化)',
+    amount: 900000,
+    paymentCycle: '月額',
+    contractMonths: 6,
+    licenseCount: 10,
+    startAt: '2026-06-01',
+    initialFee: 100000,
+    notes: '小規模スタートで6ヶ月運用→拡張提案を想定。',
+  },
+}
+
+const PAYMENT_CYCLE_TONE: Record<ProposalPaymentCycle, { bg: string; color: string }> = {
+  '月額':       { bg: 'rgba(126,198,255,0.14)', color: 'var(--color-obs-low)' },
+  '年額一括':   { bg: 'rgba(171,199,255,0.14)', color: 'var(--color-obs-primary)' },
+  '半年一括':   { bg: 'rgba(255,184,107,0.14)', color: 'var(--color-obs-middle)' },
+  '一括買い切り': { bg: 'rgba(255,107,107,0.14)', color: 'var(--color-obs-hot)' },
+}
+
 const DEAL_CONTACTS: Record<string, ISContact[]> = {
   'd1': [
     { id: '1', name: '田中 誠',   title: '営業部長', status: 'アポ獲得', callAttempts: 3, isDecisionMaker: false },
     { id: '9', name: '鈴木 一郎', title: 'CTO',      status: '未着手',   callAttempts: 0, isDecisionMaker: true  },
   ],
   'd2': [
-    { id: '3', name: '佐々木 拓也', title: '代表取締役', status: 'Next Action', callAttempts: 2, isDecisionMaker: true },
+    { id: '3', name: '佐々木 拓也', title: '代表取締役', status: '接続済み', callAttempts: 2, isDecisionMaker: true },
   ],
   'd3': [
     { id: '2', name: '山本 佳子', title: 'マネージャー', status: '接続済み', callAttempts: 5, isDecisionMaker: false },
@@ -634,37 +824,8 @@ const MOCK_MEETINGS: Record<string, MeetingRecord[]> = {
   ],
 }
 
-// ─── 議事録 集約サマリー（過去の流れ / 現在） ─────────────────────────────
-const MOCK_AGGREGATIONS: Record<string, MeetingAggregation> = {
-  'd1': {
-    history:
-      '2/3 初回ヒアリングで属人化の課題を共有 → 2/20 CTO鈴木氏が初登場し技術要件を深掘り、Slack連携と予算500万円で合意 → 3/15 最終交渉で技術的懸念の解消が確認され、導入時期とサポート体制まで具体化。',
-    current:
-      '最終見積を社内稟議にかけ、4/1回答予定の段階。決裁者CTOの温度感は明確に前向き。残件は4/25の最終デモと役員稟議のみ。',
-  },
-  'd2': {
-    history:
-      '2/10 代表者との初回アプローチで契約管理の課題と600万円予算を確認 → 3/10 代表直商談で当社決定の方針を口頭表明 → 4/5 法務同席で契約書・押印スケジュールを確定。',
-    current:
-      '契約書ドラフトの法務レビューが進行中(4/15完了予定)。4/25 にクラウドサインで押印、5月第1週キックオフの流れで動いており、受注はほぼ確実。',
-  },
-  'd3': {
-    history:
-      '2/18 短時間コールで課題感を確認 → 3/5 初回ヒアリングで予算200〜300万円想定とZoho比較中の状況把握 → 4/2 上長同席で要件整理、SLAアラートへの高い関心が判明。',
-    current:
-      '上長が決裁者候補として浮上し、意思決定プロセスが具体化しつつある段階。5月上旬にZoho比較表を提示することで次フェーズへ進む見込み。',
-  },
-  'd4': {
-    history:
-      '2/10 資料請求コールで購買担当の役割と人事部長決裁の構造を把握 → 2/28 初回商談で100万円予算と優先度の課題を共有 → 3/22 費用感すり合わせで機能絞り込み方針を協議。',
-    current:
-      '予算制約が明確になり、候補者管理機能に絞った提案で再アプローチが必要。人事部長の巻き込みタイミングを4月後半に設定、現状の受注確度は低め。',
-  },
-}
-
 const MOCK_STAGE_HISTORY: StageHistoryItem[] = [
   { stage: 'IS',               date: '2026-01-15', daysAgo: 67, isCurrent: false },
-  { stage: 'NURTURING',        date: '2026-01-22', daysAgo: 60, isCurrent: false },
   { stage: 'MEETING_PLANNED',  date: '2026-02-03', daysAgo: 48, isCurrent: false },
   { stage: 'MEETING_DONE',     date: '2026-02-20', daysAgo: 31, isCurrent: false },
   { stage: 'PROJECT_PLANNED',  date: '2026-03-05', daysAgo: 18, isCurrent: false },
@@ -693,7 +854,7 @@ interface DealTaskTypeStyle {
   iconColor: string
 }
 
-const DEAL_TASK_TYPE_STYLES: Record<DealTaskType, DealTaskTypeStyle> = {
+export const DEAL_TASK_TYPE_STYLES: Record<DealTaskType, DealTaskTypeStyle> = {
   call:     { Icon: Phone,        label: 'コール',   bg: 'rgba(126,198,255,0.14)', iconColor: 'var(--color-obs-low)' },
   email:    { Icon: Mail,         label: 'メール',   bg: 'rgba(171,199,255,0.14)', iconColor: 'var(--color-obs-primary)' },
   meeting:  { Icon: Briefcase,    label: '商談',     bg: 'rgba(74,217,138,0.14)',  iconColor: '#4ad98a' },
@@ -757,7 +918,6 @@ const CHIP_TONE_STYLE: Record<ChipTone, React.CSSProperties> = {
 // ステージごとの chip（Obsidian 準拠）— 色は tone で吸収
 const STAGE_CONFIG: Record<DealStage, { label: string; tone: 'primary' | 'hot' | 'middle' | 'low' | 'neutral' }> = {
   IS:              { label: 'IS',             tone: 'low'     },
-  NURTURING:       { label: 'ナーチャリング', tone: 'primary' },
   MEETING_PLANNED: { label: '商談予定',       tone: 'low'     },
   MEETING_DONE:    { label: '商談済み',       tone: 'primary' },
   PROJECT_PLANNED: { label: 'PJ化予定あり',   tone: 'primary' },
@@ -771,7 +931,7 @@ const STAGE_CONFIG: Record<DealStage, { label: string; tone: 'primary' | 'hot' |
 
 // 取引パイプラインの全ステージ順序（前進/後退の判定にも使用）— pipeline と同じ並び
 const ALL_STAGES: DealStage[] = [
-  'IS', 'NURTURING', 'MEETING_PLANNED', 'MEETING_DONE',
+  'IS', 'MEETING_PLANNED', 'MEETING_DONE',
   'PROJECT_PLANNED', 'MULTI_MEETING', 'POC',
   'CLOSED_WON', 'LOST_DEAL', 'CHURN', 'LOST',
 ]
@@ -806,7 +966,7 @@ const IS_STATUS_TONE: Record<ISContactStatus, { bg: string; color: string; dot: 
   '接続済み':    { bg: 'rgba(126,198,255,0.14)', color: 'var(--color-obs-low)',        dot: 'var(--color-obs-low)'     },
   'コール不可':  { bg: 'rgba(255,107,107,0.14)', color: 'var(--color-obs-hot)',        dot: 'var(--color-obs-hot)'     },
   'アポ獲得':    { bg: 'rgba(126,198,255,0.18)', color: '#7ec6ff',                     dot: 'var(--color-obs-low)'     },
-  'Next Action': { bg: 'rgba(171,199,255,0.14)', color: 'var(--color-obs-primary)',    dot: 'var(--color-obs-primary)' },
+  'その他':      { bg: 'rgba(143,140,144,0.14)', color: 'var(--color-obs-text-muted)', dot: 'var(--color-obs-text-muted)' },
 }
 
 const ACTIVITY_ICON: Record<ActivityType, { icon: React.ElementType; color: string; bg: string }> = {
@@ -901,15 +1061,6 @@ function ParticipantsList({ participants }: { participants: Participant[] }) {
   )
 }
 
-function InfoRow({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex items-center justify-between py-3" style={OBS_ROW_DIVIDER}>
-      <span className="text-[12px] font-medium w-28 shrink-0" style={{ color: 'var(--color-obs-text-subtle)' }}>{label}</span>
-      <div className="flex-1 text-right text-[13px]" style={{ color: 'var(--color-obs-text)' }}>{children}</div>
-    </div>
-  )
-}
-
 // カードヘッダ
 function CardHeader({ icon: Icon, title, right, iconTint = 'primary' }: {
   icon: React.ElementType
@@ -959,7 +1110,7 @@ function formatTimestamp(ts: string): string {
 // Deal Task Modal
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function DealTaskModal({ task, onClose, onSave }: {
+export function DealTaskModal({ task, onClose, onSave }: {
   task: DealTask | null
   onClose: () => void
   onSave: (t: DealTask) => void
@@ -1147,13 +1298,9 @@ function DealTaskModal({ task, onClose, onSave }: {
 // Main Page
 // ═══════════════════════════════════════════════════════════════════════════════
 
-type TabType = 'all' | 'call' | 'email' | 'note'
-
 export default function DealDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params)
   const router = useRouter()
-  const { startCall } = useCallStore()
-  const [activeTab, setActiveTab] = useState<TabType>('all')
 
   const rawDeal = (MOCK_DEALS[id] ?? MOCK_DEALS['d1'])!
 
@@ -1174,6 +1321,37 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
   // タスクの state
   const [tasks, setTasks] = useState<DealTask[]>(INITIAL_DEAL_TASKS[id] ?? [])
   const [taskModal, setTaskModal] = useState<DealTask | null | 'new'>(null)
+
+  // チケットの state
+  const [tickets, setTickets] = useState<TicketListItem[]>([])
+  const [ticketsLoading, setTicketsLoading] = useState(true)
+  const [showCreateTicket, setShowCreateTicket] = useState(false)
+
+  useEffect(() => {
+    let aborted = false
+    setTicketsLoading(true)
+    fetch(`/api/tickets?dealId=${encodeURIComponent(id)}`, { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : { tickets: [] }))
+      .then((j: { tickets: TicketListItem[] }) => {
+        if (!aborted) setTickets(j.tickets ?? [])
+      })
+      .catch(() => {
+        if (!aborted) setTickets([])
+      })
+      .finally(() => {
+        if (!aborted) setTicketsLoading(false)
+      })
+    return () => {
+      aborted = true
+    }
+  }, [id])
+
+  function reloadTickets() {
+    fetch(`/api/tickets?dealId=${encodeURIComponent(id)}`, { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : { tickets: [] }))
+      .then((j: { tickets: TicketListItem[] }) => setTickets(j.tickets ?? []))
+      .catch(() => {})
+  }
 
   // ステージ履歴の state（編集可能）
   const [stageHistory, setStageHistory] = useState<StageHistoryItem[]>(MOCK_STAGE_HISTORY)
@@ -1204,18 +1382,12 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
     setTasks(prev => prev.map(t => t.id === id ? { ...t, done: !t.done } : t))
   }
 
-  const filteredActivities = activeTab === 'all'
-    ? MOCK_ACTIVITIES
-    : MOCK_ACTIVITIES.filter(a => a.type === activeTab)
-
-  const probPct = deal.probability
-
   // 取引に紐づく IS / 営業 / プロダクト フィールド / 議事録 / 集約
+  // (フェーズ1はモック。id に紐づくデータが無い場合は d1 のダミーで埋める)
   const isFields = MOCK_IS_FIELDS[id] ?? MOCK_IS_FIELDS['d1']!
   const salesFields = MOCK_SALES_FIELDS[id] ?? MOCK_SALES_FIELDS['d1']!
   const productFields = MOCK_PRODUCT_FIELDS[id] ?? MOCK_PRODUCT_FIELDS['d1']!
-  const meetings = MOCK_MEETINGS[id] ?? []
-  const aggregation = MOCK_AGGREGATIONS[id] ?? null
+  const meetings = MOCK_MEETINGS[id] ?? MOCK_MEETINGS['d1'] ?? []
 
   // 議事録タブ: デフォルト最新
   const [activeMeetingId, setActiveMeetingId] = useState<string | null>(
@@ -1273,26 +1445,6 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
               </div>
             </div>
 
-            <motion.button
-              whileHover={{ filter: 'brightness(1.06)' }}
-              whileTap={{ scale: 0.97 }}
-              transition={{ duration: 0.1 }}
-              onClick={() => startCall({
-                contactId: deal.contactId,
-                contactName: deal.contact,
-                company: deal.company,
-                phone: deal.contactPhone,
-              })}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-[var(--radius-obs-md)] text-[13px] font-semibold shrink-0"
-              style={{
-                background: 'var(--color-obs-primary-container)',
-                color: 'var(--color-obs-on-primary)',
-                boxShadow: '0 8px 24px rgba(0,113,227,0.20)',
-              }}
-            >
-              <Phone size={13} strokeWidth={2.4} />
-              コールする
-            </motion.button>
           </div>
         </div>
 
@@ -1302,83 +1454,147 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
           {/* ── Main Column ── */}
           <div className="flex flex-col gap-6 min-w-0">
 
-            {/* ─── 基本情報 ─────────────────────────────────────────── */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-              className="rounded-[var(--radius-obs-xl)] overflow-hidden"
-              style={OBS_CARD_STYLE}
-            >
-              <CardHeader icon={Target} title="基本情報" iconTint="primary" />
-              <div className="px-5">
-                <InfoRow label="会社">
-                  <span
-                    className="cursor-pointer transition-colors hover:text-[var(--color-obs-primary)]"
-                    onClick={() => router.push(`/companies/${deal.companyId}`)}
-                  >
-                    <Building2 size={11} className="inline mr-1" style={{ color: 'var(--color-obs-text-muted)' }} />
-                    {deal.company}
-                  </span>
-                </InfoRow>
-                <InfoRow label="担当者">
-                  <span
-                    className="cursor-pointer transition-colors hover:text-[var(--color-obs-primary)]"
-                    onClick={() => router.push(`/contacts/${deal.contactId}`)}
-                  >
-                    <User size={11} className="inline mr-1" style={{ color: 'var(--color-obs-text-muted)' }} />
-                    {deal.contact}
-                  </span>
-                </InfoRow>
-                <InfoRow label="担当営業">
-                  <span className="flex items-center justify-end gap-1.5">
-                    <div
-                      className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-semibold shrink-0"
-                      style={{
-                        background: 'linear-gradient(135deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
-                        color: 'var(--color-obs-on-primary)',
-                      }}
-                    >
-                      {deal.owner[0]}
-                    </div>
-                    {deal.owner}
-                  </span>
-                </InfoRow>
-                <InfoRow label="金額">
-                  <span className="font-semibold">¥{deal.amount.toLocaleString()}</span>
-                </InfoRow>
-                <InfoRow label="確度">
-                  <div className="flex items-center justify-end gap-2">
-                    <div
-                      className="w-20 h-1.5 rounded-full overflow-hidden"
-                      style={{ background: 'var(--color-obs-surface-lowest)' }}
-                    >
-                      <motion.div
-                        className="h-full rounded-full"
-                        style={{
-                          background: 'linear-gradient(135deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
-                        }}
-                        initial={{ width: 0 }}
-                        animate={{ width: `${probPct}%` }}
-                        transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                      />
-                    </div>
-                    <span className="font-semibold tabular-nums">{deal.probability}%</span>
+            {/* ─── リサーチ（左メインカラムへ移動） ─────────────────── */}
+            <ResearchChatPanel entityType="deal" entityId={id} />
+
+            {/* ─── インテント（部門別の採用動向） ───────────────────── */}
+            {(() => {
+              const intents = DEAL_INTENTS[id] ?? []
+              if (intents.length === 0) return null
+              return (
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.01, ease: [0.16, 1, 0.3, 1] }}
+                  className="rounded-[var(--radius-obs-xl)] overflow-hidden"
+                  style={OBS_CARD_STYLE}
+                >
+                  <CardHeader
+                    icon={Activity}
+                    title="インテント"
+                    iconTint="hot"
+                    right={
+                      <span className="text-[11px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                        部門別の採用動向
+                      </span>
+                    }
+                  />
+                  <div className="px-5 py-3 flex flex-col gap-2">
+                    {intents.map((it, i) => {
+                      const tone =
+                        it.intentLevel === 'HOT'
+                          ? { bg: 'rgba(255,107,107,0.12)', color: 'var(--color-obs-hot)' }
+                          : it.intentLevel === 'MIDDLE'
+                            ? { bg: 'rgba(255,184,107,0.12)', color: 'var(--color-obs-middle)' }
+                            : { bg: 'rgba(126,198,255,0.12)', color: 'var(--color-obs-low)' }
+                      return (
+                        <div key={i} className="flex items-center gap-3 py-1.5">
+                          <span
+                            className="inline-flex items-center justify-center px-2 h-5 rounded-full text-[10px] font-bold tracking-wide tabular-nums shrink-0"
+                            style={{ backgroundColor: tone.bg, color: tone.color, minWidth: 50 }}
+                          >
+                            {it.intentLevel}
+                          </span>
+                          <span className="text-[13px] flex-1" style={{ color: 'var(--color-obs-text)' }}>
+                            {dealDeptLabel(it.departmentType)}
+                          </span>
+                          <span className="text-[11.5px] tabular-nums" style={{ color: 'var(--color-obs-text-muted)' }}>
+                            {it.signalCount}シグナル
+                          </span>
+                          <span className="text-[11.5px] tabular-nums shrink-0" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                            {formatDate(it.latestSignalAt)}
+                          </span>
+                        </div>
+                      )
+                    })}
                   </div>
-                </InfoRow>
-                <InfoRow label="想定クローズ">
-                  <span className="flex items-center justify-end gap-1">
-                    <Calendar size={11} style={{ color: 'var(--color-obs-text-muted)' }} />
-                    {formatDate(deal.expectedCloseAt)}
-                  </span>
-                </InfoRow>
-                <InfoRow label="ステータス">
-                  <div className="flex justify-end">
-                    <StatusBadge status={deal.status} />
+                </motion.div>
+              )
+            })()}
+
+            {/* ─── 採用シグナル履歴 ─────────────────────────────────── */}
+            {(() => {
+              const signals = DEAL_INTENT_SIGNALS[id] ?? []
+              if (signals.length === 0) return null
+              return (
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.015, ease: [0.16, 1, 0.3, 1] }}
+                  className="rounded-[var(--radius-obs-xl)] overflow-hidden"
+                  style={OBS_CARD_STYLE}
+                >
+                  <CardHeader
+                    icon={History}
+                    title="採用シグナル履歴"
+                    iconTint="middle"
+                    right={
+                      <span className="text-[11px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                        最新 {signals.length}件
+                      </span>
+                    }
+                  />
+                  <div className="px-5 py-2 flex flex-col">
+                    {signals.map((s) => {
+                      const hasUrl = !!s.sourceUrl && /^https?:\/\//i.test(s.sourceUrl)
+                      const Wrapper = hasUrl ? 'a' : 'div'
+                      const wrapperProps = hasUrl
+                        ? { href: s.sourceUrl, target: '_blank' as const, rel: 'noopener noreferrer' }
+                        : {}
+                      return (
+                        <Wrapper
+                          key={s.id}
+                          {...wrapperProps}
+                          className={`group flex items-center gap-3 px-2 py-2.5 rounded-[8px] transition-colors duration-150 ${
+                            hasUrl ? 'cursor-pointer' : ''
+                          }`}
+                          onMouseOver={(e) => {
+                            if (hasUrl)
+                              (e.currentTarget as HTMLElement).style.backgroundColor =
+                                'var(--color-obs-surface-highest)'
+                          }}
+                          onMouseOut={(e) => {
+                            ;(e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'
+                          }}
+                          title={hasUrl ? `${s.sourceUrl} を新しいタブで開く` : 'リンク情報なし'}
+                        >
+                          <span
+                            className="inline-flex items-center px-1.5 h-5 rounded-full text-[10px] font-medium shrink-0"
+                            style={{
+                              backgroundColor: 'var(--color-obs-surface-highest)',
+                              color: 'var(--color-obs-text-muted)',
+                            }}
+                          >
+                            {s.signalType}
+                          </span>
+                          <span
+                            className="flex-1 text-sm truncate"
+                            style={{
+                              color: hasUrl ? 'var(--color-obs-text)' : 'var(--color-obs-text-muted)',
+                            }}
+                          >
+                            {s.title}
+                          </span>
+                          {hasUrl && (
+                            <ExternalLink
+                              size={11}
+                              className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                              style={{ color: 'var(--color-obs-primary)' }}
+                            />
+                          )}
+                          <span className="text-xs shrink-0 whitespace-nowrap" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                            {dealDeptLabel(s.departmentType)}
+                          </span>
+                          <span className="text-xs shrink-0 tabular-nums whitespace-nowrap" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                            {formatDate(s.publishedAt)}
+                          </span>
+                        </Wrapper>
+                      )
+                    })}
                   </div>
-                </InfoRow>
-              </div>
-            </motion.div>
+                </motion.div>
+              )
+            })()}
 
             {/* ─── ISフィールド（電話・メールから自動抽出） ─────────────── */}
             <motion.div
@@ -1651,63 +1867,6 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
                 }
               />
 
-              {/* 集約サマリー（最上部に常時表示、コンパクト） */}
-              {aggregation && (
-                <div
-                  className="p-4"
-                  style={{
-                    background: 'var(--color-obs-surface-low)',
-                    ...OBS_ROW_DIVIDER,
-                  }}
-                >
-                  <div className="flex items-center gap-2 mb-3">
-                    <Layers size={12} style={{ color: 'var(--color-obs-primary)' }} />
-                    <h4
-                      className="text-[11px] font-bold uppercase tracking-[0.08em]"
-                      style={{ color: 'var(--color-obs-primary)' }}
-                    >
-                      集約サマリー
-                    </h4>
-                    <span
-                      className="text-[10px]"
-                      style={{ color: 'var(--color-obs-text-subtle)' }}
-                    >
-                      (全{meetings.length}件を横串整理)
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-                    {/* 過去の流れ */}
-                    <div
-                      className="p-3 rounded-[var(--radius-obs-md)]"
-                      style={{ background: 'var(--color-obs-surface-lowest)' }}
-                    >
-                      <p className="text-[10px] font-bold uppercase tracking-[0.08em] mb-1.5 flex items-center gap-1.5" style={{ color: 'var(--color-obs-text-subtle)' }}>
-                        <History size={10} style={{ color: 'var(--color-obs-middle)' }} />
-                        過去の流れ
-                      </p>
-                      <p className="text-[12px] leading-relaxed" style={{ color: 'var(--color-obs-text)' }}>
-                        {aggregation.history}
-                      </p>
-                    </div>
-
-                    {/* 現在 */}
-                    <div
-                      className="p-3 rounded-[var(--radius-obs-md)]"
-                      style={{ background: 'rgba(171,199,255,0.06)' }}
-                    >
-                      <p className="text-[10px] font-bold uppercase tracking-[0.08em] mb-1.5 flex items-center gap-1.5" style={{ color: 'var(--color-obs-primary)' }}>
-                        <Flame size={10} style={{ color: 'var(--color-obs-primary)' }} />
-                        現在
-                      </p>
-                      <p className="text-[12px] leading-relaxed" style={{ color: 'var(--color-obs-text)' }}>
-                        {aggregation.current}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
               {/* 議事録: タブ切替 */}
               {meetings.length === 0 ? (
                 <div className="px-5 py-8 text-center">
@@ -1777,9 +1936,20 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
                           {/* Title area */}
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <h4 className="text-[13.5px] font-semibold tracking-[-0.01em]" style={{ color: 'var(--color-obs-text)' }}>
-                                {activeMeeting.sequence}回目 — {activeMeeting.title}
-                              </h4>
+                              <Link
+                                href={`/meetings?id=${activeMeeting.id}`}
+                                className="group inline-flex items-center gap-1.5 hover:text-[var(--color-obs-primary)] transition-colors"
+                                style={{ color: 'var(--color-obs-text)' }}
+                                title="元の議事録ページを開く"
+                              >
+                                <h4 className="text-[13.5px] font-semibold tracking-[-0.01em] group-hover:underline" style={{ color: 'inherit' }}>
+                                  {activeMeeting.sequence}回目 — {activeMeeting.title}
+                                </h4>
+                                <ExternalLink
+                                  size={11}
+                                  className="opacity-40 group-hover:opacity-100 transition-opacity shrink-0"
+                                />
+                              </Link>
                               <span className="text-[11px] tabular-nums" style={{ color: 'var(--color-obs-text-muted)' }}>
                                 {formatDate(activeMeeting.date)}
                               </span>
@@ -1928,7 +2098,7 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
               </motion.div>
             )}
 
-            {/* ─── Activity Timeline ──────────────────────────── */}
+            {/* ─── Activity Timeline (コンタクト詳細と同じ仕様: コール/メール/会議/議事録 を内包) ─── */}
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
@@ -1936,127 +2106,17 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
               className="rounded-[var(--radius-obs-xl)] overflow-hidden"
               style={OBS_CARD_STYLE}
             >
-              <div className="flex items-center gap-0 px-5" style={OBS_CARD_DIVIDER}>
+              <div className="flex items-center gap-2 px-5 py-4" style={OBS_CARD_DIVIDER}>
                 <Activity size={14} style={{ color: 'var(--color-obs-primary)' }} />
-                <h3 className="text-[13px] font-semibold ml-2 mr-4 tracking-[-0.01em]" style={{ color: 'var(--color-obs-text)' }}>
+                <h3 className="text-[13px] font-semibold tracking-[-0.01em]" style={{ color: 'var(--color-obs-text)' }}>
                   アクティビティ
                 </h3>
-                {([
-                  { key: 'all', label: '全件' },
-                  { key: 'call', label: 'コール' },
-                  { key: 'email', label: 'メール' },
-                  { key: 'note', label: 'ノート' },
-                ] as { key: TabType; label: string }[]).map(tab => (
-                  <button
-                    key={tab.key}
-                    onClick={() => setActiveTab(tab.key)}
-                    className="relative px-3 py-3 text-[13px] font-medium transition-colors duration-100"
-                    style={{ color: activeTab === tab.key ? 'var(--color-obs-primary)' : 'var(--color-obs-text-muted)' }}
-                  >
-                    {tab.label}
-                    {activeTab === tab.key && (
-                      <motion.div
-                        layoutId="deal-tab-indicator"
-                        className="absolute bottom-0 left-0 right-0 h-[2px] rounded-full"
-                        style={{ background: 'var(--color-obs-primary)' }}
-                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                      />
-                    )}
-                  </button>
-                ))}
-              </div>
-
-              <div className="p-5">
-                {filteredActivities.length === 0 ? (
-                  <p className="text-center text-[13px] py-6" style={{ color: 'var(--color-obs-text-muted)' }}>
-                    活動記録がありません
-                  </p>
-                ) : (
-                  <motion.div
-                    className="relative"
-                    initial="hidden"
-                    animate="visible"
-                    variants={{ visible: { transition: { staggerChildren: 0.05 } } }}
-                  >
-                    <div
-                      className="absolute left-[14px] top-4 bottom-4 w-px"
-                      style={{ background: 'var(--color-obs-outline-variant)', opacity: 0.5 }}
-                    />
-
-                    <div className="space-y-4">
-                      {filteredActivities.map((activity) => {
-                        const cfg = ACTIVITY_ICON[activity.type]
-                        const Icon = cfg.icon
-                        return (
-                          <motion.div
-                            key={activity.id}
-                            variants={{
-                              hidden: { opacity: 0, x: -8 },
-                              visible: { opacity: 1, x: 0, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } },
-                            }}
-                            className="flex gap-3 pl-1"
-                          >
-                            <div
-                              className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 relative z-10"
-                              style={{ background: cfg.bg }}
-                            >
-                              <Icon size={13} style={{ color: cfg.color }} />
-                            </div>
-
-                            <div className="flex-1 min-w-0 pt-0.5">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-[13px] font-medium tracking-[-0.01em]" style={{ color: 'var(--color-obs-text)' }}>
-                                  {activity.title}
-                                </span>
-                                {activity.result && (
-                                  <span
-                                    className="text-[10px] font-semibold px-1.5 py-0.5 rounded-[4px]"
-                                    style={{ background: 'rgba(171,199,255,0.10)', color: 'var(--color-obs-primary)' }}
-                                  >
-                                    {activity.result}
-                                  </span>
-                                )}
-                                {activity.durationSec !== undefined && activity.durationSec > 0 && (
-                                  <span className="flex items-center gap-0.5 text-[11px]" style={{ color: 'var(--color-obs-text-muted)' }}>
-                                    <Clock size={10} />
-                                    {formatDuration(activity.durationSec)}
-                                  </span>
-                                )}
-                              </div>
-                              {activity.description && (
-                                <p className="text-[12px] mt-0.5" style={{ color: 'var(--color-obs-text-muted)' }}>
-                                  {activity.description}
-                                </p>
-                              )}
-                              <p className="text-[11px] mt-1" style={{ color: 'var(--color-obs-text-subtle)' }}>
-                                {formatTimestamp(activity.timestamp)}
-                              </p>
-                            </div>
-                          </motion.div>
-                        )
-                      })}
-                    </div>
-                  </motion.div>
-                )}
-              </div>
-            </motion.div>
-
-            {/* ─── Google 連携タイムライン（メール/会議/議事録） ─── */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.22, ease: [0.16, 1, 0.3, 1] }}
-              className="rounded-[var(--radius-obs-xl)] overflow-hidden"
-              style={OBS_CARD_STYLE}
-            >
-              <div className="flex items-center gap-2 px-5 py-4" style={OBS_CARD_DIVIDER}>
-                <Mail size={14} style={{ color: 'var(--color-obs-primary)' }} />
-                <h3 className="text-[13px] font-semibold tracking-[-0.01em]" style={{ color: 'var(--color-obs-text)' }}>
-                  Gmail / Meet 履歴
-                </h3>
+                <p className="text-[11px] ml-1" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                  コール・メール・会議の履歴を時系列で表示
+                </p>
               </div>
               <div className="p-5">
-                <GoogleTimeline scope="deal" id={id} />
+                <ContactHistoryTimeline />
               </div>
             </motion.div>
           </div>
@@ -2076,27 +2136,16 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
                 icon={Flame}
                 title="進捗管理"
                 iconTint="middle"
-                right={
-                  <span
-                    className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-                    style={{
-                      background: 'rgba(171,199,255,0.10)',
-                      color: 'var(--color-obs-primary)',
-                    }}
-                  >
-                    パイプライン連動
-                  </span>
-                }
               />
 
               <div className="p-4 space-y-3.5">
                 {/* Status */}
                 <div>
                   <label
-                    className="text-[11px] font-bold uppercase tracking-[0.06em] mb-1.5 block"
+                    className="text-[11px] font-bold tracking-[0.06em] mb-1.5 block"
                     style={{ color: 'var(--color-obs-text-subtle)' }}
                   >
-                    ステータス
+                    進捗
                   </label>
                   <textarea
                     value={progressStatus}
@@ -2115,10 +2164,21 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
                 {/* Next Action */}
                 <div>
                   <label
-                    className="text-[11px] font-bold uppercase tracking-[0.06em] mb-1.5 flex items-center justify-between"
+                    className="text-[11px] font-bold tracking-[0.06em] mb-1.5 flex items-center justify-between"
                     style={{ color: 'var(--color-obs-text-subtle)' }}
                   >
-                    <span>Next Action</span>
+                    <span className="flex items-center gap-1.5">
+                      ネクストアクション
+                      <span
+                        className="text-[10px] font-semibold px-2 py-0.5 rounded-full tracking-normal"
+                        style={{
+                          background: 'rgba(171,199,255,0.10)',
+                          color: 'var(--color-obs-primary)',
+                        }}
+                      >
+                        タスク連動
+                      </span>
+                    </span>
                     <input
                       type="date"
                       value={nextActionDate ?? ''}
@@ -2313,11 +2373,106 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
               )}
             </motion.div>
 
+            {/* ─── チケット ──────────────────── */}
+            <motion.div
+              initial={{ opacity: 0, x: 12 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3, delay: 0.14, ease: [0.16, 1, 0.3, 1] }}
+              className="rounded-[var(--radius-obs-xl)] overflow-hidden"
+              style={OBS_CARD_STYLE}
+            >
+              <CardHeader
+                icon={LifeBuoy}
+                title="チケット"
+                iconTint="low"
+                right={
+                  <>
+                    <span
+                      className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold"
+                      style={{ background: 'rgba(126,198,255,0.14)', color: 'var(--color-obs-low)' }}
+                    >
+                      {tickets.length}
+                    </span>
+                    <button
+                      onClick={() => setShowCreateTicket(true)}
+                      className="inline-flex items-center gap-1 px-2.5 h-[26px] rounded-[7px] text-[10.5px] font-semibold transition-all hover:brightness-106"
+                      style={{
+                        background: 'var(--color-obs-primary-container)',
+                        color: 'var(--color-obs-on-primary)',
+                      }}
+                    >
+                      <Plus size={10} strokeWidth={2.4} />
+                      作成
+                    </button>
+                  </>
+                }
+              />
+
+              {ticketsLoading ? (
+                <div className="px-4 py-6 text-center">
+                  <p className="text-[11.5px]" style={{ color: 'var(--color-obs-text-muted)' }}>
+                    読み込み中...
+                  </p>
+                </div>
+              ) : tickets.length === 0 ? (
+                <div className="px-4 py-6 text-center">
+                  <p className="text-[11.5px]" style={{ color: 'var(--color-obs-text-muted)' }}>
+                    チケットはまだありません
+                  </p>
+                  <button
+                    onClick={() => setShowCreateTicket(true)}
+                    className="mt-2 inline-flex items-center gap-1 text-[10.5px] font-bold transition-colors hover:text-[var(--color-obs-text)]"
+                    style={{ color: 'var(--color-obs-primary)' }}
+                  >
+                    <Plus size={10} strokeWidth={2.5} />
+                    最初のチケットを作成
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  {tickets.map((t, i) => (
+                    <button
+                      key={t.id}
+                      onClick={() => router.push(`/tickets/${t.id}`)}
+                      className="w-full flex items-start gap-2 px-3.5 py-2.5 transition-colors hover:bg-[rgba(171,199,255,0.04)] text-left"
+                      style={i < tickets.length - 1 ? OBS_ROW_DIVIDER : undefined}
+                    >
+                      <span
+                        className="font-mono text-[10px] tabular-nums shrink-0 mt-[2px]"
+                        style={{ color: 'var(--color-obs-text-subtle)' }}
+                      >
+                        T-{String(t.ticketNumber).padStart(4, '0')}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p
+                          className="text-[12px] font-medium truncate"
+                          style={{ color: 'var(--color-obs-text)' }}
+                        >
+                          {t.subject}
+                        </p>
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <TicketStatusBadge status={t.status} />
+                          {t.assignee && (
+                            <span
+                              className="text-[10px] truncate"
+                              style={{ color: 'var(--color-obs-text-muted)' }}
+                            >
+                              · {t.assignee.name}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+
             {/* Stage History */}
             <motion.div
               initial={{ opacity: 0, x: 12 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.3, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
               className="rounded-[var(--radius-obs-xl)] overflow-hidden"
               style={OBS_CARD_STYLE}
             >
@@ -2350,7 +2505,6 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
                       className="w-full flex items-center gap-2.5 px-2 py-2 rounded-[7px] text-left transition-colors"
                       style={{
                         background: isCurrent ? 'rgba(171,199,255,0.06)' : 'transparent',
-                        boxShadow: isCurrent ? 'inset 2px 0 0 var(--color-obs-primary)' : undefined,
                         cursor: isCurrent ? 'default' : 'pointer',
                       }}
                       onMouseEnter={(e) => {
@@ -2363,20 +2517,16 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
                     >
                       {isCurrent ? (
                         <CheckCircle2 size={13} style={{ color: 'var(--color-obs-primary)' }} className="shrink-0" />
-                      ) : isPassed ? (
-                        <CheckCircle2 size={13} style={{ color: 'var(--color-obs-text-muted)' }} className="shrink-0" />
                       ) : (
                         <div className="w-[13px] h-[13px] rounded-full shrink-0" style={{ boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.20)' }} />
                       )}
                       <span
                         className="text-[12px] flex-1"
                         style={{
-                          fontWeight: isCurrent ? 600 : isPassed ? 500 : 400,
+                          fontWeight: isCurrent ? 600 : 400,
                           color: isCurrent
                             ? 'var(--color-obs-primary)'
-                            : isPassed
-                              ? 'var(--color-obs-text)'
-                              : 'var(--color-obs-text-subtle)',
+                            : 'var(--color-obs-text-subtle)',
                         }}
                       >
                         {cfg.label}
@@ -2396,6 +2546,429 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
                 })}
               </motion.div>
             </motion.div>
+
+            {/* 提案内容（サービス・契約条件） */}
+            {(() => {
+              const proposal = DEAL_PROPOSALS[id] ?? DEAL_PROPOSALS['d1']
+              if (!proposal) return null
+              const cycleTone = PAYMENT_CYCLE_TONE[proposal.paymentCycle]
+              const totalContractValue =
+                proposal.paymentCycle === '月額'
+                  ? proposal.amount * proposal.contractMonths
+                  : proposal.amount
+              return (
+                <motion.div
+                  initial={{ opacity: 0, x: 12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                  className="rounded-[var(--radius-obs-xl)] overflow-hidden"
+                  style={OBS_CARD_STYLE}
+                >
+                  <CardHeader
+                    icon={Briefcase}
+                    title="提案内容"
+                    iconTint="primary"
+                    right={
+                      <span
+                        className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9.5px] font-semibold"
+                        style={{ background: cycleTone.bg, color: cycleTone.color }}
+                      >
+                        {proposal.paymentCycle}
+                      </span>
+                    }
+                  />
+
+                  {/* サービス */}
+                  <div
+                    className="px-4 py-3"
+                    style={{ boxShadow: 'inset 0 -1px 0 rgba(109,106,111,0.10)' }}
+                  >
+                    <div
+                      className="text-[10px] font-semibold tracking-[0.06em] uppercase mb-1"
+                      style={{ color: 'var(--color-obs-text-subtle)' }}
+                    >
+                      提案サービス
+                    </div>
+                    <div
+                      className="text-[12.5px] font-semibold leading-snug"
+                      style={{ color: 'var(--color-obs-text)' }}
+                    >
+                      {proposal.service}
+                    </div>
+                  </div>
+
+                  {/* 金額サマリ */}
+                  <div
+                    className="px-4 py-3"
+                    style={{ boxShadow: 'inset 0 -1px 0 rgba(109,106,111,0.10)' }}
+                  >
+                    <div className="flex items-baseline justify-between mb-2">
+                      <span
+                        className="text-[10px] font-semibold tracking-[0.06em] uppercase"
+                        style={{ color: 'var(--color-obs-text-subtle)' }}
+                      >
+                        {proposal.paymentCycle === '月額' ? '月額' : '提案金額'}
+                      </span>
+                      <span
+                        className="text-[16px] font-bold tabular-nums"
+                        style={{ color: 'var(--color-obs-text)' }}
+                      >
+                        ¥{(proposal.amount / 1000000).toFixed(proposal.amount >= 10000000 ? 1 : 2)}M
+                      </span>
+                    </div>
+                    <div className="flex items-baseline justify-between text-[11px]">
+                      <span style={{ color: 'var(--color-obs-text-subtle)' }}>
+                        契約期間総額
+                      </span>
+                      <span className="tabular-nums font-medium" style={{ color: 'var(--color-obs-text)' }}>
+                        ¥{totalContractValue.toLocaleString()}
+                      </span>
+                    </div>
+                    {proposal.initialFee && (
+                      <div className="flex items-baseline justify-between text-[11px] mt-1">
+                        <span style={{ color: 'var(--color-obs-text-subtle)' }}>
+                          初期費用
+                        </span>
+                        <span className="tabular-nums" style={{ color: 'var(--color-obs-text-muted)' }}>
+                          ¥{proposal.initialFee.toLocaleString()}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 契約条件 */}
+                  <div
+                    className="px-4 py-3"
+                    style={{ boxShadow: proposal.notes ? 'inset 0 -1px 0 rgba(109,106,111,0.10)' : undefined }}
+                  >
+                    <div className="flex flex-col gap-1.5 text-[11.5px]">
+                      <div className="flex items-center gap-1.5">
+                        <Calendar size={9} style={{ color: 'var(--color-obs-text-subtle)' }} className="shrink-0" />
+                        <span className="w-16 shrink-0" style={{ color: 'var(--color-obs-text-subtle)' }}>契約期間</span>
+                        <span className="tabular-nums" style={{ color: 'var(--color-obs-text)' }}>
+                          {proposal.contractMonths}ヶ月
+                        </span>
+                      </div>
+                      {proposal.licenseCount !== null && (
+                        <div className="flex items-center gap-1.5">
+                          <Users size={9} style={{ color: 'var(--color-obs-text-subtle)' }} className="shrink-0" />
+                          <span className="w-16 shrink-0" style={{ color: 'var(--color-obs-text-subtle)' }}>ライセンス</span>
+                          <span className="tabular-nums" style={{ color: 'var(--color-obs-text)' }}>
+                            {proposal.licenseCount}名分
+                          </span>
+                        </div>
+                      )}
+                      {proposal.startAt && (
+                        <div className="flex items-center gap-1.5">
+                          <Zap size={9} style={{ color: 'var(--color-obs-text-subtle)' }} className="shrink-0" />
+                          <span className="w-16 shrink-0" style={{ color: 'var(--color-obs-text-subtle)' }}>開始予定</span>
+                          <span className="tabular-nums" style={{ color: 'var(--color-obs-text)' }}>
+                            {formatDate(proposal.startAt)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 提案メモ */}
+                  {proposal.notes && (
+                    <div className="px-4 py-3">
+                      <div className="flex items-start gap-1.5">
+                        <StickyNote size={10} style={{ color: 'var(--color-obs-text-subtle)' }} className="shrink-0 mt-0.5" />
+                        <p
+                          className="text-[11px] leading-relaxed"
+                          style={{ color: 'var(--color-obs-text-muted)' }}
+                        >
+                          {proposal.notes}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
+              )
+            })()}
+
+            {/* 紐付け情報（紐付け企業 + 担当コンタクト） */}
+            {(() => {
+              // deal は MOCK_DEALS[id] ?? MOCK_DEALS['d1'] でフォールバックしているため
+              // 紐付け企業・コンタクトも同様にフォールバックして整合させる
+              const linkedCompany = DEAL_LINKED_COMPANIES[id] ?? DEAL_LINKED_COMPANIES['d1']
+              const linkedContacts = DEAL_CONTACTS[id] ?? DEAL_CONTACTS['d1'] ?? []
+              const primaryContact =
+                linkedContacts.find((c) => c.id === deal.contactId) ?? linkedContacts[0]
+              const otherContacts = linkedContacts.filter((c) => c.id !== primaryContact?.id)
+              const websiteHost = linkedCompany?.websiteUrl
+                ?.replace(/^https?:\/\//, '')
+                .replace(/\/$/, '')
+              return (
+                <motion.div
+                  initial={{ opacity: 0, x: 12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, delay: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                  className="rounded-[var(--radius-obs-xl)] overflow-hidden"
+                  style={OBS_CARD_STYLE}
+                >
+                  <CardHeader icon={Layers} title="紐付け情報" iconTint="primary" />
+
+                  {/* 紐付け企業 */}
+                  <div
+                    className="px-4 py-3.5"
+                    style={{ boxShadow: 'inset 0 -1px 0 rgba(109,106,111,0.10)' }}
+                  >
+                    <div className="flex items-center gap-1.5 mb-2.5">
+                      <Building2 size={10} style={{ color: 'var(--color-obs-text-subtle)' }} />
+                      <span
+                        className="text-[10px] font-semibold tracking-[0.06em] uppercase"
+                        style={{ color: 'var(--color-obs-text-subtle)' }}
+                      >
+                        紐付け企業
+                      </span>
+                    </div>
+
+                    <button
+                      onClick={() => router.push(`/companies/${deal.companyId}`)}
+                      className="group flex items-center gap-2 mb-2.5 transition-colors w-full text-left"
+                    >
+                      <div
+                        className="w-7 h-7 rounded-[var(--radius-obs-md)] flex items-center justify-center shrink-0"
+                        style={{
+                          background:
+                            'linear-gradient(135deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
+                          color: 'var(--color-obs-on-primary)',
+                        }}
+                      >
+                        <Building2 size={12} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div
+                          className="text-[12px] font-semibold tracking-[-0.01em] truncate group-hover:text-[var(--color-obs-primary)] transition-colors"
+                          style={{ color: 'var(--color-obs-text)' }}
+                        >
+                          {deal.company}
+                        </div>
+                        {linkedCompany && (
+                          <div
+                            className="text-[10.5px] mt-0.5 truncate"
+                            style={{ color: 'var(--color-obs-text-muted)' }}
+                          >
+                            {linkedCompany.industry}
+                          </div>
+                        )}
+                      </div>
+                      <ExternalLink
+                        size={10}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                        style={{ color: 'var(--color-obs-primary)' }}
+                      />
+                    </button>
+
+                    {linkedCompany ? (
+                      <div className="flex flex-col gap-1.5 text-[11.5px]">
+                        <div className="flex items-center gap-1.5">
+                          <Users size={9} style={{ color: 'var(--color-obs-text-subtle)' }} className="shrink-0" />
+                          <span className="w-12 shrink-0" style={{ color: 'var(--color-obs-text-subtle)' }}>従業員</span>
+                          <span style={{ color: 'var(--color-obs-text)' }}>{linkedCompany.employees}</span>
+                        </div>
+                        {linkedCompany.representative && (
+                          <div className="flex items-center gap-1.5">
+                            <User size={9} style={{ color: 'var(--color-obs-text-subtle)' }} className="shrink-0" />
+                            <span className="w-12 shrink-0" style={{ color: 'var(--color-obs-text-subtle)' }}>代表</span>
+                            <span className="truncate" style={{ color: 'var(--color-obs-text)' }}>{linkedCompany.representative}</span>
+                          </div>
+                        )}
+                        <div className="flex items-start gap-1.5">
+                          <MapPin size={9} style={{ color: 'var(--color-obs-text-subtle)' }} className="shrink-0 mt-0.5" />
+                          <span className="w-12 shrink-0 mt-0.5" style={{ color: 'var(--color-obs-text-subtle)' }}>所在地</span>
+                          <span className="leading-snug min-w-0 flex-1" style={{ color: 'var(--color-obs-text)' }}>{linkedCompany.address}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Phone size={9} style={{ color: 'var(--color-obs-text-subtle)' }} className="shrink-0" />
+                          <span className="w-12 shrink-0" style={{ color: 'var(--color-obs-text-subtle)' }}>電話</span>
+                          <a
+                            href={`tel:${linkedCompany.phone}`}
+                            className="tabular-nums hover:text-[var(--color-obs-primary)] transition-colors truncate"
+                            style={{ color: 'var(--color-obs-text)' }}
+                          >
+                            {linkedCompany.phone}
+                          </a>
+                        </div>
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <Globe size={9} style={{ color: 'var(--color-obs-text-subtle)' }} className="shrink-0" />
+                          <span className="w-12 shrink-0" style={{ color: 'var(--color-obs-text-subtle)' }}>Web</span>
+                          <a
+                            href={linkedCompany.websiteUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:text-[var(--color-obs-primary)] transition-colors truncate min-w-0"
+                            style={{ color: 'var(--color-obs-text)' }}
+                          >
+                            {websiteHost}
+                          </a>
+                        </div>
+                      </div>
+                    ) : (
+                      <div
+                        className="text-[11.5px]"
+                        style={{ color: 'var(--color-obs-text-muted)' }}
+                      >
+                        企業詳細プロファイル未登録
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 担当コンタクト */}
+                  <div className="px-4 py-3.5">
+                    <div className="flex items-center gap-1.5 mb-2.5">
+                      <Users size={10} style={{ color: 'var(--color-obs-text-subtle)' }} />
+                      <span
+                        className="text-[10px] font-semibold tracking-[0.06em] uppercase"
+                        style={{ color: 'var(--color-obs-text-subtle)' }}
+                      >
+                        担当コンタクト
+                      </span>
+                      {linkedContacts.length > 0 && (
+                        <span
+                          className="ml-auto inline-flex items-center justify-center min-w-[16px] h-[16px] px-1.5 rounded-full text-[9.5px] font-bold"
+                          style={{
+                            background: 'rgba(171,199,255,0.12)',
+                            color: 'var(--color-obs-primary)',
+                          }}
+                        >
+                          {linkedContacts.length}
+                        </span>
+                      )}
+                    </div>
+
+                    <button
+                      onClick={() => router.push(`/contacts/${deal.contactId}`)}
+                      className="group flex items-center gap-2 w-full text-left mb-2"
+                    >
+                      <div
+                        className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold shrink-0"
+                        style={{
+                          background:
+                            'linear-gradient(135deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
+                          color: 'var(--color-obs-on-primary)',
+                        }}
+                      >
+                        {deal.contact[0]}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1 flex-wrap">
+                          <span
+                            className="text-[12px] font-semibold tracking-[-0.01em] group-hover:text-[var(--color-obs-primary)] transition-colors truncate"
+                            style={{ color: 'var(--color-obs-text)' }}
+                          >
+                            {deal.contact}
+                          </span>
+                          {primaryContact?.isDecisionMaker && (
+                            <span
+                              className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded-[4px] text-[9px] font-semibold shrink-0"
+                              style={{
+                                background: 'rgba(255,184,107,0.16)',
+                                color: 'var(--color-obs-middle)',
+                              }}
+                            >
+                              <Star size={7} strokeWidth={2.5} />
+                              決裁者
+                            </span>
+                          )}
+                        </div>
+                        {primaryContact?.title && (
+                          <p
+                            className="text-[10.5px] mt-0.5 truncate"
+                            style={{ color: 'var(--color-obs-text-muted)' }}
+                          >
+                            {primaryContact.title}
+                          </p>
+                        )}
+                      </div>
+                      <ExternalLink
+                        size={10}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                        style={{ color: 'var(--color-obs-primary)' }}
+                      />
+                    </button>
+
+                    {deal.contactPhone && (
+                      <div className="flex items-center gap-1.5 text-[11.5px] pl-9">
+                        <Phone size={9} style={{ color: 'var(--color-obs-text-subtle)' }} className="shrink-0" />
+                        <a
+                          href={`tel:${deal.contactPhone}`}
+                          className="tabular-nums hover:text-[var(--color-obs-primary)] transition-colors truncate"
+                          style={{ color: 'var(--color-obs-text)' }}
+                        >
+                          {deal.contactPhone}
+                        </a>
+                      </div>
+                    )}
+
+                    {otherContacts.length > 0 && (
+                      <div
+                        className="mt-2.5 pt-2.5"
+                        style={{ borderTop: '1px dashed rgba(109,106,111,0.18)' }}
+                      >
+                        <div
+                          className="text-[9.5px] font-semibold tracking-[0.06em] uppercase mb-1.5"
+                          style={{ color: 'var(--color-obs-text-subtle)' }}
+                        >
+                          その他のコンタクト
+                        </div>
+                        <div className="flex flex-col gap-0.5">
+                          {otherContacts.map((contact) => (
+                            <button
+                              key={contact.id}
+                              onClick={() => router.push(`/contacts/${contact.id}`)}
+                              className="group flex items-center gap-2 px-1.5 py-1.5 rounded-[var(--radius-obs-md)] transition-colors hover:bg-[rgba(171,199,255,0.06)] text-left"
+                            >
+                              <div
+                                className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-semibold shrink-0"
+                                style={{
+                                  background:
+                                    'linear-gradient(135deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
+                                  color: 'var(--color-obs-on-primary)',
+                                }}
+                              >
+                                {contact.name[0]}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1 flex-wrap">
+                                  <span
+                                    className="text-[11.5px] font-medium tracking-[-0.01em] group-hover:text-[var(--color-obs-primary)] transition-colors truncate"
+                                    style={{ color: 'var(--color-obs-text)' }}
+                                  >
+                                    {contact.name}
+                                  </span>
+                                  {contact.isDecisionMaker && (
+                                    <span
+                                      className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded-[3px] text-[8.5px] font-semibold shrink-0"
+                                      style={{
+                                        background: 'rgba(255,184,107,0.16)',
+                                        color: 'var(--color-obs-middle)',
+                                      }}
+                                    >
+                                      <Star size={6} strokeWidth={2.5} />
+                                      決裁者
+                                    </span>
+                                  )}
+                                </div>
+                                <p
+                                  className="text-[10px] mt-0.5 truncate"
+                                  style={{ color: 'var(--color-obs-text-muted)' }}
+                                >
+                                  {contact.title}
+                                </p>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )
+            })()}
+
           </aside>
         </div>
 
@@ -2409,6 +2982,19 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
             />
           )}
         </AnimatePresence>
+
+        {/* Create Ticket Modal */}
+        {showCreateTicket && (
+          <CreateTicketModal
+            presetDealId={id}
+            presetDealLabel={`${deal.name}${deal.company ? ` — ${deal.company}` : ''}`}
+            onClose={() => setShowCreateTicket(false)}
+            onCreated={() => {
+              setShowCreateTicket(false)
+              reloadTickets()
+            }}
+          />
+        )}
       </div>
     </ObsPageShell>
   )

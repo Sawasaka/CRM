@@ -29,6 +29,10 @@ model Organization {
   sequences     Sequence[]
   knowledgeDocs KnowledgeDoc[]
   ragQueries    RagQuery[]
+  faqEntries    FaqEntry[]
+  driveFolders  DriveFolderConnection[]
+  rulebook      KnowledgeRulebook?
+  tickets       Ticket[]
 }
 
 enum Plan {
@@ -52,14 +56,16 @@ model User {
   slackUserId  String?
   createdAt    DateTime @default(now())
 
-  org            Organization       @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  ownedDeals     Deal[]              @relation("DealOwner")
-  ownedCompanies Company[]           @relation("CompanyOwner")
-  tasks          Task[]
-  activities     Activity[]
-  googleAccount  UserGoogleAccount?
-  emailMessages  EmailMessage[]
-  meetingEvents  MeetingEvent[]
+  org             Organization       @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  ownedDeals      Deal[]             @relation("DealOwner")
+  ownedCompanies  Company[]          @relation("CompanyOwner")
+  tasks           Task[]
+  activities      Activity[]
+  googleAccount   UserGoogleAccount?
+  emailMessages   EmailMessage[]
+  meetingEvents   MeetingEvent[]
+  approvedFaqs    FaqEntry[]         @relation("FaqApprover")
+  assignedTickets Ticket[]           @relation("TicketAssignee")
 
   @@unique([orgId, email])
   @@index([orgId])
@@ -103,6 +109,7 @@ model Company {
   scoreEvents   ScoreEvent[]
   emailMessages EmailMessage[]
   meetingEvents MeetingEvent[]
+  tickets       Ticket[]
 
   @@index([orgId, leadScore(sort: Desc)])
   @@index([orgId, domain])
@@ -152,7 +159,7 @@ enum LeadSource {
 // CONTACT（担当者）
 // ============================
 model Contact {
-  id              String   @id @default(cuid())
+  id              String  @id @default(cuid())
   orgId           String
   companyId       String
   name            String
@@ -160,7 +167,7 @@ model Contact {
   phone           String?
   title           String?
   department      String?
-  isDecisionMaker Boolean  @default(false)
+  isDecisionMaker Boolean @default(false)
 
   // IS フィールド
   isOwnerId        String?
@@ -188,6 +195,7 @@ model Contact {
   currentSeq    Sequence?      @relation(fields: [currentSeqId], references: [id])
   emailMessages EmailMessage[]
   meetingEvents MeetingEvent[]
+  tickets       Ticket[]
 
   @@index([orgId, approachStatus])
   @@index([orgId, companyId])
@@ -272,6 +280,7 @@ model Deal {
   stageHistory  StageHistory[]
   emailMessages EmailMessage[]
   meetingEvents MeetingEvent[]
+  tickets       Ticket[]
 
   @@index([orgId, stage])
   @@index([orgId, ownerId])
@@ -381,6 +390,137 @@ enum TaskSource {
 }
 
 // ============================
+// FAQ ENTRY（チーム公式FAQ）
+// チャット連携・Drive連携・手動投稿・個人ナレッジ昇格などから
+// 候補化され、管理者承認で公式FAQになる。
+// ============================
+model FaqEntry {
+  id           String                       @id @default(cuid())
+  orgId        String
+  title        String // 質問
+  body         String // 回答（Markdown）
+  department   String? // 大分類: 部門 (営業/人事/経理/法務/IT/プロダクト/その他)
+  category     String? // 中分類: 部門内のカテゴリ (例: 業務フロー、規定、ノウハウ)
+  tags         String[] @default([]) // 小分類: タグ (例: ["育休", "復帰", "面談"]) 複数可
+  status       FaqStatus                    @default(CANDIDATE)
+  sourceType   FaqSourceType                @default(MANUAL)
+  sourceUrl    String? // 引用元URL (Slack permalink / Drive fileUrl など)
+  sourceMeta   Json? // ソース固有情報 { channelId, ts, threadTs, driveFileId, ... }
+  hits         Int                          @default(0)
+  approvedById String?
+  approvedAt   DateTime?
+  embedding    Unsupported("vector(1536)")?
+  createdAt    DateTime                     @default(now())
+  updatedAt    DateTime                     @updatedAt
+
+  org        Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  approvedBy User?        @relation("FaqApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+
+  @@index([orgId, status, updatedAt(sort: Desc)])
+  @@index([orgId, department, category])
+  @@index([orgId, department])
+  @@index([orgId, sourceType])
+}
+
+enum FaqStatus {
+  CANDIDATE // 候補（未承認）
+  PUBLISHED // 公式
+  ARCHIVED // アーカイブ
+  REJECTED // 却下
+}
+
+enum FaqSourceType {
+  MANUAL // 手動
+  SLACK // Slack 自動抽出
+  GOOGLE_CHAT // Google Chat 自動抽出
+  DRIVE // Google Drive ドキュメント
+}
+
+// ============================
+// DRIVE FOLDER CONNECTION（Drive連携先フォルダ）
+// 同期対象とする Google Drive フォルダの登録情報。
+// 配下のファイルは KnowledgeDoc として取り込み、KnowledgeChunk に分割保存する。
+// ============================
+model DriveFolderConnection {
+  id           String    @id @default(cuid())
+  orgId        String
+  folderId     String // Drive folder ID
+  folderName   String
+  folderUrl    String?
+  enabled      Boolean   @default(true)
+  lastSyncAt   DateTime?
+  lastSyncStat Json? // { fileCount, addedCount, errorCount, ... }
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, folderId])
+  @@index([orgId, enabled])
+}
+
+// ============================
+// KNOWLEDGE RULEBOOK
+// 組織ごとの「前提」と「ポリシー」を自然言語で保持。
+// チャット自動抽出時の system prompt に差し込んで、
+// AI の判断基準を組織側で制御する。
+// ============================
+model KnowledgeRulebook {
+  id          String   @id @default(cuid())
+  orgId       String   @unique
+  premises    String   @default("") // 前提（業界・チーム・対象顧客などの文脈）
+  policies    String   @default("") // ポリシー（除外条件・分類基準・優先度など）
+  updatedById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+}
+
+// ============================
+// TICKET（問い合わせチケット）
+// ============================
+model Ticket {
+  id                    String       @id @default(cuid())
+  orgId                 String
+  ticketNumber          Int // 組織内通し番号
+  subject               String
+  description           String? // 問い合わせ内容
+  cause                 String? // 原因
+  resolution            String? // 対応方針
+  memo                  String? // 内部メモ
+  status                TicketStatus @default(OPEN)
+  dealId                String?
+  companyId             String?
+  contactId             String?
+  assigneeUserId        String? // 対応者
+  estimatedCompletionAt DateTime? // 完了見込み
+  resolvedAt            DateTime?
+  closedAt              DateTime?
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+
+  org      Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  deal     Deal?        @relation(fields: [dealId], references: [id], onDelete: SetNull)
+  company  Company?     @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  contact  Contact?     @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  assignee User?        @relation("TicketAssignee", fields: [assigneeUserId], references: [id], onDelete: SetNull)
+
+  @@unique([orgId, ticketNumber])
+  @@index([orgId, status])
+  @@index([orgId, dealId])
+  @@index([orgId, companyId])
+  @@index([orgId, updatedAt(sort: Desc)])
+}
+
+enum TicketStatus {
+  OPEN
+  PENDING
+  SOLVED
+  CLOSED
+}
+
+// ============================
 // SCORING
 // ============================
 model ScoreEvent {
@@ -446,9 +586,9 @@ model Transcript {
   createdAt       DateTime       @default(now())
 
   // Google Meet 連携メタデータ
-  meetingEventId     String?  @unique
-  conferenceRecordId String?  @unique // Meet API: conferenceRecords/{name}
-  googleDocId        String?           // 議事録 Google Doc の Drive file ID
+  meetingEventId     String?          @unique
+  conferenceRecordId String?          @unique // Meet API: conferenceRecords/{name}
+  googleDocId        String? // 議事録 Google Doc の Drive file ID
   googleDocUrl       String?
   source             TranscriptSource @default(MANUAL)
 
@@ -528,7 +668,7 @@ model KnowledgeDoc {
   lastModified DateTime
   indexedAt    DateTime @default(now())
 
-  org    Organization   @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  org    Organization     @relation(fields: [orgId], references: [id], onDelete: Cascade)
   chunks KnowledgeChunk[]
 
   @@unique([orgId, sourceId])
@@ -536,13 +676,13 @@ model KnowledgeDoc {
 }
 
 model KnowledgeChunk {
-  id         String                      @id @default(cuid())
+  id         String                       @id @default(cuid())
   docId      String
   content    String
   embedding  Unsupported("vector(1536)")?
   metadata   Json?
   chunkIndex Int
-  createdAt  DateTime                    @default(now())
+  createdAt  DateTime                     @default(now())
 
   doc KnowledgeDoc @relation(fields: [docId], references: [id], onDelete: Cascade)
 
@@ -571,37 +711,37 @@ model RagQuery {
 // 全テナントで共有される企業DB。abm-toolから移行したデータを保持。
 // ================================================================
 model CompanyMaster {
-  id               String           @id @default(cuid())
-  corporateNumber  String           @unique
-  name             String
-  nameKana         String?
-  websiteUrl       String?
-  prefecture       String
-  city             String?
-  address          String?
-  corporateType    String
-  industryId       String?
-  serviceSummary   String?
-  companyFeatures  String?
-  employeeCount    String?
-  revenue          String?
-  representative   String?
+  id                  String           @id @default(cuid())
+  corporateNumber     String           @unique
+  name                String
+  nameKana            String?
+  websiteUrl          String?
+  prefecture          String
+  city                String?
+  address             String?
+  corporateType       String
+  industryId          String?
+  serviceSummary      String?
+  companyFeatures     String?
+  employeeCount       String?
+  revenue             String?
+  representative      String?
   representativePhone String?
   representativeEmail String?
-  enrichmentStatus EnrichmentStatus @default(PENDING)
-  sourceId         String?
-  lastCrawledAt    DateTime?
-  lastEnrichedAt   DateTime?
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
+  enrichmentStatus    EnrichmentStatus @default(PENDING)
+  sourceId            String?
+  lastCrawledAt       DateTime?
+  lastEnrichedAt      DateTime?
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
 
-  industry         Industry?              @relation(fields: [industryId], references: [id])
-  offices          Office[]
-  departments      Department[]
-  intentSignals    IntentSignal[]
-  companyIntents   CompanyIntent[]
-  serviceTags      CompanyServiceTag[]
-  linkedCompanies  Company[]
+  industry        Industry?           @relation(fields: [industryId], references: [id])
+  offices         Office[]
+  departments     Department[]
+  intentSignals   IntentSignal[]
+  companyIntents  CompanyIntent[]
+  serviceTags     CompanyServiceTag[]
+  linkedCompanies Company[]
 
   @@index([name])
   @@index([prefecture])
@@ -729,7 +869,7 @@ enum DepartmentType {
 
 // インテント個別シグナル（求人情報・プレスリリース）
 model IntentSignal {
-  id              String            @id @default(cuid())
+  id              String           @id @default(cuid())
   companyMasterId String
   departmentType  DepartmentType?
   departmentId    String?
@@ -740,7 +880,7 @@ model IntentSignal {
   description     String?
   publishedAt     DateTime?
   rawData         Json?
-  createdAt       DateTime          @default(now())
+  createdAt       DateTime         @default(now())
 
   companyMaster CompanyMaster @relation(fields: [companyMasterId], references: [id], onDelete: Cascade)
   department    Department?   @relation(fields: [departmentId], references: [id], onDelete: SetNull)
@@ -795,30 +935,30 @@ enum IntentLevel {
 // GOOGLE 連携 — OAuth トークン保存
 // ============================
 model UserGoogleAccount {
-  id           String    @id @default(cuid())
-  userId       String    @unique
-  googleSub    String    @unique
-  email        String
-  accessToken  String?
-  refreshToken String?
-  expiresAt    DateTime?
-  scope        String?
+  id                 String    @id @default(cuid())
+  userId             String    @unique
+  googleSub          String    @unique
+  email              String
+  accessToken        String?
+  refreshToken       String?
+  expiresAt          DateTime?
+  scope              String?
   // Gmail History API 用カーソル（差分同期）
-  gmailHistoryId String?
+  gmailHistoryId     String?
   // Calendar 同期トークン
-  calendarSyncToken String?
+  calendarSyncToken  String?
   // 最終同期時刻（観測用）
   lastGmailSyncAt    DateTime?
   lastCalendarSyncAt DateTime?
   lastMeetSyncAt     DateTime?
   lastChatSyncAt     DateTime?
   // 機能ごとの有効/無効（ユーザーが個別に ON/OFF できる）
-  gmailEnabled    Boolean @default(true)
-  calendarEnabled Boolean @default(true)
-  meetEnabled     Boolean @default(true)
-  chatEnabled     Boolean @default(false)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  gmailEnabled       Boolean   @default(true)
+  calendarEnabled    Boolean   @default(true)
+  meetEnabled        Boolean   @default(true)
+  chatEnabled        Boolean   @default(false)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -876,19 +1016,19 @@ enum EmailDirection {
 // MEETING — Calendar / Meet イベント
 // ============================
 model MeetingEvent {
-  id              String   @id @default(cuid())
+  id              String  @id @default(cuid())
   orgId           String
   userId          String
-  calendarId      String   @default("primary")
+  calendarId      String  @default("primary")
   calendarEventId String
   iCalUID         String?
 
-  title       String
-  description String?
-  startsAt    DateTime
-  endsAt      DateTime
-  meetUrl     String?
-  meetCode    String?
+  title        String
+  description  String?
+  startsAt     DateTime
+  endsAt       DateTime
+  meetUrl      String?
+  meetCode     String?
   conferenceId String?
 
   attendeeEmails String[] @default([])
@@ -908,10 +1048,10 @@ model MeetingEvent {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  primaryContact Contact?     @relation(fields: [primaryContactId], references: [id], onDelete: SetNull)
-  company        Company?     @relation(fields: [companyId], references: [id], onDelete: SetNull)
-  deal           Deal?        @relation(fields: [dealId], references: [id], onDelete: SetNull)
+  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  primaryContact Contact?    @relation(fields: [primaryContactId], references: [id], onDelete: SetNull)
+  company        Company?    @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  deal           Deal?       @relation(fields: [dealId], references: [id], onDelete: SetNull)
   transcript     Transcript?
 
   @@unique([userId, calendarEventId])
@@ -922,18 +1062,18 @@ model MeetingEvent {
 }
 
 enum MeetingStatus {
-  SCHEDULED   // カレンダー登録済み（未開催）
-  HELD        // 開催済み（議事録未取得）
-  COMPLETED   // 議事録取得済み
+  SCHEDULED // カレンダー登録済み（未開催）
+  HELD // 開催済み（議事録未取得）
+  COMPLETED // 議事録取得済み
   CANCELED
 }
 
 enum MeetingType {
-  FIRST       // 初回商談
-  FOLLOW_UP   // 2回目以降
-  PROPOSAL    // 提案
+  FIRST // 初回商談
+  FOLLOW_UP // 2回目以降
+  PROPOSAL // 提案
   NEGOTIATION // 交渉
-  CLOSING     // クロージング
+  CLOSING // クロージング
   OTHER
 }
 
@@ -941,22 +1081,22 @@ enum MeetingType {
 // SLACK 連携 — ワークスペース接続情報
 // ============================
 model SlackWorkspace {
-  id            String   @id @default(cuid())
-  orgId         String
-  installerUserId String   // CRM 側の User.id（インストールしたユーザー）
-  teamId        String   // Slack の team_id (T...)
-  teamName      String
-  enterpriseId  String?
+  id              String    @id @default(cuid())
+  orgId           String
+  installerUserId String // CRM 側の User.id（インストールしたユーザー）
+  teamId          String // Slack の team_id (T...)
+  teamName        String
+  enterpriseId    String?
   // OAuth tokens (Bot 用)
-  botToken      String   // xoxb-...
-  botUserId     String?  // U... (Bot のユーザーID)
+  botToken        String // xoxb-...
+  botUserId       String? // U... (Bot のユーザーID)
   // optional: User 用 token
-  userToken     String?  // xoxp-...
-  scope         String?
-  enabled       Boolean  @default(true)
-  lastSyncAt    DateTime?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  userToken       String? // xoxp-...
+  scope           String?
+  enabled         Boolean   @default(true)
+  lastSyncAt      DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   @@unique([orgId, teamId])
   @@index([installerUserId])
@@ -966,24 +1106,24 @@ model SlackWorkspace {
 // SLACK — メッセージ取り込み
 // ============================
 model SlackMessage {
-  id              String   @id @default(cuid())
-  orgId           String
-  workspaceId     String
-  channelId       String
-  channelName     String?
-  ts              String   // Slack の message timestamp (一意キー兼)
-  threadTs        String?
-  senderUserId    String?  // Slack の U...
-  senderName      String?
-  senderEmail     String?
-  text            String
-  permalink       String?
-  postedAt        DateTime
-  contactId       String?
-  companyId       String?
-  dealId          String?
-  matchedBy       String?
-  createdAt       DateTime @default(now())
+  id           String   @id @default(cuid())
+  orgId        String
+  workspaceId  String
+  channelId    String
+  channelName  String?
+  ts           String // Slack の message timestamp (一意キー兼)
+  threadTs     String?
+  senderUserId String? // Slack の U...
+  senderName   String?
+  senderEmail  String?
+  text         String
+  permalink    String?
+  postedAt     DateTime
+  contactId    String?
+  companyId    String?
+  dealId       String?
+  matchedBy    String?
+  createdAt    DateTime @default(now())
 
   @@unique([workspaceId, channelId, ts])
   @@index([orgId, contactId])
@@ -995,27 +1135,94 @@ model SlackMessage {
 // GOOGLE CHAT — メッセージ
 // ============================
 model ChatMessage {
-  id             String   @id @default(cuid())
-  orgId          String
-  userId         String
+  id                String   @id @default(cuid())
+  orgId             String
+  userId            String
   // Chat API 上の name: spaces/{space}/messages/{id}
-  chatName       String   @unique
-  spaceName      String   // spaces/{space}
-  spaceDisplayName String?
-  threadName     String?
-  senderEmail    String?
+  chatName          String   @unique
+  spaceName         String // spaces/{space}
+  spaceDisplayName  String?
+  threadName        String?
+  senderEmail       String?
   senderDisplayName String?
-  text           String
-  createdAtChat  DateTime
+  text              String
+  createdAtChat     DateTime
   // 紐付け
-  contactId String?
-  companyId String?
-  dealId    String?
-  matchedBy String?
-  createdAt DateTime @default(now())
+  contactId         String?
+  companyId         String?
+  dealId            String?
+  matchedBy         String?
+  createdAt         DateTime @default(now())
 
   @@index([orgId, contactId])
   @@index([orgId, dealId])
   @@index([spaceName])
   @@index([orgId, createdAtChat(sort: Desc)])
+}
+
+// ─── メール配信 (マーケティング: リスト一斉送信 + ファーストパーティ計測) ──
+
+enum MailCampaignStatus {
+  DRAFT
+  SCHEDULED
+  SENDING
+  SENT
+}
+
+enum CampaignLinkKind {
+  HOMEPAGE
+  SCHEDULE
+  DOC
+  OTHER
+}
+
+model MailCampaign {
+  id          String             @id @default(cuid())
+  orgId       String
+  ownerUserId String // 配信オーナー (Gmail送信元)
+  name        String // 社内管理名
+  subject     String
+  body        String             @db.Text
+  listId      String // ISリストID (CallList 等)
+  listName    String // 表示用キャッシュ
+  status      MailCampaignStatus @default(DRAFT)
+  recipients  Int                @default(0) // 送信実数
+  opened      Int                @default(0)
+  replied     Int                @default(0)
+  sentAt      DateTime?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  links CampaignLink[]
+
+  @@index([orgId, createdAt(sort: Desc)])
+  @@index([orgId, status])
+}
+
+model CampaignLink {
+  id          String           @id @default(cuid())
+  campaignId  String
+  campaign    MailCampaign     @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  kind        CampaignLinkKind
+  label       String // 受信者に表示するテキスト
+  originalUrl String // 実際の遷移先
+  createdAt   DateTime         @default(now())
+
+  clicks LinkClick[]
+
+  @@index([campaignId])
+}
+
+model LinkClick {
+  id        String       @id @default(cuid())
+  linkId    String
+  link      CampaignLink @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  contactId String? // 紐付けに成功した場合
+  userAgent String?      @db.Text
+  ipHash    String? // プライバシー対応のためハッシュ化して保存
+  referer   String?      @db.Text
+  clickedAt DateTime     @default(now())
+
+  @@index([linkId, clickedAt(sort: Desc)])
+  @@index([contactId])
 }

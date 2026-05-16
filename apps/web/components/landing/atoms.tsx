@@ -1,7 +1,7 @@
 'use client'
 
 /**
- * Landing page primitives — Front Office (Photon Drift)
+ * Landing page primitives — KikuCRM (Front Office / Photon Drift)
  * 公開LP（/）専用の基本コンポーネント群。AGENTSメタデータ、Eyebrow、Pill、
  * Orb、ParticleField、NebulaBG、Section、MiniBar、GlassCard を提供する。
  */

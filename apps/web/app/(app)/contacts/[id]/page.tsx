@@ -1,4 +1,5 @@
 'use client'
+import { ResearchChatPanel } from '@/components/research/ResearchChatPanel'
 
 import React, { useState, useMemo, useEffect, useRef } from 'react'
 import Link from 'next/link'
@@ -46,6 +47,7 @@ const STATUS_OBS_STYLES: Record<ApproachStatus, ObsChipStyle> = {
   '接続済み':   { bg: 'rgba(126,198,255,0.14)', fg: 'var(--color-obs-low)' },
   'コール不可': { bg: 'rgba(255,107,107,0.14)', fg: 'var(--color-obs-hot)' },
   'アポ獲得':   { bg: 'rgba(74,217,138,0.14)',  fg: '#4ad98a' },
+  'その他':     { bg: 'rgba(143,140,144,0.14)', fg: 'var(--color-obs-text-muted)' },
 }
 
 function StatusObsBadge({ status, size = 'md' }: { status: ApproachStatus; size?: 'sm' | 'md' }) {
@@ -64,15 +66,10 @@ function StatusObsBadge({ status, size = 'md' }: { status: ApproachStatus; size?
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
-type SimpleTask = {
-  id: string
-  title: string
-  done: boolean
-  dueAt: string | null
-  memo?: string
-}
+// 取引詳細のタスクモーダルを再利用 (タスク作成 UI を統一)
+import { DealTaskModal, DEAL_TASK_TYPE_STYLES, type DealTask } from '@/app/(app)/deals/[id]/page'
 
-type NextActionValue = 'メール' | 'コール' | '連絡待ち' | 'ナーチャリング' | '除外' | 'その他' | null
+type NextActionValue = string | null
 type PersonRole = '決裁者' | '推進者' | '一般'
 
 // 角度 — A / B / C / プラス / 設定なし
@@ -109,7 +106,16 @@ interface ContactDetail {
   nextActionAt: string | null
   personRole: PersonRole
   leadSource: LeadSource
+  owner: string  // IS担当者
+  handoverNote: string  // 後続担当への申し送り事項
 }
+
+// IS担当者リスト (タスク一覧の REPS と整合)
+const IS_OWNERS = [
+  { name: '田中太郎', color: 'var(--color-obs-primary)' },
+  { name: '鈴木花子', color: 'var(--color-obs-middle)' },
+  { name: '佐藤次郎', color: 'var(--color-obs-low)' },
+] as const
 
 // ─── Lead Source Style ─────────────────────────────────────────────────────────
 // 全タイプ共通: surface-high 相当の薄い neutral 下地 + アイコン色だけ大分類を表す
@@ -176,6 +182,8 @@ const MOCK_CONTACTS: Record<string, ContactDetail> = {
     callAttempts: 3, mailCount: 12, lastCallAt: '2026-03-20', nextActionAt: '2026-03-28',
     personRole: '決裁者',
     leadSource: { category: 'homepage', sub: 'Webフォーム' },
+    owner: '田中太郎',
+    handoverNote: '営業部長として最終決裁権を持つ。比較表は既に送付済み。次は鈴木様(CTO)を巻き込んでクロージングフェーズへ。',
   },
   '2': {
     id: '2', name: '山本 佳子', title: 'マネージャー', department: '購買部',
@@ -186,6 +194,8 @@ const MOCK_CONTACTS: Record<string, ContactDetail> = {
     callAttempts: 5, mailCount: 8, lastCallAt: '2026-03-19', nextActionAt: '2026-03-22',
     personRole: '推進者',
     leadSource: { category: 'event', sub: '展示会' },
+    owner: '鈴木花子',
+    handoverNote: '展示会で名刺交換した本人。提案資料を希望されており、温度感は中。次回MTGで予算感をヒアリング予定。',
   },
   '3': {
     id: '3', name: '佐々木 拓也', title: '事業企画 部長', department: '経営企画部',
@@ -196,6 +206,8 @@ const MOCK_CONTACTS: Record<string, ContactDetail> = {
     callAttempts: 0, mailCount: 0, lastCallAt: null, nextActionAt: '2026-04-25',
     personRole: '決裁者',
     leadSource: { category: 'homepage', sub: '問い合わせ' },
+    owner: '田中太郎',
+    handoverNote: '紹介経由・決裁ライン直結。初回コール未実施。先方の都合は平日午前優先(秘書経由で予約推奨)。',
   },
   '4': {
     id: '4', name: '中村 理恵', title: 'マーケティング マネージャー', department: 'マーケティング部',
@@ -206,6 +218,8 @@ const MOCK_CONTACTS: Record<string, ContactDetail> = {
     callAttempts: 2, mailCount: 6, lastCallAt: '2026-04-18', nextActionAt: '2026-04-23',
     personRole: '推進者',
     leadSource: { category: 'ad', sub: '検索広告' },
+    owner: '佐藤次郎',
+    handoverNote: 'Salesforce → 自社プロダクト切替を検討中。比較資料(機能差分・料金)送付済み。Q2中の比較検討と明言あり。',
   },
 }
 
@@ -252,19 +266,6 @@ const PERSON_ROLE_STYLES: Record<PersonRole, ObsChipStyle> = {
 
 const ALL_PERSON_ROLES: PersonRole[] = ['決裁者', '推進者', '一般']
 
-// ─── Next Action Style (Liquid Obsidian flat chip) ────────────────────────────
-
-const NEXT_ACTION_STYLES: Record<Exclude<NextActionValue, null>, ObsChipStyle> = {
-  'メール':       { bg: 'rgba(171,199,255,0.14)', fg: 'var(--color-obs-primary)' },
-  'コール':       { bg: 'rgba(126,198,255,0.14)', fg: 'var(--color-obs-low)' },
-  '連絡待ち':     { bg: 'rgba(255,184,107,0.14)', fg: 'var(--color-obs-middle)' },
-  'ナーチャリング': { bg: 'rgba(74,217,138,0.14)',  fg: '#4ad98a' },
-  '除外':         { bg: 'rgba(255,107,107,0.14)', fg: 'var(--color-obs-hot)' },
-  'その他':       { bg: 'rgba(143,140,144,0.14)', fg: 'var(--color-obs-text-muted)' },
-}
-
-const ALL_NEXT_ACTIONS: Exclude<NextActionValue, null>[] = ['メール', 'コール', '連絡待ち', 'ナーチャリング', '除外', 'その他']
-
 // ─── Style Constants (Liquid Obsidian) ─────────────────────────────────────────
 
 const CARD_STYLE: React.CSSProperties = {
@@ -283,7 +284,7 @@ function formatDuration(sec: number): string {
 
 // ─── Inline Selectors (クリックでドロップダウン編集) ──────────────────────────
 
-const STATUS_OPTIONS: ApproachStatus[] = ['未着手', '不通', '不在', '接続済み', 'コール不可', 'アポ獲得']
+const STATUS_OPTIONS: ApproachStatus[] = ['未着手', '不通', '不在', '接続済み', 'コール不可', 'アポ獲得', 'その他']
 
 function StatusSelector({ value, onChange }: {
   value: ApproachStatus
@@ -358,38 +359,17 @@ function StatusSelector({ value, onChange }: {
   )
 }
 
-function NextActionSelector({ value, onChange }: {
-  value: NextActionValue
-  onChange: (v: NextActionValue) => void
+// ─── IS担当者 セレクタ ─────────────────────────────────────────────────────
+function OwnerSelector({ value, onChange }: {
+  value: string
+  onChange: (v: string) => void
 }) {
   const [open, setOpen] = useState(false)
   const [hover, setHover] = useState(false)
   const active = hover || open
-
-  const renderBadge = () => {
-    if (!value) {
-      const fg = 'var(--color-obs-primary)'
-      return (
-        <span
-          className="inline-flex items-center gap-1.5 px-2 h-5 rounded-full text-[11px] font-medium tracking-[-0.005em] whitespace-nowrap"
-          style={{ backgroundColor: 'rgba(171,199,255,0.14)', color: fg }}
-        >
-          <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: fg }} />
-          未設定
-        </span>
-      )
-    }
-    const s = NEXT_ACTION_STYLES[value]
-    return (
-      <span
-        className="inline-flex items-center gap-1.5 px-2 h-5 rounded-full text-[11px] font-medium tracking-[-0.005em] whitespace-nowrap"
-        style={{ backgroundColor: s.bg, color: s.fg }}
-      >
-        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: s.fg }} />
-        {value}
-      </span>
-    )
-  }
+  const current = IS_OWNERS.find(o => o.name === value)
+  const ownerColor = current?.color ?? 'var(--color-obs-text-subtle)'
+  const initial = value ? value[0] : '?'
 
   return (
     <div className="relative">
@@ -397,14 +377,22 @@ function NextActionSelector({ value, onChange }: {
         onClick={e => { e.stopPropagation(); setOpen(v => !v) }}
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
-        className="inline-flex items-center gap-1 px-1.5 py-1 -mx-1.5 -my-1 rounded-[8px] transition-all cursor-pointer"
+        className="inline-flex items-center gap-1.5 px-1.5 py-1 -mx-1.5 -my-1 rounded-[8px] transition-all cursor-pointer"
         style={{
-          background: active ? 'rgba(171,199,255,0.10)' : 'transparent',
+          background: active ? 'rgba(171,199,255,0.10)' : 'var(--color-obs-surface-high)',
           boxShadow: active ? 'inset 0 0 0 1px var(--color-obs-primary)' : 'none',
         }}
-        title="クリックして変更"
+        title="クリックして担当者を変更"
       >
-        {renderBadge()}
+        <span
+          className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold shrink-0"
+          style={{ backgroundColor: ownerColor, color: 'var(--color-obs-on-primary)' }}
+        >
+          {initial}
+        </span>
+        <span className="text-[12.5px] font-medium" style={{ color: 'var(--color-obs-text)' }}>
+          {value || '未割当'}
+        </span>
         <ChevronDown
           size={13}
           className="transition-transform"
@@ -423,44 +411,32 @@ function NextActionSelector({ value, onChange }: {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -4, scale: 0.97 }}
               transition={{ duration: 0.15 }}
-              className="absolute top-full right-0 mt-1.5 z-40 rounded-[10px] py-1.5 min-w-[160px]"
+              className="absolute top-full left-0 mt-1.5 z-40 rounded-[10px] py-1.5 min-w-[160px]"
               style={{
                 background: 'var(--color-obs-surface-highest)',
                 boxShadow: '0 12px 32px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(109,106,111,0.18)',
               }}
             >
-              {ALL_NEXT_ACTIONS.map(a => {
-                const style = NEXT_ACTION_STYLES[a]
-                const selected = a === value
+              {IS_OWNERS.map(o => {
+                const selected = o.name === value
                 return (
                   <button
-                    key={a}
-                    onClick={e => { e.stopPropagation(); onChange(a); setOpen(false) }}
+                    key={o.name}
+                    onClick={e => { e.stopPropagation(); onChange(o.name); setOpen(false) }}
                     className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-left hover:bg-[rgba(171,199,255,0.08)] transition-colors"
                     style={{ color: 'var(--color-obs-text)', fontWeight: selected ? 600 : 500 }}
                   >
                     <span
-                      className="rounded-full shrink-0"
-                      style={{ width: 6, height: 6, backgroundColor: style.fg }}
-                    />
-                    {a}
+                      className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold shrink-0"
+                      style={{ backgroundColor: o.color, color: 'var(--color-obs-on-primary)' }}
+                    >
+                      {o.name[0]}
+                    </span>
+                    {o.name}
                     {selected && <span className="ml-auto" style={{ color: 'var(--color-obs-primary)' }}>✓</span>}
                   </button>
                 )
               })}
-              <div className="mx-2 my-1 h-px" style={{ background: 'var(--color-obs-surface-low)' }} />
-              <button
-                onClick={e => { e.stopPropagation(); onChange(null); setOpen(false) }}
-                className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-left hover:bg-[rgba(171,199,255,0.08)] transition-colors"
-                style={{ color: value === null ? 'var(--color-obs-primary)' : 'var(--color-obs-text-muted)', fontWeight: value === null ? 600 : 500 }}
-              >
-                <span
-                  className="w-1.5 h-1.5 rounded-full shrink-0"
-                  style={{ backgroundColor: 'var(--color-obs-primary)' }}
-                />
-                未設定
-                {value === null && <span className="ml-auto" style={{ color: 'var(--color-obs-primary)' }}>✓</span>}
-              </button>
             </motion.div>
           </>
         )}
@@ -747,10 +723,10 @@ function CompanyRow({
 // 実装時は GoogleTimeline / 連携APIに差し替える前提
 type HistoryKind = 'call' | 'email' | 'meeting'
 
-type CallResult = '通話' | '不在' | '不通' | '折返し依頼'
-const CALL_RESULTS: CallResult[] = ['通話', '不在', '不通', '折返し依頼']
+type CallResult = '通話' | '不在' | '不通' | 'その他'
+const CALL_RESULTS: CallResult[] = ['通話', '不在', '不通', 'その他']
 
-type HistoryEntry = {
+export type HistoryEntry = {
   id: string
   kind: HistoryKind
   occurredAt: string // ISO
@@ -773,8 +749,7 @@ type HistoryEntry = {
   meetUrl?: string
   // Google Meet で自動生成された議事録ドキュメント (Google Docs) へのリンク
   minutesDocUrl?: string
-  meetingAgenda?: string[]    // 展開時: アジェンダ
-  meetingMinutes?: { heading: string; items: string[] }[] // 展開時: 議事録セクション
+  meetingSummary?: string[]   // 展開時: 要約サマリー(箇条書き)
 }
 
 const MOCK_CONTACT_HISTORY: HistoryEntry[] = [
@@ -788,37 +763,10 @@ const MOCK_CONTACT_HISTORY: HistoryEntry[] = [
     meetUrl: 'https://meet.google.com/abc-defg-hij',
     minutesDocUrl: 'https://docs.google.com/document/d/1abc-techno-lead-2026-03-28-minutes/edit',
     durationSec: 50 * 60,
-    meetingAgenda: [
-      '会社紹介とプロダクトデモ (15分)',
-      '田中様の現行業務フローのヒアリング (15分)',
-      '想定ユースケース・期待効果のディスカッション (15分)',
-      'NEXT STEP の合意 (5分)',
-    ],
-    meetingMinutes: [
-      {
-        heading: '現状の課題',
-        items: [
-          '営業部 12名の SFA 利用率が 4 割程度に留まっており、データ精度が課題',
-          'Salesforce のコスト面で見直し時期に差し掛かっている (Q2 中に判断したい)',
-          '「インテントスコア」のような外部シグナルでの優先度付けは現行未対応',
-        ],
-      },
-      {
-        heading: '評価ポイント',
-        items: [
-          'モバイルでの入力体験が良いか (現場SR からの強い要望)',
-          '既存 Slack / Google Workspace との連携',
-          '導入から本格稼働まで 6 週間以内が望ましい',
-        ],
-      },
-      {
-        heading: 'NEXT STEP',
-        items: [
-          '4/3 (金) までに機能差分 + 料金の比較表を送付',
-          '4/10 週で 2 回目商談 (現場SR 2 名同席を想定)',
-          '田中様から CTO 川崎様の同席可否を確認',
-        ],
-      },
+    meetingSummary: [
+      '営業部 12名の SFA 利用率は約 4 割で、データ精度が課題。Salesforce はコスト面から Q2 中に切替判断を予定。',
+      '評価軸はモバイル入力体験 / Slack・Google Workspace 連携 / 6 週間以内での本格稼働。',
+      'NEXT STEP: 4/3 までに機能差分 + 料金の比較表を送付、4/10 週で 2 回目商談(現場SR 2 名同席)、CTO 川崎様の同席可否を田中様から確認。',
     ],
   },
   {
@@ -945,7 +893,7 @@ const RESULT_TONE: Record<NonNullable<HistoryEntry['result']>, { bg: string; fg:
   '通話':       { bg: 'rgba(110,231,161,0.14)', fg: '#6ee7a1' },
   '不在':       { bg: 'rgba(255,184,107,0.14)', fg: 'var(--color-obs-middle)' },
   '不通':       { bg: 'rgba(255,107,107,0.14)', fg: 'var(--color-obs-hot)' },
-  '折返し依頼': { bg: 'rgba(126,198,255,0.14)', fg: 'var(--color-obs-low)' },
+  'その他':     { bg: 'rgba(143,140,144,0.14)', fg: 'var(--color-obs-text-muted)' },
 }
 
 function formatHistoryDateTime(iso: string): { date: string; time: string } {
@@ -955,19 +903,27 @@ function formatHistoryDateTime(iso: string): { date: string; time: string } {
   return { date, time }
 }
 
-function ContactHistoryTimeline() {
+// コンタクト・取引両方で使えるアクティビティタイムライン
+// entries 省略時は MOCK_CONTACT_HISTORY を表示する (主にコンタクト詳細用)
+export function ContactHistoryTimeline({ entries }: { entries?: HistoryEntry[] } = {}) {
   const [filter, setFilter] = useState<HistoryKind | 'all'>('all')
+  const source = entries ?? MOCK_CONTACT_HISTORY
 
   const filtered = useMemo(() => {
-    const arr = filter === 'all' ? MOCK_CONTACT_HISTORY : MOCK_CONTACT_HISTORY.filter((e) => e.kind === filter)
+    const arr = filter === 'all' ? source : source.filter((e) => e.kind === filter)
     return [...arr].sort((a, b) => (a.occurredAt < b.occurredAt ? 1 : -1))
-  }, [filter])
+  }, [filter, source])
 
   const counts = useMemo(() => {
-    const acc = { all: MOCK_CONTACT_HISTORY.length, call: 0, email: 0, meeting: 0 }
-    for (const e of MOCK_CONTACT_HISTORY) acc[e.kind] += 1
+    const acc = { all: source.length, call: 0, email: 0, meeting: 0 }
+    for (const e of source) acc[e.kind] += 1
     return acc
-  }, [])
+  }, [source])
+
+  // タブ切替で高さがガクつかないよう、すべて表示時のおおよその高さを min-height として確保する
+  // (1行あたり折り畳み時 約76px + 行間ギャップ込み)
+  const ROW_HEIGHT = 76
+  const minBodyHeight = source.length > 0 ? source.length * ROW_HEIGHT : 0
 
   return (
     <div>
@@ -1010,30 +966,34 @@ function ContactHistoryTimeline() {
         })}
       </div>
 
-      {/* タイムライン */}
-      {filtered.length === 0 ? (
-        <div
-          className="px-3 py-8 text-center text-[12px] rounded-[10px]"
-          style={{
-            color: 'var(--color-obs-text-subtle)',
-            background: 'var(--color-obs-surface-low)',
-          }}
-        >
-          履歴がありません
-        </div>
-      ) : (
-        <div className="relative">
+      {/* タイムライン (タブ切替時に高さがジャンプしないよう min-height を確保) */}
+      <div
+        style={{ minHeight: minBodyHeight ? `${minBodyHeight}px` : undefined }}
+      >
+        {filtered.length === 0 ? (
           <div
-            className="absolute left-[15px] top-2 bottom-2 w-px"
-            style={{ background: 'rgba(109,106,111,0.22)' }}
-          />
-          <div className="space-y-3">
-            {filtered.map((e) => (
-              <HistoryRow key={e.id} entry={e} />
-            ))}
+            className="px-3 py-8 text-center text-[12px] rounded-[10px]"
+            style={{
+              color: 'var(--color-obs-text-subtle)',
+              background: 'var(--color-obs-surface-low)',
+            }}
+          >
+            履歴がありません
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="relative">
+            <div
+              className="absolute left-[15px] top-2 bottom-2 w-px"
+              style={{ background: 'rgba(109,106,111,0.22)' }}
+            />
+            <div className="space-y-3">
+              {filtered.map((e) => (
+                <HistoryRow key={e.id} entry={e} />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -1475,7 +1435,7 @@ function EmailExpanded({ entry }: { entry: HistoryEntry }) {
   )
 }
 
-// ─── Meeting: 展開ビュー(アジェンダ + 議事録 + Meet リンク) ──────────────────
+// ─── Meeting: 展開ビュー(参加者 + 要約サマリー + 議事録Docsリンク) ─────────
 function MeetingExpanded({ entry }: { entry: HistoryEntry }) {
   return (
     <div className="space-y-3">
@@ -1506,72 +1466,30 @@ function MeetingExpanded({ entry }: { entry: HistoryEntry }) {
         </div>
       )}
 
-      {/* アジェンダ */}
-      {entry.meetingAgenda && entry.meetingAgenda.length > 0 && (
-        <div>
-          <div
-            className="text-[10.5px] tracking-[0.06em] uppercase mb-1"
-            style={{ color: 'var(--color-obs-text-subtle)' }}
-          >
-            アジェンダ
-          </div>
-          <ol className="space-y-1 list-decimal pl-5">
-            {entry.meetingAgenda.map((line, i) => (
-              <li
-                key={i}
-                className="text-[12px] leading-relaxed"
-                style={{ color: 'var(--color-obs-text)' }}
-              >
-                {line}
-              </li>
-            ))}
-          </ol>
-        </div>
-      )}
-
-      {/* 議事録(セクション) */}
-      {entry.meetingMinutes && entry.meetingMinutes.length > 0 && (
+      {/* 要約サマリー */}
+      {entry.meetingSummary && entry.meetingSummary.length > 0 && (
         <div>
           <div
             className="text-[10.5px] tracking-[0.06em] uppercase mb-1.5"
             style={{ color: 'var(--color-obs-text-subtle)' }}
           >
-            議事録
+            要約サマリー
           </div>
-          <div className="space-y-3">
-            {entry.meetingMinutes.map((sec, i) => (
-              <div
+          <ul className="space-y-1.5">
+            {entry.meetingSummary.map((line, i) => (
+              <li
                 key={i}
-                className="rounded-[8px] px-3 py-2.5"
-                style={{
-                  background: 'var(--color-obs-surface-highest)',
-                  boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.14)',
-                }}
+                className="text-[12px] leading-relaxed pl-3 relative"
+                style={{ color: 'var(--color-obs-text)' }}
               >
-                <div
-                  className="text-[12px] font-semibold mb-1"
-                  style={{ color: 'var(--color-obs-text)' }}
-                >
-                  {sec.heading}
-                </div>
-                <ul className="space-y-1">
-                  {sec.items.map((it, j) => (
-                    <li
-                      key={j}
-                      className="text-[11.5px] leading-relaxed pl-3 relative"
-                      style={{ color: 'var(--color-obs-text-muted)' }}
-                    >
-                      <span
-                        className="absolute left-0 top-[8px] w-1 h-1 rounded-full"
-                        style={{ background: 'var(--color-obs-text-subtle)' }}
-                      />
-                      {it}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+                <span
+                  className="absolute left-0 top-[8px] w-1 h-1 rounded-full"
+                  style={{ background: 'var(--color-obs-middle)' }}
+                />
+                {line}
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       )}
 
@@ -2343,47 +2261,6 @@ function EditContactModal({ contact, onClose, onSave }: {
   )
 }
 
-// ─── IS Field Row ──────────────────────────────────────────────────────────────
-
-function ISFieldRow({
-  label,
-  children,
-  editable,
-  vertical,
-}: {
-  label: string
-  children: React.ReactNode
-  editable?: boolean
-  vertical?: boolean
-}) {
-  return (
-    <motion.div
-      variants={{
-        hidden: { opacity: 0, y: 6 },
-        visible: { opacity: 1, y: 0, transition: { duration: 0.2, ease: [0.16, 1, 0.3, 1] } },
-      }}
-      className={
-        vertical
-          ? 'flex flex-col gap-1.5 py-2.5'
-          : 'flex items-center justify-between gap-3 py-2.5'
-      }
-      style={{ boxShadow: 'inset 0 -1px 0 rgba(109,106,111,0.10)' }}
-    >
-      <span
-        className={`text-[11px] inline-flex items-center gap-1 ${vertical ? '' : 'shrink-0 w-24'}`}
-        style={{
-          color: editable ? 'var(--color-obs-primary)' : 'var(--color-obs-text-muted)',
-          letterSpacing: '0.02em',
-        }}
-      >
-        {label}
-        {editable && <Pencil size={9} style={{ color: 'var(--color-obs-primary)', opacity: 0.7 }} />}
-      </span>
-      <div className={vertical ? 'w-full' : 'text-right min-w-0 flex-1'}>{children}</div>
-    </motion.div>
-  )
-}
-
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function ContactDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -2392,25 +2269,17 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
   const initialContact = MOCK_CONTACTS[id] ?? MOCK_CONTACTS['1']!
   const [contact, setContact] = useState<ContactDetail>(initialContact)
   const [showEditModal, setShowEditModal] = useState(false)
-  // 独立したタスクカード用 state(モック)
-  const [tasks, setTasks] = useState<SimpleTask[]>([])
-  const handleCreateTask = () => {
-    const today = new Date()
-    const due = new Date(today)
-    due.setDate(due.getDate() + 7)
-    const dueIso = `${due.getFullYear()}-${String(due.getMonth() + 1).padStart(2, '0')}-${String(due.getDate()).padStart(2, '0')}`
-    setTasks((prev) => [
-      ...prev,
-      {
-        id: `t_${Date.now()}`,
-        title: contact.nextAction
-          ? `${contact.nextAction}: ${contact.name} 様`
-          : '新しいタスク',
-        done: false,
-        dueAt: contact.nextActionAt ?? dueIso,
-        memo: contact.nextActionMemo || undefined,
-      },
-    ])
+  // 独立したタスクカード用 state(モック) — 取引詳細と同じ DealTask 型 + DealTaskModal を使用
+  const [tasks, setTasks] = useState<DealTask[]>([])
+  const [taskModal, setTaskModal] = useState<{ task: DealTask | null } | null>(null)
+  // タスク詳細(タイトル+メモ)を展開するための state
+  const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null)
+  const openCreateTaskModal = () => setTaskModal({ task: null })
+  const saveTask = (task: DealTask) => {
+    setTasks((prev) => {
+      const exists = prev.some((t) => t.id === task.id)
+      return exists ? prev.map((t) => (t.id === task.id ? task : t)) : [...prev, task]
+    })
   }
   const toggleTaskDone = (id: string) =>
     setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, done: !t.done } : t)))
@@ -2578,6 +2447,9 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
         {/* ── Right Sidebar ── */}
         <div className="w-[300px] shrink-0 space-y-4">
 
+          {/* リサーチ */}
+          <ResearchChatPanel entityType="contact" entityId={id} />
+
           {/* ネクストアクション統合カード = タスクと連動 (ステータスを上部に統合) */}
           <motion.div
             initial={{ opacity: 0, x: 12 }}
@@ -2586,13 +2458,13 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
             className="rounded-[12px] p-5"
             style={CARD_STYLE}
           >
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-4">
               <h3
-                className="text-xs font-semibold uppercase tracking-[0.06em] flex items-center gap-1.5"
-                style={{ color: 'var(--color-obs-text-muted)' }}
+                className="text-[13px] font-bold tracking-[-0.01em] flex items-center gap-1.5"
+                style={{ color: 'var(--color-obs-text)' }}
               >
-                <CalendarClock size={12} style={{ color: 'var(--color-obs-primary)' }} />
-                ネクストアクション
+                <CalendarClock size={13} style={{ color: 'var(--color-obs-primary)' }} />
+                次の対応
               </h3>
               <span
                 className="inline-flex items-center gap-1 px-2 py-[2px] rounded-full text-[9px] font-semibold whitespace-nowrap"
@@ -2601,11 +2473,59 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
                   color: 'var(--color-obs-primary)',
                   boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.3)',
                 }}
-                title="このネクストアクションは自動的にタスクとして登録されます"
+                title="ここで設定した内容は自動的にタスクとして登録されます"
               >
                 <CheckCircle2 size={9} />
                 タスク連動
               </span>
+            </div>
+
+            {/* IS担当者 + 申し送り + リード経由元 (一番上に配置) */}
+            <div
+              className="mb-4 pb-4 space-y-3.5"
+              style={{ boxShadow: 'inset 0 -1px 0 rgba(109,106,111,0.15)' }}
+            >
+              <div>
+                <label
+                  className="text-[10px] font-semibold uppercase tracking-[0.04em] mb-1.5 flex items-center gap-1"
+                  style={{ color: 'var(--color-obs-primary)' }}
+                >
+                  IS担当者
+                  <Pencil size={9} style={{ color: 'var(--color-obs-primary)', opacity: 0.7 }} />
+                </label>
+                <OwnerSelector
+                  value={contact.owner}
+                  onChange={v => setContact(c => ({ ...c, owner: v }))}
+                />
+                {/* 後続担当への申し送り事項 */}
+                <textarea
+                  value={contact.handoverNote}
+                  onChange={e => setContact(c => ({ ...c, handoverNote: e.target.value }))}
+                  placeholder="後続担当への申し送り事項を入力(キーパーソン情報・温度感・連絡時の留意点など)"
+                  rows={3}
+                  className="w-full mt-2 px-3 py-2 text-[12px] outline-none rounded-[8px] resize-none transition-all leading-relaxed"
+                  style={{ ...nestedInputStyle, color: 'var(--color-obs-text)' }}
+                  onFocus={e => {
+                    e.currentTarget.style.boxShadow = 'inset 0 0 0 1px var(--color-obs-primary)'
+                  }}
+                  onBlur={e => {
+                    e.currentTarget.style.boxShadow = 'inset 0 0 0 1px rgba(109,106,111,0.12)'
+                  }}
+                />
+              </div>
+              <div>
+                <label
+                  className="text-[10px] font-semibold uppercase tracking-[0.04em] mb-1.5 flex items-center gap-1"
+                  style={{ color: 'var(--color-obs-primary)' }}
+                >
+                  リード経由元
+                  <Pencil size={9} style={{ color: 'var(--color-obs-primary)', opacity: 0.7 }} />
+                </label>
+                <LeadSourceSelector
+                  value={contact.leadSource}
+                  onChange={v => setContact(c => ({ ...c, leadSource: v }))}
+                />
+              </div>
             </div>
 
             {/* ステータス */}
@@ -2623,19 +2543,34 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
               />
             </div>
 
-            {/* アクション種別 */}
+            {/* Next Action 内容 (フリーテキスト) */}
             <div className="mb-3">
               <label
                 className="text-[10px] font-semibold uppercase tracking-[0.04em] mb-1.5 flex items-center gap-1"
                 style={{ color: 'var(--color-obs-primary)' }}
               >
-                種別
+                Next Action
                 <Pencil size={9} style={{ color: 'var(--color-obs-primary)', opacity: 0.7 }} />
               </label>
-              <NextActionSelector
-                value={contact.nextAction}
-                onChange={v => setContact(c => ({ ...c, nextAction: v }))}
-              />
+              <div
+                className="relative rounded-[8px] transition-all"
+                style={nestedInputStyle}
+              >
+                <input
+                  type="text"
+                  value={contact.nextAction ?? ''}
+                  onChange={e => setContact(c => ({ ...c, nextAction: e.target.value || null }))}
+                  placeholder="例: 比較表のフォローコール"
+                  className="w-full h-[36px] px-3 text-[13px] font-medium outline-none bg-transparent"
+                  style={{ color: 'var(--color-obs-text)' }}
+                  onFocus={e => {
+                    e.currentTarget.parentElement!.style.boxShadow = 'inset 0 0 0 1px var(--color-obs-primary)'
+                  }}
+                  onBlur={e => {
+                    e.currentTarget.parentElement!.style.boxShadow = 'inset 0 0 0 1px rgba(109,106,111,0.12)'
+                  }}
+                />
+              </div>
             </div>
 
             {/* 実施予定日 */}
@@ -2747,7 +2682,7 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
               </span>
               <button
                 type="button"
-                onClick={handleCreateTask}
+                onClick={openCreateTaskModal}
                 className="inline-flex items-center gap-1 px-2.5 h-[26px] rounded-[7px] text-[10.5px] font-semibold transition-all hover:brightness-110"
                 style={{
                   background: 'var(--color-obs-primary-container)',
@@ -2767,7 +2702,7 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
                 </p>
                 <button
                   type="button"
-                  onClick={handleCreateTask}
+                  onClick={openCreateTaskModal}
                   className="mt-2 inline-flex items-center gap-1 text-[10.5px] font-bold transition-colors hover:text-[var(--color-obs-text)]"
                   style={{ color: 'var(--color-obs-primary)' }}
                 >
@@ -2778,168 +2713,238 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
             ) : (
               <div>
                 {tasks.map((task, i) => {
+                  const cfg = DEAL_TASK_TYPE_STYLES[task.type]
+                  const TypeIcon = cfg.Icon
                   const dueDate = task.dueAt ? new Date(task.dueAt) : null
                   const isOverdue =
                     dueDate && !task.done && dueDate < new Date(new Date().toDateString())
                   const dueLabel = dueDate
                     ? `${dueDate.getMonth() + 1}/${dueDate.getDate()}`
                     : null
+                  const isExpanded = expandedTaskId === task.id
                   return (
                     <div
                       key={task.id}
-                      className="flex items-center gap-2 px-3.5 py-2.5 transition-colors hover:bg-[rgba(171,199,255,0.04)] group"
                       style={
                         i < tasks.length - 1
                           ? { boxShadow: 'inset 0 -1px 0 rgba(109,106,111,0.10)' }
                           : undefined
                       }
                     >
-                      <button
-                        type="button"
-                        onClick={() => toggleTaskDone(task.id)}
-                        className="w-4 h-4 rounded-[4px] flex items-center justify-center shrink-0 transition-all"
-                        style={{
-                          backgroundColor: task.done
-                            ? 'var(--color-obs-primary-container)'
-                            : 'var(--color-obs-surface-low)',
-                          boxShadow: task.done
-                            ? 'none'
-                            : 'inset 0 0 0 1px rgba(109,106,111,0.25)',
+                      <div
+                        className="flex items-center gap-2 px-3.5 py-2.5 transition-colors hover:bg-[rgba(171,199,255,0.04)] group cursor-pointer"
+                        onClick={() => {
+                          setExpandedTaskId(isExpanded ? null : task.id)
                         }}
-                        aria-label={task.done ? '未完了に戻す' : '完了にする'}
                       >
-                        {task.done && (
-                          <CheckCircle2
-                            size={10}
-                            strokeWidth={2.5}
-                            style={{ color: 'var(--color-obs-on-primary)' }}
-                          />
-                        )}
-                      </button>
-
-                      <div className="flex-1 min-w-0">
-                        <p
-                          className="text-[12px] font-medium truncate"
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            toggleTaskDone(task.id)
+                          }}
+                          className="w-4 h-4 rounded-[4px] flex items-center justify-center shrink-0 transition-all"
                           style={{
-                            color: task.done
-                              ? 'var(--color-obs-text-subtle)'
-                              : 'var(--color-obs-text)',
-                            textDecoration: task.done ? 'line-through' : 'none',
+                            backgroundColor: task.done
+                              ? 'var(--color-obs-primary-container)'
+                              : 'var(--color-obs-surface-lowest)',
+                            boxShadow: task.done
+                              ? 'none'
+                              : 'inset 0 0 0 1px rgba(109,106,111,0.25)',
+                          }}
+                          aria-label={task.done ? '未完了に戻す' : '完了にする'}
+                        >
+                          {task.done && (
+                            <CheckCircle2
+                              size={10}
+                              strokeWidth={2.5}
+                              style={{ color: 'var(--color-obs-on-primary)' }}
+                            />
+                          )}
+                        </button>
+
+                        {/* タイプアイコン (取引詳細のタスクUIと統一) */}
+                        <div
+                          className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
+                          style={{
+                            backgroundColor: cfg.bg,
+                            opacity: task.done ? 0.5 : 1,
                           }}
                         >
-                          {task.title}
-                        </p>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          {dueLabel && (
-                            <span
-                              className="inline-flex items-center gap-1 px-1.5 py-[1px] rounded-[4px] text-[9.5px] font-bold tabular-nums whitespace-nowrap"
+                          <TypeIcon size={12} style={{ color: cfg.iconColor }} strokeWidth={2} />
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <p
+                              className="text-[12px] font-medium truncate"
                               style={{
-                                background: isOverdue
-                                  ? 'rgba(255,107,107,0.14)'
-                                  : 'rgba(171,199,255,0.10)',
-                                color: isOverdue
-                                  ? 'var(--color-obs-hot)'
-                                  : 'var(--color-obs-primary)',
+                                color: task.done
+                                  ? 'var(--color-obs-text-subtle)'
+                                  : 'var(--color-obs-text)',
+                                textDecoration: task.done ? 'line-through' : 'none',
                               }}
                             >
-                              <Calendar size={8} strokeWidth={2.5} />
-                              {dueLabel}
-                            </span>
-                          )}
-                          {task.memo && (
-                            <p
-                              className="text-[10.5px] truncate"
-                              style={{ color: 'var(--color-obs-text-muted)' }}
-                            >
-                              {task.memo}
+                              {task.title}
                             </p>
-                          )}
+                          </div>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            {dueLabel && (
+                              <span
+                                className="inline-flex items-center gap-1 px-1.5 py-[1px] rounded-[4px] text-[9.5px] font-bold tabular-nums whitespace-nowrap shrink-0"
+                                style={{
+                                  background: isOverdue
+                                    ? 'rgba(255,107,107,0.14)'
+                                    : 'rgba(171,199,255,0.10)',
+                                  color: isOverdue
+                                    ? 'var(--color-obs-hot)'
+                                    : 'var(--color-obs-primary)',
+                                }}
+                              >
+                                <Calendar size={8} strokeWidth={2.5} />
+                                {dueLabel}
+                              </span>
+                            )}
+                            {task.memo && (
+                              <p
+                                className="text-[10.5px] truncate"
+                                style={{ color: 'var(--color-obs-text-muted)' }}
+                              >
+                                {task.memo}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-0.5 shrink-0">
+                          {/* 展開トグル — クリックでタイトル/メモのインライン編集を表示 */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setExpandedTaskId(isExpanded ? null : task.id)
+                            }}
+                            className="w-6 h-6 flex items-center justify-center rounded-[5px] transition-colors hover:bg-[var(--color-obs-surface-high)]"
+                            aria-label={isExpanded ? '詳細を閉じる' : '詳細を編集'}
+                            aria-expanded={isExpanded}
+                            title={isExpanded ? '詳細を閉じる' : 'タイトル・メモを編集'}
+                          >
+                            <ChevronDown
+                              size={11}
+                              strokeWidth={2.2}
+                              style={{
+                                color: 'var(--color-obs-text-muted)',
+                                transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                                transition: 'transform 150ms var(--ease-liquid)',
+                              }}
+                            />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              deleteTask(task.id)
+                            }}
+                            className="w-6 h-6 flex items-center justify-center rounded-[5px] transition-colors opacity-0 group-hover:opacity-100 hover:bg-[rgba(255,107,107,0.12)]"
+                            title="削除"
+                          >
+                            <Trash2 size={10} style={{ color: 'var(--color-obs-hot)' }} />
+                          </button>
                         </div>
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={() => deleteTask(task.id)}
-                        className="w-6 h-6 flex items-center justify-center rounded-[5px] transition-colors opacity-0 group-hover:opacity-100 hover:bg-[rgba(255,107,107,0.12)]"
-                        title="削除"
-                      >
-                        <Trash2 size={10} style={{ color: 'var(--color-obs-hot)' }} />
-                      </button>
+                      {/* 展開エリア — タイトル + メモをインライン編集 (blur時に自動保存) */}
+                      <AnimatePresence initial={false}>
+                        {isExpanded && (
+                          <motion.div
+                            key={`detail-${task.id}`}
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                            className="overflow-hidden"
+                          >
+                            <div
+                              className="mx-3.5 mb-2.5 px-3 py-2.5 rounded-[8px] space-y-2.5"
+                              style={{
+                                backgroundColor: 'var(--color-obs-surface-low)',
+                                boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.12)',
+                              }}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <div>
+                                <p
+                                  className="text-[9px] font-bold uppercase tracking-[0.06em] mb-1 inline-flex items-center gap-1"
+                                  style={{ color: 'var(--color-obs-text-subtle)' }}
+                                >
+                                  <CheckCircle2 size={9} />
+                                  タイトル
+                                </p>
+                                <input
+                                  type="text"
+                                  defaultValue={task.title}
+                                  onBlur={(e) => {
+                                    const newTitle = e.target.value
+                                    if (newTitle !== task.title) {
+                                      saveTask({ ...task, title: newTitle })
+                                    }
+                                  }}
+                                  placeholder="タイトルを入力..."
+                                  className="w-full px-2 py-1.5 text-[12px] font-medium leading-snug outline-none rounded-[6px] transition-all"
+                                  style={{
+                                    background: 'var(--color-obs-surface-lowest)',
+                                    color: 'var(--color-obs-text)',
+                                    boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.10)',
+                                  }}
+                                  onFocus={(e) => {
+                                    e.currentTarget.style.boxShadow = 'inset 0 0 0 1px var(--color-obs-primary)'
+                                  }}
+                                  onBlurCapture={(e) => {
+                                    e.currentTarget.style.boxShadow = 'inset 0 0 0 1px rgba(109,106,111,0.10)'
+                                  }}
+                                />
+                              </div>
+                              <div>
+                                <p
+                                  className="text-[9px] font-bold uppercase tracking-[0.06em] mb-1 inline-flex items-center gap-1"
+                                  style={{ color: 'var(--color-obs-text-subtle)' }}
+                                >
+                                  <FileText size={9} />
+                                  メモ
+                                </p>
+                                <textarea
+                                  defaultValue={task.memo}
+                                  onBlur={(e) => {
+                                    const newMemo = e.target.value
+                                    if (newMemo !== task.memo) {
+                                      saveTask({ ...task, memo: newMemo })
+                                    }
+                                  }}
+                                  placeholder="メモを入力..."
+                                  rows={3}
+                                  className="w-full px-2 py-1.5 text-[11.5px] leading-relaxed outline-none rounded-[6px] resize-none transition-all"
+                                  style={{
+                                    background: 'var(--color-obs-surface-lowest)',
+                                    color: 'var(--color-obs-text-muted)',
+                                    boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.10)',
+                                  }}
+                                  onFocus={(e) => {
+                                    e.currentTarget.style.boxShadow = 'inset 0 0 0 1px var(--color-obs-primary)'
+                                  }}
+                                  onBlurCapture={(e) => {
+                                    e.currentTarget.style.boxShadow = 'inset 0 0 0 1px rgba(109,106,111,0.10)'
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
                   )
                 })}
               </div>
             )}
-          </motion.div>
-
-          {/* リード/活動量カード(ステータスはネクストアクションへ移動済み) */}
-          <motion.div
-            initial={{ opacity: 0, x: 12 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.3, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
-            className="rounded-[12px] p-5"
-            style={CARD_STYLE}
-          >
-            <h3
-              className="text-xs font-semibold uppercase tracking-[0.06em] mb-3"
-              style={{ color: 'var(--color-obs-text-muted)' }}
-            >
-              リード / 活動量
-            </h3>
-            <motion.div
-              initial="hidden"
-              animate="visible"
-              variants={{ visible: { transition: { staggerChildren: 0.04 } } }}
-            >
-              <ISFieldRow label="リード経由元" editable vertical>
-                <LeadSourceSelector
-                  value={contact.leadSource}
-                  onChange={v => setContact(c => ({ ...c, leadSource: v }))}
-                />
-              </ISFieldRow>
-
-              <ISFieldRow label="コール試行">
-                <div className="flex items-center gap-1.5 justify-end">
-                  <PhoneCall size={12} style={{ color: 'var(--color-obs-text-muted)' }} />
-                  <span className="text-sm font-medium" style={{ color: 'var(--color-obs-text)' }}>{contact.callAttempts}回</span>
-                </div>
-              </ISFieldRow>
-
-              <ISFieldRow label="メール回数">
-                <div className="flex items-center gap-1.5 justify-end">
-                  <Mail size={12} style={{ color: 'var(--color-obs-text-muted)' }} />
-                  <span className="text-sm font-medium" style={{ color: 'var(--color-obs-text)' }}>{contact.mailCount}回</span>
-                </div>
-              </ISFieldRow>
-            </motion.div>
-
-            {/* メモ */}
-            <div
-              className="mt-4 pt-3"
-              style={{ boxShadow: 'inset 0 1px 0 rgba(109,106,111,0.15)' }}
-            >
-              <label
-                className="text-[10px] font-semibold uppercase tracking-[0.04em] mb-1.5 flex items-center gap-1"
-                style={{ color: 'var(--color-obs-primary)' }}
-              >
-                メモ
-                <Pencil size={9} style={{ color: 'var(--color-obs-primary)', opacity: 0.7 }} />
-              </label>
-              <textarea
-                value={contact.statusMemo}
-                onChange={e => setContact(c => ({ ...c, statusMemo: e.target.value }))}
-                placeholder="活動状況に関するメモを入力..."
-                rows={3}
-                className="w-full px-3 py-2 text-[12px] outline-none rounded-[8px] resize-none transition-all"
-                style={{ ...nestedInputStyle, color: 'var(--color-obs-text)' }}
-                onFocus={e => {
-                  e.currentTarget.style.boxShadow = 'inset 0 0 0 1px var(--color-obs-primary)'
-                }}
-                onBlur={e => {
-                  e.currentTarget.style.boxShadow = 'inset 0 0 0 1px rgba(109,106,111,0.12)'
-                }}
-              />
-            </div>
           </motion.div>
 
         </div>
@@ -2952,6 +2957,17 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
             contact={contact}
             onClose={() => setShowEditModal(false)}
             onSave={updated => setContact(updated)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* ── Task Modal (取引詳細と同じ仕様: コール / メール / その他) ── */}
+      <AnimatePresence>
+        {taskModal && (
+          <DealTaskModal
+            task={taskModal.task}
+            onClose={() => setTaskModal(null)}
+            onSave={saveTask}
           />
         )}
       </AnimatePresence>

@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Search, Plus, Users, CalendarCheck, X, ChevronDown } from 'lucide-react'
 import type { CallList } from '@/types/crm'
+
+type ListKind = 'is' | 'company'
+type LocalList = CallList & { kind: ListKind }
 import {
   ObsButton,
   ObsCard,
@@ -16,26 +19,38 @@ import {
 
 // ─── Mock Data ─────────────────────────────────────────────────────────────────
 
-const MOCK_LISTS: CallList[] = [
+const MOCK_LISTS: LocalList[] = [
+  // ── ISリスト（コンタクト基点） ─────────────
   {
     id: 'list-1', name: '今週のコール対象', description: '今週中にコールすべきターゲット',
     ownerName: '田中太郎', contactCount: 12, completedCount: 5, appointmentCount: 2,
-    color: '#0071E3', createdAt: '2026-03-24', updatedAt: '2026-03-26',
+    color: '#0071E3', createdAt: '2026-03-24', updatedAt: '2026-03-26', kind: 'is',
   },
   {
     id: 'list-2', name: '再フォローリスト', description: '不在/不通で再コールが必要',
     ownerName: '田中太郎', contactCount: 8, completedCount: 1, appointmentCount: 0,
-    color: '#FF9F0A', createdAt: '2026-03-20', updatedAt: '2026-03-25',
+    color: '#FF9F0A', createdAt: '2026-03-20', updatedAt: '2026-03-25', kind: 'is',
   },
   {
     id: 'list-3', name: 'セミナー参加者リスト', description: '3/15セミナー参加者へのフォローアップ',
     ownerName: '鈴木花子', contactCount: 20, completedCount: 14, appointmentCount: 5,
-    color: '#34C759', createdAt: '2026-03-16', updatedAt: '2026-03-22',
+    color: '#34C759', createdAt: '2026-03-16', updatedAt: '2026-03-22', kind: 'is',
+  },
+  // ── 企業リスト（企業基点） ─────────────────
+  {
+    id: 'list-4', name: 'Aランク未着手企業', description: 'Aランクでまだ未アプローチの企業',
+    ownerName: '田中太郎', contactCount: 6, completedCount: 0, appointmentCount: 0,
+    color: '#FF3B30', createdAt: '2026-03-18', updatedAt: '2026-03-26', kind: 'company',
   },
   {
-    id: 'list-4', name: 'Aランク未着手', description: 'Aランクでまだ未アプローチの企業',
-    ownerName: '田中太郎', contactCount: 6, completedCount: 0, appointmentCount: 0,
-    color: '#FF3B30', createdAt: '2026-03-18', updatedAt: '2026-03-26',
+    id: 'list-5', name: 'HOT 2026Q2 アプローチ対象', description: '求人インテントHOTの企業を抽出',
+    ownerName: 'IS 三郎', contactCount: 323, completedCount: 42, appointmentCount: 9,
+    color: '#FF3B30', createdAt: '2026-04-12', updatedAt: '2026-05-02', kind: 'company',
+  },
+  {
+    id: 'list-6', name: '製造業×従業員500名以上', description: '製造業の中堅以上をまとめたターゲットリスト',
+    ownerName: '営業 花子', contactCount: 87, completedCount: 12, appointmentCount: 3,
+    color: '#FF9F0A', createdAt: '2026-04-25', updatedAt: '2026-05-08', kind: 'company',
   },
 ]
 
@@ -60,7 +75,7 @@ const cardVariant = {
 
 // ─── ListCard ────────────────────────────────────────────────────────────────
 
-function ListCard({ list, index }: { list: CallList; index: number }) {
+function ListCard({ list, index }: { list: LocalList; index: number }) {
   const router = useRouter()
   const accent = COLOR_ACCENT[list.color] ?? 'var(--color-obs-primary)'
 
@@ -284,11 +299,14 @@ export default function ListsPage() {
   const [showCreate, setShowCreate] = useState(false)
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return MOCK_LISTS
-    const q = search.toLowerCase()
-    return MOCK_LISTS.filter(
-      (l) => l.name.toLowerCase().includes(q) || l.ownerName.toLowerCase().includes(q),
-    )
+    let base = MOCK_LISTS.filter((l) => l.kind === 'is')
+    if (search.trim()) {
+      const q = search.toLowerCase()
+      base = base.filter(
+        (l) => l.name.toLowerCase().includes(q) || l.ownerName.toLowerCase().includes(q),
+      )
+    }
+    return base
   }, [search])
 
   return (
@@ -296,14 +314,14 @@ export default function ListsPage() {
       <div className="w-full px-8 xl:px-12 2xl:px-16 pb-16">
         {/* ── Hero ── */}
         <ObsHero
-          eyebrow="IS Lists"
+          eyebrow="LISTS"
           title="ISリスト"
           caption="コール対象リストを管理・アプローチの進捗を可視化。"
           action={
             <ObsButton
               variant="primary"
               size="md"
-              onClick={() => router.push('/companies?mode=list-create')}
+              onClick={() => router.push('/contacts')}
             >
               <span className="inline-flex items-center gap-1.5">
                 <Plus size={14} strokeWidth={2.5} />
@@ -341,7 +359,7 @@ export default function ListsPage() {
           <ObsCard depth="low" padding="lg" radius="xl">
             <div className="py-16 text-center">
               <p className="text-sm" style={{ color: 'var(--color-obs-text-muted)' }}>
-                リストが見つかりません
+                ISリストがありません。コンタクト一覧から作成してください。
               </p>
             </div>
           </ObsCard>

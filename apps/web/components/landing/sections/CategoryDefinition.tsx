@@ -16,7 +16,7 @@ export const CategoryDefinition = () => (
           <p>「会計」「人事」「総務」を統合した Back Office は、もう当たり前になりました。</p>
           <p>けれど、レベニュー側 — 営業・マーケ・サポート・PDM・ヘルプデスク — は、ばらばらのツールに分かれたまま。</p>
           <p>BGM (Business Growth Management) は、レベニュー側のすべてを束ねる、はじめてのカテゴリです。</p>
-          <p className="text-[#7e7c83]">Front Office は、その第一号になります。</p>
+          <p className="text-[#7e7c83]">KikuCRM は、その Front Office カテゴリの第一号です。</p>
         </div>
       </div>
 
@@ -59,7 +59,7 @@ export const CategoryDefinition = () => (
                 </span>
               ))}
             </div>
-            <div className="mt-8 text-xs text-aurora/80">Front Office (RookieSmart Inc.)</div>
+            <div className="mt-8 text-xs text-aurora/80">KikuCRM by RookieSmart Inc.</div>
           </div>
         </div>
       </div>

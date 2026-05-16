@@ -3,7 +3,6 @@
 import { useMemo, useState, useRef, useEffect, DragEvent } from 'react'
 import Link from 'next/link'
 import {
-  Plus,
   Calendar,
   X,
   Check,
@@ -21,7 +20,6 @@ import { SignalBadge } from '@/components/crm/SignalBadge'
 type IntentSignal = 'Hot' | 'Middle' | 'Low'
 type StageKey =
   | 'IS'
-  | 'NURTURING'
   | 'MEETING_PLANNED'
   | 'MEETING_DONE'
   | 'PROJECT_PLANNED'
@@ -66,58 +64,50 @@ type SourceCategory = 'web' | 'referral' | 'partner' | 'event' | 'media'
 const INITIAL_DEALS: Deal[] = [
   { id: 'd1',  code: 'BGM-0842', name: 'グローバルERP統合計画',       company: '株式会社テクノリード',    contact: '田中 誠',    amount: 12_500_000, intent: 'Hot',    owner: '田中太郎', stage: 'IS',              order: 0, probability: 35, dueDate: '14 Oct', createdAt: '2026-04-02', emailCount: 2,  meetingCount: 0, status: 'アポ獲得待ち', nextAction: '初回コール', nextActionDate: '4/22', sourceCategory: 'web', source: 'HP' },
   { id: 'd2',  code: 'BGM-1209', name: 'マーケティングHub連携',       company: '合同会社ビジョン',        contact: '加藤 雄介',  amount: 2_100_000,  intent: 'Low',    owner: '佐藤次郎', stage: 'IS',              order: 1, probability: 15, dueDate: '21 Oct', createdAt: '2026-04-08', emailCount: 1,  meetingCount: 0, status: '期日超過(2日)', nextAction: '資料送付', nextActionDate: '4/20', sourceCategory: 'web', source: 'HP' },
-  { id: 'd3',  code: 'BGM-0992', name: '次世代CRM導入検討',           company: '合同会社フューチャー',    contact: '山本 佳子',  amount: 8_900_000,  intent: 'Hot',    owner: '鈴木花子', stage: 'NURTURING',       order: 0, probability: 48, lastContact: '2h ago', createdAt: '2026-03-14', emailCount: 6,  meetingCount: 1, status: 'PoC検討中 / 次回商談設定', nextAction: '再アプローチ', nextActionDate: '4/24', sourceCategory: 'web', source: '無料トライアルフォーム' },
   { id: 'd4',  code: 'BGM-1104', name: 'SFA刷新案件 - A社',          company: '有限会社サクセス',        contact: '小林 健太',  amount: 5_200_000,  intent: 'Middle', owner: '鈴木花子', stage: 'MEETING_PLANNED', order: 0, probability: 52, dueDate: '28 Oct', createdAt: '2026-03-22', emailCount: 4,  meetingCount: 0, status: '初回商談前', nextAction: '商談実施', nextActionDate: '4/28', sourceCategory: 'referral', source: '名和さん紹介' },
   { id: 'd5',  code: 'BGM-1066', name: '物流最適化システム提案',      company: '株式会社イノベーション',  contact: '佐々木 拓也', amount: 3_600_000,  intent: 'Middle', owner: '田中太郎', stage: 'MEETING_DONE',    order: 0, probability: 60, createdAt: '2026-03-10', emailCount: 8,  meetingCount: 1, status: '提案書レビュー待ち(先方CTO)', nextAction: '提案書レビュー', nextActionDate: '4/23', sourceCategory: 'event', source: 'IT・情シス DXPO' },
   { id: 'd6',  code: 'BGM-1122', name: '基幹システムクラウド移行',    company: '株式会社グロース',        contact: '中村 理恵',  amount: 18_500_000, intent: 'Hot',    owner: '田中太郎', stage: 'PROJECT_PLANNED', order: 0, probability: 92, priorityPhase: 'PRIORITY Q4', createdAt: '2026-02-18', emailCount: 22, meetingCount: 3, status: '決裁者MTG調整中', nextAction: '決裁者MTG', nextActionDate: '4/25', sourceCategory: 'partner', source: '株式会社アシスト' },
   { id: 'd7',  code: 'BGM-0901', name: 'AI解析エンジン検証',          company: '株式会社ネクスト',        contact: '鈴木 美香',  amount: 6_800_000,  intent: 'Hot',    owner: '田中太郎', stage: 'POC',             order: 0, probability: 70, priorityPhase: 'Phase: Model Validation', createdAt: '2026-02-01', emailCount: 35, meetingCount: 5, status: 'PoC進行中 (週次定例)', nextAction: 'POC中間報告', nextActionDate: '4/26', sourceCategory: 'web', source: 'HP' },
   { id: 'd8',  code: 'BGM-0718', name: 'エンタープライズ契約（2期）', company: '株式会社テクノリード',    contact: '田中 誠',    amount: 48_000_000, intent: 'Hot',    owner: '田中太郎', stage: 'CLOSED_WON',      order: 0, probability: 100, createdAt: '2025-12-12', emailCount: 58, meetingCount: 12, status: '契約完了 / オンボ開始', nextAction: 'オンボーディング', nextActionDate: '5/1', sourceCategory: 'event', source: 'Startup JAPAN EXPO' },
-  { id: 'd9',  code: 'BGM-1301', name: 'スタータープラン再提案',     company: '株式会社スタート',        contact: '吉田 千春',  amount: 600_000,    intent: 'Low',    owner: '佐藤次郎', stage: 'NURTURING',       order: 1, probability: 10, lastContact: '5d ago', createdAt: '2026-03-28', emailCount: 3,  meetingCount: 0, status: '長期ナーチャ(月次配信)', nextAction: 'ナーチャリングメール', nextActionDate: '5/3', sourceCategory: 'media', source: 'BOXIL' },
-  { id: 'd10', code: 'BGM-0821', name: 'データ分析基盤構築',         company: '株式会社アルファ',        contact: '渡辺 健二',  amount: 1_500_000,  intent: 'Middle', owner: '鈴木花子', stage: 'LOST_DEAL',       order: 0, createdAt: '2026-01-20', emailCount: 11, meetingCount: 2, sourceCategory: 'media', source: 'アイスマイリー' },
-  { id: 'd11', code: 'BGM-0633', name: 'カスタマーサクセス契約',     company: '合同会社ベータ',          contact: '佐藤 良子',  amount: 960_000,    intent: 'Middle', owner: '田中太郎', stage: 'CHURN',           order: 0, createdAt: '2025-10-05', emailCount: 40, meetingCount: 4, sourceCategory: 'partner', source: '後藤さん紹介' },
-  { id: 'd12', code: 'BGM-0299', name: 'AI活用コンサルティング',     company: '株式会社デルタ',          contact: '木村 隆',    amount: 2_100_000,  intent: 'Hot',    owner: '佐藤次郎', stage: 'LOST',            order: 0, createdAt: '2026-01-08', emailCount: 14, meetingCount: 2, sourceCategory: 'event', source: 'デジタル化・DX推進展' },
+  { id: 'd10', code: 'BGM-0821', name: 'データ分析基盤構築',         company: '株式会社アルファ',        contact: '渡辺 健二',  amount: 1_500_000,  intent: 'Middle', owner: '鈴木花子', stage: 'LOST_DEAL',       order: 0, createdAt: '2026-01-20', emailCount: 11, meetingCount: 2, sourceCategory: 'media', source: 'アイスマイリー',       status: 'POC後に競合決定 (機能差で失注)', nextAction: '失注理由ヒアリング',   nextActionDate: '1/30' },
+  { id: 'd11', code: 'BGM-0633', name: 'カスタマーサクセス契約',     company: '合同会社ベータ',          contact: '佐藤 良子',  amount: 960_000,    intent: 'Middle', owner: '田中太郎', stage: 'CHURN',           order: 0, createdAt: '2025-10-05', emailCount: 40, meetingCount: 4, sourceCategory: 'partner', source: '後藤さん紹介',          status: 'Q4更新で解約 (社内体制変更)',     nextAction: 'Win-back提案準備',     nextActionDate: '11/1' },
+  { id: 'd12', code: 'BGM-0299', name: 'AI活用コンサルティング',     company: '株式会社デルタ',          contact: '木村 隆',    amount: 2_100_000,  intent: 'Hot',    owner: '佐藤次郎', stage: 'LOST',            order: 0, createdAt: '2026-01-08', emailCount: 14, meetingCount: 2, sourceCategory: 'event', source: 'デジタル化・DX推進展', status: '追客終了 (3ヶ月接触なし)',        nextAction: '対応終了',             nextActionDate: '—' },
 ]
 
 // ─── Stages ────────────────────────────────────────────────────────────────────
 
-// ゲームのプログレス風：冷→温→熱→最終の順で色変化
-// トーンは Liquid Obsidian の primary/ middle/ hot を基軸に、phase間で相違がつくように調整
+// 色は Liquid Obsidian デザインシステムのパレット (primary / low / middle / hot / text系) のみで構成
+// アクセントは控えめ。ヘッダーやドットは subtle に光らせる程度。
 type StageColor = { accent: string; bg: string; glow: string; text: string }
 
-// ゲージと同じ RPG レアリティ階段でプログレス
-// COMMON → RARE → EPIC → LEGENDARY → MYTHIC を8段階に展開（中間はブリッジ色）
+// フェーズの進行感は色相で表現（中立→primary→middle→success→hot/muted）
 const STAGES: { key: StageKey; label: string; desc: string; color: StageColor }[] = [
-  // Tier1: Common（シルバー） — 出発点
+  // 出発点 — outline / muted
   { key: 'IS',               label: 'IS',             desc: '未商談の企業へアプローチ',
-    color: { accent: '#7e90b0', bg: 'rgba(126,144,176,0.14)', glow: 'rgba(126,144,176,0.45)', text: '#aab8d1' } },
-  // Tier1→2 ブリッジ（シルバーグリーン）
-  { key: 'NURTURING',        label: 'ナーチャリング', desc: '再アプローチで商談獲得を目指す',
-    color: { accent: '#6fb895', bg: 'rgba(111,184,149,0.14)', glow: 'rgba(111,184,149,0.5)',  text: '#8edbb3' } },
-  // Tier2: Rare（エメラルドグリーン）
+    color: { accent: '#8f8c90', bg: 'rgba(143,140,144,0.10)', glow: 'rgba(143,140,144,0.20)', text: '#c7c5c9' } },
+  // 商談 — primary blue
   { key: 'MEETING_PLANNED',  label: '商談予定',       desc: '初回商談がスケジュール済み',
-    color: { accent: '#4ad98a', bg: 'rgba(74,217,138,0.14)',  glow: 'rgba(74,217,138,0.55)',  text: '#6ef7a5' } },
-  // Tier2→3 ブリッジ（エメラルド→シアン）
+    color: { accent: '#abc7ff', bg: 'rgba(171,199,255,0.10)', glow: 'rgba(171,199,255,0.20)', text: '#c7d6ff' } },
   { key: 'MEETING_DONE',     label: '商談済み',       desc: '初回商談が完了した案件',
-    color: { accent: '#5bc7d9', bg: 'rgba(91,199,217,0.14)',  glow: 'rgba(91,199,217,0.55)',  text: '#7de0ee' } },
-  // Tier3: Epic（ブリリアントブルー）
+    color: { accent: '#abc7ff', bg: 'rgba(171,199,255,0.12)', glow: 'rgba(171,199,255,0.22)', text: '#c7d6ff' } },
+  // PJ化 — low (cyan-blue)
   { key: 'PROJECT_PLANNED',  label: 'PJ化予定あり',   desc: '具体的なプロジェクト化が見込める',
-    color: { accent: '#4a9eff', bg: 'rgba(74,158,255,0.14)',  glow: 'rgba(74,158,255,0.6)',   text: '#8dc0ff' } },
-  // Tier3→4 ブリッジ（ブルーパープル）
+    color: { accent: '#7ec6ff', bg: 'rgba(126,198,255,0.12)', glow: 'rgba(126,198,255,0.22)', text: '#a8d6ff' } },
+  // PJ進行 / 検証 — middle (orange)
   { key: 'MULTI_MEETING',    label: '複数商談済み',   desc: '2回以上の商談を実施済み',
-    color: { accent: '#8a7bdf', bg: 'rgba(138,123,223,0.14)', glow: 'rgba(138,123,223,0.55)', text: '#a698f0' } },
-  // Tier4: Legendary（ネオンパープル）
+    color: { accent: '#ffb86b', bg: 'rgba(255,184,107,0.10)', glow: 'rgba(255,184,107,0.20)', text: '#ffce99' } },
   { key: 'POC',              label: 'POC',            desc: '検証・トライアルを実施中',
-    color: { accent: '#c07cff', bg: 'rgba(192,124,255,0.14)', glow: 'rgba(192,124,255,0.6)',  text: '#d9a3ff' } },
-  // Tier5: Mythic（フレイムゴールド） — 勝利の到達点
+    color: { accent: '#ffb86b', bg: 'rgba(255,184,107,0.12)', glow: 'rgba(255,184,107,0.22)', text: '#ffce99' } },
+  // 受注 — emerald (success の唯一の例外色。緑で成功を伝える)
   { key: 'CLOSED_WON',       label: '受注',           desc: '契約締結が完了した案件',
-    color: { accent: '#ffb347', bg: 'rgba(255,179,71,0.16)',  glow: 'rgba(255,179,71,0.75)',  text: '#ffd37a' } },
-  // 失注・チャーン系（赤） — ネガティブは別階層
+    color: { accent: '#6ee7a1', bg: 'rgba(110,231,161,0.12)', glow: 'rgba(110,231,161,0.22)', text: '#9af0c0' } },
+  // 失注・チャーン — hot
   { key: 'LOST_DEAL',        label: '失注',           desc: 'POC後に受注に至らなかった案件',
-    color: { accent: '#ff6b6b', bg: 'rgba(255,107,107,0.12)', glow: 'rgba(255,107,107,0.4)',  text: '#ff8a8a' } },
+    color: { accent: '#ff6b6b', bg: 'rgba(255,107,107,0.10)', glow: 'rgba(255,107,107,0.20)', text: '#ff8a8a' } },
   { key: 'CHURN',            label: 'チャーン',       desc: '契約後に解約となった案件',
-    color: { accent: '#ff4e6a', bg: 'rgba(255,78,106,0.12)',  glow: 'rgba(255,78,106,0.4)',   text: '#ff8a8a' } },
+    color: { accent: '#ff6b6b', bg: 'rgba(255,107,107,0.10)', glow: 'rgba(255,107,107,0.20)', text: '#ff8a8a' } },
   { key: 'LOST',             label: 'ロスト',         desc: '追客を完全に終了した案件',
-    color: { accent: '#6d6a6f', bg: 'rgba(109,106,111,0.15)', glow: 'rgba(109,106,111,0.3)',  text: '#8f8c90' } },
+    color: { accent: '#6d6a6f', bg: 'rgba(109,106,111,0.12)', glow: 'rgba(109,106,111,0.18)', text: '#8f8c90' } },
 ]
 
 const OWNERS = ['全員', '田中太郎', '鈴木花子', '佐藤次郎']
@@ -273,7 +263,7 @@ export default function PipelinePage() {
                   )
                 })}
                 <span className="ml-auto text-[11px] tracking-[0.08em] uppercase" style={{ color: 'var(--color-obs-text-subtle)' }}>
-                  {filtered.length}件 ・ 合計 {formatJpy(filtered.reduce((s, d) => s + d.amount, 0))}
+                  {filtered.length}件
                 </span>
               </div>
 
@@ -290,46 +280,40 @@ export default function PipelinePage() {
                   onDragLeave={onColumnDragLeave}
                   onDrop={(e) => onDrop(e, stage.key)}
                 >
-                  {/* Column header — Phase Chip スタイル */}
+                  {/* Column header — Liquid Obsidian トーン (subtle・フラット) */}
                   <div className="mb-4">
                     <div
                       className="rounded-[var(--radius-obs-md)] px-3 py-2.5 mb-1.5 relative overflow-hidden"
                       style={{
-                        background: `linear-gradient(140deg, ${stage.color.bg} 0%, rgba(28,28,30,0.4) 100%)`,
-                        boxShadow: `inset 0 0 0 1px ${stage.color.accent}33, inset 0 1px 0 0 ${stage.color.accent}22`,
+                        backgroundColor: 'var(--color-obs-surface-high)',
+                        boxShadow: `inset 0 0 0 1px ${stage.color.accent}1f`,
                       }}
                     >
-                      {/* 左端のカラーバー */}
+                      {/* 左端のカラーバー — グロー削除、フラットなアクセント */}
                       <span
-                        className="absolute left-0 top-0 bottom-0 w-[3px]"
+                        className="absolute left-0 top-0 bottom-0 w-[2px]"
                         style={{
-                          background: `linear-gradient(180deg, ${stage.color.accent} 0%, transparent 100%)`,
-                          boxShadow: `0 0 10px ${stage.color.glow}`,
+                          backgroundColor: stage.color.accent,
+                          opacity: 0.7,
                         }}
                       />
 
                       <div className="flex items-center justify-between mb-1 pl-1">
                         <div className="flex items-center gap-2 min-w-0">
                           <span
-                            className="w-2 h-2 rounded-full shrink-0"
-                            style={{
-                              backgroundColor: stage.color.accent,
-                              boxShadow: `0 0 10px ${stage.color.glow}, 0 0 3px ${stage.color.accent}`,
-                            }}
+                            className="w-1.5 h-1.5 rounded-full shrink-0"
+                            style={{ backgroundColor: stage.color.accent }}
                           />
                           <h3
-                            className="font-[family-name:var(--font-display)] text-[13px] font-extrabold tracking-[-0.01em] leading-none"
-                            style={{
-                              color: stage.color.text,
-                              textShadow: `0 0 10px ${stage.color.glow}`,
-                            }}
+                            className="font-[family-name:var(--font-display)] text-[13px] font-semibold tracking-[-0.005em] leading-none"
+                            style={{ color: 'var(--color-obs-text)' }}
                           >
                             {stage.label}
                           </h3>
                           <span
-                            className="text-[10px] font-bold tabular-nums px-1.5 h-4 rounded-sm inline-flex items-center leading-none"
+                            className="text-[10px] font-medium tabular-nums px-1.5 h-4 rounded-sm inline-flex items-center leading-none"
                             style={{
-                              backgroundColor: `${stage.color.accent}22`,
+                              backgroundColor: `${stage.color.accent}1f`,
                               color: stage.color.accent,
                             }}
                           >
@@ -338,19 +322,16 @@ export default function PipelinePage() {
                         </div>
                         {stageDeals.length > 0 && (
                           <span
-                            className="text-[11px] font-bold tabular-nums"
-                            style={{
-                              color: stage.color.accent,
-                              textShadow: `0 0 6px ${stage.color.glow}`,
-                            }}
+                            className="text-[11px] font-semibold tabular-nums"
+                            style={{ color: 'var(--color-obs-text-muted)' }}
                           >
                             {formatJpy(stageDeals.reduce((s, d) => s + d.amount, 0))}
                           </span>
                         )}
                       </div>
                       <p
-                        className="text-[10px] leading-tight pl-1 opacity-80"
-                        style={{ color: 'var(--color-obs-text-muted)' }}
+                        className="text-[10px] leading-tight pl-1"
+                        style={{ color: 'var(--color-obs-text-subtle)' }}
                       >
                         {stage.desc}
                       </p>
@@ -388,20 +369,6 @@ export default function PipelinePage() {
           )}
         </div>
 
-        {/* ── FAB（chromatic + button） ── */}
-        <button
-          className="fixed bottom-8 right-8 w-14 h-14 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110 group z-40"
-          style={{
-            background:
-              'linear-gradient(140deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
-            color: 'var(--color-obs-on-primary)',
-            boxShadow:
-              '0 0 25px rgba(0,113,227,0.4), inset 0 1px 0 rgba(255,255,255,0.2)',
-            transitionTimingFunction: 'var(--ease-liquid)',
-          }}
-        >
-          <Plus size={22} strokeWidth={2.5} className="group-hover:rotate-90 transition-transform duration-300" />
-        </button>
       </div>
     </ObsPageShell>
   )
@@ -456,7 +423,6 @@ function bucketOf(stage: StageKey): ReportBucket {
   if (stage === 'PROJECT_PLANNED') return 'PJ可能'
   if (
     stage === 'IS' ||
-    stage === 'NURTURING' ||
     stage === 'MEETING_PLANNED' ||
     stage === 'MEETING_DONE'
   ) {

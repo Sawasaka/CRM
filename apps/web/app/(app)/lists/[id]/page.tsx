@@ -11,7 +11,6 @@ import {
   ChevronDown,
   Phone,
   Mail,
-  ChevronDown as CaretDown,
   FileEdit,
   Megaphone,
   Share2,
@@ -25,6 +24,7 @@ import {
 } from 'lucide-react'
 import type { ApproachStatus, CallList, CallListItem } from '@/types/crm'
 import { ObsPageShell } from '@/components/obsidian'
+import { MOCK_CONTACTS_BY_ID, type LeadSourceType } from '@/lib/mock-data/contacts'
 
 // ─── Mock Data ─────────────────────────────────────────────────────────────────
 
@@ -57,34 +57,69 @@ const MOCK_LISTS: Record<string, CallList & { accent: string }> = {
 
 type CallListItemEx = CallListItem & { leadSource: LeadSourceType }
 
-const MOCK_ITEMS: Record<string, CallListItemEx[]> = {
+// リストへの割当データ。コンタクトの実値はここでは持たず、表示時に MOCK_CONTACTS から引く。
+// 「リード経由元 / ステータス / コール / メール」 等は contacts と完全連動。
+const LIST_ASSIGNMENTS: Record<string, { contactId: string; priority: number }[]> = {
   'list-1': [
-    { id: 'li-1', listId: 'list-1', contactId: '1', contactName: '田中 誠', contactTitle: '営業部長', companyId: '1', companyName: '株式会社テクノリード', rank: 'A', status: 'アポ獲得', callAttempts: 3, emailsSent: 5, lastCallAt: '2026-03-20', nextActionAt: '2026-03-28', priority: 1, leadSource: 'inbound' },
-    { id: 'li-2', listId: 'list-1', contactId: '2', contactName: '山本 佳子', contactTitle: 'マネージャー', companyId: '2', companyName: '合同会社フューチャー', rank: 'A', status: '接続済み', callAttempts: 5, emailsSent: 8, lastCallAt: '2026-03-19', nextActionAt: '2026-03-22', priority: 2, leadSource: 'event' },
-    { id: 'li-3', listId: 'list-1', contactId: '3', contactName: '佐々木 拓也', contactTitle: '代表取締役', companyId: '3', companyName: '株式会社イノベーション', rank: 'A', status: 'Next Action', callAttempts: 2, emailsSent: 3, lastCallAt: '2026-03-18', nextActionAt: '2026-03-25', priority: 3, leadSource: 'referral' },
-    { id: 'li-4', listId: 'list-1', contactId: '4', contactName: '中村 理恵', contactTitle: '購買担当', companyId: '4', companyName: '株式会社グロース', rank: 'B', status: '不在', callAttempts: 4, emailsSent: 2, lastCallAt: '2026-03-15', nextActionAt: null, priority: 4, leadSource: 'paid_ads' },
-    { id: 'li-5', listId: 'list-1', contactId: '5', contactName: '小林 健太', contactTitle: '部長', companyId: '5', companyName: '有限会社サクセス', rank: 'B', status: '不通', callAttempts: 6, emailsSent: 1, lastCallAt: '2026-03-14', nextActionAt: '2026-03-23', priority: 5, leadSource: 'web_form' },
-    { id: 'li-6', listId: 'list-1', contactId: '6', contactName: '鈴木 美香', contactTitle: '課長', companyId: '6', companyName: '株式会社ネクスト', rank: 'C', status: '未着手', callAttempts: 0, emailsSent: 0, lastCallAt: null, nextActionAt: null, priority: 6, leadSource: 'cold_call' },
-    { id: 'li-7', listId: 'list-1', contactId: '7', contactName: '加藤 雄介', contactTitle: '取締役', companyId: '7', companyName: '合同会社ビジョン', rank: 'C', status: '未着手', callAttempts: 0, emailsSent: 0, lastCallAt: null, nextActionAt: null, priority: 7, leadSource: 'cold_mail' },
-    { id: 'li-8', listId: 'list-1', contactId: '8', contactName: '吉田 千春', contactTitle: '部長', companyId: '8', companyName: '株式会社スタート', rank: 'C', status: 'コール不可', callAttempts: 8, emailsSent: 4, lastCallAt: '2026-03-01', nextActionAt: null, priority: 8, leadSource: 'sns' },
+    { contactId: '1', priority: 1 },
+    { contactId: '2', priority: 2 },
+    { contactId: '3', priority: 3 },
+    { contactId: '4', priority: 4 },
+    { contactId: '5', priority: 5 },
+    { contactId: '6', priority: 6 },
+    { contactId: '7', priority: 7 },
+    { contactId: '8', priority: 8 },
   ],
   'list-2': [
-    { id: 'li-9', listId: 'list-2', contactId: '4', contactName: '中村 理恵', contactTitle: '購買担当', companyId: '4', companyName: '株式会社グロース', rank: 'B', status: '不在', callAttempts: 4, emailsSent: 2, lastCallAt: '2026-03-15', nextActionAt: null, priority: 1, leadSource: 'paid_ads' },
-    { id: 'li-10', listId: 'list-2', contactId: '5', contactName: '小林 健太', contactTitle: '部長', companyId: '5', companyName: '有限会社サクセス', rank: 'B', status: '不通', callAttempts: 6, emailsSent: 1, lastCallAt: '2026-03-14', nextActionAt: '2026-03-23', priority: 2, leadSource: 'web_form' },
+    { contactId: '4', priority: 1 },
+    { contactId: '5', priority: 2 },
   ],
   'list-3': [
-    { id: 'li-11', listId: 'list-3', contactId: '1', contactName: '田中 誠', contactTitle: '営業部長', companyId: '1', companyName: '株式会社テクノリード', rank: 'A', status: 'アポ獲得', callAttempts: 3, emailsSent: 5, lastCallAt: '2026-03-20', nextActionAt: '2026-03-28', priority: 1, leadSource: 'event' },
+    { contactId: '1', priority: 1 },
   ],
   'list-4': [
-    { id: 'li-12', listId: 'list-4', contactId: '6', contactName: '鈴木 美香', contactTitle: '課長', companyId: '6', companyName: '株式会社ネクスト', rank: 'A', status: '未着手', callAttempts: 0, emailsSent: 0, lastCallAt: null, nextActionAt: null, priority: 1, leadSource: 'cold_call' },
-    { id: 'li-13', listId: 'list-4', contactId: '7', contactName: '加藤 雄介', contactTitle: '取締役', companyId: '7', companyName: '合同会社ビジョン', rank: 'A', status: '未着手', callAttempts: 0, emailsSent: 0, lastCallAt: null, nextActionAt: null, priority: 2, leadSource: 'partner' },
-    { id: 'li-14', listId: 'list-4', contactId: '9', contactName: '高橋 健一', contactTitle: 'CTO', companyId: '9', companyName: '株式会社デジタルフォース', rank: 'A', status: '未着手', callAttempts: 0, emailsSent: 0, lastCallAt: null, nextActionAt: null, priority: 3, leadSource: 'organic_search' },
+    { contactId: '6', priority: 1 },
+    { contactId: '7', priority: 2 },
+    { contactId: '9', priority: 3 },
   ],
+}
+
+function buildCallListItem(
+  listId: string,
+  contactId: string,
+  priority: number,
+): CallListItemEx | null {
+  const c = MOCK_CONTACTS_BY_ID[contactId]
+  if (!c) return null
+  return {
+    id: `li-${listId}-${contactId}`,
+    listId,
+    contactId,
+    contactName: c.name,
+    contactTitle: c.title,
+    companyId: c.companyId,
+    companyName: c.company,
+    rank: c.rank,
+    status: c.status,
+    callAttempts: c.callAttempts,
+    emailsSent: c.emailsSent,
+    lastCallAt: c.lastCallAt,
+    nextActionAt: c.nextActionAt,
+    priority,
+    leadSource: c.leadSource.type,
+  }
+}
+
+function getListItems(listId: string): CallListItemEx[] {
+  const assignments = LIST_ASSIGNMENTS[listId] ?? []
+  return assignments
+    .map((a) => buildCallListItem(listId, a.contactId, a.priority))
+    .filter((i): i is CallListItemEx => i !== null)
 }
 
 // ─── Filter / Sort types ─────────────────────────────────────────────────────
 
-type FilterKey = 'all' | '未着手' | '不通' | '不在' | '接続済み' | 'コール不可' | 'アポ獲得'
+type FilterKey = 'all' | '未着手' | '不通' | '不在' | '接続済み' | 'コール不可' | 'アポ獲得' | 'その他'
 type SortKey = 'priority' | 'name' | 'rank'
 type SortDir = 'asc' | 'desc'
 
@@ -96,7 +131,11 @@ const FILTERS: { key: FilterKey; label: string }[] = [
   { key: '接続済み', label: '接続済み' },
   { key: 'コール不可', label: 'コール不可' },
   { key: 'アポ獲得', label: 'アポ獲得' },
+  { key: 'その他', label: 'その他' },
 ]
+
+// コール / メール件数の絞り込み
+type CountRange = '' | '0' | '1' | '3' | '5'
 
 // ─── 色定義（Liquid Obsidian: 薄い同色背景 + ●ドット + 同色文字） ───────────
 
@@ -110,37 +149,10 @@ const STATUS_STYLES: Record<string, ObsChipStyle> = {
   '接続済み':    { core: 'var(--color-obs-low)',        bg: 'rgba(126,198,255,0.14)' },
   'コール不可':  { core: 'var(--color-obs-hot)',        bg: 'rgba(255,107,107,0.14)' },
   'アポ獲得':    { core: '#4ad98a',                     bg: 'rgba(74,217,138,0.14)' },
-  'Next Action': { core: 'var(--color-obs-primary)',    bg: 'rgba(171,199,255,0.14)' },
+  'その他':      { core: 'var(--color-obs-text-muted)', bg: 'rgba(143,140,144,0.14)' },
 }
 
-// Next Action: Liquid Obsidian の primary / low / emerald / middle / muted に統一
-type NextActionValue = 'メール' | 'コール' | '商談' | '連絡待ち' | 'フォロー' | null
-const ALL_NEXT_ACTIONS: Exclude<NextActionValue, null>[] = ['メール', 'コール', '商談', '連絡待ち', 'フォロー']
-
-const NEXT_ACTION_STYLES: Record<string, ObsChipStyle> = {
-  'メール':     { core: 'var(--color-obs-primary)',    bg: 'rgba(171,199,255,0.14)' },
-  'コール':     { core: 'var(--color-obs-low)',        bg: 'rgba(126,198,255,0.14)' },
-  '商談':       { core: '#4ad98a',                     bg: 'rgba(74,217,138,0.14)' },
-  '連絡待ち':   { core: 'var(--color-obs-middle)',     bg: 'rgba(255,184,107,0.14)' },
-  'フォロー':   { core: 'var(--color-obs-text-muted)', bg: 'rgba(143,140,144,0.14)' },
-}
-
-const UNSET_STYLE: ObsChipStyle = { core: 'var(--color-obs-text-muted)', bg: 'rgba(143,140,144,0.14)' }
-
-
-// ─── リード経由元（チャネル種別） ────────────────────────────────────────────
-type LeadSourceType =
-  | 'web_form'
-  | 'organic_search'
-  | 'paid_ads'
-  | 'sns'
-  | 'event'
-  | 'referral'
-  | 'cold_call'
-  | 'cold_mail'
-  | 'partner'
-  | 'inbound'
-  | 'other'
+// ─── リード経由元（チャネル種別 — 共有モジュール `LeadSourceType` を使用) ──
 
 const LEAD_SOURCE_STYLES: Record<LeadSourceType, { Icon: React.ElementType; label: string; chipBg: string; chipRing: string; fg: string }> = {
   web_form:       { Icon: FileEdit,      label: 'Webフォーム',     chipBg: 'rgba(171,199,255,0.10)', chipRing: 'inset 0 0 0 1px rgba(171,199,255,0.32)', fg: 'var(--color-obs-primary)' },
@@ -185,94 +197,6 @@ function StatusBadge({ status }: { status: string }) {
   )
 }
 
-function NextActionSelect({
-  value,
-  onChange,
-}: {
-  value: NextActionValue
-  onChange: (v: NextActionValue) => void
-}) {
-  const [open, setOpen] = useState(false)
-  const style = value ? NEXT_ACTION_STYLES[value]! : UNSET_STYLE
-  const label = value ?? '設定'
-  return (
-    <div className="relative">
-      <button
-        onClick={(e) => {
-          e.stopPropagation()
-          setOpen((v) => !v)
-        }}
-        className="inline-flex items-center gap-1.5 px-2 h-5 rounded-full text-[11px] font-medium tracking-[-0.005em] whitespace-nowrap transition-colors"
-        style={{ backgroundColor: style.bg, color: style.core }}
-      >
-        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: style.core }} />
-        {label}
-        <CaretDown size={10} style={{ color: style.core, opacity: 0.65 }} />
-      </button>
-      {open && (
-        <>
-          <div className="fixed inset-0 z-30" onClick={(e) => { e.stopPropagation(); setOpen(false) }} />
-          <div
-            className="absolute top-full left-0 mt-1 z-40 rounded-[var(--radius-obs-md)] py-1 min-w-[140px]"
-            style={{
-              backgroundColor: 'var(--color-obs-surface-highest)',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(65,71,83,0.3)',
-            }}
-          >
-            {ALL_NEXT_ACTIONS.map((a) => {
-              const s = NEXT_ACTION_STYLES[a]!
-              const selected = a === value
-              return (
-                <button
-                  key={a}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onChange(a)
-                    setOpen(false)
-                  }}
-                  className="w-full flex items-center gap-2 px-3 h-7 text-[12px] text-left transition-colors"
-                  style={{
-                    color: selected ? s.core : 'var(--color-obs-text-muted)',
-                    backgroundColor: selected ? s.bg : 'transparent',
-                  }}
-                  onMouseOver={(e) => {
-                    if (!selected) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--color-obs-surface-high)'
-                  }}
-                  onMouseOut={(e) => {
-                    if (!selected) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
-                  }}
-                >
-                  <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: s.core }} />
-                  {a}
-                </button>
-              )
-            })}
-            {value && (
-              <>
-                <div className="mx-2 my-1 h-px" style={{ backgroundColor: 'var(--color-obs-outline-variant)' }} />
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onChange(null)
-                    setOpen(false)
-                  }}
-                  className="w-full flex items-center gap-2 px-3 h-7 text-[12px] text-left transition-colors"
-                  style={{ color: 'var(--color-obs-text-subtle)' }}
-                  onMouseOver={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--color-obs-surface-high)' }}
-                  onMouseOut={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent' }}
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-obs-text-subtle)]" />
-                  クリア
-                </button>
-              </>
-            )}
-          </div>
-        </>
-      )}
-    </div>
-  )
-}
-
 function SortHeader({
   label,
   sortKey,
@@ -309,11 +233,11 @@ export default function ListDetailPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
   const list = MOCK_LISTS[id]
-  const [items] = useState<CallListItemEx[]>(MOCK_ITEMS[id] || [])
-  const [nextActions, setNextActions] = useState<Record<string, NextActionValue>>({})
+  const [items] = useState<CallListItemEx[]>(() => getListItems(id))
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<FilterKey>('all')
-  const [filterNextAction, setFilterNextAction] = useState<NextActionValue | 'all'>('all')
+  const [filterCallRange, setFilterCallRange] = useState<CountRange>('')
+  const [filterEmailRange, setFilterEmailRange] = useState<CountRange>('')
   const [sortKey, setSortKey] = useState<SortKey>('priority')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
 
@@ -334,13 +258,10 @@ export default function ListDetailPage() {
       )
     }
     if (filter !== 'all') result = result.filter((i) => i.status === filter)
-    if (filterNextAction !== 'all') {
-      if (filterNextAction === null) {
-        result = result.filter((i) => !nextActions[i.id])
-      } else {
-        result = result.filter((i) => nextActions[i.id] === filterNextAction)
-      }
-    }
+    if (filterCallRange === '0') result = result.filter((i) => i.callAttempts === 0)
+    else if (filterCallRange) result = result.filter((i) => i.callAttempts >= Number(filterCallRange))
+    if (filterEmailRange === '0') result = result.filter((i) => i.emailsSent === 0)
+    else if (filterEmailRange) result = result.filter((i) => i.emailsSent >= Number(filterEmailRange))
     result.sort((a, b) => {
       let cmp = 0
       switch (sortKey) {
@@ -351,7 +272,7 @@ export default function ListDetailPage() {
       return sortDir === 'asc' ? cmp : -cmp
     })
     return result
-  }, [items, search, filter, filterNextAction, nextActions, sortKey, sortDir])
+  }, [items, search, filter, filterCallRange, filterEmailRange, sortKey, sortDir])
 
   if (!list) {
     return (
@@ -441,33 +362,58 @@ export default function ListDetailPage() {
             ))}
           </div>
 
-          {/* Next Action */}
+          {/* 活動量(コール / メール件数) */}
           <div className="flex items-center gap-2 flex-wrap">
             <span
               className="text-[10px] font-bold uppercase tracking-[0.12em] w-[88px] shrink-0"
               style={{ color: 'var(--color-obs-text-subtle)' }}
             >
-              Next Action
+              活動量
             </span>
-            <FilterPill active={filterNextAction === 'all'} onClick={() => setFilterNextAction('all')}>
-              全て
-            </FilterPill>
-            {ALL_NEXT_ACTIONS.map((a) => (
-              <FilterPill
-                key={a}
-                active={filterNextAction === a}
-                onClick={() => setFilterNextAction((p) => (p === a ? 'all' : a))}
-                style={NEXT_ACTION_STYLES[a]}
-              >
-                {a}
-              </FilterPill>
-            ))}
-            <FilterPill
-              active={filterNextAction === null}
-              onClick={() => setFilterNextAction((p) => (p === null ? 'all' : null))}
+
+            {/* コール数 */}
+            <select
+              value={filterCallRange}
+              onChange={(e) => setFilterCallRange(e.target.value as CountRange)}
+              className="h-8 px-3 text-[12px] font-medium rounded-[var(--radius-obs-md)] appearance-none cursor-pointer outline-none"
+              style={{
+                backgroundColor: filterCallRange
+                  ? 'var(--color-obs-primary-container)'
+                  : 'var(--color-obs-surface-lowest)',
+                color: filterCallRange
+                  ? 'var(--color-obs-on-primary)'
+                  : 'var(--color-obs-text-muted)',
+                boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.18)',
+              }}
             >
-              未設定
-            </FilterPill>
+              <option value="">コール数</option>
+              <option value="0">0件のみ</option>
+              <option value="1">1件以上</option>
+              <option value="3">3件以上</option>
+              <option value="5">5件以上</option>
+            </select>
+
+            {/* メール数 */}
+            <select
+              value={filterEmailRange}
+              onChange={(e) => setFilterEmailRange(e.target.value as CountRange)}
+              className="h-8 px-3 text-[12px] font-medium rounded-[var(--radius-obs-md)] appearance-none cursor-pointer outline-none"
+              style={{
+                backgroundColor: filterEmailRange
+                  ? 'var(--color-obs-primary-container)'
+                  : 'var(--color-obs-surface-lowest)',
+                color: filterEmailRange
+                  ? 'var(--color-obs-on-primary)'
+                  : 'var(--color-obs-text-muted)',
+                boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.18)',
+              }}
+            >
+              <option value="">メール数</option>
+              <option value="0">0件のみ</option>
+              <option value="1">1件以上</option>
+              <option value="3">3件以上</option>
+              <option value="5">5件以上</option>
+            </select>
 
             {/* Search (右寄せ) */}
             <div className="ml-auto relative">
@@ -499,13 +445,12 @@ export default function ListDetailPage() {
           {/* Header */}
           <div
             className="grid items-center gap-x-3 px-5 py-3"
-            style={{ gridTemplateColumns: '40px 1fr 150px 140px 150px 80px 80px' }}
+            style={{ gridTemplateColumns: '40px 1fr 150px 140px 80px 80px' }}
           >
             <span className="text-[10px] font-medium uppercase tracking-[0.1em]" style={{ color: 'var(--color-obs-text-subtle)' }}>#</span>
             <SortHeader label="氏名" sortKey="name" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
             <span className="text-[10px] font-medium uppercase tracking-[0.1em]" style={{ color: 'var(--color-obs-text-subtle)' }}>リード経由元</span>
             <span className="text-[10px] font-medium uppercase tracking-[0.1em]" style={{ color: 'var(--color-obs-text-subtle)' }}>ステータス</span>
-            <span className="text-[10px] font-medium uppercase tracking-[0.1em]" style={{ color: 'var(--color-obs-text-subtle)' }}>Next Action</span>
             <span className="text-[10px] font-medium uppercase tracking-[0.1em] text-right" style={{ color: 'var(--color-obs-text-subtle)' }}>コール</span>
             <span className="text-[10px] font-medium uppercase tracking-[0.1em] text-right" style={{ color: 'var(--color-obs-text-subtle)' }}>メール</span>
           </div>
@@ -517,7 +462,7 @@ export default function ListDetailPage() {
               onClick={() => router.push(`/contacts/${item.contactId}`)}
               className="grid items-center gap-x-3 px-5 py-3 cursor-pointer transition-colors duration-150"
               style={{
-                gridTemplateColumns: '40px 1fr 150px 140px 150px 80px 80px',
+                gridTemplateColumns: '40px 1fr 150px 140px 80px 80px',
                 boxShadow: i < filtered.length - 1 ? 'inset 0 -1px 0 0 rgba(65,71,83,0.2)' : 'none',
                 transitionTimingFunction: 'var(--ease-liquid)',
               }}
@@ -559,14 +504,6 @@ export default function ListDetailPage() {
 
               {/* ステータス */}
               <div><StatusBadge status={item.status as ApproachStatus} /></div>
-
-              {/* Next Action */}
-              <div onClick={(e) => e.stopPropagation()}>
-                <NextActionSelect
-                  value={nextActions[item.id] ?? null}
-                  onChange={(val) => setNextActions((prev) => ({ ...prev, [item.id]: val }))}
-                />
-              </div>
 
               {/* コール数 */}
               <div className="flex items-center justify-end gap-1.5">

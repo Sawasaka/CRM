@@ -8,6 +8,7 @@ import {
   Mail,
   Briefcase,
   ChevronRight,
+  ChevronDown,
   Check,
   X,
   RotateCcw,
@@ -16,6 +17,8 @@ import {
   Calendar,
   CalendarClock,
   CheckSquare,
+  FileText,
+  Pencil,
 } from 'lucide-react'
 import {
   ObsPageShell,
@@ -25,6 +28,7 @@ import {
   ObsButton,
   ObsInput,
 } from '@/components/obsidian'
+import { SignalBadge, type Signal } from '@/components/crm/SignalBadge'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -42,6 +46,8 @@ interface Task {
   ownerName: string
   category: TaskCategory
   linkTo: string
+  // タスク作成時に入力されるタイトル (任意・1 行)
+  title?: string
   memo: string
   dueAt: string
   completed: boolean
@@ -56,26 +62,33 @@ const REPS = [
 ]
 
 const INITIAL_TASKS: Task[] = [
-  { id: 't1', type: 'call',  company: '株式会社テクノリード',    person: '田中 誠',    rank: 'A', owner: 'u1', ownerName: '田中太郎', category: 'contact', linkTo: '/contacts/1', memo: '',             dueAt: '2026-03-23', completed: false },
-  { id: 't2', type: 'call',  company: '合同会社ビジョン',        person: '加藤 雄介',  rank: 'C', owner: 'u1', ownerName: '田中太郎', category: 'contact', linkTo: '/contacts/7', memo: '',             dueAt: '2026-03-23', completed: false },
-  { id: 't3', type: 'email', company: '株式会社イノベーション',  person: '佐々木 拓也', rank: 'A', owner: 'u1', ownerName: '田中太郎', category: 'contact', linkTo: '/contacts/3', memo: '先日の商談を受けて', dueAt: '2026-03-23', completed: false },
-  { id: 't4', type: 'call',  company: '合同会社フューチャー',    person: '山本 佳子',  rank: 'A', owner: 'u2', ownerName: '鈴木花子', category: 'contact', linkTo: '/contacts/2', memo: '',             dueAt: '2026-03-23', completed: false },
-  { id: 't5', type: 'other', company: '有限会社サクセス',        person: '小林 健太',  rank: 'B', owner: 'u2', ownerName: '鈴木花子', category: 'contact', linkTo: '/contacts/5', memo: '商談準備',     dueAt: '2026-03-24', completed: false },
-  { id: 't6', type: 'call',  company: '株式会社ネクスト',        person: '鈴木 美香',  rank: 'C', owner: 'u1', ownerName: '田中太郎', category: 'contact', linkTo: '/contacts/6', memo: '',             dueAt: '2026-03-20', completed: false },
-  { id: 't7', type: 'other', company: '株式会社テクノリード',    person: '',           rank: 'A', owner: 'u1', ownerName: '田中太郎', category: 'deal',    linkTo: '/deals/d1', memo: '資料送付',     dueAt: '2026-03-25', completed: false },
-  { id: 't8', type: 'email', company: '株式会社グロース',        person: '中村 理恵',  rank: 'B', owner: 'u3', ownerName: '佐藤次郎', category: 'contact', linkTo: '/contacts/4', memo: '',             dueAt: '2026-03-21', completed: true  },
-  { id: 't9', type: 'other', company: '株式会社グロース',        person: '',           rank: 'A', owner: 'u3', ownerName: '佐藤次郎', category: 'deal',    linkTo: '/deals/d4', memo: '提案書作成',   dueAt: '2026-03-22', completed: false },
-  { id: 't10', type: 'other', company: '株式会社デルタ',         person: '',           rank: 'B', owner: 'u3', ownerName: '佐藤次郎', category: 'deal',    linkTo: '/deals/d2', memo: '見積書送付',   dueAt: '2026-03-23', completed: false },
+  { id: 't1', type: 'call',  company: '株式会社テクノリード',    person: '田中 誠',    rank: 'A', owner: 'u1', ownerName: '田中太郎', category: 'contact', linkTo: '/contacts/1', title: '初回コールでアポ獲得', memo: '前回送付した会社紹介資料に対する反応を確認。次回商談の日程候補を3つ提示する。意思決定者(CTO)の同席可否も合わせてヒアリングしたい。',             dueAt: '2026-03-23', completed: false },
+  { id: 't2', type: 'call',  company: '合同会社ビジョン',        person: '加藤 雄介',  rank: 'C', owner: 'u1', ownerName: '田中太郎', category: 'contact', linkTo: '/contacts/7', title: '受付経由で再アプローチ', memo: '',             dueAt: '2026-03-23', completed: false },
+  { id: 't3', type: 'email', company: '株式会社イノベーション',  person: '佐々木 拓也', rank: 'A', owner: 'u1', ownerName: '田中太郎', category: 'contact', linkTo: '/contacts/3', title: '提案書ドラフトの送付', memo: '先日の商談を受けて、既存プロセスに合わせた段階導入案 (フェーズ1: 商談管理 / フェーズ2: AI議事録) を提案書に反映。料金は表記ベース+ボリュームディスカウント想定で。', dueAt: '2026-03-23', completed: false },
+  { id: 't4', type: 'call',  company: '合同会社フューチャー',    person: '山本 佳子',  rank: 'A', owner: 'u2', ownerName: '鈴木花子', category: 'contact', linkTo: '/contacts/2', title: '比較表のフォローコール', memo: '',             dueAt: '2026-03-23', completed: false },
+  { id: 't5', type: 'other', company: '有限会社サクセス',        person: '小林 健太',  rank: 'B', owner: 'u2', ownerName: '鈴木花子', category: 'contact', linkTo: '/contacts/5', title: '次回商談の事前準備', memo: '小林様向けの商談準備。先方の業務フロー (見積→提案→受注) に沿ったデモシナリオを作成。SR 2 名同席予定なので、現場視点の質問にも備える。',     dueAt: '2026-03-24', completed: false },
+  { id: 't6', type: 'call',  company: '株式会社ネクスト',        person: '鈴木 美香',  rank: 'C', owner: 'u1', ownerName: '田中太郎', category: 'contact', linkTo: '/contacts/6', title: '初回コール (リトライ)', memo: '',             dueAt: '2026-03-20', completed: false },
+  { id: 't7', type: 'other', company: '株式会社テクノリード',    person: '',           rank: 'A', owner: 'u1', ownerName: '田中太郎', category: 'deal',    linkTo: '/deals/d1', title: '機能差分 + 料金比較表の送付', memo: 'Salesforce との機能比較表を 4/3 までに送付。ROI 試算 (営業 12 名 × 月次工数削減効果) も併せて提示する。CTO 川崎様向けにセキュリティ仕様書も同梱予定。',     dueAt: '2026-03-25', completed: false },
+  { id: 't8', type: 'email', company: '株式会社グロース',        person: '中村 理恵',  rank: 'B', owner: 'u3', ownerName: '佐藤次郎', category: 'contact', linkTo: '/contacts/4', title: '商談リマインドメール', memo: '',             dueAt: '2026-03-21', completed: true  },
+  { id: 't9', type: 'other', company: '株式会社グロース',        person: '',           rank: 'A', owner: 'u3', ownerName: '佐藤次郎', category: 'deal',    linkTo: '/deals/d4', title: '決裁者向け提案書の作成', memo: '中村様 (推進担当) からの追加要望を反映。決裁者 MTG (4/25) で使用する想定で、ROI シミュレーション + 段階導入計画 (Q3 までの 3 フェーズ) をスライドに落とす。',   dueAt: '2026-03-22', completed: false },
+  { id: 't10', type: 'other', company: '株式会社デルタ',         person: '',           rank: 'B', owner: 'u3', ownerName: '佐藤次郎', category: 'deal',    linkTo: '/deals/d2', title: '正式見積書の送付', memo: '見積条件: 5 シート × ¥6,000/月 (年額一括払い、20% 割引適用)。支払サイクルは月末締め翌月末払い。発行依頼書は財務部宛にCCで送付。',   dueAt: '2026-03-23', completed: false },
 ]
 
 // ─── Style ─────────────────────────────────────────────────────────────────────
 
-// ランク → ObsChip tone (A=hot, B=middle, C=low)
+// ランク → ObsChip tone (A=hot, B=middle, C=low) — コンタクトの優先度表示用
 function rankToTone(rank: string): 'hot' | 'middle' | 'low' | 'neutral' {
   if (rank === 'A') return 'hot'
   if (rank === 'B') return 'middle'
   if (rank === 'C') return 'low'
   return 'neutral'
+}
+
+// 取引タスク用: A/B/C → 1stパーティシグナル (強/中/弱) へのマッピング
+function rankToSignal(rank: string): Signal {
+  if (rank === 'A') return 'Hot'
+  if (rank === 'B') return 'Middle'
+  return 'Low'
 }
 
 // コンタクトページのNext Actionと完全に連動
@@ -101,11 +114,12 @@ const OWNERS_FILTER = ['全員', '田中太郎', '鈴木花子', '佐藤次郎']
 
 // ─── Task Row ──────────────────────────────────────────────────────────────────
 
-function TaskRow({ task, isLast, onComplete, onRestore, onUpdateDue }: {
+function TaskRow({ task, isLast, onComplete, onRestore, onUpdateDue, onEdit }: {
   task: Task; isLast: boolean
   onComplete: (id: string) => void
   onRestore: (id: string) => void
   onUpdateDue: (id: string, dueAt: string) => void
+  onEdit: (task: Task) => void
 }) {
   const router = useRouter()
   const dateInputRef = useRef<HTMLInputElement>(null)
@@ -113,6 +127,9 @@ function TaskRow({ task, isLast, onComplete, onRestore, onUpdateDue }: {
 
   // 完了アニメーション中フラグ。クリック直後に立てて、緑のwash → 縮小フェードへ。
   const [completing, setCompleting] = useState(false)
+  // 詳細(タイトル + メモ)の展開フラグ
+  const [expanded, setExpanded] = useState(false)
+  const hasDetail = Boolean(task.title || task.memo)
 
   function openDatePicker(e: React.MouseEvent) {
     e.stopPropagation()
@@ -150,25 +167,26 @@ function TaskRow({ task, isLast, onComplete, onRestore, onUpdateDue }: {
         transition: { duration: 0.32, ease: [0.4, 0, 0.2, 1] },
       }}
       transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-      onClick={() => !task.completed && !completing && router.push(task.linkTo)}
-      className={`relative flex items-center gap-3 px-5 py-3 overflow-hidden ${
-        task.completed || completing ? '' : 'cursor-pointer'
-      }`}
+      className="relative overflow-hidden group"
       style={{
         backgroundColor: 'transparent',
         ...(isLast ? {} : { boxShadow: 'inset 0 -1px 0 0 var(--color-obs-surface-low)' }),
       }}
-      onMouseOver={(e) => {
-        if (!task.completed && !completing) {
-          (e.currentTarget as HTMLDivElement).style.backgroundColor = 'var(--color-obs-surface-high)'
-        }
-      }}
-      onMouseOut={(e) => {
-        if (!completing) {
-          (e.currentTarget as HTMLDivElement).style.backgroundColor = 'transparent'
-        }
-      }}
     >
+      {/* 1行レイアウト — 担当先名は遷移、タイトル/メモは展開トグルで動線を分離 */}
+      <div
+        className="relative flex items-center gap-3 px-5 py-3"
+        onMouseOver={(e) => {
+          if (!task.completed && !completing) {
+            (e.currentTarget as HTMLDivElement).style.backgroundColor = 'var(--color-obs-surface-high)'
+          }
+        }}
+        onMouseOut={(e) => {
+          if (!completing) {
+            (e.currentTarget as HTMLDivElement).style.backgroundColor = 'transparent'
+          }
+        }}
+      >
       {/* 完了時の緑wash オーバーレイ */}
       <AnimatePresence>
         {completing && (
@@ -248,40 +266,178 @@ function TaskRow({ task, isLast, onComplete, onRestore, onUpdateDue }: {
         </AnimatePresence>
       </div>
 
-      <div className="flex-1 min-w-0 relative z-10">
+      {/* 左カラム: 担当先(コンタクト/会社) — 名前テキストをリンク化 */}
+      <div className="w-[200px] shrink-0 min-w-0 relative z-10">
         <div className="flex items-center gap-2">
           {task.completed && (
             <ObsChip tone="low" className="shrink-0">
               <Check size={9} strokeWidth={3} />完了
             </ObsChip>
           )}
-          <motion.span
-            className="text-[13px] font-medium truncate"
-            animate={{
+          <span
+            role={!task.completed && !completing ? 'link' : undefined}
+            tabIndex={!task.completed && !completing ? 0 : undefined}
+            onClick={(e) => {
+              if (task.completed || completing) return
+              e.stopPropagation()
+              router.push(task.linkTo)
+            }}
+            onMouseEnter={(e) => {
+              if (task.completed || completing) return
+              ;(e.currentTarget as HTMLSpanElement).style.color = 'var(--color-obs-primary)'
+            }}
+            onMouseLeave={(e) => {
+              ;(e.currentTarget as HTMLSpanElement).style.color = isDoneVisual
+                ? completing ? '#6ee7a1' : 'var(--color-obs-text-subtle)'
+                : 'var(--color-obs-text)'
+            }}
+            className={`text-[13px] font-medium truncate transition-colors ${
+              task.completed || completing ? '' : 'cursor-pointer'
+            }`}
+            style={{
               color: isDoneVisual
                 ? completing ? '#6ee7a1' : 'var(--color-obs-text-subtle)'
                 : 'var(--color-obs-text)',
-            }}
-            transition={{ duration: 0.22 }}
-            style={{
               textDecoration: task.completed ? 'line-through' : 'none',
             }}
+            title={!task.completed && !completing
+              ? (task.category === 'deal' ? '取引詳細を開く' : 'コンタクト詳細を開く')
+              : undefined}
           >
             {task.person || task.company}
-          </motion.span>
+          </span>
           {!task.completed && !completing && (
-            <ObsChip tone={rankToTone(task.rank)} className="shrink-0">
-              {task.rank}
-            </ObsChip>
+            task.category === 'deal' ? (
+              <SignalBadge signal={rankToSignal(task.rank)} />
+            ) : (
+              <ObsChip tone={rankToTone(task.rank)} className="shrink-0">
+                {task.rank}
+              </ObsChip>
+            )
           )}
         </div>
         <p
-          className="text-[12px] mt-0.5"
+          className="text-[12px] mt-0.5 truncate"
           style={{ color: isDoneVisual ? 'var(--color-obs-text-subtle)' : 'var(--color-obs-text-muted)' }}
         >
           {task.company}
         </p>
       </div>
+
+      {/* 中央カラム: タスクのタイトル + メモプレビュー — クリックで展開 */}
+      <div
+        className={`flex-1 min-w-0 relative z-10 ${
+          hasDetail && !completing ? 'cursor-pointer' : ''
+        }`}
+        onClick={(e) => {
+          if (!hasDetail || completing) return
+          e.stopPropagation()
+          setExpanded((v) => !v)
+        }}
+        title={hasDetail ? (expanded ? '詳細を閉じる' : 'タスクの詳細を見る') : undefined}
+      >
+        {task.title && (
+          <p
+            className="text-[12.5px] font-medium truncate"
+            style={{
+              color: isDoneVisual ? 'var(--color-obs-text-subtle)' : 'var(--color-obs-text)',
+              textDecoration: task.completed ? 'line-through' : 'none',
+            }}
+          >
+            {task.title}
+          </p>
+        )}
+        {/* メモのプレビュー — 1行 truncate で常時表示。全文は ▼ で展開 */}
+        {task.memo && !expanded && (
+          <p
+            className="text-[11.5px] mt-0.5 truncate"
+            style={{
+              color: isDoneVisual ? 'var(--color-obs-text-subtle)' : 'var(--color-obs-text-muted)',
+            }}
+          >
+            {task.memo}
+          </p>
+        )}
+        {/* タイトルもメモも無い時のプレースホルダ(縦位置を揃える) */}
+        {!task.title && !task.memo && (
+          <p
+            className="text-[12px] italic"
+            style={{ color: 'var(--color-obs-text-subtle)', opacity: 0.6 }}
+          >
+            (タイトル・メモなし)
+          </p>
+        )}
+      </div>
+
+      {/* 詳細展開トグル (タイトル or メモがある時だけ表示) */}
+      {hasDetail && !completing && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            setExpanded((v) => !v)
+          }}
+          className="shrink-0 z-10 inline-flex items-center justify-center w-7 h-7 rounded-full transition-colors"
+          style={{
+            backgroundColor: expanded ? 'var(--color-obs-surface-highest)' : 'transparent',
+            color: expanded ? 'var(--color-obs-text)' : 'var(--color-obs-text-muted)',
+          }}
+          onMouseOver={(e) => {
+            ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
+              'var(--color-obs-surface-highest)'
+            ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-obs-text)'
+          }}
+          onMouseOut={(e) => {
+            ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = expanded
+              ? 'var(--color-obs-surface-highest)'
+              : 'transparent'
+            ;(e.currentTarget as HTMLButtonElement).style.color = expanded
+              ? 'var(--color-obs-text)'
+              : 'var(--color-obs-text-muted)'
+          }}
+          aria-label={expanded ? '詳細を閉じる' : '詳細を開く'}
+          aria-expanded={expanded}
+          title={expanded ? '詳細を閉じる' : 'タスクの詳細を見る'}
+        >
+          <ChevronDown
+            size={14}
+            strokeWidth={2.2}
+            style={{
+              transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
+              transition: 'transform 150ms var(--ease-liquid)',
+            }}
+          />
+        </button>
+      )}
+
+      {/* 編集ボタン（常時表示） */}
+      {!task.completed && !completing && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            onEdit(task)
+          }}
+          className="shrink-0 z-10 inline-flex items-center justify-center w-7 h-7 rounded-full transition-colors"
+          style={{
+            backgroundColor: 'transparent',
+            color: 'var(--color-obs-text-muted)',
+          }}
+          onMouseOver={(e) => {
+            ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
+              'var(--color-obs-surface-highest)'
+            ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-obs-text)'
+          }}
+          onMouseOut={(e) => {
+            ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
+            ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-obs-text-muted)'
+          }}
+          aria-label="タスクを編集"
+          title="タスクを編集"
+        >
+          <Pencil size={12} strokeWidth={2.2} />
+        </button>
+      )}
 
       {/* 期日バッジ（クリックで日付変更） */}
       {!task.completed && !completing && (
@@ -390,35 +546,103 @@ function TaskRow({ task, isLast, onComplete, onRestore, onUpdateDue }: {
           </motion.button>
         </div>
       )}
+      </div>
+
+      {/* 詳細展開エリア — タスクのタイトル + メモを全文表示 */}
+      <AnimatePresence initial={false}>
+        {expanded && hasDetail && (
+          <motion.div
+            key="task-detail"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            className="overflow-hidden"
+          >
+            <div
+              className="mx-5 mb-3 px-4 py-3 rounded-[10px] space-y-3"
+              style={{
+                backgroundColor: 'var(--color-obs-surface-low)',
+                boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.12)',
+              }}
+            >
+              {task.title && (
+                <div>
+                  <p
+                    className="text-[10px] font-bold uppercase tracking-[0.08em] mb-1 inline-flex items-center gap-1"
+                    style={{ color: 'var(--color-obs-text-subtle)' }}
+                  >
+                    <CheckSquare size={10} />
+                    タイトル
+                  </p>
+                  <p
+                    className="text-[13px] font-medium leading-snug"
+                    style={{ color: 'var(--color-obs-text)' }}
+                  >
+                    {task.title}
+                  </p>
+                </div>
+              )}
+              {task.memo && (
+                <div>
+                  <p
+                    className="text-[10px] font-bold uppercase tracking-[0.08em] mb-1 inline-flex items-center gap-1"
+                    style={{ color: 'var(--color-obs-text-subtle)' }}
+                  >
+                    <FileText size={10} />
+                    メモ
+                  </p>
+                  <p
+                    className="text-[12.5px] leading-relaxed whitespace-pre-wrap"
+                    style={{ color: 'var(--color-obs-text-muted)' }}
+                  >
+                    {task.memo}
+                  </p>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   )
 }
 
 // ─── Category Group ────────────────────────────────────────────────────────────
 
-function CategoryGroup({ label, icon: Icon, tasks, onComplete, onRestore, onUpdateDue }: {
+function CategoryGroup({ label, icon: Icon, tasks, onComplete, onRestore, onUpdateDue, onEdit }: {
   label: string; icon: React.ElementType; tasks: Task[]
   onComplete: (id: string) => void
   onRestore: (id: string) => void
   onUpdateDue: (id: string, dueAt: string) => void
+  onEdit: (task: Task) => void
 }) {
   if (tasks.length === 0) return null
+  // ラベルごとのアクセントカラー (取引=primary / コンタクト=low) — 背景は使わずアクセント線とアイコンのみで識別
+  const isDeal = label === '取引'
+  const accentFg = isDeal ? 'var(--color-obs-primary)' : 'var(--color-obs-low)'
   return (
     <div>
-      <div className="flex items-center gap-1.5 px-5 pt-3 pb-1.5">
-        <Icon size={11} style={{ color: 'var(--color-obs-text-subtle)' }} />
+      <div className="flex items-center gap-2 px-5 pt-3 pb-1.5">
         <span
-          className="text-[10px] font-semibold uppercase tracking-[0.08em]"
-          style={{ color: 'var(--color-obs-text-subtle)' }}
+          className="inline-flex items-center justify-center w-[18px] h-[18px] rounded-[5px] shrink-0"
+          style={{ backgroundColor: 'var(--color-obs-surface-high)' }}
+        >
+          <Icon size={11} style={{ color: accentFg }} strokeWidth={2.4} />
+        </span>
+        <span
+          className="text-[12px] font-bold tracking-[0.01em]"
+          style={{ color: 'var(--color-obs-text)' }}
         >
           {label}
         </span>
         <motion.span
           key={tasks.length}
-          initial={{ scale: 1.4, color: 'var(--color-obs-primary)' }}
-          animate={{ scale: 1, color: 'var(--color-obs-text-subtle)' }}
+          initial={{ scale: 1.4 }}
+          animate={{ scale: 1 }}
           transition={{ duration: 0.32, ease: [0.34, 1.56, 0.64, 1] }}
-          className="text-[10px] tabular-nums"
+          className="text-[11px] tabular-nums font-medium"
+          style={{ color: 'var(--color-obs-text-subtle)' }}
         >
           {tasks.length}
         </motion.span>
@@ -432,6 +656,7 @@ function CategoryGroup({ label, icon: Icon, tasks, onComplete, onRestore, onUpda
             onComplete={onComplete}
             onRestore={onRestore}
             onUpdateDue={onUpdateDue}
+            onEdit={onEdit}
           />
         ))}
       </AnimatePresence>
@@ -453,6 +678,7 @@ function TaskModal({ task, onClose, onSave }: {
     rank: task?.rank ?? 'B',
     category: (task?.category ?? 'contact') as TaskCategory,
     dueAt: task?.dueAt ?? '',
+    title: task?.title ?? '',
     memo: task?.memo ?? '',
   })
 
@@ -473,6 +699,7 @@ function TaskModal({ task, onClose, onSave }: {
       ownerName: rep.name,
       category: form.category,
       linkTo: task?.linkTo ?? (form.category === 'contact' ? '/contacts' : '/deals'),
+      title: form.title.trim() || undefined,
       memo: form.memo.trim(),
       dueAt: form.dueAt,
       completed: task?.completed ?? false,
@@ -587,6 +814,22 @@ function TaskModal({ task, onClose, onSave }: {
               />
             </div>
 
+            {/* タイトル */}
+            <div>
+              <label
+                className="text-[11px] font-bold uppercase tracking-[0.08em] mb-2 flex items-center gap-1"
+                style={{ color: 'var(--color-obs-text-subtle)' }}
+              >
+                タイトル
+              </label>
+              <ObsInput
+                type="text"
+                value={form.title}
+                onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+                placeholder="タスクのタイトル(例: 比較表のフォローコール)"
+              />
+            </div>
+
             {/* メモ */}
             <div>
               <label
@@ -628,11 +871,12 @@ function TaskModal({ task, onClose, onSave }: {
 
 // ─── Rep Section ───────────────────────────────────────────────────────────────
 
-function RepSection({ rep, tasks, completedTasks, index, onComplete, onRestore, onUpdateDue }: {
+function RepSection({ rep, tasks, completedTasks, index, onComplete, onRestore, onUpdateDue, onEdit }: {
   rep: typeof REPS[0]; tasks: Task[]; completedTasks: Task[]; index: number
   onComplete: (id: string) => void
   onRestore: (id: string) => void
   onUpdateDue: (id: string, dueAt: string) => void
+  onEdit: (task: Task) => void
 }) {
   const [open, setOpen] = useState(true)
   const [completedOpen, setCompletedOpen] = useState(false)
@@ -692,11 +936,11 @@ function RepSection({ rep, tasks, completedTasks, index, onComplete, onRestore, 
           {open && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }} className="overflow-hidden">
-              <CategoryGroup label="コンタクト" icon={User} tasks={contactTasks} onComplete={onComplete} onRestore={onRestore} onUpdateDue={onUpdateDue} />
-              {contactTasks.length > 0 && dealTasks.length > 0 && (
+              <CategoryGroup label="取引" icon={Building2} tasks={dealTasks} onComplete={onComplete} onRestore={onRestore} onUpdateDue={onUpdateDue} onEdit={onEdit} />
+              {dealTasks.length > 0 && contactTasks.length > 0 && (
                 <div className="mx-5 h-px" style={{ backgroundColor: 'var(--color-obs-surface)' }} />
               )}
-              <CategoryGroup label="取引" icon={Building2} tasks={dealTasks} onComplete={onComplete} onRestore={onRestore} onUpdateDue={onUpdateDue} />
+              <CategoryGroup label="コンタクト" icon={User} tasks={contactTasks} onComplete={onComplete} onRestore={onRestore} onUpdateDue={onUpdateDue} onEdit={onEdit} />
 
               {completedTasks.length > 0 && (
                 <>
@@ -733,7 +977,7 @@ function RepSection({ rep, tasks, completedTasks, index, onComplete, onRestore, 
                         <AnimatePresence initial={false}>
                           {completedTasks.map((task, i) => (
                             <TaskRow key={task.id} task={task} isLast={i === completedTasks.length - 1}
-                              onComplete={onComplete} onRestore={onRestore} onUpdateDue={onUpdateDue} />
+                              onComplete={onComplete} onRestore={onRestore} onUpdateDue={onUpdateDue} onEdit={onEdit} />
                           ))}
                         </AnimatePresence>
                       </motion.div>
@@ -834,6 +1078,7 @@ export default function TasksPage() {
                 onComplete={handleComplete}
                 onRestore={handleRestore}
                 onUpdateDue={handleUpdateDue}
+                onEdit={(task) => setModalTask(task)}
               />
             )
           })}

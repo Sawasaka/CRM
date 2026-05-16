@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import {
   Calendar as CalendarLucide,
   Check,
+  Cloud,
+  FolderOpen,
   Hash,
   Link2,
   Loader2,
@@ -12,7 +14,13 @@ import {
   Plug,
   RefreshCw,
   Trash2,
+  Users as UsersLucide,
   Video as VideoLucide,
+  ShieldCheck,
+  AlertCircle,
+  Search,
+  Settings as SettingsIcon,
+  ClipboardList,
 } from 'lucide-react'
 import { ObsButton, ObsCard, ObsHero, ObsPageShell } from '@/components/obsidian'
 
@@ -87,6 +95,9 @@ const SERVICE_DEFS: Array<{
 ]
 
 export default function IntegrationsPage() {
+  // 未連携メンバーがいる場合はメンバー連携状況タブを既定で開く
+  const initialIncompleteCount = getIncompleteMemberCount()
+  const [tab, setTab] = useState<'setup' | 'review'>(initialIncompleteCount > 0 ? 'review' : 'setup')
   const [status, setStatus] = useState<GoogleStatus | null>(null)
   const [busy, setBusy] = useState<ServiceKey | 'all' | null>(null)
   const [lastResult, setLastResult] = useState<unknown>(null)
@@ -132,6 +143,57 @@ export default function IntegrationsPage() {
           caption="Gmail / Google カレンダー / Google Meet / Google チャット を機能ごとに個別連携できます。"
         />
 
+        {/* ── タブナビ ── */}
+        <div
+          className="inline-flex items-center p-1 rounded-[var(--radius-obs-md)] mb-6 gap-1"
+          style={{ backgroundColor: 'var(--color-obs-surface-high)' }}
+        >
+          {(
+            [
+              { key: 'setup',  label: '連携設定',         icon: SettingsIcon,   badgeCount: 0 },
+              { key: 'review', label: 'メンバー連携状況', icon: ClipboardList,  badgeCount: initialIncompleteCount },
+            ] as const
+          ).map((t) => {
+            const active = tab === t.key
+            const Icon = t.icon
+            const showWarn = t.badgeCount > 0
+            return (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => setTab(t.key)}
+                className="relative inline-flex items-center gap-1.5 h-9 px-4 rounded-[calc(var(--radius-obs-md)-2px)] text-[13px] font-medium transition-colors"
+                style={{
+                  backgroundColor: active ? 'var(--color-obs-primary-container)' : 'transparent',
+                  color: active ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
+                }}
+              >
+                {showWarn && !active && (
+                  <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                    <span className="absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping" style={{ backgroundColor: 'var(--color-obs-hot)' }} />
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5" style={{ backgroundColor: 'var(--color-obs-hot)' }} />
+                  </span>
+                )}
+                <Icon size={14} />
+                {t.label}
+                {showWarn && (
+                  <span
+                    className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10.5px] font-extrabold tabular-nums"
+                    style={{
+                      backgroundColor: active ? '#fff' : 'var(--color-obs-hot)',
+                      color: active ? 'var(--color-obs-hot)' : '#fff',
+                    }}
+                  >
+                    {t.badgeCount}
+                  </span>
+                )}
+              </button>
+            )
+          })}
+        </div>
+
+        {tab === 'setup' && (
+          <>
         {/* ── トップ: Google Workspace 一括連携 ── */}
         <ObsCard depth="high" padding="lg" radius="xl">
           <div className="flex items-start gap-4">
@@ -277,6 +339,9 @@ export default function IntegrationsPage() {
         {/* ── Slack 連携 ── */}
         <SlackSection />
 
+        {/* ── Microsoft 365 連携 (近日対応予定) ── */}
+        <MicrosoftSection />
+
         <ObsCard depth="low" padding="md" radius="xl" className="mt-4">
           <div
             className="text-[12px] font-medium uppercase tracking-[0.1em] mb-2"
@@ -293,6 +358,12 @@ export default function IntegrationsPage() {
             <li>・Google Chat はスペース/DM の最近のメッセージを定期取り込みします。</li>
           </ul>
         </ObsCard>
+          </>
+        )}
+
+        {tab === 'review' && (
+          <MemberIntegrationStatusSection />
+        )}
       </div>
     </ObsPageShell>
   )
@@ -742,5 +813,558 @@ function GoogleLogo() {
         d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"
       />
     </svg>
+  )
+}
+
+// ─── Microsoft 365 セクション (近日対応予定) ───────────────────────────────
+
+const MICROSOFT_SERVICES: Array<{
+  key: string
+  label: string
+  icon: () => React.ReactNode
+  description: string
+}> = [
+  {
+    key: 'outlook',
+    label: 'Outlook',
+    icon: () => (
+      <OfficialIcon
+        src="/icons/outlook.png"
+        alt="Outlook"
+        fallback={<BrandedIcon Icon={MailLucide} color="#0078D4" bg="rgba(0,120,212,0.14)" />}
+      />
+    ),
+    description: '送受信メールをコンタクトのメアドと一致させて取り込み',
+  },
+  {
+    key: 'ms-calendar',
+    label: 'Microsoft カレンダー',
+    icon: () => (
+      <OfficialIcon
+        src="/icons/microsoft-calendar.png"
+        alt="Microsoft Calendar"
+        fallback={<BrandedIcon Icon={CalendarLucide} color="#0078D4" bg="rgba(0,120,212,0.14)" />}
+      />
+    ),
+    description: '商談予定を取引・コンタクトに自動連携',
+  },
+  {
+    key: 'teams',
+    label: 'Microsoft Teams',
+    icon: () => (
+      <OfficialIcon
+        src="/icons/teams.png"
+        alt="Microsoft Teams"
+        fallback={<BrandedIcon Icon={UsersLucide} color="#5059C9" bg="rgba(80,89,201,0.14)" />}
+      />
+    ),
+    description: '会議録画・チャットを取込 → 議事録BANT自動入力',
+  },
+  {
+    key: 'onedrive',
+    label: 'OneDrive',
+    icon: () => (
+      <OfficialIcon
+        src="/icons/onedrive.png"
+        alt="OneDrive"
+        fallback={<BrandedIcon Icon={Cloud} color="#0364B8" bg="rgba(3,100,184,0.14)" />}
+      />
+    ),
+    description: 'ファイル参照・取引/コンタクトに添付資料を紐付け',
+  },
+  {
+    key: 'sharepoint',
+    label: 'SharePoint',
+    icon: () => (
+      <OfficialIcon
+        src="/icons/sharepoint.png"
+        alt="SharePoint"
+        fallback={<BrandedIcon Icon={FolderOpen} color="#038387" bg="rgba(3,131,135,0.14)" />}
+      />
+    ),
+    description: 'ドキュメントライブラリと連携・社内ナレッジ取込',
+  },
+]
+
+function MicrosoftSection() {
+  return (
+    <ObsCard depth="high" padding="lg" radius="xl" className="mt-4">
+      <div className="flex items-start gap-4">
+        <div
+          className="shrink-0 w-12 h-12 rounded-[var(--radius-obs-lg)] flex items-center justify-center overflow-hidden"
+          style={{ backgroundColor: 'var(--color-obs-surface-high)' }}
+        >
+          <OfficialIcon
+            src="/icons/microsoft-365.png"
+            alt="Microsoft 365"
+            fallback={<MicrosoftLogo />}
+          />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h2 className="text-lg font-semibold" style={{ color: 'var(--color-obs-text)' }}>
+              Microsoft 365
+            </h2>
+            <span
+              className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full uppercase tracking-[0.05em]"
+              style={{
+                color: '#FFC107',
+                backgroundColor: 'rgba(255,193,7,0.14)',
+              }}
+            >
+              近日対応予定
+            </span>
+          </div>
+          <p className="text-[13px] mt-1" style={{ color: 'var(--color-obs-text-muted)' }}>
+            Outlook / Microsoft カレンダー / Teams / OneDrive / SharePoint との連携を準備中です。
+            現在は Google Workspace を優先実装しています。リリースをお待ちください。
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+        {MICROSOFT_SERVICES.map((s) => (
+          <div
+            key={s.key}
+            className="rounded-[var(--radius-obs-xl)] p-5 opacity-60"
+            style={{
+              backgroundColor: 'var(--color-obs-surface)',
+              boxShadow: 'inset 0 0 0 1px var(--color-obs-surface-high)',
+            }}
+          >
+            <div className="flex items-start gap-4">
+              <div
+                className="shrink-0 w-12 h-12 rounded-[var(--radius-obs-lg)] flex items-center justify-center overflow-hidden"
+                style={{ backgroundColor: 'var(--color-obs-surface-high)' }}
+              >
+                {s.icon()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <h3
+                    className="text-[15px] font-semibold"
+                    style={{ color: 'var(--color-obs-text)' }}
+                  >
+                    {s.label}
+                  </h3>
+                  <span
+                    className="inline-flex items-center text-[10px] font-medium px-1.5 py-0.5 rounded-full"
+                    style={{
+                      color: 'var(--color-obs-text-subtle)',
+                      backgroundColor: 'var(--color-obs-surface-high)',
+                    }}
+                  >
+                    予定
+                  </span>
+                </div>
+                <p
+                  className="text-[12.5px] mt-1 leading-relaxed"
+                  style={{ color: 'var(--color-obs-text-muted)' }}
+                >
+                  {s.description}
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </ObsCard>
+  )
+}
+
+function MicrosoftLogo() {
+  return (
+    <svg width="32" height="32" viewBox="0 0 23 23" xmlns="http://www.w3.org/2000/svg">
+      <path fill="#F25022" d="M1 1h10v10H1z" />
+      <path fill="#7FBA00" d="M12 1h10v10H12z" />
+      <path fill="#00A4EF" d="M1 12h10v10H1z" />
+      <path fill="#FFB900" d="M12 12h10v10H12z" />
+    </svg>
+  )
+}
+
+// ─── メンバー別 連携状況 (管理者用) ─────────────────────────────────────────────
+// 各メンバーが Gmail/Calendar/Meet/Chat/Slack を個別連携できているかを管理者が一覧で把握できるセクション。
+// バックエンド連携前のモック実装。
+
+type MemberIntegrationKey = 'gmail' | 'calendar' | 'meet' | 'chat' | 'slack'
+
+interface MemberIntegrationRow {
+  id: string
+  name: string
+  email: string
+  role: '管理者' | 'メンバー'
+  integrations: Partial<Record<MemberIntegrationKey, { connected: boolean; lastSyncAt: string | null }>>
+  invitedAt: string
+}
+
+const MEMBER_ROWS: MemberIntegrationRow[] = [
+  {
+    id: 'm-1', name: '田中 太郎', email: 'tanaka@zooba.io', role: '管理者',
+    integrations: {
+      gmail:    { connected: true, lastSyncAt: '2 分前' },
+      calendar: { connected: true, lastSyncAt: '5 分前' },
+      meet:     { connected: true, lastSyncAt: '1 時間前' },
+      chat:     { connected: true, lastSyncAt: '30 分前' },
+      slack:    { connected: true, lastSyncAt: '12 分前' },
+    },
+    invitedAt: '2026-01-15',
+  },
+  {
+    id: 'm-2', name: '鈴木 花子', email: 'suzuki@zooba.io', role: 'メンバー',
+    integrations: {
+      gmail:    { connected: true, lastSyncAt: '8 分前' },
+      calendar: { connected: true, lastSyncAt: '15 分前' },
+      meet:     { connected: false, lastSyncAt: null },
+      chat:     { connected: true, lastSyncAt: '45 分前' },
+      slack:    { connected: true, lastSyncAt: '20 分前' },
+    },
+    invitedAt: '2026-02-01',
+  },
+  {
+    id: 'm-3', name: '佐藤 次郎', email: 'sato@zooba.io', role: 'メンバー',
+    integrations: {
+      gmail:    { connected: true, lastSyncAt: '32 分前' },
+      calendar: { connected: false, lastSyncAt: null },
+      meet:     { connected: false, lastSyncAt: null },
+      chat:     { connected: false, lastSyncAt: null },
+      slack:    { connected: true, lastSyncAt: '1 時間前' },
+    },
+    invitedAt: '2026-02-12',
+  },
+  {
+    id: 'm-4', name: '開発 太郎', email: 'dev-taro@zooba.io', role: 'メンバー',
+    integrations: {
+      gmail:    { connected: false, lastSyncAt: null },
+      calendar: { connected: false, lastSyncAt: null },
+      meet:     { connected: false, lastSyncAt: null },
+      chat:     { connected: false, lastSyncAt: null },
+      slack:    { connected: false, lastSyncAt: null },
+    },
+    invitedAt: '2026-04-08',
+  },
+  {
+    id: 'm-5', name: '高田 美咲', email: 'takada@zooba.io', role: 'メンバー',
+    integrations: {
+      gmail:    { connected: true, lastSyncAt: '18 分前' },
+      calendar: { connected: true, lastSyncAt: '22 分前' },
+      meet:     { connected: true, lastSyncAt: '昨日' },
+      chat:     { connected: false, lastSyncAt: null },
+      slack:    { connected: true, lastSyncAt: '3 時間前' },
+    },
+    invitedAt: '2026-03-02',
+  },
+]
+
+const INTEGRATION_COLS: { key: MemberIntegrationKey; label: string }[] = [
+  { key: 'gmail',    label: 'Gmail' },
+  { key: 'calendar', label: 'カレンダー' },
+  { key: 'meet',     label: 'Meet' },
+  { key: 'chat',     label: 'Chat' },
+  { key: 'slack',    label: 'Slack' },
+]
+
+// スーパー管理者(role==='管理者')と同じ項目を必須とみなす共通ヘルパー
+function getRequiredKeys(): MemberIntegrationKey[] {
+  const superAdmin = MEMBER_ROWS.find((m) => m.role === '管理者')
+  return superAdmin
+    ? INTEGRATION_COLS.map((c) => c.key).filter((k) => !!superAdmin.integrations[k]?.connected)
+    : INTEGRATION_COLS.map((c) => c.key)
+}
+
+function getIncompleteMemberCount(): number {
+  const superAdmin = MEMBER_ROWS.find((m) => m.role === '管理者')
+  const required = getRequiredKeys()
+  return MEMBER_ROWS.filter(
+    (m) => m.id !== superAdmin?.id && required.some((k) => !m.integrations[k]?.connected),
+  ).length
+}
+
+function MemberIntegrationStatusSection() {
+  const [search, setSearch] = useState('')
+  // 未連携メンバーがいる場合は最初から未連携だけ表示する(余計なクリックを発生させない)
+  const [filter, setFilter] = useState<'all' | 'incomplete'>(getIncompleteMemberCount() > 0 ? 'incomplete' : 'all')
+
+  // スーパー管理者(role==='管理者')が連携している項目を「会社として必須の連携」とみなす。
+  // 各メンバーは、スーパー管理者と同じ項目を全て連携できていれば「OK」、欠けていれば「未連携あり」とする。
+  const superAdmin = MEMBER_ROWS.find((m) => m.role === '管理者')
+  const requiredKeys = getRequiredKeys()
+
+  const isMemberIncomplete = (m: MemberIntegrationRow) =>
+    m.id !== superAdmin?.id && requiredKeys.some((k) => !m.integrations[k]?.connected)
+
+  const incompleteCount = MEMBER_ROWS.filter(isMemberIncomplete).length
+  const hasIncomplete = incompleteCount > 0
+
+  const filtered = MEMBER_ROWS
+    .filter((m) => {
+      if (search.trim()) {
+        const q = search.toLowerCase()
+        if (!m.name.toLowerCase().includes(q) && !m.email.toLowerCase().includes(q)) return false
+      }
+      // スーパー管理者は基準として常に表示する(フィルタ対象外)
+      if (filter === 'incomplete' && !isMemberIncomplete(m) && m.id !== superAdmin?.id) return false
+      return true
+    })
+    // スーパー管理者を常に先頭に
+    .sort((a, b) => {
+      if (a.id === superAdmin?.id) return -1
+      if (b.id === superAdmin?.id) return 1
+      return 0
+    })
+
+  return (
+    <ObsCard depth="high" padding="lg" radius="xl" className="mt-4">
+      {/* ヘッダ */}
+      <div className="flex items-start gap-4 mb-5">
+        <div
+          className="shrink-0 w-12 h-12 rounded-[var(--radius-obs-lg)] flex items-center justify-center"
+          style={{ backgroundColor: 'rgba(171,199,255,0.14)' }}
+        >
+          <UsersLucide size={20} style={{ color: 'var(--color-obs-primary)' }} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h2 className="text-lg font-semibold" style={{ color: 'var(--color-obs-text)' }}>
+            メンバー別 連携状況
+          </h2>
+          <p className="text-[13px] mt-1" style={{ color: 'var(--color-obs-text-muted)' }}>
+            メンバー全員の連携状況を一覧で確認できます。
+          </p>
+        </div>
+      </div>
+
+      {/* ツールバー */}
+      <div className="flex items-center gap-2 mb-3 flex-wrap">
+        <div className="relative flex-1 min-w-[240px] max-w-md">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--color-obs-text-subtle)' }} />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="メンバー名・メールで検索"
+            className="w-full pl-9 pr-3 h-9 rounded-[var(--radius-obs-md)] text-[13px] outline-none"
+            style={{
+              backgroundColor: 'var(--color-obs-surface-lowest)',
+              color: 'var(--color-obs-text)',
+              boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.18)',
+            }}
+          />
+        </div>
+        <div
+          className="inline-flex items-center rounded-[var(--radius-obs-md)] p-0.5"
+          style={{ background: 'var(--color-obs-surface-high)', boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.18)' }}
+        >
+          <button
+            type="button"
+            onClick={() => setFilter('all')}
+            className="h-8 px-3 rounded-[var(--radius-obs-sm)] text-[12px] font-semibold transition-colors"
+            style={{
+              backgroundColor: filter === 'all' ? 'var(--color-obs-primary-container)' : 'transparent',
+              color: filter === 'all' ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
+            }}
+          >
+            すべて ({MEMBER_ROWS.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilter('incomplete')}
+            className="h-8 px-3 rounded-[var(--radius-obs-sm)] text-[12px] font-bold transition-all inline-flex items-center gap-1.5"
+            style={
+              hasIncomplete
+                ? {
+                    backgroundColor: filter === 'incomplete' ? 'var(--color-obs-hot)' : 'rgba(255,107,107,0.18)',
+                    color: filter === 'incomplete' ? '#fff' : 'var(--color-obs-hot)',
+                    boxShadow: filter === 'incomplete'
+                      ? '0 0 0 1.5px rgba(255,107,107,0.6), 0 0 16px rgba(255,107,107,0.4)'
+                      : 'inset 0 0 0 1.5px rgba(255,107,107,0.55)',
+                  }
+                : {
+                    backgroundColor: filter === 'incomplete' ? 'var(--color-obs-primary-container)' : 'transparent',
+                    color: filter === 'incomplete' ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
+                  }
+            }
+          >
+            {hasIncomplete && (
+              <span className="relative inline-flex h-2 w-2 shrink-0">
+                <span className="absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping" style={{ backgroundColor: filter === 'incomplete' ? '#fff' : 'var(--color-obs-hot)' }} />
+                <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: filter === 'incomplete' ? '#fff' : 'var(--color-obs-hot)' }} />
+              </span>
+            )}
+            <AlertCircle size={12} strokeWidth={2.6} />
+            未連携あり
+            <span
+              className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[11px] font-extrabold tabular-nums"
+              style={
+                hasIncomplete
+                  ? {
+                      backgroundColor: filter === 'incomplete' ? '#fff' : 'var(--color-obs-hot)',
+                      color: filter === 'incomplete' ? 'var(--color-obs-hot)' : '#fff',
+                    }
+                  : {
+                      backgroundColor: 'rgba(143,140,144,0.20)',
+                      color: 'var(--color-obs-text-subtle)',
+                    }
+              }
+            >
+              {incompleteCount}
+            </span>
+          </button>
+        </div>
+      </div>
+
+      {/* テーブル */}
+      <div className="rounded-[var(--radius-obs-md)] overflow-hidden" style={{ boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.18)' }}>
+        {/* ヘッダ */}
+        <div
+          className="grid items-center gap-2 px-4 py-2.5 text-[10.5px] font-semibold tracking-[0.06em] uppercase"
+          style={{
+            gridTemplateColumns: '1fr 80px 80px 80px 80px 80px',
+            backgroundColor: 'var(--color-obs-surface-low)',
+            color: 'var(--color-obs-text-subtle)',
+          }}
+        >
+          <div>メンバー</div>
+          {INTEGRATION_COLS.map((c) => (
+            <div key={c.key} className="text-center">{c.label}</div>
+          ))}
+        </div>
+
+        {/* スーパー管理者(計測基準)セクション */}
+        {filtered.some((m) => m.id === superAdmin?.id) && superAdmin && (
+          <>
+            <div
+              className="grid items-center gap-2 px-4 py-3 text-[12.5px]"
+              style={{
+                gridTemplateColumns: '1fr 80px 80px 80px 80px 80px',
+                backgroundColor: 'rgba(255,184,107,0.04)',
+                boxShadow: 'inset 3px 0 0 0 var(--color-obs-middle)',
+              }}
+            >
+              {/* メンバー(スーパー管理者) */}
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div
+                  className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-[12px] font-semibold"
+                  style={{
+                    backgroundColor: 'rgba(255,184,107,0.18)',
+                    color: 'var(--color-obs-middle)',
+                    boxShadow: 'inset 0 0 0 1px rgba(255,184,107,0.42)',
+                  }}
+                >
+                  {superAdmin.name[0]}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="font-semibold truncate" style={{ color: 'var(--color-obs-text)' }}>{superAdmin.name}</span>
+                    <span
+                      className="inline-flex items-center gap-1 h-[18px] px-1.5 rounded-full text-[9.5px] font-bold whitespace-nowrap"
+                      style={{
+                        color: '#fff',
+                        backgroundColor: 'var(--color-obs-middle)',
+                        boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.15)',
+                      }}
+                      title="スーパー管理者の連携状況を計測基準として使用"
+                    >
+                      <ShieldCheck size={10} strokeWidth={2.8} />
+                      スーパー管理者
+                    </span>
+                  </div>
+                  <div className="text-[10.5px] truncate" style={{ color: 'var(--color-obs-text-subtle)' }}>{superAdmin.email}</div>
+                </div>
+              </div>
+
+              {/* 各連携の状態(基準) */}
+              {INTEGRATION_COLS.map((c) => {
+                const ok = !!superAdmin.integrations[c.key]?.connected
+                return (
+                  <div key={c.key} className="flex items-center justify-center">
+                    {ok ? (
+                      <Check size={15} strokeWidth={3} style={{ color: 'var(--color-obs-middle)' }} />
+                    ) : (
+                      <span className="text-[12px]" style={{ color: 'var(--color-obs-text-subtle)', opacity: 0.4 }}>—</span>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* スーパー管理者行の直下キャプション(基準であることを明示) */}
+            <div
+              className="px-4 py-2 flex items-center gap-1.5 text-[10.5px] font-semibold tracking-[0.04em]"
+              style={{
+                backgroundColor: 'rgba(255,184,107,0.04)',
+                color: 'var(--color-obs-middle)',
+                boxShadow: 'inset 3px 0 0 0 var(--color-obs-middle)',
+              }}
+            >
+              <ShieldCheck size={11} strokeWidth={2.6} />
+              ↑ 計測基準 — この連携状況をベースに、メンバーの未連携を判定します
+            </div>
+
+            {/* 基準セクションとメンバーセクションの間スペーサー */}
+            <div style={{ height: 12, backgroundColor: 'var(--color-obs-surface-low)' }} />
+          </>
+        )}
+
+        {/* メンバー(スーパー管理者以外) */}
+        {filtered.filter((m) => m.id !== superAdmin?.id).length === 0 ? (
+          <div className="px-4 py-10 text-center text-[12.5px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
+            該当するメンバーがいません
+          </div>
+        ) : (
+          filtered
+            .filter((m) => m.id !== superAdmin?.id)
+            .map((m, i) => (
+              <div
+                key={m.id}
+                className="grid items-center gap-2 px-4 py-3 text-[12.5px]"
+                style={{
+                  gridTemplateColumns: '1fr 80px 80px 80px 80px 80px',
+                  borderTop: i === 0 ? undefined : '1px solid rgba(109,106,111,0.12)',
+                }}
+              >
+                {/* メンバー */}
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div
+                    className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-[12px] font-semibold"
+                    style={{ backgroundColor: 'var(--color-obs-surface-highest)', color: 'var(--color-obs-text)' }}
+                  >
+                    {m.name[0]}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-medium truncate" style={{ color: 'var(--color-obs-text)' }}>{m.name}</span>
+                    </div>
+                    <div className="text-[10.5px] truncate" style={{ color: 'var(--color-obs-text-subtle)' }}>{m.email}</div>
+                  </div>
+                </div>
+
+                {/* 各連携の状態 */}
+                {INTEGRATION_COLS.map((c) => {
+                  const s = m.integrations[c.key]
+                  const ok = !!s?.connected
+                  // スーパー管理者と比較: 必須項目で未連携 = 赤強調
+                  const isRequired = requiredKeys.includes(c.key)
+                  const missingRequired = !ok && isRequired
+                  return (
+                    <div key={c.key} className="flex items-center justify-center">
+                      {ok ? (
+                        <Check size={14} strokeWidth={3} style={{ color: '#6ee7a1' }} />
+                      ) : missingRequired ? (
+                        <AlertCircle size={13} style={{ color: 'var(--color-obs-hot)' }} />
+                      ) : (
+                        <span className="text-[12px]" style={{ color: 'var(--color-obs-text-subtle)', opacity: 0.4 }}>—</span>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            ))
+        )}
+      </div>
+
+      <p className="text-[10.5px] mt-3" style={{ color: 'var(--color-obs-text-subtle)' }}>
+        ※ 連携は本人による OAuth 認可が必要なため、管理者が代理連携することはできません。リマインド送信で本人に手続きを促す形になります。
+      </p>
+    </ObsCard>
   )
 }

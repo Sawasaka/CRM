@@ -8,7 +8,11 @@ import {
   Mic,
 } from 'lucide-react'
 import { ObsPageShell } from '@/components/obsidian'
-import { AssigneeFilter } from '@/components/ai/AssigneeFilter'
+import {
+  AssigneeFilter,
+  DEFAULT_SCOPE,
+  type AssigneeScopeValue,
+} from '@/components/ai/AssigneeFilter'
 import { ModelSelector } from '@/components/ai/ModelSelector'
 import {
   useFileAttachments,
@@ -19,6 +23,11 @@ import {
 export default function HomePage() {
   const router = useRouter()
   const [prompt, setPrompt] = useState('')
+  const [scope, setScope] = useState<AssigneeScopeValue>(() => ({
+    features: new Set(DEFAULT_SCOPE.features),
+    persons:  new Set(DEFAULT_SCOPE.persons),
+    includeExternal: DEFAULT_SCOPE.includeExternal,
+  }))
   const taRef = useRef<HTMLTextAreaElement | null>(null)
   const attach = useFileAttachments()
 
@@ -26,6 +35,13 @@ export default function HomePage() {
     const q = prompt.trim()
     if (!q) return
     const params = new URLSearchParams({ q })
+    // 参照スコープ(機能/人/外部情報)をクエリに含める。
+    // 既定値(全機能 + 全担当 + 外部OFF)から変更がある場合のみ送る。
+    const allFeatures = scope.features.size === DEFAULT_SCOPE.features.size
+    const allPersons  = scope.persons.size  === DEFAULT_SCOPE.persons.size
+    if (!allFeatures) params.set('features', Array.from(scope.features).join(','))
+    if (!allPersons)  params.set('persons',  Array.from(scope.persons).join(','))
+    if (scope.includeExternal) params.set('external', '1')
     // TODO: RAG エンドポイントに送信する — いまはナレッジページへ検索クエリとして渡す
     router.push(`/knowledge?${params.toString()}`)
   }
@@ -121,8 +137,8 @@ export default function HomePage() {
                 {/* ── モデル + 思考の深さ ── */}
                 <ModelSelector />
 
-                {/* ── 担当者で絞り込む ── */}
-                <AssigneeFilter />
+                {/* ── 参照スコープ(全員 / チームFAQ / 担当者) ── */}
+                <AssigneeFilter value={scope} onChange={setScope} />
               </div>
 
               <div className="flex items-center gap-2">

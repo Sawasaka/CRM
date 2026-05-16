@@ -10,18 +10,19 @@ export type ApproachStatus =
   | '接続済み'
   | 'コール不可'
   | 'アポ獲得'
-  | 'Next Action'
+  | 'その他'
 
-export type CallResultCode = ApproachStatus
+export type CallResultCode = ApproachStatus | 'Next Action'
 
 // Legacy Tailwind class style (for light-theme components)
-export const STATUS_STYLES: Record<ApproachStatus, { bg: string; text: string; dot: string }> = {
+export const STATUS_STYLES: Record<CallResultCode, { bg: string; text: string; dot: string }> = {
   '未着手':      { bg: 'bg-[rgba(174,174,178,0.18)]', text: 'text-[#D8DCE6]', dot: 'bg-[#AEAEB2]' },
   '不通':        { bg: 'bg-[rgba(255,59,48,0.22)]',   text: 'text-[#FF8A82]', dot: 'bg-[#FF3B30]' },
   '不在':        { bg: 'bg-[rgba(255,159,10,0.22)]',  text: 'text-[#FFC266]', dot: 'bg-[#FF9F0A]' },
   '接続済み':    { bg: 'bg-[rgba(0,113,227,0.22)]',   text: 'text-[#7AB4FF]', dot: 'bg-[#0071E3]' },
   'コール不可':  { bg: 'bg-[rgba(255,59,48,0.22)]',   text: 'text-[#FF8A82]', dot: 'bg-[#FF3B30]' },
   'アポ獲得':    { bg: 'bg-[rgba(52,199,89,0.22)]',   text: 'text-[#7EE6A1]', dot: 'bg-[#34C759]' },
+  'その他':      { bg: 'bg-[rgba(143,140,144,0.18)]', text: 'text-[#D8DCE6]', dot: 'bg-[#8F8C90]' },
   'Next Action': { bg: 'bg-[rgba(94,92,230,0.22)]',   text: 'text-[#A6A4FF]', dot: 'bg-[#5E5CE6]' },
 }
 
@@ -84,13 +85,13 @@ export const STATUS_GAME_STYLES: Record<ApproachStatus, StatusGameStyle> = {
     borderColor: 'rgba(255,255,255,0.4)',
     textShadow: 'none',
   },
-  'Next Action': {
-    gradient: 'linear-gradient(135deg, #C4B5FD 0%, #A78BFA 35%, #8B5CF6 70%, #6D28D9 100%)',
-    glow: '0 0 14px rgba(139,92,246,0.85), 0 0 5px rgba(196,181,253,0.95), inset 0 1px 0 rgba(255,255,255,0.4)',
-    color: '#FFFFFF',
-    dotColor: '#E9E5FF',
-    borderColor: 'rgba(255,255,255,0.3)',
-    textShadow: '0 1px 2px rgba(50,20,100,0.6)',
+  'その他': {
+    gradient: 'linear-gradient(135deg, #E5E5EA 0%, #C7C7CC 35%, #AEAEB2 70%, #8E8E93 100%)',
+    glow: '0 0 12px rgba(143,140,144,0.45), inset 0 1px 0 rgba(255,255,255,0.3)',
+    color: '#2C2C2E',
+    dotColor: '#48484A',
+    borderColor: 'rgba(255,255,255,0.30)',
+    textShadow: 'none',
   },
 }
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -15,6 +15,9 @@ import {
   Zap,
   Radio,
   HelpCircle,
+  Mail,
+  Users,
+  Calendar,
 } from 'lucide-react'
 import {
   ObsButton,
@@ -35,6 +38,7 @@ type DealStage =
   | 'LOST_DEAL' | 'CLOSED_WON' | 'CHURN' | 'LOST'
 
 import { SignalBadge, type Signal } from '@/components/crm/SignalBadge'
+import { getCompanyFirstPartySignal } from '@/lib/mock-data/firstPartySignals'
 
 type ChipTone = 'neutral' | 'hot' | 'middle' | 'low' | 'primary'
 
@@ -58,20 +62,28 @@ interface Deal {
   updatedAt: string
   nextAction: NextActionType
   taskDueAt: string | null
+  progressStatus: string
+  nextActionText: string
+  emailCount: number
+  meetingCount: number
+  createdAt: string // YYYY-MM-DD
 }
 
 // ─── Mock Data ─────────────────────────────────────────────────────────────────
+// 各取引の signal は社名キーで firstPartySignals.ts と連動させる(290万社DBの 1stシグナル列と同じソース)
 
-const MOCK_DEALS: Deal[] = [
-  { id: 'd1', name: '株式会社テクノリード - 2026/01/15', company: '株式会社テクノリード', contact: '田中 誠', owner: '田中太郎', rank: 'A', stage: 'CLOSED_WON',     signal: 'Hot',    amount: 4800000, probability: 80, expectedCloseAt: '2026-03-31', updatedAt: '2026-03-22', nextAction: 'proposal', taskDueAt: '2026-03-28' },
-  { id: 'd2', name: '株式会社イノベーション - 大型案件',  company: '株式会社イノベーション', contact: '佐々木 拓也', owner: '田中太郎', rank: 'A', stage: 'POC',             signal: 'Hot',    amount: 6000000, probability: 90, expectedCloseAt: '2026-03-28', updatedAt: '2026-03-21', nextAction: 'meeting', taskDueAt: '2026-03-26' },
-  { id: 'd3', name: '合同会社フューチャー - 2026/02/01', company: '合同会社フューチャー', contact: '山本 佳子', owner: '鈴木花子', rank: 'A', stage: 'MEETING_PLANNED', signal: 'Hot',    amount: 2400000, probability: 40, expectedCloseAt: '2026-04-15', updatedAt: '2026-03-19', nextAction: 'call', taskDueAt: '2026-03-25' },
-  { id: 'd4', name: '株式会社グロース - HR導入',        company: '株式会社グロース',    contact: '中村 理恵', owner: '佐藤次郎', rank: 'B', stage: 'MEETING_DONE',    signal: 'Middle', amount: 900000,  probability: 30, expectedCloseAt: '2026-04-30', updatedAt: '2026-03-10', nextAction: 'email', taskDueAt: '2026-03-24' },
-  { id: 'd5', name: '株式会社イノベーション - 初回',    company: '株式会社イノベーション', contact: '佐々木 拓也', owner: '田中太郎', rank: 'A', stage: 'PROJECT_PLANNED', signal: 'Hot',    amount: 3600000, probability: 50, expectedCloseAt: '2026-04-20', updatedAt: '2026-03-18', nextAction: 'followup', taskDueAt: '2026-03-30' },
-  { id: 'd6', name: '有限会社サクセス - PoC',          company: '有限会社サクセス',    contact: '小林 健太', owner: '鈴木花子', rank: 'B', stage: 'MULTI_MEETING',  signal: 'Middle', amount: 1800000, probability: 60, expectedCloseAt: '2026-04-10', updatedAt: '2026-03-05', nextAction: 'meeting', taskDueAt: '2026-04-02' },
-  { id: 'd7', name: '株式会社ネクスト - 不動産向け',   company: '株式会社ネクスト',    contact: '鈴木 美香', owner: '田中太郎', rank: 'C', stage: 'NURTURING',       signal: 'Low',    amount: 720000,  probability: 35, expectedCloseAt: '2026-04-25', updatedAt: '2026-03-17', nextAction: 'proposal', taskDueAt: '2026-04-05' },
-  { id: 'd8', name: '株式会社テクノリード - 新規',     company: '株式会社テクノリード', contact: '田中 誠',   owner: '田中太郎', rank: 'A', stage: 'IS',              signal: 'Middle', amount: 1200000, probability: 20, expectedCloseAt: '2026-05-15', updatedAt: '2026-03-23', nextAction: 'call', taskDueAt: null },
-]
+const MOCK_DEALS: Deal[] = (
+  [
+    { id: 'd1', name: '株式会社テクノリード - 2026/01/15', company: '株式会社テクノリード', contact: '田中 誠', owner: '田中太郎', rank: 'A', stage: 'CLOSED_WON',     amount: 4800000, probability: 80, expectedCloseAt: '2026-03-31', updatedAt: '2026-03-22', nextAction: 'proposal', taskDueAt: '2026-03-28', progressStatus: '提案フェーズ / 最終見積回答待ち。社内稟議のタイミングに合わせて4/1までに最終見積を回答予定で、CTO鈴木氏の承認を待つフェーズ。', nextActionText: '決裁者(CTO鈴木氏)同席の最終デモ — 4/25 14:00〜 オンサイト。導入後3ヶ月のロードマップとサポート体制も合わせて提示する。', emailCount: 18, meetingCount: 4, createdAt: '2026-01-15' },
+    { id: 'd2', name: '株式会社イノベーション - 大型案件',  company: '株式会社イノベーション', contact: '佐々木 拓也', owner: '田中太郎', rank: 'A', stage: 'POC',             amount: 6000000, probability: 90, expectedCloseAt: '2026-03-28', updatedAt: '2026-03-21', nextAction: 'meeting', taskDueAt: '2026-03-26', progressStatus: '口頭合意済 / 契約書ドラフト確認中。法務レビュー通常3営業日。', nextActionText: '契約書の最終レビュー結果を法務から受け取り、押印手配 (クラウドサイン経由)。', emailCount: 24, meetingCount: 6, createdAt: '2026-02-03' },
+    { id: 'd3', name: '合同会社フューチャー - 2026/02/01', company: '合同会社フューチャー', contact: '山本 佳子', owner: '鈴木花子', rank: 'A', stage: 'MEETING_PLANNED', amount: 2400000, probability: 40, expectedCloseAt: '2026-04-15', updatedAt: '2026-03-19', nextAction: 'call', taskDueAt: '2026-03-25', progressStatus: 'ヒアリング継続 / 予算確認中。山本氏は決裁権限なしで決裁者の特定が必要。', nextActionText: '2回目商談で要件整理。Zoho CRM との比較軸を当社から提示し優位性を訴求。', emailCount: 6, meetingCount: 1, createdAt: '2026-02-01' },
+    { id: 'd4', name: '株式会社グロース - HR導入',        company: '株式会社グロース',    contact: '中村 理恵', owner: '佐藤次郎', rank: 'B', stage: 'MEETING_DONE',    amount: 900000,  probability: 30, expectedCloseAt: '2026-04-30', updatedAt: '2026-03-10', nextAction: 'email', taskDueAt: '2026-03-24', progressStatus: '初期ヒアリング完了 / 費用感共有待ち。予算と優先度の両面で社内調整が必要。', nextActionText: '比較資料を送付後フォローコール。人事部長を巻き込むタイミングを見極めたい。', emailCount: 11, meetingCount: 2, createdAt: '2026-02-12' },
+    { id: 'd5', name: '株式会社イノベーション - 初回',    company: '株式会社イノベーション', contact: '佐々木 拓也', owner: '田中太郎', rank: 'A', stage: 'PROJECT_PLANNED', amount: 3600000, probability: 50, expectedCloseAt: '2026-04-20', updatedAt: '2026-03-18', nextAction: 'followup', taskDueAt: '2026-03-30', progressStatus: 'PJ化方針共有済み / 要件定義の優先順位調整中。', nextActionText: '次回キックオフに向けた要件整理ドキュメントを送付し、合意を取る。', emailCount: 27, meetingCount: 7, createdAt: '2026-01-08' },
+    { id: 'd6', name: '有限会社サクセス - PoC',          company: '有限会社サクセス',    contact: '小林 健太', owner: '鈴木花子', rank: 'B', stage: 'MULTI_MEETING',  amount: 1800000, probability: 60, expectedCloseAt: '2026-04-10', updatedAt: '2026-03-05', nextAction: 'meeting', taskDueAt: '2026-04-02', progressStatus: '複数回の商談済 / PoC評価フェーズ。現場責任者の評価は良好。', nextActionText: 'PoC終了報告会を設定。経営層を含めた最終ジャッジに繋げる。', emailCount: 14, meetingCount: 5, createdAt: '2026-01-20' },
+    { id: 'd7', name: '株式会社ネクスト - 不動産向け',   company: '株式会社ネクスト',    contact: '鈴木 美香', owner: '田中太郎', rank: 'C', stage: 'NURTURING',       amount: 720000,  probability: 35, expectedCloseAt: '2026-04-25', updatedAt: '2026-03-17', nextAction: 'proposal', taskDueAt: '2026-04-05', progressStatus: 'ナーチャリング中 / 不動産業界向けユースケース資料の準備。', nextActionText: '業界事例 + 機能フィット資料を送付し再アプローチのきっかけを作る。', emailCount: 4, meetingCount: 0, createdAt: '2026-03-01' },
+    { id: 'd8', name: '株式会社テクノリード - 新規',     company: '株式会社テクノリード', contact: '田中 誠',   owner: '田中太郎', rank: 'A', stage: 'IS',              amount: 1200000, probability: 20, expectedCloseAt: '2026-05-15', updatedAt: '2026-03-23', nextAction: 'call', taskDueAt: null, progressStatus: 'IS段階 / 別事業部からの新規問い合わせ。既存契約とは別案件として進行。', nextActionText: '初回コールで課題ヒアリング。既存契約との関連性を確認し、提案範囲を仮置きする。', emailCount: 2, meetingCount: 0, createdAt: '2026-03-10' },
+  ] as Omit<Deal, 'signal'>[]
+).map((d) => ({ ...d, signal: (getCompanyFirstPartySignal(d.company) ?? 'Low') as Signal }))
 
 // ─── Stage Config ───────────────────────────────────────────────────────────────
 
@@ -105,11 +117,125 @@ const ALL_STAGES = Object.keys(STAGE_CONFIG) as DealStage[]
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
+// YYYY-MM-DD → M/D（短縮表示）
+function formatShortDate(iso: string): string {
+  if (!iso) return '—'
+  const parts = iso.split('-')
+  if (parts.length !== 3) return iso
+  return `${Number(parts[1])}/${Number(parts[2])}`
+}
+
 function SortIcon({ col, sortKey, sortDir }: { col: SortKey; sortKey: SortKey; sortDir: SortDir }) {
   if (col !== sortKey) return <ArrowUpDown size={12} className="ml-1 inline" style={{ color: 'var(--color-obs-text-subtle)' }} />
   return sortDir === 'asc'
     ? <ChevronUp size={12} className="ml-1 inline" style={{ color: 'var(--color-obs-primary)' }} />
     : <ChevronDown size={12} className="ml-1 inline" style={{ color: 'var(--color-obs-primary)' }} />
+}
+
+// 行内のテキストセル: 1行に切り詰め、横の展開ボタンで全文ポップオーバー表示
+// テキスト本体は行クリック(=取引詳細遷移)を阻害しない
+function TruncatableCell({ text, label }: { text: string; label: string }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const onDoc = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('mousedown', onDoc)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDoc)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+
+  if (!text) {
+    return (
+      <span className="text-sm" style={{ color: 'var(--color-obs-text-subtle)' }}>
+        —
+      </span>
+    )
+  }
+
+  return (
+    <div ref={ref} className="relative min-w-0 flex items-center gap-1.5">
+      <span
+        className="block flex-1 min-w-0 text-sm truncate transition-colors duration-150"
+        style={{ color: 'var(--color-obs-text-muted)' }}
+        title={text}
+      >
+        {text}
+      </span>
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation()
+          setOpen((v) => !v)
+        }}
+        aria-label={`${label}の詳細を表示`}
+        title={open ? '閉じる' : '全文を表示'}
+        className="shrink-0 w-7 h-7 rounded-[8px] flex items-center justify-center transition-colors"
+        style={{
+          backgroundColor: open ? 'var(--color-obs-primary-container)' : 'var(--color-obs-surface-high)',
+          color: open ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
+        }}
+        onMouseOver={(e) => {
+          if (open) return
+          ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--color-obs-surface-highest)'
+          ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-obs-text)'
+        }}
+        onMouseOut={(e) => {
+          if (open) return
+          ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--color-obs-surface-high)'
+          ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-obs-text-muted)'
+        }}
+      >
+        <ChevronDown
+          size={15}
+          strokeWidth={2.2}
+          style={{
+            transform: open ? 'rotate(180deg)' : 'rotate(0)',
+            transition: 'transform 0.15s ease',
+          }}
+        />
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -4, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -4, scale: 0.98 }}
+            transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+            className="absolute z-50 top-full right-0 mt-2 w-[360px] max-w-[80vw] p-3.5 rounded-[var(--radius-obs-md)]"
+            style={{
+              background: 'var(--color-obs-surface-highest)',
+              boxShadow: '0 16px 36px rgba(0,0,0,0.45)',
+              border: '1px solid var(--color-obs-border)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              className="text-[10.5px] font-bold tracking-[0.06em] mb-1.5 uppercase"
+              style={{ color: 'var(--color-obs-primary)' }}
+            >
+              {label}
+            </div>
+            <p
+              className="text-[12.5px] leading-relaxed whitespace-pre-wrap"
+              style={{ color: 'var(--color-obs-text)' }}
+            >
+              {text}
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
 }
 
 // ─── Main Page ─────────────────────────────────────────────────────────────────
@@ -141,6 +267,11 @@ export default function DealsPage() {
       updatedAt: `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`,
       nextAction: null,
       taskDueAt: null,
+      progressStatus: '',
+      nextActionText: '',
+      emailCount: 0,
+      meetingCount: 0,
+      createdAt: `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`,
     }
     setDeals(prev => [newDeal, ...prev])
     setShowCreateModal(false)
@@ -241,7 +372,7 @@ export default function DealsPage() {
               color: filterOwner ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
             }}
           >
-            <option value="">担当者</option>
+            <option value="">担当者：全員</option>
             {ALL_OWNERS.map(o => <option key={o} value={o}>{o}</option>)}
           </select>
 
@@ -279,13 +410,17 @@ export default function DealsPage() {
         <ObsCard depth="low" padding="none" radius="xl">
           {/* Header */}
           <div
-            className="grid grid-cols-[300px_90px_1fr_140px_140px] gap-x-3 px-5 py-3 text-[11px] font-medium tracking-[0.08em] uppercase"
+            className="grid grid-cols-[220px_72px_1fr_1fr_64px_64px_84px_104px_98px] gap-x-3 px-5 py-3 text-[11px] font-medium tracking-[0.08em] uppercase"
             style={{ color: 'var(--color-obs-text-subtle)' }}
           >
             {[
               { label: '取引名',         key: 'name' as SortKey,       sortable: true,  signal: false },
-              { label: '1st シグナル', key: null,                sortable: false, signal: true  },
-              { label: '',               key: null,                    sortable: false, signal: false },
+              { label: '1st シグナル',   key: null,                    sortable: false, signal: true  },
+              { label: '進捗',           key: null,                    sortable: false, signal: false },
+              { label: 'ネクスト',       key: null,                    sortable: false, signal: false },
+              { label: 'メール',         key: null,                    sortable: false, signal: false },
+              { label: '商談',           key: null,                    sortable: false, signal: false },
+              { label: '作成日',         key: null,                    sortable: false, signal: false },
               { label: '担当者',         key: null,                    sortable: false, signal: false },
               { label: 'ステージ',       key: 'stage' as SortKey,      sortable: true,  signal: false },
             ].map((col, i) => (
@@ -344,7 +479,7 @@ export default function DealsPage() {
                       visible: { opacity: 1, y: 0, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } },
                     }}
                     onClick={() => router.push(`/deals/${deal.id}`)}
-                    className="grid grid-cols-[300px_90px_1fr_140px_140px] gap-x-3 items-center px-5 py-3.5 transition-colors duration-150 group cursor-pointer"
+                    className="grid grid-cols-[220px_72px_1fr_1fr_64px_64px_84px_104px_98px] gap-x-3 items-center px-5 py-3.5 transition-colors duration-150 group cursor-pointer"
                     style={{
                       transitionTimingFunction: 'var(--ease-liquid)',
                       boxShadow: 'inset 0 -1px 0 0 var(--color-obs-surface)',
@@ -370,12 +505,45 @@ export default function DealsPage() {
                     </div>
 
                     {/* シグナル（1stパーティーデータ） */}
-                    <div onClick={(e) => e.stopPropagation()}>
+                    <div>
                       <SignalBadge signal={deal.signal} />
                     </div>
 
-                    {/* スペーサー */}
-                    <div />
+                    {/* 進捗（クリックで全文表示） */}
+                    <TruncatableCell text={deal.progressStatus} label="進捗" />
+
+                    {/* ネクスト（クリックで全文表示） */}
+                    <TruncatableCell text={deal.nextActionText} label="ネクスト" />
+
+                    {/* メール回数 */}
+                    <div
+                      className="flex items-center gap-1 text-[12.5px] tabular-nums"
+                      style={{ color: 'var(--color-obs-text-muted)' }}
+                      title={`メール ${deal.emailCount}件`}
+                    >
+                      <Mail size={11} strokeWidth={2} style={{ color: 'var(--color-obs-text-subtle)' }} />
+                      {deal.emailCount}
+                    </div>
+
+                    {/* 商談数 */}
+                    <div
+                      className="flex items-center gap-1 text-[12.5px] tabular-nums"
+                      style={{ color: 'var(--color-obs-text-muted)' }}
+                      title={`商談 ${deal.meetingCount}件`}
+                    >
+                      <Users size={11} strokeWidth={2} style={{ color: 'var(--color-obs-text-subtle)' }} />
+                      {deal.meetingCount}
+                    </div>
+
+                    {/* 作成日 */}
+                    <div
+                      className="flex items-center gap-1 text-[12px] tabular-nums whitespace-nowrap"
+                      style={{ color: 'var(--color-obs-text-muted)' }}
+                      title={deal.createdAt}
+                    >
+                      <Calendar size={11} strokeWidth={2} style={{ color: 'var(--color-obs-text-subtle)' }} />
+                      {formatShortDate(deal.createdAt)}
+                    </div>
 
                     {/* 担当者 */}
                     <div className="flex items-center gap-1.5">

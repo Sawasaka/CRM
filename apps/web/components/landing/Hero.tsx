@@ -1,14 +1,16 @@
 'use client'
 
 /**
- * Hero — Front Office ライブチャットデモ
+ * Hero — KikuCRM ライブチャットデモ
  * チャット入力 + 5体のサジェストチップで RAG 風の回答を擬似ストリーミング表示。
  */
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
-import { Sparkles, Send, Check, Copy } from 'lucide-react'
+import { Sparkles, Send, Check, Copy, Paperclip, ChevronDown, Mic, Layers, User, Globe } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from 'recharts'
-import { AGENTS, type AgentKey, Eyebrow, NebulaBG, Orb, ParticleField, Section, MiniBar } from './atoms'
+import { AGENTS, type AgentKey, Eyebrow, NebulaBG, Orb, ParticleField, Section } from './atoms'
+import { HeroSidebar } from './HeroSidebar'
+import { HeroDemoView, type HeroDemoKey } from './hero-demos'
 
 const PLACEHOLDERS = [
   '今週アプローチすべきHOT企業を教えて',
@@ -31,37 +33,80 @@ const SUGGESTIONS: Suggestion[] = [
   { id: 'tmpl',   label: 'ベテランの提案テンプレートを教えて',     agent: 'helpdesk' },
 ]
 
+// ---------- Realtime signal badge (Hot / Mid / Low) ----------
+type SignalLevel = 'Hot' | 'Mid' | 'Low'
+const SIGNAL_STYLE: Record<SignalLevel, { bg: string; fg: string; pulse: boolean }> = {
+  Hot: { bg: 'rgba(255,107,107,0.15)', fg: '#ff6b6b', pulse: true },
+  Mid: { bg: 'rgba(255,207,74,0.14)',  fg: '#ffcf4a', pulse: false },
+  Low: { bg: 'rgba(155,153,160,0.10)', fg: '#9b99a0', pulse: false },
+}
+const SignalBadge = ({ level }: { level: SignalLevel }) => {
+  const s = SIGNAL_STYLE[level]
+  return (
+    <span
+      className="inline-flex items-center gap-1 text-[9px] font-mono px-1.5 py-0.5 rounded uppercase tracking-wider"
+      style={{ background: s.bg, color: s.fg }}
+    >
+      <span
+        className={`w-1 h-1 rounded-full ${s.pulse ? 'animate-pulse' : ''}`}
+        style={{ background: s.fg, boxShadow: s.pulse ? `0 0 6px ${s.fg}` : 'none' }}
+      />
+      {level}
+    </span>
+  )
+}
+
 // ---------- Rich content blocks ----------
 const HotCompaniesTable = () => {
-  const rows = [
-    { c: 'アクトラス株式会社',   i: 'SaaS',    e: '120名',   s: '資料DL3回 / 役員来訪',    score: 94 },
-    { c: '株式会社メリディアン', i: '製造',    e: '850名',   s: '求人+12 / 価格ページ',    score: 89 },
-    { c: 'PoltCraft Inc.',       i: 'FinTech', e: '240名',   s: 'ウェビナー参加 / 比較記事', score: 86 },
-    { c: 'セレナーデ商事',       i: '商社',    e: '1,200名', s: '問合せ / 資料DL2回',       score: 81 },
-    { c: 'ベルガモット工業',     i: '化学',    e: '560名',   s: '求人+8 / 採用ページ滞在',  score: 77 },
+  const rows: Array<{
+    c: string; i: string;
+    jobs: string; jobsLv: SignalLevel;
+    dept: string; rev: string; emp: string;
+    sig: string; sigLv: SignalLevel;
+  }> = [
+    { c: 'アクトラス株式会社',   i: 'SaaS',    jobs: '+12', jobsLv: 'Hot', dept: '営業 / CS',   rev: '¥18.4B', emp: '120名',   sig: '資料DL ×3',    sigLv: 'Hot' },
+    { c: '株式会社メリディアン', i: '製造',    jobs: '+8',  jobsLv: 'Mid', dept: '生産 / 技術', rev: '¥124B',  emp: '850名',   sig: 'IR訪問 ×2',    sigLv: 'Mid' },
+    { c: 'PoltCraft Inc.',       i: 'FinTech', jobs: '+5',  jobsLv: 'Mid', dept: 'プロダクト',  rev: '¥4.2B',  emp: '240名',   sig: 'ウェビナー',   sigLv: 'Mid' },
+    { c: 'セレナーデ商事',       i: '商社',    jobs: '+9',  jobsLv: 'Hot', dept: '営業 / IT',   rev: '¥220B',  emp: '1,200名', sig: '問合せ / DL',  sigLv: 'Hot' },
+    { c: 'ベルガモット工業',     i: '化学',    jobs: '+6',  jobsLv: 'Mid', dept: 'R&D / IT',    rev: '¥58B',   emp: '560名',   sig: '採用滞在',     sigLv: 'Low' },
   ]
   return (
-    <div className="mt-3 rounded-xl bg-pitch/80 p-4 fo-glass-rim">
-      <div className="grid grid-cols-12 text-[0.68rem] uppercase tracking-[0.14em] text-[#9b99a0] pb-2">
-        <div className="col-span-4">会社名</div>
-        <div className="col-span-2">業界</div>
-        <div className="col-span-2">従業員</div>
-        <div className="col-span-2">今週シグナル</div>
-        <div className="col-span-2 text-right">スコア</div>
+    <div className="mt-3 rounded-xl bg-pitch/80 p-4 fo-glass-rim overflow-x-auto fo-thin-scroll">
+      {/* live indicator */}
+      <div className="flex items-center justify-between mb-2 min-w-[680px]">
+        <span className="text-[0.62rem] uppercase tracking-[0.14em] text-[#7e7c83]">HOT 企業 TOP5</span>
+        <span className="inline-flex items-center gap-1.5 text-[9px] font-mono text-[#8dffc9]">
+          <span className="w-1.5 h-1.5 rounded-full bg-mint animate-pulse" style={{ boxShadow: '0 0 6px #8dffc9' }} />
+          LIVE · 60秒前更新
+        </span>
+      </div>
+      <div className="grid grid-cols-[2fr_0.9fr_1.4fr_1.2fr_1fr_0.9fr_1.6fr] gap-x-3 text-[0.62rem] uppercase tracking-[0.14em] text-[#9b99a0] pb-2 min-w-[680px]">
+        <div>会社名</div>
+        <div>業界</div>
+        <div>求人インテント</div>
+        <div>部門</div>
+        <div className="text-right">売上</div>
+        <div className="text-right">従業員</div>
+        <div>1stパーティ・シグナル</div>
       </div>
       {rows.map((r, i) => (
         <div
           key={i}
-          className="grid grid-cols-12 items-center text-sm py-2.5"
+          className="grid grid-cols-[2fr_0.9fr_1.4fr_1.2fr_1fr_0.9fr_1.6fr] gap-x-3 items-center text-[12.5px] py-2 min-w-[680px]"
           style={{ borderTop: i === 0 ? 'none' : '1px solid rgba(171,199,255,0.06)' }}
         >
-          <div className="col-span-4 text-[#e7e5ea] truncate">{r.c}</div>
-          <div className="col-span-2 text-[#9b99a0]">{r.i}</div>
-          <div className="col-span-2 text-[#9b99a0]">{r.e}</div>
-          <div className="col-span-2 text-[#c7c5c9] truncate text-xs">{r.s}</div>
-          <div className="col-span-2 flex items-center justify-end gap-2">
-            <MiniBar value={r.score} color="#abc7ff" w={60} />
-            <span className="font-mono text-aurora text-xs w-7 text-right">{r.score}</span>
+          <div className="text-[#e7e5ea] truncate">{r.c}</div>
+          <div className="text-[#9b99a0] truncate">{r.i}</div>
+          <div className="flex items-center gap-1.5">
+            <SignalBadge level={r.jobsLv} />
+            <span className="font-mono text-amber text-xs">{r.jobs}</span>
+          </div>
+          <div className="text-[#c7c5c9] truncate text-xs">{r.dept}</div>
+          <div className="text-right font-mono text-[#e7e5ea] text-xs">{r.rev}</div>
+          <div className="text-right text-[#9b99a0] text-xs">{r.emp}</div>
+          <div className="flex items-center gap-1.5 min-w-0">
+            <SignalBadge level={r.sigLv} />
+            <span className="text-[#c7c5c9] truncate text-xs">{r.sig}</span>
           </div>
         </div>
       ))}
@@ -301,7 +346,7 @@ const ChatMessage = ({ m, streaming }: { m: ChatMsg; streaming: boolean }) => {
           {!streaming && (
             <div className="mt-3 text-[11px] text-[#7e7c83] flex items-center gap-1.5">
               <Sparkles size={12} color="#abc7ff" />
-              これは Front Office のRAGデモです。実データで試すには{' '}
+              これは KikuCRM のRAGデモです。実データで試すには{' '}
               <a href="#cta" className="text-aurora hover:underline ml-1">無料アカウント発行 →</a>
             </div>
           )}
@@ -312,13 +357,100 @@ const ChatMessage = ({ m, streaming }: { m: ChatMsg; streaming: boolean }) => {
 }
 
 // ---------- Hero ----------
+// ---------- Dropdown menu primitives ----------
+const DropdownMenu = ({ children, wide }: { children: React.ReactNode; wide?: boolean }) => (
+  <div
+    className={`absolute bottom-full left-0 mb-2 rounded-xl bg-pitch fo-glass-rim py-1 z-50 ${wide ? 'w-[260px]' : 'w-[200px]'}`}
+    style={{ boxShadow: '0 10px 30px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(171,199,255,0.15)' }}
+    onClick={(e) => e.stopPropagation()}
+  >
+    {children}
+  </div>
+)
+
+const DropdownHeader = ({ children }: { children: React.ReactNode }) => (
+  <div className="px-3 py-1.5 text-[9px] uppercase tracking-[0.14em] text-[#7e7c83] border-b border-white/[0.04] mb-1">
+    {children}
+  </div>
+)
+
+const DropdownItem = ({
+  children,
+  selected,
+  onClick,
+  meta,
+}: { children: React.ReactNode; selected?: boolean; onClick: () => void; meta?: string }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className="w-full text-left px-3 py-2 text-[12px] flex items-center justify-between gap-3 rounded-md hover:bg-shimmer/40 transition-colors"
+    style={{ color: selected ? '#abc7ff' : '#c7c5c9' }}
+  >
+    <span className="flex flex-col min-w-0">
+      <span className="truncate">{children}</span>
+      {meta && <span className="text-[10px] text-[#7e7c83] mt-0.5">{meta}</span>}
+    </span>
+    {selected && <Check size={12} color="#abc7ff" className="shrink-0" />}
+  </button>
+)
+
+// ---------- Option chips (model / scope / person / external) ----------
+type ModelKey      = 'gpt-4o-mini' | 'gpt-4o' | 'claude-opus-4' | 'claude-sonnet-4-5' | 'gemini-2-5-pro'
+type FeatureScope  = 'all' | 'crm' | 'marketing' | 'pdm' | 'support' | 'helpdesk'
+type PersonScope   = 'all' | 'tanaka' | 'suzuki' | 'sato' | 'takahashi' | 'watanabe'
+type ExternalScope = 'off' | 'web' | 'google'
+
+const MODEL_LABELS: Record<ModelKey, string> = {
+  'gpt-4o-mini':     'GPT-4o mini',
+  'gpt-4o':          'GPT-4o',
+  'claude-opus-4':   'Claude Opus 4.7',
+  'claude-sonnet-4-5': 'Claude Sonnet 4.6',
+  'gemini-2-5-pro':  'Gemini 2.5 Pro',
+}
+const FEATURE_LABELS: Record<FeatureScope, string> = {
+  all: '全て', crm: 'CRM', marketing: 'マーケ', pdm: 'PDM', support: 'サポート', helpdesk: 'ヘルプデスク',
+}
+const PERSON_LABELS: Record<PersonScope, string> = {
+  all: '全て',
+  tanaka: '田中 太郎',
+  suzuki: '鈴木 花子',
+  sato: '佐藤 次郎',
+  takahashi: '高橋 美咲',
+  watanabe: '渡辺 健二',
+}
+const PERSON_ROLES: Record<PersonScope, string> = {
+  all: '',
+  tanaka: 'エンタープライズ営業',
+  suzuki: 'マーケ／インサイドセールス',
+  sato: 'カスタマーサポート',
+  takahashi: 'PdM',
+  watanabe: 'ヘルプデスク',
+}
+const EXTERNAL_LABELS: Record<ExternalScope, string> = {
+  off: 'OFF',
+  web: '外部リサーチ',
+  google: 'Google 連携',
+}
+const EXTERNAL_SHORT: Record<ExternalScope, string> = {
+  off: 'OFF',
+  web: 'リサーチ',
+  google: 'Google',
+}
+const EXTERNAL_DESC: Record<ExternalScope, string> = {
+  off: '内部データのみを参照',
+  web: 'Web検索結果も併用',
+  google: 'Gmail / Calendar / Drive を併用',
+}
+
 export const Hero = () => {
   const [messages, setMessages] = useState<ChatMsg[]>([
+    { id: 'm-init-u', role: 'user', text: '今週アプローチすべきHOT企業を教えて' },
     {
-      id: 'm0',
+      id: 'm-init-a',
       role: 'agent',
       agent: 'sales',
-      text: 'こんにちは。Front Office のRAGデモです。下の質問例を試すか、自由に入力してください。',
+      text: RESPONSES.hot.text,
+      rich: RESPONSES.hot.rich,
     },
   ])
   const [streamingId, setStreamingId] = useState<string | null>(null)
@@ -326,8 +458,27 @@ export const Hero = () => {
   const [input, setInput] = useState('')
   const [phIdx, setPhIdx] = useState(0)
   const [phShow, setPhShow] = useState(true)
+  const [demoView, setDemoView] = useState<HeroDemoKey>('chat')
+  const [model, setModel] = useState<ModelKey>('gpt-4o-mini')
+  const [featureScope, setFeatureScope] = useState<FeatureScope>('all')
+  const [personScope, setPersonScope] = useState<PersonScope>('all')
+  const [externalScope, setExternalScope] = useState<ExternalScope>('off')
+  const [openMenu, setOpenMenu] = useState<'model' | 'feature' | 'person' | 'external' | null>(null)
   const threadRef = useRef<HTMLDivElement | null>(null)
   const inputRef = useRef<HTMLInputElement | null>(null)
+  const menuRootRef = useRef<HTMLDivElement | null>(null)
+
+  // Close dropdowns on outside click
+  useEffect(() => {
+    if (!openMenu) return
+    const onDocClick = (e: MouseEvent) => {
+      if (menuRootRef.current && !menuRootRef.current.contains(e.target as Node)) {
+        setOpenMenu(null)
+      }
+    }
+    document.addEventListener('mousedown', onDocClick)
+    return () => document.removeEventListener('mousedown', onDocClick)
+  }, [openMenu])
 
   // Rotate placeholder
   useEffect(() => {
@@ -348,8 +499,21 @@ export const Hero = () => {
     }
   })
 
-  const streamResponse = useCallback((agent: AgentKey, text: string, rich: RichKind) => {
+  const streamResponse = useCallback((agent: AgentKey, baseText: string, rich: RichKind) => {
     const id = 'a' + Date.now()
+    const personPrefix = personScope !== 'all'
+      ? `${PERSON_LABELS[personScope]}さん（${PERSON_ROLES[personScope]}）の担当データから抽出しました。\n\n`
+      : ''
+    const externalPrefix = externalScope === 'web'
+      ? '※ 外部リサーチ（Web検索）の最新情報も反映しています。\n\n'
+      : externalScope === 'google'
+        ? '※ Google Workspace（Gmail / Calendar / Drive）の関連データも反映しています。\n\n'
+        : ''
+    const scopeNote = featureScope === 'all' && personScope === 'all' && externalScope === 'off'
+      ? ''
+      : `\n\n（参照スコープ：機能=${FEATURE_LABELS[featureScope]} ／ 人=${PERSON_LABELS[personScope]} ／ 外部=${EXTERNAL_LABELS[externalScope]}）`
+    const modelNote = `\n— Powered by ${MODEL_LABELS[model]}`
+    const text = personPrefix + externalPrefix + baseText + scopeNote + modelNote
     setMessages((ms) => [...ms, { id, role: 'agent', agent, text: '', rich }])
     setStreamingId(id)
     setActiveAgent(agent)
@@ -367,7 +531,7 @@ export const Hero = () => {
     }
     timer = setTimeout(step, 220)
     return () => clearTimeout(timer)
-  }, [])
+  }, [model, featureScope, personScope, externalScope])
 
   const sendChip = useCallback(
     (sug: Suggestion) => {
@@ -413,8 +577,8 @@ export const Hero = () => {
     { agent: 'helpdesk',  pos: 'top-[48%] left-[2%] hidden lg:block',     size: 32 },
   ]
 
-  const heroWords = ['Front', 'Office', 'を、']
-  const heroLine2 = ['まず、', '聞いて', 'みて', 'ください。']
+  const heroWords = ['営業の', 'すべての', '答えが、']
+  const heroLine2 = ['ひとつの', 'チャットに。']
 
   return (
     <Section id="hero" tone="obsidian" screenLabel="01 Hero">
@@ -430,7 +594,7 @@ export const Hero = () => {
       <div className="relative mx-auto max-w-6xl px-6 pt-32 md:pt-40 pb-24 md:pb-32 min-h-screen flex flex-col justify-center">
         <div className="text-center">
           <div className="flex justify-center mb-6">
-            <Eyebrow color="#abc7ff">A NEW CATEGORY ／ BGM × AGENTIC ERA</Eyebrow>
+            <Eyebrow color="#abc7ff">FRONT OFFICE ／ KIKU CRM</Eyebrow>
           </div>
           <h1 className="font-display font-bold tracking-[-0.025em] text-[2.6rem] sm:text-[3.4rem] md:text-[4.6rem] leading-[1.04]">
             <span className="block">
@@ -453,10 +617,28 @@ export const Hero = () => {
             </span>
           </h1>
           <p className="mt-6 text-[#c7c5c9] max-w-2xl mx-auto text-[1.05rem] leading-relaxed fo-word-in" style={{ animationDelay: '650ms' }}>
-            これは説明ページではありません。<span className="text-aurora">Front Office そのものです。</span>
+            商談・メール・議事録・求人インテント・290万社DBを横断し、
             <br />
-            下のチャットに何でも投げてみてください。5体のAIエージェントが答えます。
+            あなたの会社のデータを踏まえて答えます。
           </p>
+
+          {/* Top trust strip — 数値プルーフ */}
+          <div className="mt-8 flex flex-wrap justify-center items-center gap-x-8 sm:gap-x-12 gap-y-3 fo-word-in" style={{ animationDelay: '780ms' }}>
+            <div className="flex items-baseline gap-2">
+              <span className="font-display font-bold fo-gradient-text text-[1.5rem] sm:text-[1.8rem] leading-none">約6,000</span>
+              <span className="text-[10px] uppercase tracking-[0.14em] text-[#9b99a0]">社 累計エンリッチ</span>
+            </div>
+            <span className="hidden sm:inline-block h-6 w-px bg-white/[0.08]" />
+            <div className="flex items-baseline gap-2">
+              <span className="font-display font-bold fo-gradient-text text-[1.5rem] sm:text-[1.8rem] leading-none">25</span>
+              <span className="text-[10px] uppercase tracking-[0.14em] text-[#9b99a0]">部門 求人インテント</span>
+            </div>
+            <span className="hidden sm:inline-block h-6 w-px bg-white/[0.08]" />
+            <div className="flex items-baseline gap-2">
+              <span className="font-display font-bold fo-gradient-text text-[1.5rem] sm:text-[1.8rem] leading-none">2,900,000</span>
+              <span className="text-[10px] uppercase tracking-[0.14em] text-[#9b99a0]">社 収録企業</span>
+            </div>
+          </div>
         </div>
 
         {/* Chat panel */}
@@ -469,6 +651,11 @@ export const Hero = () => {
             }}
           />
           <div className="relative rounded-[1.8rem] fo-glass-strong fo-glass-rim overflow-hidden fo-tilt-1400" style={{ transformStyle: 'preserve-3d' }}>
+            <div className="flex">
+              <HeroSidebar active={demoView} onSelect={setDemoView} />
+              <div className="flex-1 min-w-0 flex flex-col" style={{ minHeight: 540 }}>
+                {demoView !== 'chat' && <HeroDemoView kind={demoView} />}
+                {demoView === 'chat' && (<>
             {/* Top bar */}
             <div className="px-5 md:px-7 pt-5 pb-3 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
@@ -480,7 +667,7 @@ export const Hero = () => {
                   ))}
                 </div>
                 <span className="text-sm text-[#c7c5c9]">
-                  Front Office <span className="text-[#7e7c83]">／ Live RAG demo</span>
+                  KikuCRM <span className="text-[#7e7c83]">／ Live RAG demo</span>
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -516,40 +703,178 @@ export const Hero = () => {
                   }}
                 />
                 <div
-                  className="relative rounded-2xl bg-pitch flex items-center gap-3 px-4 md:px-5 h-[68px] md:h-20"
+                  className="relative rounded-2xl bg-pitch px-4 md:px-5 pt-4 pb-3"
                   style={{ boxShadow: 'inset 0 0 0 1px rgba(65,71,83,0.18)' }}
                   onClick={() => inputRef.current?.focus()}
                 >
-                  <Sparkles size={20} color="#abc7ff" />
-                  <div className="flex-1 relative">
-                    <input
-                      ref={inputRef}
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                      onKeyDown={onKeyDown}
-                      className="w-full bg-transparent outline-none text-[1rem] md:text-[1.05rem] text-[#e7e5ea]"
-                      style={{ caretColor: '#abc7ff' }}
-                      aria-label="ask Front Office"
-                    />
-                    {!input && (
-                      <div className="absolute inset-y-0 left-0 flex items-center pointer-events-none">
-                        <span
-                          className={`text-[#7e7c83] text-[1rem] md:text-[1.05rem] transition-all duration-[600ms] ${phShow ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-1'}`}
-                        >
-                          {PLACEHOLDERS[phIdx]}
-                        </span>
-                        <span className="fo-cursor-blink ml-0.5" />
-                      </div>
-                    )}
+                  {/* Row 1: input */}
+                  <div className="flex items-center gap-3 mb-3">
+                    <Sparkles size={18} color="#abc7ff" className="shrink-0" />
+                    <div className="flex-1 relative">
+                      <input
+                        ref={inputRef}
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        onKeyDown={onKeyDown}
+                        className="w-full bg-transparent outline-none text-[1rem] md:text-[1.05rem] text-[#e7e5ea]"
+                        style={{ caretColor: '#abc7ff' }}
+                        aria-label="ask KikuCRM"
+                      />
+                      {!input && (
+                        <div className="absolute inset-y-0 left-0 flex items-center pointer-events-none">
+                          <span className="fo-cursor-blink shrink-0" />
+                          <span
+                            className={`ml-2 text-[#7e7c83] text-[1rem] md:text-[1.05rem] transition-all duration-[600ms] ${phShow ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-1'}`}
+                          >
+                            {PLACEHOLDERS[phIdx]}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <button
-                    onClick={sendInput}
-                    disabled={!input.trim() || !!streamingId}
-                    className="rounded-xl px-4 h-11 inline-flex items-center gap-2 text-sm font-medium disabled:opacity-40"
-                    style={{ background: 'linear-gradient(135deg, #abc7ff, #0071e3)', color: '#0a0a0c' }}
-                  >
-                    送信 <Send size={15} color="#0a0a0c" />
-                  </button>
+
+                  {/* Row 2: option chips + actions */}
+                  <div ref={menuRootRef} className="flex items-center justify-between flex-wrap gap-2">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <button
+                        type="button"
+                        className="w-8 h-8 rounded-full inline-flex items-center justify-center text-[#9b99a0] hover:bg-shimmer/40 transition-colors"
+                        onClick={(e) => e.stopPropagation()}
+                        aria-label="添付"
+                      >
+                        <Paperclip size={14} />
+                      </button>
+
+                      {/* Model dropdown */}
+                      <div className="relative">
+                        <button
+                          type="button"
+                          className={`h-8 px-2.5 rounded-full inline-flex items-center gap-1.5 text-[11.5px] text-[#c7c5c9] transition-colors ${openMenu === 'model' ? 'bg-shimmer/70' : 'bg-shimmer/40 hover:bg-shimmer/60'}`}
+                          onClick={(e) => { e.stopPropagation(); setOpenMenu(openMenu === 'model' ? null : 'model') }}
+                        >
+                          <Sparkles size={11} color="#abc7ff" />
+                          {MODEL_LABELS[model]}
+                          <ChevronDown size={11} color="#7e7c83" />
+                        </button>
+                        {openMenu === 'model' && (
+                          <DropdownMenu>
+                            <DropdownHeader>モデル選択</DropdownHeader>
+                            {(Object.keys(MODEL_LABELS) as ModelKey[]).map((k) => (
+                              <DropdownItem
+                                key={k}
+                                selected={model === k}
+                                onClick={() => { setModel(k); setOpenMenu(null) }}
+                              >
+                                {MODEL_LABELS[k]}
+                              </DropdownItem>
+                            ))}
+                          </DropdownMenu>
+                        )}
+                      </div>
+
+                      {/* Feature scope dropdown */}
+                      <div className="relative">
+                        <button
+                          type="button"
+                          className={`h-8 px-2.5 rounded-full inline-flex items-center gap-1.5 text-[11.5px] text-[#c7c5c9] transition-colors ${openMenu === 'feature' ? 'bg-shimmer/70' : 'bg-shimmer/40 hover:bg-shimmer/60'}`}
+                          onClick={(e) => { e.stopPropagation(); setOpenMenu(openMenu === 'feature' ? null : 'feature') }}
+                        >
+                          <Layers size={11} color="#abc7ff" />
+                          機能 <span className="text-[#7e7c83]">{FEATURE_LABELS[featureScope]}</span>
+                          <ChevronDown size={11} color="#7e7c83" />
+                        </button>
+                        {openMenu === 'feature' && (
+                          <DropdownMenu>
+                            <DropdownHeader>参照する機能</DropdownHeader>
+                            {(Object.keys(FEATURE_LABELS) as FeatureScope[]).map((k) => (
+                              <DropdownItem
+                                key={k}
+                                selected={featureScope === k}
+                                onClick={() => { setFeatureScope(k); setOpenMenu(null) }}
+                              >
+                                {FEATURE_LABELS[k]}
+                              </DropdownItem>
+                            ))}
+                          </DropdownMenu>
+                        )}
+                      </div>
+
+                      {/* Person scope dropdown */}
+                      <div className="relative">
+                        <button
+                          type="button"
+                          className={`h-8 px-2.5 rounded-full inline-flex items-center gap-1.5 text-[11.5px] text-[#c7c5c9] transition-colors ${openMenu === 'person' ? 'bg-shimmer/70' : 'bg-shimmer/40 hover:bg-shimmer/60'}`}
+                          onClick={(e) => { e.stopPropagation(); setOpenMenu(openMenu === 'person' ? null : 'person') }}
+                        >
+                          <User size={11} color="#abc7ff" />
+                          人 <span className="text-[#7e7c83]">{PERSON_LABELS[personScope]}</span>
+                          <ChevronDown size={11} color="#7e7c83" />
+                        </button>
+                        {openMenu === 'person' && (
+                          <DropdownMenu wide>
+                            <DropdownHeader>参照する人</DropdownHeader>
+                            {(Object.keys(PERSON_LABELS) as PersonScope[]).map((k) => (
+                              <DropdownItem
+                                key={k}
+                                selected={personScope === k}
+                                onClick={() => { setPersonScope(k); setOpenMenu(null) }}
+                                meta={PERSON_ROLES[k]}
+                              >
+                                {PERSON_LABELS[k]}
+                              </DropdownItem>
+                            ))}
+                          </DropdownMenu>
+                        )}
+                      </div>
+
+                      {/* External data toggle */}
+                      <div className="relative">
+                        <button
+                          type="button"
+                          className={`h-8 px-2.5 rounded-full inline-flex items-center gap-1.5 text-[11.5px] text-[#c7c5c9] transition-colors ${openMenu === 'external' ? 'bg-shimmer/70' : 'bg-shimmer/40 hover:bg-shimmer/60'}`}
+                          onClick={(e) => { e.stopPropagation(); setOpenMenu(openMenu === 'external' ? null : 'external') }}
+                        >
+                          <Globe size={11} color={externalScope === 'off' ? '#7e7c83' : '#abc7ff'} />
+                          外部 <span className={externalScope === 'off' ? 'text-[#7e7c83]' : 'text-aurora'}>{EXTERNAL_SHORT[externalScope]}</span>
+                          <ChevronDown size={11} color="#7e7c83" />
+                        </button>
+                        {openMenu === 'external' && (
+                          <DropdownMenu wide>
+                            <DropdownHeader>外部データ連携</DropdownHeader>
+                            {(Object.keys(EXTERNAL_LABELS) as ExternalScope[]).map((k) => (
+                              <DropdownItem
+                                key={k}
+                                selected={externalScope === k}
+                                onClick={() => { setExternalScope(k); setOpenMenu(null) }}
+                                meta={EXTERNAL_DESC[k]}
+                              >
+                                {EXTERNAL_LABELS[k]}
+                              </DropdownItem>
+                            ))}
+                          </DropdownMenu>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        className="w-8 h-8 rounded-full inline-flex items-center justify-center text-[#9b99a0] hover:bg-shimmer/40 transition-colors"
+                        onClick={(e) => e.stopPropagation()}
+                        aria-label="音声入力"
+                      >
+                        <Mic size={14} />
+                      </button>
+                      <button
+                        onClick={sendInput}
+                        disabled={!input.trim() || !!streamingId}
+                        className="rounded-lg px-3.5 h-9 inline-flex items-center gap-1.5 text-[12.5px] font-medium disabled:opacity-40"
+                        style={{ background: 'linear-gradient(135deg, #abc7ff, #0071e3)', color: '#0a0a0c' }}
+                      >
+                        送信 <Send size={13} color="#0a0a0c" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -572,21 +897,76 @@ export const Hero = () => {
                 })}
               </div>
             </div>
+                </>)}
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Below chat */}
-        <div className="mt-12 md:mt-16 text-center space-y-6">
+        <div className="mt-12 md:mt-16 text-center space-y-7">
+          {/* 連携サービス（カテゴリ別） */}
+          <div>
+            <div className="text-[10px] uppercase tracking-[0.18em] text-[#7e7c83] mb-5">CONNECTS WITH ／ 連携サービス</div>
+            <div className="max-w-4xl mx-auto space-y-3">
+              {[
+                {
+                  tag: '標準連携',           tagColor: '#8dffc9', tagBg: 'rgba(141,255,201,0.10)',
+                  items: [
+                    { l: 'Google Workspace', c: '#abc7ff', sub: 'Gmail / Meet / カレンダー / チャット' },
+                    { l: 'Slack',            c: '#c8b9ff' },
+                  ],
+                },
+                {
+                  tag: '近日対応予定',        tagColor: '#ffcf4a', tagBg: 'rgba(255,207,74,0.10)',
+                  items: [
+                    { l: 'Microsoft 365',    c: '#abc7ff', sub: 'Outlook / Teams / OneDrive / SharePoint' },
+                    { l: 'Zoom',             c: '#7aa4ff', sub: '議事録 / Meeting' },
+                  ],
+                },
+                {
+                  tag: 'CRMデータ移行（CSV）', tagColor: '#abc7ff', tagBg: 'rgba(171,199,255,0.10)',
+                  items: [
+                    { l: 'Salesforce',       c: '#7ec6ff' },
+                    { l: 'HubSpot',          c: '#ff9f6b' },
+                    { l: 'その他 CRM',         c: '#9b99a0' },
+                  ],
+                },
+                {
+                  tag: '追加対応（初期費用）', tagColor: '#d3a5ff', tagBg: 'rgba(211,165,255,0.10)',
+                  items: [
+                    { l: 'その他カスタム連携',  c: '#9b99a0', sub: 'お気軽にご相談ください' },
+                  ],
+                },
+              ].map((group) => (
+                <div key={group.tag} className="flex flex-wrap items-center justify-center gap-2 md:gap-3">
+                  <span
+                    className="inline-flex items-center text-[9px] font-mono uppercase tracking-[0.14em] px-2 py-1 rounded-full"
+                    style={{ background: group.tagBg, color: group.tagColor, boxShadow: `inset 0 0 0 1px ${group.tagColor}30` }}
+                  >
+                    {group.tag}
+                  </span>
+                  {group.items.map((s) => (
+                    <span
+                      key={s.l}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-pitch/60 fo-glass-rim text-[12px] text-[#c7c5c9] hover:text-[#e7e5ea] hover:bg-shimmer/40 transition-colors"
+                      title={s.sub}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full" style={{ background: s.c, boxShadow: `0 0 6px ${s.c}` }} />
+                      {s.l}
+                      {s.sub && (
+                        <span className="text-[10px] text-[#7e7c83] hidden md:inline">／ {s.sub}</span>
+                      )}
+                    </span>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div className="text-[#c7c5c9] text-sm">
             実際にあなたの組織のデータで試すには →{' '}
             <a href="#cta" className="text-aurora underline-offset-4 hover:underline">無料で始める</a>
-          </div>
-          <div className="flex flex-wrap justify-center gap-x-10 gap-y-3 text-xs text-[#9b99a0]">
-            <span>累計エンリッチ <span className="text-[#e7e5ea] font-mono">4,560社</span></span>
-            <span className="hidden sm:inline text-[#414753]">／</span>
-            <span>収録企業 <span className="text-[#e7e5ea] font-mono">2,900,000社</span></span>
-            <span className="hidden sm:inline text-[#414753]">／</span>
-            <span>gBizINFO <span className="text-[#e7e5ea]">公式連携</span></span>
           </div>
         </div>
       </div>

@@ -110,9 +110,9 @@ const TRIGGER_OPTIONS: { key: TriggerType; label: string; description: string }[
   { key: 'manual',   label: '手動登録',                 description: 'コンタクトを手動で登録' },
 ]
 
-const APPROACH_OPTIONS = ['未着手', '不通', '不在', '接続済み', 'コール不可', 'アポ獲得', 'Next Action']
+const APPROACH_OPTIONS = ['未着手', '不通', '不在', '接続済み', 'コール不可', 'アポ獲得', 'その他']
 const PHASE_OPTIONS = ['リード', '商談中', '顧客', '休眠', '失注']
-const PIPELINE_OPTIONS = ['IS', '商談済み', 'PJ化予定あり', 'POC実施中', '決裁者合意済み', '受注', 'ナーチャリング', '失注', 'チャーン', 'ロスト']
+const PIPELINE_OPTIONS = ['IS', '商談済み', 'PJ化予定あり', 'POC実施中', '決裁者合意済み', '受注', '失注', 'チャーン', 'ロスト']
 
 // ステータス → ObsChip tone へのマッピング
 const STATUS_TONE: Record<SequenceStatus, { tone: ChipTone; label: string }> = {

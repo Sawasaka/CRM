@@ -24,6 +24,10 @@ import {
   Handshake,
   Inbox,
   HelpCircle,
+  Filter,
+  List,
+  CheckSquare,
+  Square,
 } from 'lucide-react'
 import {
   ObsButton,
@@ -34,38 +38,120 @@ import {
   ObsPageShell,
 } from '@/components/obsidian'
 
-// ─── Types ─────────────────────────────────────────────────────────────────────
+import {
+  MOCK_CONTACTS,
+  type Contact,
+  type ContactStatus,
+  type LeadSource,
+  type LeadSourceType,
+  type NextAction,
+  type PersonRole,
+  type Rank,
+} from '@/lib/mock-data/contacts'
+import type { ApproachStatus } from '@/types/crm'
+import { SignalBadge } from '@/components/crm/SignalBadge'
+import { getCompanyFirstPartySignal } from '@/lib/mock-data/firstPartySignals'
 
-type Rank = 'A' | 'B' | 'C'
-type ApproachStatus =
-  | '未着手'
-  | '不通'
-  | '不在'
-  | '接続済み'
-  | 'コール不可'
-  | 'アポ獲得'
-  | 'Next Action'
+// ─── 求人インテント(モック)── 会社名キーで紐付け ─────────────────────────────
+type IntentLevel = 'HOT' | 'MID' | 'LOW' | 'NONE'
+interface CompanyIntent { level: IntentLevel; deptCount: number }
 
-type ContactStatus = 'リード' | '商談中' | '顧客' | '休眠' | '失注'
-type NextAction = 'メールアプローチ' | 'コール' | '連絡待ち' | null
-
-type LeadSourceType =
-  | 'web_form'
-  | 'organic_search'
-  | 'paid_ads'
-  | 'sns'
-  | 'event'
-  | 'referral'
-  | 'cold_call'
-  | 'cold_mail'
-  | 'partner'
-  | 'inbound'
-  | 'other'
-
-interface LeadSource {
-  type: LeadSourceType
-  detail: string
+const COMPANY_INTENT_MAP: Record<string, CompanyIntent> = {
+  '株式会社テクノリード':    { level: 'HOT', deptCount: 3 },
+  '合同会社フューチャー':    { level: 'MID', deptCount: 2 },
+  '株式会社イノベーション':  { level: 'HOT', deptCount: 5 },
+  '株式会社グロース':        { level: 'MID', deptCount: 2 },
+  '有限会社サクセス':        { level: 'LOW', deptCount: 1 },
+  '株式会社ネクスト':        { level: 'HOT', deptCount: 4 },
+  '株式会社デジタルフォース': { level: 'HOT', deptCount: 6 },
 }
+
+function getCompanyIntent(companyName: string): CompanyIntent {
+  return COMPANY_INTENT_MAP[companyName] ?? { level: 'NONE', deptCount: 0 }
+}
+
+// ISリスト作成モーダルの「IS担当者」プルダウン候補。
+// ワークスペースのメンバー機能ができたら差し替える。
+const LIST_MEMBERS = [
+  '開発 太郎',
+  '営業 花子',
+  'マーケ 次郎',
+  'IS 三郎',
+  'CS 四郎',
+] as const
+
+const INTENT_TONE: Record<IntentLevel, { fg: string; bg: string; ring: string }> = {
+  HOT:  { fg: 'var(--color-obs-hot)',    bg: 'rgba(255,107,107,0.14)', ring: 'rgba(255,107,107,0.32)' },
+  MID:  { fg: 'var(--color-obs-middle)', bg: 'rgba(255,184,107,0.14)', ring: 'rgba(255,184,107,0.32)' },
+  LOW:  { fg: 'var(--color-obs-low)',    bg: 'rgba(126,198,255,0.14)', ring: 'rgba(126,198,255,0.32)' },
+  NONE: { fg: 'var(--color-obs-text-subtle)', bg: 'transparent', ring: 'transparent' },
+}
+
+function IntentChip({ companyName }: { companyName: string }) {
+  const intent = getCompanyIntent(companyName)
+  if (intent.level === 'NONE') {
+    return <span className="text-[12px]" style={{ color: 'var(--color-obs-text-subtle)', opacity: 0.55 }}>—</span>
+  }
+  const c = INTENT_TONE[intent.level]
+  return (
+    <span
+      className="inline-flex items-center gap-1 h-6 px-2 rounded-full text-[10.5px] font-bold whitespace-nowrap"
+      style={{ backgroundColor: c.bg, color: c.fg, boxShadow: `inset 0 0 0 1px ${c.ring}` }}
+    >
+      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: c.fg }} />
+      {intent.level}
+      <span className="ml-0.5 opacity-80 font-semibold">{intent.deptCount}部門</span>
+    </span>
+  )
+}
+
+function FirstPartySignalCell({ companyName }: { companyName: string }) {
+  const signal = getCompanyFirstPartySignal(companyName)
+  if (!signal) {
+    return <span className="text-[12px]" style={{ color: 'var(--color-obs-text-subtle)', opacity: 0.55 }}>—</span>
+  }
+  return <SignalBadge signal={signal} />
+}
+
+// 290万社DBの IntentFilterChip と完全に同じデザイン
+function ContactsIntentFilterChip({
+  active,
+  tone,
+  label,
+  count,
+  onClick,
+}: {
+  active: boolean
+  tone: 'hot' | 'middle' | 'low'
+  label: string
+  count: number
+  onClick: () => void
+}) {
+  const palette = {
+    hot:    { fg: 'var(--color-obs-hot)',    bg: 'rgba(255,107,107,0.14)',  ring: 'rgba(255,107,107,0.32)' },
+    middle: { fg: 'var(--color-obs-middle)', bg: 'rgba(255,184,107,0.14)',  ring: 'rgba(255,184,107,0.32)' },
+    low:    { fg: 'var(--color-obs-low)',    bg: 'rgba(126,198,255,0.14)',  ring: 'rgba(126,198,255,0.32)' },
+  }[tone]
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="inline-flex items-center gap-1.5 h-6 px-2 rounded-full text-[10.5px] font-bold transition-all"
+      style={{
+        backgroundColor: active ? palette.bg : 'transparent',
+        color: active ? palette.fg : 'var(--color-obs-text-muted)',
+        boxShadow: active ? `inset 0 0 0 1px ${palette.ring}` : 'inset 0 0 0 1px rgba(109,106,111,0.18)',
+        opacity: active ? 1 : 0.7,
+      }}
+    >
+      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: palette.fg }} />
+      {label}
+      <span className="tabular-nums opacity-90">{count}</span>
+    </button>
+  )
+}
+
+// ─── Types (共有モジュールから再利用) ────────────────────────────────────────
 
 interface LeadSourceStyle {
   Icon: React.ElementType
@@ -89,44 +175,10 @@ const LEAD_SOURCE_STYLES: Record<LeadSourceType, LeadSourceStyle> = {
 
 type ChipTone = 'neutral' | 'hot' | 'middle' | 'low' | 'primary'
 
-type SortKey = 'name' | 'callAttempts' | 'emailsSent' | 'lastCallAt' | 'nextActionAt' | 'status' | 'contactStatus'
+type SortKey = 'name' | 'callAttempts' | 'emailsSent' | 'lastCallAt' | 'nextActionAt' | 'status' | 'contactStatus' | 'owner'
 type SortDir = 'asc' | 'desc'
 
-type PersonRole = '決裁者' | '推進者' | '一般'
-
-interface Contact {
-  id: string
-  name: string
-  title: string
-  department: string
-  personRole: PersonRole
-  company: string
-  companyId: string
-  rank: Rank
-  status: ApproachStatus
-  contactStatus: ContactStatus
-  leadSource: LeadSource
-  callAttempts: number
-  emailsSent: number
-  lastCallAt: string | null
-  nextActionAt: string | null
-  nextAction: NextAction
-}
-
-// ─── Mock Data ─────────────────────────────────────────────────────────────────
-
-const MOCK_CONTACTS: Contact[] = [
-  { id: '1', name: '田中 誠',    title: '営業部長',   department: '営業部',     personRole: '決裁者', company: '株式会社テクノリード',    companyId: '1', rank: 'A', status: 'アポ獲得',   contactStatus: '商談中', leadSource: { type: 'inbound',  detail: '公式サイトの資料DLフォーム経由' },             callAttempts: 3, emailsSent: 5, lastCallAt: '2026-03-20', nextActionAt: '2026-03-28', nextAction: '連絡待ち' },
-  { id: '2', name: '山本 佳子',  title: 'マネージャー', department: '購買部',     personRole: '推進者', company: '合同会社フューチャー',    companyId: '2', rank: 'A', status: '接続済み',   contactStatus: '商談中', leadSource: { type: 'event',    detail: '2026年Q1 SaaSWORLD出展時に名刺交換' },         callAttempts: 5, emailsSent: 8, lastCallAt: '2026-03-19', nextActionAt: '2026-03-22', nextAction: 'メールアプローチ' },
-  { id: '3', name: '佐々木 拓也', title: '代表取締役',  department: '経営企画',   personRole: '決裁者', company: '株式会社イノベーション',  companyId: '3', rank: 'A', status: 'Next Action', contactStatus: 'リード', leadSource: { type: 'referral', detail: '既存顧客（株式会社グロース）からの紹介' },     callAttempts: 2, emailsSent: 3, lastCallAt: '2026-03-18', nextActionAt: '2026-03-25', nextAction: 'コール' },
-  { id: '4', name: '中村 理恵',  title: '購買担当',   department: '調達部',     personRole: '一般',  company: '株式会社グロース',        companyId: '4', rank: 'B', status: '不在',      contactStatus: 'リード', leadSource: { type: 'paid_ads', detail: 'Google広告 (キーワード: SFA 切替)' },           callAttempts: 4, emailsSent: 2, lastCallAt: '2026-03-15', nextActionAt: null, nextAction: 'コール' },
-  { id: '5', name: '小林 健太',  title: '部長',      department: '営業部',     personRole: '推進者', company: '有限会社サクセス',        companyId: '5', rank: 'B', status: '不通',      contactStatus: 'リード', leadSource: { type: 'cold_call', detail: '営業リスト経由 (2026/02)' },                  callAttempts: 6, emailsSent: 1, lastCallAt: '2026-03-14', nextActionAt: '2026-03-23', nextAction: 'コール' },
-  { id: '6', name: '鈴木 美香',  title: '課長',      department: 'マーケ部',   personRole: '一般',  company: '株式会社ネクスト',        companyId: '6', rank: 'C', status: '未着手',    contactStatus: 'リード', leadSource: { type: 'organic_search', detail: 'Google検索 → 比較記事' },                callAttempts: 0, emailsSent: 0, lastCallAt: null,          nextActionAt: null, nextAction: null },
-  { id: '7', name: '加藤 雄介',  title: '取締役',    department: '経営企画',   personRole: '決裁者', company: '合同会社ビジョン',        companyId: '7', rank: 'C', status: '未着手',    contactStatus: '休眠',  leadSource: { type: 'partner',  detail: 'パートナー(株式会社アライアンス)経由' },         callAttempts: 0, emailsSent: 0, lastCallAt: null,          nextActionAt: null, nextAction: null },
-  { id: '8', name: '吉田 千春',  title: '部長',      department: '人事部',     personRole: '推進者', company: '株式会社スタート',        companyId: '8', rank: 'C', status: 'コール不可', contactStatus: '失注',  leadSource: { type: 'cold_mail', detail: '一斉メール 2025/11 配信' },                    callAttempts: 8, emailsSent: 4, lastCallAt: '2026-03-01', nextActionAt: null, nextAction: null },
-]
-
-const ALL_STATUSES: ApproachStatus[] = ['未着手', '不通', '不在', '接続済み', 'コール不可', 'アポ獲得', 'Next Action']
+const ALL_STATUSES: ApproachStatus[] = ['未着手', '不通', '不在', '接続済み', 'コール不可', 'アポ獲得', 'その他']
 const ALL_CONTACT_STATUSES: ContactStatus[] = ['リード', '商談中', '顧客', '休眠', '失注']
 const ALL_RANKS: Rank[] = ['A', 'B', 'C']
 
@@ -140,12 +192,10 @@ function rankToTone(rank: Rank): ChipTone {
 
 function statusToTone(s: ApproachStatus): ChipTone {
   // アポ獲得/接続済み → low (neutral の青)
-  // Next Action/メールアプローチ → primary
   // 不在 → middle
   // 不通/コール不可 → hot
   // 未着手 → neutral
   if (s === 'アポ獲得' || s === '接続済み') return 'low'
-  if (s === 'Next Action') return 'primary'
   if (s === '不在') return 'middle'
   if (s === '不通' || s === 'コール不可') return 'hot'
   return 'neutral'
@@ -173,7 +223,57 @@ function personRoleToTone(r: PersonRole): ChipTone {
 const ALL_NEXT_ACTIONS: Exclude<NextAction, null>[] = ['メールアプローチ', 'コール', '連絡待ち']
 const ALL_PERSON_ROLES: PersonRole[] = ['決裁者', '推進者', '一般']
 
+// リード経由(LeadSourceType)を日本語ラベルに変換
+const LEAD_SOURCE_LABEL: Record<LeadSourceType, string> = {
+  web_form: '問い合わせ',
+  organic_search: '自然検索',
+  paid_ads: '広告',
+  sns: 'SNS',
+  event: '展示会・イベント',
+  referral: '紹介',
+  cold_call: '新規コール',
+  cold_mail: '新規メール',
+  partner: 'パートナー',
+  inbound: '問い合わせ',
+  other: 'その他',
+}
+const ALL_LEAD_SOURCE_TYPES: LeadSourceType[] = [
+  'inbound', 'web_form', 'organic_search', 'paid_ads', 'sns',
+  'event', 'referral', 'cold_call', 'cold_mail', 'partner', 'other',
+]
+const ALL_SIGNALS: ('Hot' | 'Middle' | 'Low')[] = ['Hot', 'Middle', 'Low']
+const SIGNAL_LABEL: Record<'Hot' | 'Middle' | 'Low', string> = {
+  Hot: '強',
+  Middle: '中',
+  Low: '弱',
+}
+
 // ─── Sub-components ────────────────────────────────────────────────────────────
+
+// 担当者ごとのアバター色 (タスク一覧の REPS と整合)
+const OWNER_COLORS: Record<string, string> = {
+  '田中太郎': 'var(--color-obs-primary)',
+  '鈴木花子': 'var(--color-obs-middle)',
+  '佐藤次郎': 'var(--color-obs-low)',
+}
+
+function OwnerCell({ name }: { name: string }) {
+  const color = OWNER_COLORS[name] ?? 'var(--color-obs-text-subtle)'
+  const initial = name ? name[0] : '?'
+  return (
+    <div className="min-w-0 flex items-center gap-1.5" title={name}>
+      <span
+        className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold shrink-0"
+        style={{ backgroundColor: color, color: 'var(--color-obs-on-primary)' }}
+      >
+        {initial}
+      </span>
+      <span className="text-[12px] truncate" style={{ color: 'var(--color-obs-text-muted)' }}>
+        {name || '—'}
+      </span>
+    </div>
+  )
+}
 
 function LeadSourceCell({ source }: { source: LeadSource }) {
   const s = LEAD_SOURCE_STYLES[source.type]
@@ -326,6 +426,11 @@ export default function ContactsPage() {
   // コール/メールの活動量フィルタ。'' = 全件、'0' = 0件のみ、それ以外は「N件以上」
   const [filterCallRange, setFilterCallRange] = useState<'' | '0' | '1' | '3' | '5'>('')
   const [filterEmailRange, setFilterEmailRange] = useState<'' | '0' | '1' | '3' | '5'>('')
+  // 追加フィルタ: リード経由 / 1stシグナル / NEXT ACTION / 担当者
+  const [filterLeadSource, setFilterLeadSource] = useState<LeadSourceType | ''>('')
+  const [filterSignal, setFilterSignal] = useState<'Hot' | 'Middle' | 'Low' | ''>('')
+  const [filterNextAction, setFilterNextAction] = useState<Exclude<NextAction, null> | ''>('')
+  const [filterOwner, setFilterOwner] = useState<string>('')
   const [sortKey, setSortKey]             = useState<SortKey>('status')
   const [sortDir, setSortDir]             = useState<SortDir>('asc')
   const [filterContactStatuses, setFilterContactStatuses] = useState<ContactStatus[]>([])
@@ -333,9 +438,36 @@ export default function ContactsPage() {
   const [showRankFilter, setShowRankFilter]     = useState(false)
   const [showContactStatusFilter, setShowContactStatusFilter] = useState(false)
 
+  // 求人インテントフィルタ(290万社DBと同じUI)— 紐付く企業のintent levelで絞り込み
+  type IntentFilterKey = 'hot' | 'mid' | 'low'
+  const [intentFilter, setIntentFilter] = useState<IntentFilterKey[]>([])
+  const toggleIntentFilter = (k: IntentFilterKey) =>
+    setIntentFilter((prev) => (prev.includes(k) ? prev.filter((x) => x !== k) : [...prev, k]))
+  const intentCounts = useMemo(() => {
+    const c = { hot: 0, mid: 0, low: 0, none: 0 }
+    contacts.forEach((ct) => {
+      const lv = getCompanyIntent(ct.company).level
+      if (lv === 'HOT') c.hot++
+      else if (lv === 'MID') c.mid++
+      else if (lv === 'LOW') c.low++
+      else c.none++
+    })
+    return c
+  }, [contacts])
+
   // 部門のユニーク値
   const ALL_DEPARTMENTS = useMemo(() => Array.from(new Set(contacts.map(c => c.department).filter(Boolean))), [contacts])
+  // 担当者のユニーク値
+  const ALL_OWNERS = useMemo(() => Array.from(new Set(contacts.map(c => c.owner).filter(Boolean))), [contacts])
   const [showCreateModal, setShowCreateModal]   = useState(false)
+  // ISリスト作成モーダル
+  const [createListOpen, setCreateListOpen] = useState(false)
+  // 一括選択（ISリスト作成の対象）
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [newListName, setNewListName] = useState('')
+  const [newListAssignee, setNewListAssignee] = useState<string>('IS 三郎')
+  const [creatingList, setCreatingList] = useState(false)
+  const [createListMessage, setCreateListMessage] = useState<string | null>(null)
   const [createForm, setCreateForm] = useState({
     name: '', company: '', title: '', email: '', phone: '',
     rank: 'B' as Rank, contactStatus: 'リード' as ContactStatus, isDecisionMaker: false,
@@ -348,6 +480,7 @@ export default function ContactsPage() {
       title: createForm.title, department: '', personRole: '一般', company: createForm.company.trim(),
       companyId: `new-${Date.now()}`, rank: createForm.rank,
       status: '未着手', contactStatus: createForm.contactStatus, leadSource: { type: 'other', detail: '手動追加' }, callAttempts: 0, emailsSent: 0, lastCallAt: null, nextActionAt: null, nextAction: null,
+      owner: '田中太郎',
     }
     setContacts(prev => [newContact, ...prev])
     setShowCreateModal(false)
@@ -375,10 +508,23 @@ export default function ContactsPage() {
     else if (filterCallRange)      list = list.filter(c => c.callAttempts >= Number(filterCallRange))
     if (filterEmailRange === '0')  list = list.filter(c => c.emailsSent === 0)
     else if (filterEmailRange)     list = list.filter(c => c.emailsSent >= Number(filterEmailRange))
+    if (filterLeadSource)          list = list.filter(c => c.leadSource.type === filterLeadSource)
+    if (filterSignal)              list = list.filter(c => getCompanyFirstPartySignal(c.company) === filterSignal)
+    if (filterNextAction)          list = list.filter(c => c.nextAction === filterNextAction)
+    if (filterOwner)               list = list.filter(c => c.owner === filterOwner)
+    if (intentFilter.length > 0) {
+      list = list.filter((c) => {
+        const lv = getCompanyIntent(c.company).level
+        if (lv === 'HOT' && intentFilter.includes('hot')) return true
+        if (lv === 'MID' && intentFilter.includes('mid')) return true
+        if (lv === 'LOW' && intentFilter.includes('low')) return true
+        return false
+      })
+    }
 
     const STATUS_ORDER: Record<ApproachStatus, number> = {
-      'アポ獲得': 0, 'Next Action': 1, '接続済み': 2,
-      '不在': 3, '不通': 4, '未着手': 5, 'コール不可': 6,
+      'アポ獲得': 0, '接続済み': 1,
+      '不在': 2, '不通': 3, '未着手': 4, 'コール不可': 5, 'その他': 6,
     }
 
     list = [...list].sort((a, b) => {
@@ -390,11 +536,12 @@ export default function ContactsPage() {
       if (sortKey === 'emailsSent') cmp = a.emailsSent - b.emailsSent
       if (sortKey === 'lastCallAt')  cmp = (a.lastCallAt ?? '').localeCompare(b.lastCallAt ?? '')
       if (sortKey === 'nextActionAt') cmp = (a.nextActionAt ?? '9999').localeCompare(b.nextActionAt ?? '9999')
+      if (sortKey === 'owner')        cmp = a.owner.localeCompare(b.owner, 'ja')
       return sortDir === 'desc' ? -cmp : cmp
     })
 
     return list
-  }, [contacts, search, filterStatuses, filterContactStatuses, filterRanks, filterDepartment, filterPersonRole, filterCallRange, filterEmailRange, sortKey, sortDir])
+  }, [contacts, search, filterStatuses, filterContactStatuses, filterRanks, filterDepartment, filterPersonRole, filterCallRange, filterEmailRange, filterLeadSource, filterSignal, filterNextAction, filterOwner, intentFilter, sortKey, sortDir])
 
   function toggleSort(key: SortKey) {
     if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
@@ -411,7 +558,18 @@ export default function ContactsPage() {
     setFilterContactStatuses(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])
   }
 
-  const hasFilters = filterStatuses.length > 0 || filterRanks.length > 0 || filterContactStatuses.length > 0 || !!filterDepartment || !!filterPersonRole || !!filterCallRange || !!filterEmailRange
+  const hasFilters =
+    filterStatuses.length > 0 ||
+    filterRanks.length > 0 ||
+    filterContactStatuses.length > 0 ||
+    !!filterDepartment ||
+    !!filterPersonRole ||
+    !!filterCallRange ||
+    !!filterEmailRange ||
+    !!filterLeadSource ||
+    !!filterSignal ||
+    !!filterNextAction ||
+    !!filterOwner
 
   return (
     <ObsPageShell>
@@ -423,12 +581,108 @@ export default function ContactsPage() {
         <ObsHero
           eyebrow="Contacts"
           title="コンタクト"
-          caption={`全 ${contacts.length.toLocaleString()} 件。アプローチ状況とネクストアクションで優先度を可視化。`}
+          caption={
+            <>
+              全 {contacts.length.toLocaleString()} 件 ／ アプローチ状況とネクストアクションで優先度を可視化
+              <br />
+              取得項目: 求人インテント ・ 1stシグナル ・ 部門 ・ 役職 ・ ステータス ・ Next Action ・ コール / メール履歴
+            </>
+          }
           action={
-            <ObsButton variant="primary" size="md" onClick={() => setShowCreateModal(true)}>
-              <Plus size={14} className="mr-1.5 inline" strokeWidth={2.5} />
-              コンタクトを追加
-            </ObsButton>
+            <div className="flex items-center gap-3">
+              {/* HOT/MID/LOW インテントフィルタ — 290万社DBと同じ */}
+              <div
+                className="inline-flex items-center gap-1.5 px-2 py-1.5 rounded-full"
+                style={{
+                  background: 'var(--color-obs-surface-high)',
+                  boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.18)',
+                }}
+                title="クリックでインテント別に絞り込み"
+              >
+                <Filter size={11} strokeWidth={2.2} style={{ color: 'var(--color-obs-text-subtle)' }} className="ml-1" />
+                <ContactsIntentFilterChip
+                  active={intentFilter.includes('hot')}
+                  tone="hot"
+                  label="HOT"
+                  count={intentCounts.hot}
+                  onClick={() => toggleIntentFilter('hot')}
+                />
+                <ContactsIntentFilterChip
+                  active={intentFilter.includes('mid')}
+                  tone="middle"
+                  label="MID"
+                  count={intentCounts.mid}
+                  onClick={() => toggleIntentFilter('mid')}
+                />
+                <ContactsIntentFilterChip
+                  active={intentFilter.includes('low')}
+                  tone="low"
+                  label="LOW"
+                  count={intentCounts.low}
+                  onClick={() => toggleIntentFilter('low')}
+                />
+                {intentFilter.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setIntentFilter([])}
+                    className="inline-flex items-center justify-center w-5 h-5 rounded-full transition-colors hover:bg-[var(--color-obs-surface-highest)]"
+                    title="フィルタをクリア"
+                    style={{ color: 'var(--color-obs-text-muted)' }}
+                  >
+                    <X size={10} strokeWidth={2.4} />
+                  </button>
+                )}
+              </div>
+
+              {/* ISリスト作成 — 選択中のコンタクトをリスト化（未選択時は disabled） */}
+              <button
+                type="button"
+                onClick={() => { if (selectedIds.size > 0) setCreateListOpen(true) }}
+                disabled={selectedIds.size === 0}
+                title={
+                  selectedIds.size === 0
+                    ? '一覧から対象コンタクトを選択するとISリストを作成できます'
+                    : `選択中の ${selectedIds.size} 名でISリストを作成`
+                }
+                className="h-9 px-4 text-sm rounded-[var(--radius-obs-md)] font-medium tracking-[-0.01em] inline-flex items-center transition-all duration-200 disabled:cursor-not-allowed"
+                style={{
+                  backgroundColor: selectedIds.size === 0 ? 'rgba(143,140,144,0.08)' : 'rgba(255,184,107,0.12)',
+                  color: selectedIds.size === 0 ? 'var(--color-obs-text-subtle)' : 'var(--color-obs-middle)',
+                  boxShadow: selectedIds.size === 0
+                    ? 'inset 0 0 0 1px rgba(109,106,111,0.18)'
+                    : 'inset 0 0 0 1px rgba(255,184,107,0.42)',
+                }}
+                onMouseOver={(e) => {
+                  if (selectedIds.size > 0) {
+                    ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(255,184,107,0.20)'
+                  }
+                }}
+                onMouseOut={(e) => {
+                  if (selectedIds.size > 0) {
+                    ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(255,184,107,0.12)'
+                  }
+                }}
+              >
+                <List size={14} className="mr-1.5 inline" strokeWidth={2.5} />
+                ISリスト作成
+                {selectedIds.size > 0 && (
+                  <span
+                    className="ml-1.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full text-[10.5px] font-bold tabular-nums"
+                    style={{
+                      backgroundColor: 'rgba(255,184,107,0.22)',
+                      color: 'var(--color-obs-middle)',
+                    }}
+                  >
+                    {selectedIds.size}
+                  </span>
+                )}
+              </button>
+
+              <ObsButton variant="primary" size="md" onClick={() => setShowCreateModal(true)}>
+                <Plus size={14} className="mr-1.5 inline" strokeWidth={2.5} />
+                コンタクトを追加
+              </ObsButton>
+            </div>
           }
         />
 
@@ -452,23 +706,26 @@ export default function ContactsPage() {
 
           {/* Status filter */}
           <div className="relative" onClick={e => e.stopPropagation()}>
-            <ObsButton
-              variant="ghost"
-              size="sm"
+            <button
+              type="button"
               onClick={() => { setShowStatusFilter(v => !v); setShowRankFilter(false); setShowContactStatusFilter(false) }}
-              className={filterStatuses.length > 0 ? '!text-[var(--color-obs-primary)]' : ''}
+              className="h-8 pl-3 pr-7 text-xs font-medium rounded-[var(--radius-obs-md)] inline-flex items-center transition-colors outline-none relative"
+              style={{
+                backgroundColor: filterStatuses.length > 0 ? 'var(--color-obs-primary-container)' : 'var(--color-obs-surface-high)',
+                color: filterStatuses.length > 0 ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
+              }}
             >
               ステータス
               {filterStatuses.length > 0 && (
                 <span
                   className="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold tabular-nums"
-                  style={{ backgroundColor: 'var(--color-obs-primary-container)', color: 'var(--color-obs-on-primary)' }}
+                  style={{ backgroundColor: 'rgba(255,255,255,0.20)', color: 'var(--color-obs-on-primary)' }}
                 >
                   {filterStatuses.length}
                 </span>
               )}
-              <ChevronDown size={12} className="ml-1 inline" />
-            </ObsButton>
+              <ChevronDown size={11} strokeWidth={2.2} className="absolute right-2 top-1/2 -translate-y-1/2" style={{ color: filterStatuses.length > 0 ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-subtle)' }} />
+            </button>
 
             <AnimatePresence>
               {showStatusFilter && (
@@ -512,23 +769,26 @@ export default function ContactsPage() {
 
           {/* Rank filter */}
           <div className="relative" onClick={e => e.stopPropagation()}>
-            <ObsButton
-              variant="ghost"
-              size="sm"
+            <button
+              type="button"
               onClick={() => { setShowRankFilter(v => !v); setShowStatusFilter(false); setShowContactStatusFilter(false) }}
-              className={filterRanks.length > 0 ? '!text-[var(--color-obs-primary)]' : ''}
+              className="h-8 pl-3 pr-7 text-xs font-medium rounded-[var(--radius-obs-md)] inline-flex items-center transition-colors outline-none relative"
+              style={{
+                backgroundColor: filterRanks.length > 0 ? 'var(--color-obs-primary-container)' : 'var(--color-obs-surface-high)',
+                color: filterRanks.length > 0 ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
+              }}
             >
               角度
               {filterRanks.length > 0 && (
                 <span
                   className="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold tabular-nums"
-                  style={{ backgroundColor: 'var(--color-obs-primary-container)', color: 'var(--color-obs-on-primary)' }}
+                  style={{ backgroundColor: 'rgba(255,255,255,0.20)', color: 'var(--color-obs-on-primary)' }}
                 >
                   {filterRanks.length}
                 </span>
               )}
-              <ChevronDown size={12} className="ml-1 inline" />
-            </ObsButton>
+              <ChevronDown size={11} strokeWidth={2.2} className="absolute right-2 top-1/2 -translate-y-1/2" style={{ color: filterRanks.length > 0 ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-subtle)' }} />
+            </button>
 
             <AnimatePresence>
               {showRankFilter && (
@@ -564,23 +824,26 @@ export default function ContactsPage() {
 
           {/* Contact status filter */}
           <div className="relative" onClick={e => e.stopPropagation()}>
-            <ObsButton
-              variant="ghost"
-              size="sm"
+            <button
+              type="button"
               onClick={() => { setShowContactStatusFilter(v => !v); setShowStatusFilter(false); setShowRankFilter(false) }}
-              className={filterContactStatuses.length > 0 ? '!text-[var(--color-obs-primary)]' : ''}
+              className="h-8 pl-3 pr-7 text-xs font-medium rounded-[var(--radius-obs-md)] inline-flex items-center transition-colors outline-none relative"
+              style={{
+                backgroundColor: filterContactStatuses.length > 0 ? 'var(--color-obs-primary-container)' : 'var(--color-obs-surface-high)',
+                color: filterContactStatuses.length > 0 ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
+              }}
             >
               フェーズ
               {filterContactStatuses.length > 0 && (
                 <span
                   className="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold tabular-nums"
-                  style={{ backgroundColor: 'var(--color-obs-primary-container)', color: 'var(--color-obs-on-primary)' }}
+                  style={{ backgroundColor: 'rgba(255,255,255,0.20)', color: 'var(--color-obs-on-primary)' }}
                 >
                   {filterContactStatuses.length}
                 </span>
               )}
-              <ChevronDown size={12} className="ml-1 inline" />
-            </ObsButton>
+              <ChevronDown size={11} strokeWidth={2.2} className="absolute right-2 top-1/2 -translate-y-1/2" style={{ color: filterContactStatuses.length > 0 ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-subtle)' }} />
+            </button>
 
             <AnimatePresence>
               {showContactStatusFilter && (
@@ -622,11 +885,12 @@ export default function ContactsPage() {
           </div>
 
           {/* 部門フィルター */}
-          <select
+          <div className="relative inline-flex items-center" onClick={e => e.stopPropagation()}>
+            <select
             value={filterDepartment}
             onChange={e => setFilterDepartment(e.target.value)}
             onClick={e => e.stopPropagation()}
-            className="h-8 px-3 text-xs font-medium rounded-[var(--radius-obs-md)] appearance-none cursor-pointer transition-colors outline-none"
+            className="h-8 pl-3 pr-7 text-xs font-medium rounded-[var(--radius-obs-md)] appearance-none cursor-pointer transition-colors outline-none"
             style={{
               backgroundColor: filterDepartment ? 'var(--color-obs-primary-container)' : 'var(--color-obs-surface-high)',
               color: filterDepartment ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
@@ -635,13 +899,16 @@ export default function ContactsPage() {
             <option value="">部門</option>
             {ALL_DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
           </select>
+            <ChevronDown size={11} strokeWidth={2.2} className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2" style={{ color: filterDepartment ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-subtle)' }} />
+          </div>
 
           {/* 役職フィルター */}
-          <select
+          <div className="relative inline-flex items-center" onClick={e => e.stopPropagation()}>
+            <select
             value={filterPersonRole}
             onChange={e => setFilterPersonRole(e.target.value as PersonRole | '')}
             onClick={e => e.stopPropagation()}
-            className="h-8 px-3 text-xs font-medium rounded-[var(--radius-obs-md)] appearance-none cursor-pointer transition-colors outline-none"
+            className="h-8 pl-3 pr-7 text-xs font-medium rounded-[var(--radius-obs-md)] appearance-none cursor-pointer transition-colors outline-none"
             style={{
               backgroundColor: filterPersonRole ? 'var(--color-obs-primary-container)' : 'var(--color-obs-surface-high)',
               color: filterPersonRole ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
@@ -650,13 +917,16 @@ export default function ContactsPage() {
             <option value="">役職</option>
             {ALL_PERSON_ROLES.map(r => <option key={r} value={r}>{r}</option>)}
           </select>
+            <ChevronDown size={11} strokeWidth={2.2} className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2" style={{ color: filterPersonRole ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-subtle)' }} />
+          </div>
 
           {/* コール数フィルター */}
-          <select
+          <div className="relative inline-flex items-center" onClick={e => e.stopPropagation()}>
+            <select
             value={filterCallRange}
             onChange={e => setFilterCallRange(e.target.value as '' | '0' | '1' | '3' | '5')}
             onClick={e => e.stopPropagation()}
-            className="h-8 px-3 text-xs font-medium rounded-[var(--radius-obs-md)] appearance-none cursor-pointer transition-colors outline-none"
+            className="h-8 pl-3 pr-7 text-xs font-medium rounded-[var(--radius-obs-md)] appearance-none cursor-pointer transition-colors outline-none"
             style={{
               backgroundColor: filterCallRange ? 'var(--color-obs-primary-container)' : 'var(--color-obs-surface-high)',
               color: filterCallRange ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
@@ -668,13 +938,16 @@ export default function ContactsPage() {
             <option value="3">3件以上</option>
             <option value="5">5件以上</option>
           </select>
+            <ChevronDown size={11} strokeWidth={2.2} className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2" style={{ color: filterCallRange ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-subtle)' }} />
+          </div>
 
           {/* メール数フィルター */}
-          <select
+          <div className="relative inline-flex items-center" onClick={e => e.stopPropagation()}>
+            <select
             value={filterEmailRange}
             onChange={e => setFilterEmailRange(e.target.value as '' | '0' | '1' | '3' | '5')}
             onClick={e => e.stopPropagation()}
-            className="h-8 px-3 text-xs font-medium rounded-[var(--radius-obs-md)] appearance-none cursor-pointer transition-colors outline-none"
+            className="h-8 pl-3 pr-7 text-xs font-medium rounded-[var(--radius-obs-md)] appearance-none cursor-pointer transition-colors outline-none"
             style={{
               backgroundColor: filterEmailRange ? 'var(--color-obs-primary-container)' : 'var(--color-obs-surface-high)',
               color: filterEmailRange ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
@@ -686,6 +959,88 @@ export default function ContactsPage() {
             <option value="3">3件以上</option>
             <option value="5">5件以上</option>
           </select>
+            <ChevronDown size={11} strokeWidth={2.2} className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2" style={{ color: filterEmailRange ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-subtle)' }} />
+          </div>
+
+          {/* リード経由フィルター */}
+          <div className="relative inline-flex items-center" onClick={e => e.stopPropagation()}>
+            <select
+            value={filterLeadSource}
+            onChange={e => setFilterLeadSource(e.target.value as LeadSourceType | '')}
+            onClick={e => e.stopPropagation()}
+            className="h-8 pl-3 pr-7 text-xs font-medium rounded-[var(--radius-obs-md)] appearance-none cursor-pointer transition-colors outline-none"
+            style={{
+              backgroundColor: filterLeadSource ? 'var(--color-obs-primary-container)' : 'var(--color-obs-surface-high)',
+              color: filterLeadSource ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
+            }}
+          >
+            <option value="">リード経由</option>
+            {ALL_LEAD_SOURCE_TYPES.map(t => (
+              <option key={t} value={t}>{LEAD_SOURCE_LABEL[t]}</option>
+            ))}
+          </select>
+            <ChevronDown size={11} strokeWidth={2.2} className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2" style={{ color: filterLeadSource ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-subtle)' }} />
+          </div>
+
+          {/* 1stシグナルフィルター */}
+          <div className="relative inline-flex items-center" onClick={e => e.stopPropagation()}>
+            <select
+            value={filterSignal}
+            onChange={e => setFilterSignal(e.target.value as 'Hot' | 'Middle' | 'Low' | '')}
+            onClick={e => e.stopPropagation()}
+            className="h-8 pl-3 pr-7 text-xs font-medium rounded-[var(--radius-obs-md)] appearance-none cursor-pointer transition-colors outline-none"
+            style={{
+              backgroundColor: filterSignal ? 'var(--color-obs-primary-container)' : 'var(--color-obs-surface-high)',
+              color: filterSignal ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
+            }}
+          >
+            <option value="">1stシグナル</option>
+            {ALL_SIGNALS.map(s => (
+              <option key={s} value={s}>{SIGNAL_LABEL[s]}</option>
+            ))}
+          </select>
+            <ChevronDown size={11} strokeWidth={2.2} className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2" style={{ color: filterSignal ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-subtle)' }} />
+          </div>
+
+          {/* NEXT ACTION フィルター */}
+          <div className="relative inline-flex items-center" onClick={e => e.stopPropagation()}>
+            <select
+            value={filterNextAction}
+            onChange={e => setFilterNextAction(e.target.value as Exclude<NextAction, null> | '')}
+            onClick={e => e.stopPropagation()}
+            className="h-8 pl-3 pr-7 text-xs font-medium rounded-[var(--radius-obs-md)] appearance-none cursor-pointer transition-colors outline-none"
+            style={{
+              backgroundColor: filterNextAction ? 'var(--color-obs-primary-container)' : 'var(--color-obs-surface-high)',
+              color: filterNextAction ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
+            }}
+          >
+            <option value="">ネクスト</option>
+            {ALL_NEXT_ACTIONS.map(a => (
+              <option key={a} value={a}>{a}</option>
+            ))}
+          </select>
+            <ChevronDown size={11} strokeWidth={2.2} className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2" style={{ color: filterNextAction ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-subtle)' }} />
+          </div>
+
+          {/* 担当者フィルター */}
+          <div className="relative inline-flex items-center" onClick={e => e.stopPropagation()}>
+            <select
+            value={filterOwner}
+            onChange={e => setFilterOwner(e.target.value)}
+            onClick={e => e.stopPropagation()}
+            className="h-8 pl-3 pr-7 text-xs font-medium rounded-[var(--radius-obs-md)] appearance-none cursor-pointer transition-colors outline-none"
+            style={{
+              backgroundColor: filterOwner ? 'var(--color-obs-primary-container)' : 'var(--color-obs-surface-high)',
+              color: filterOwner ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
+            }}
+          >
+            <option value="">担当者</option>
+            {ALL_OWNERS.map(o => (
+              <option key={o} value={o}>{o}</option>
+            ))}
+          </select>
+            <ChevronDown size={11} strokeWidth={2.2} className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2" style={{ color: filterOwner ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-subtle)' }} />
+          </div>
 
           {/* Clear filters */}
           <AnimatePresence>
@@ -695,7 +1050,19 @@ export default function ContactsPage() {
                 animate={{ opacity: 1, width: 'auto' }}
                 exit={{ opacity: 0, width: 0 }}
                 transition={{ duration: 0.15 }}
-                onClick={() => { setFilterStatuses([]); setFilterContactStatuses([]); setFilterRanks([]); setFilterDepartment(''); setFilterPersonRole(''); setFilterCallRange(''); setFilterEmailRange('') }}
+                onClick={() => {
+                  setFilterStatuses([])
+                  setFilterContactStatuses([])
+                  setFilterRanks([])
+                  setFilterDepartment('')
+                  setFilterPersonRole('')
+                  setFilterCallRange('')
+                  setFilterEmailRange('')
+                  setFilterLeadSource('')
+                  setFilterSignal('')
+                  setFilterNextAction('')
+                  setFilterOwner('')
+                }}
                 className="inline-flex items-center gap-1 h-8 px-3 rounded-[var(--radius-obs-md)] text-xs font-medium transition-colors whitespace-nowrap overflow-hidden"
                 style={{ color: 'var(--color-obs-text-muted)' }}
                 onMouseOver={(e) => {
@@ -712,13 +1079,84 @@ export default function ContactsPage() {
           </AnimatePresence>
         </div>
 
-        {/* ── Result counter ── */}
-        <div className="mb-3 flex items-center gap-2 text-[12px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
+        {/* ── Result counter (一括選択アクション含む) ── */}
+        <div className="mb-3 flex items-center gap-3 text-[12px] flex-wrap" style={{ color: 'var(--color-obs-text-subtle)' }}>
+          {/* 一括選択アクション */}
+          <div className="flex items-center gap-2">
+            {selectedIds.size > 0 && (
+              <button
+                type="button"
+                onClick={() => setSelectedIds(new Set())}
+                className="inline-flex items-center gap-1 px-2 h-6 rounded-full text-[11px] font-semibold tabular-nums transition-colors"
+                style={{
+                  background: 'rgba(171,199,255,0.14)',
+                  color: 'var(--color-obs-primary)',
+                  boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.42)',
+                }}
+                onMouseOver={(e) => {
+                  ;(e.currentTarget as HTMLButtonElement).style.background = 'rgba(171,199,255,0.22)'
+                  ;(e.currentTarget as HTMLButtonElement).style.boxShadow = 'inset 0 0 0 1px rgba(171,199,255,0.55)'
+                }}
+                onMouseOut={(e) => {
+                  ;(e.currentTarget as HTMLButtonElement).style.background = 'rgba(171,199,255,0.14)'
+                  ;(e.currentTarget as HTMLButtonElement).style.boxShadow = 'inset 0 0 0 1px rgba(171,199,255,0.42)'
+                }}
+                title="クリックで選択をすべて解除"
+              >
+                <CheckSquare size={11} strokeWidth={2.4} />
+                <span>{selectedIds.size.toLocaleString()}名選択中</span>
+              </button>
+            )}
+            {/* 全選択（既に全件選択済みなら非表示） */}
+            {selectedIds.size < filtered.length && (
+              <button
+                type="button"
+                onClick={() => setSelectedIds(new Set(filtered.map((c) => c.id)))}
+                className="inline-flex items-center gap-1 px-2.5 h-6 rounded-full text-[11px] font-medium transition-colors"
+                style={{
+                  color: 'var(--color-obs-text-muted)',
+                  background: 'transparent',
+                  boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.22)',
+                }}
+                onMouseOver={(e) => {
+                  ;(e.currentTarget as HTMLButtonElement).style.background = 'var(--color-obs-surface-high)'
+                  ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-obs-text)'
+                }}
+                onMouseOut={(e) => {
+                  ;(e.currentTarget as HTMLButtonElement).style.background = 'transparent'
+                  ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-obs-text-muted)'
+                }}
+                title={`絞り込み結果 ${filtered.length.toLocaleString()}名をすべて選択`}
+              >
+                {selectedIds.size > 0 ? (
+                  <CheckSquare size={11} strokeWidth={2.2} />
+                ) : (
+                  <Square size={11} strokeWidth={2.2} />
+                )}
+                {selectedIds.size > 0
+                  ? `残り${(filtered.length - selectedIds.size).toLocaleString()}名も選択`
+                  : `${filtered.length.toLocaleString()}名すべて選択`}
+              </button>
+            )}
+          </div>
+
+          {/* 件数（companies/page.tsx と統一: フィルタ有無で表記切替） */}
           <span>
-            <span style={{ color: 'var(--color-obs-text)' }} className="font-medium tabular-nums">
-              {filtered.length.toLocaleString()}
-            </span>
-            件 <span className="opacity-60">/ 全 {contacts.length.toLocaleString()} 件</span>
+            {hasFilters ? (
+              <>
+                <span style={{ color: 'var(--color-obs-text)' }} className="font-medium tabular-nums">
+                  {filtered.length.toLocaleString()}
+                </span>
+                件 <span className="opacity-60">/ 全{contacts.length.toLocaleString()}件</span>
+              </>
+            ) : (
+              <>
+                <span style={{ color: 'var(--color-obs-text)' }} className="font-medium tabular-nums">
+                  {contacts.length.toLocaleString()}
+                </span>
+                件を表示中
+              </>
+            )}
           </span>
         </div>
 
@@ -726,16 +1164,41 @@ export default function ContactsPage() {
         <ObsCard depth="low" padding="none" radius="xl">
           {/* Header */}
           <div
-            className="grid grid-cols-[260px_minmax(180px,1fr)_100px_110px_140px_130px_60px_60px] gap-x-3 px-5 py-3 text-[11px] font-medium tracking-[0.08em] uppercase"
+            className="grid grid-cols-[32px_240px_minmax(160px,1fr)_110px_80px_90px_100px_120px_120px_110px_56px_56px] gap-x-3 px-5 py-3 text-[11px] font-medium tracking-[0.08em] uppercase"
             style={{ color: 'var(--color-obs-text-subtle)' }}
           >
+            {/* 全選択チェックボックス */}
+            <button
+              type="button"
+              onClick={() => {
+                const ids = filtered.map((c) => c.id)
+                const allSelected = ids.length > 0 && ids.every((id) => selectedIds.has(id))
+                setSelectedIds((prev) => {
+                  const next = new Set(prev)
+                  if (allSelected) ids.forEach((id) => next.delete(id))
+                  else ids.forEach((id) => next.add(id))
+                  return next
+                })
+              }}
+              className="inline-flex items-center justify-center w-5 h-5 rounded transition-colors hover:bg-[var(--color-obs-surface-high)]"
+              title="一覧の全件を選択 / 解除"
+            >
+              {filtered.length > 0 && filtered.every((c) => selectedIds.has(c.id)) ? (
+                <CheckSquare size={13} style={{ color: 'var(--color-obs-primary)' }} />
+              ) : (
+                <Square size={13} style={{ color: 'var(--color-obs-text-subtle)' }} />
+              )}
+            </button>
             {[
               { label: '氏名',          key: 'name' as SortKey,         sortable: true },
               { label: 'リード経由',     key: null,                       sortable: false },
+              { label: '求人インテント', key: null,                       sortable: false },
+              { label: '1st シグナル',   key: null,                       sortable: false },
               { label: '部門',          key: null,                       sortable: false },
               { label: '役職',          key: null,                       sortable: false },
               { label: 'ステータス',     key: 'status' as SortKey,       sortable: true },
               { label: 'Next Action',  key: null,                       sortable: false },
+              { label: '担当者',        key: 'owner' as SortKey,        sortable: true },
               { label: 'コール',        key: 'callAttempts' as SortKey, sortable: true },
               { label: 'メール',        key: 'emailsSent' as SortKey,   sortable: true },
             ].map((col, i) => (
@@ -779,6 +1242,7 @@ export default function ContactsPage() {
             ) : (
               filtered.map((contact) => {
                 const dnc = contact.status === 'コール不可'
+                const isSelected = selectedIds.has(contact.id)
 
                 return (
                   <motion.div
@@ -788,18 +1252,43 @@ export default function ContactsPage() {
                       visible: { opacity: 1, y: 0, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } },
                     }}
                     onClick={() => router.push(`/contacts/${contact.id}`)}
-                    className={`grid grid-cols-[260px_minmax(180px,1fr)_100px_110px_140px_130px_60px_60px] gap-x-3 items-center px-5 py-3.5 transition-colors duration-150 group cursor-pointer ${dnc ? 'opacity-35' : ''}`}
+                    className={`grid grid-cols-[32px_240px_minmax(160px,1fr)_110px_80px_90px_100px_120px_120px_110px_56px_56px] gap-x-3 items-center px-5 py-3.5 transition-colors duration-150 group cursor-pointer ${dnc ? 'opacity-35' : ''}`}
                     style={{
                       transitionTimingFunction: 'var(--ease-liquid)',
                       boxShadow: 'inset 0 -1px 0 0 var(--color-obs-surface)',
+                      backgroundColor: isSelected ? 'rgba(171,199,255,0.06)' : undefined,
                     }}
                     onMouseOver={(e) => {
                       if (!dnc) (e.currentTarget as HTMLDivElement).style.backgroundColor = 'var(--color-obs-surface-high)'
                     }}
                     onMouseOut={(e) => {
-                      ;(e.currentTarget as HTMLDivElement).style.backgroundColor = 'transparent'
+                      ;(e.currentTarget as HTMLDivElement).style.backgroundColor = isSelected
+                        ? 'rgba(171,199,255,0.06)'
+                        : 'transparent'
                     }}
                   >
+                    {/* 行選択チェックボックス */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setSelectedIds((prev) => {
+                          const next = new Set(prev)
+                          if (next.has(contact.id)) next.delete(contact.id)
+                          else next.add(contact.id)
+                          return next
+                        })
+                      }}
+                      className="inline-flex items-center justify-center w-5 h-5 rounded transition-colors hover:bg-[var(--color-obs-surface-highest)]"
+                      title={isSelected ? '選択を解除' : '選択'}
+                    >
+                      {isSelected ? (
+                        <CheckSquare size={13} style={{ color: 'var(--color-obs-primary)' }} />
+                      ) : (
+                        <Square size={13} style={{ color: 'var(--color-obs-text-subtle)' }} />
+                      )}
+                    </button>
+
                     {/* 氏名 + 会社名(下) */}
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div
@@ -823,6 +1312,16 @@ export default function ContactsPage() {
 
                     {/* リード経由 */}
                     <LeadSourceCell source={contact.leadSource} />
+
+                    {/* 求人インテント */}
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <IntentChip companyName={contact.company} />
+                    </div>
+
+                    {/* 1st パーティーシグナル */}
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <FirstPartySignalCell companyName={contact.company} />
+                    </div>
 
                     {/* 部門 */}
                     <span className="text-[12px] truncate" style={{ color: 'var(--color-obs-text-muted)' }}>
@@ -850,6 +1349,9 @@ export default function ContactsPage() {
                         onChange={val => setContacts(prev => prev.map(c => c.id === contact.id ? { ...c, nextAction: val } : c))}
                       />
                     </div>
+
+                    {/* 担当者 */}
+                    <OwnerCell name={contact.owner} />
 
                     {/* コール数 */}
                     <div className="flex items-center gap-1">
@@ -1056,6 +1558,164 @@ export default function ContactsPage() {
             </>
           )}
         </AnimatePresence>
+
+        {/* ── ISリスト作成モーダル ─────────────────────────── */}
+        {createListOpen && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            onClick={() => !creatingList && setCreateListOpen(false)}
+          >
+            <div
+              className="absolute inset-0"
+              style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
+            />
+            <div
+              className="relative w-full max-w-[460px] rounded-[var(--radius-obs-xl)] overflow-hidden"
+              style={{
+                background: 'var(--color-obs-surface-highest)',
+                boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div
+                className="px-5 py-4"
+                style={{ boxShadow: 'inset 0 -1px 0 var(--color-obs-surface-low)' }}
+              >
+                <h2 className="text-[16px] font-bold" style={{ color: 'var(--color-obs-text)' }}>
+                  ISリストを作成
+                </h2>
+                <p className="text-[13px] mt-2 inline-flex items-center gap-1.5" style={{ color: 'var(--color-obs-text)' }}>
+                  選択中の
+                  <span
+                    className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[12.5px] font-bold tabular-nums"
+                    style={{
+                      background: 'rgba(171,199,255,0.16)',
+                      color: 'var(--color-obs-primary)',
+                      boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.42)',
+                    }}
+                  >
+                    {selectedIds.size.toLocaleString()} 名
+                  </span>
+                  のコンタクトを ISリストとして保存します
+                </p>
+              </div>
+              <div className="px-5 py-4 space-y-3">
+                <label className="block">
+                  <span
+                    className="text-[11px] font-bold uppercase tracking-[0.06em]"
+                    style={{ color: 'var(--color-obs-text-subtle)' }}
+                  >
+                    リスト名
+                  </span>
+                  <input
+                    type="text"
+                    autoFocus
+                    value={newListName}
+                    onChange={(e) => setNewListName(e.target.value)}
+                    placeholder="例: HOT 2026Q2 アプローチ対象"
+                    className="mt-1.5 w-full px-3 py-2 rounded-[8px] text-[13px] outline-none"
+                    style={{
+                      background: 'var(--color-obs-surface-lowest)',
+                      color: 'var(--color-obs-text)',
+                      boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.18)',
+                    }}
+                  />
+                </label>
+
+                <label className="block">
+                  <span
+                    className="text-[11px] font-bold uppercase tracking-[0.06em]"
+                    style={{ color: 'var(--color-obs-text-subtle)' }}
+                  >
+                    IS担当者
+                  </span>
+                  <select
+                    value={newListAssignee}
+                    onChange={(e) => setNewListAssignee(e.target.value)}
+                    className="mt-1.5 w-full px-3 py-2 rounded-[8px] text-[13px] outline-none cursor-pointer"
+                    style={{
+                      background: 'var(--color-obs-surface-lowest)',
+                      color: 'var(--color-obs-text)',
+                      boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.18)',
+                    }}
+                  >
+                    {LIST_MEMBERS.map((m) => (
+                      <option key={m} value={m}>
+                        {m}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                {createListMessage && (
+                  <p
+                    className="text-[12px]"
+                    style={{ color: 'var(--color-obs-text-muted)' }}
+                  >
+                    {createListMessage}
+                  </p>
+                )}
+              </div>
+              <div
+                className="flex justify-end gap-2 px-5 py-4"
+                style={{ boxShadow: 'inset 0 1px 0 var(--color-obs-surface-low)' }}
+              >
+                <ObsButton
+                  variant="ghost"
+                  onClick={() => setCreateListOpen(false)}
+                  disabled={creatingList}
+                >
+                  キャンセル
+                </ObsButton>
+                <ObsButton
+                  variant="primary"
+                  disabled={!newListName.trim() || creatingList}
+                  onClick={() => {
+                    setCreatingList(true)
+                    setCreateListMessage(null)
+                    try {
+                      const ids = Array.from(selectedIds)
+                      // モック: localStorage に保存（後で /api/lists エンドポイントに置き換え可能）
+                      const key = 'fo.contacts.is_lists.v1'
+                      const existing = JSON.parse(
+                        localStorage.getItem(key) ?? '[]',
+                      ) as Array<{
+                        id: string
+                        name: string
+                        contactIds: string[]
+                        createdAt: string
+                        assignee?: string
+                      }>
+                      existing.unshift({
+                        id: `list-${Date.now()}`,
+                        name: newListName.trim(),
+                        contactIds: ids,
+                        createdAt: new Date().toISOString(),
+                        assignee: newListAssignee,
+                      })
+                      localStorage.setItem(key, JSON.stringify(existing))
+                      setCreateListMessage(
+                        `✓ ${ids.length} 名のリスト「${newListName.trim()}」を作成しました`,
+                      )
+                      setNewListName('')
+                      setSelectedIds(new Set())
+                      setTimeout(() => {
+                        setCreateListOpen(false)
+                        setCreateListMessage(null)
+                      }, 1200)
+                    } catch (e) {
+                      setCreateListMessage(`✗ エラー: ${(e as Error).message}`)
+                    } finally {
+                      setCreatingList(false)
+                    }
+                  }}
+                >
+                  {creatingList ? '作成中...' : 'リスト作成'}
+                </ObsButton>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </ObsPageShell>
   )

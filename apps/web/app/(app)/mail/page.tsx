@@ -2,16 +2,18 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { BarChart2, FileStack, Send, Target } from 'lucide-react'
-import { ObsPageShell, ObsHero, ObsCard } from '@/components/obsidian'
+import { Send, Activity, FileStack } from 'lucide-react'
+import { ObsPageShell, ObsHero } from '@/components/obsidian'
+import { CampaignsView } from '@/components/marketing/CampaignsView'
 import { LinkDocsView } from '@/components/marketing/LinkDocsView'
+import { FirstPartyView } from '@/components/marketing/FirstPartyView'
 
-type Tab = 'send' | 'analytics' | 'links'
+type Tab = 'send' | 'docs' | 'firstparty'
 
-const TABS: { key: Tab; label: string; icon: React.ElementType; desc: string }[] = [
-  { key: 'send', label: '配信', icon: Send, desc: 'メールテンプレート・配信履歴' },
-  { key: 'analytics', label: '分析', icon: BarChart2, desc: '開封率・クリック率・温度感スコア' },
-  { key: 'links', label: 'リンク資料化', icon: FileStack, desc: '資料配布と閲覧トラッキング' },
+const TABS: { key: Tab; label: string; icon: React.ElementType }[] = [
+  { key: 'send',       label: '配信',           icon: Send },
+  { key: 'docs',       label: '資料リンク化',   icon: FileStack },
+  { key: 'firstparty', label: '1stパーティ設定', icon: Activity },
 ]
 
 export default function MailPage() {
@@ -23,7 +25,7 @@ export default function MailPage() {
         <ObsHero
           eyebrow="Marketing"
           title="メール配信"
-          caption="テンプレ作成から効果測定、資料リンク配布までを1画面で。"
+          caption="リスト一斉配信からファーストパーティ計測、資料リンク配布までを1画面で。"
         />
 
         {/* Tab nav */}
@@ -60,34 +62,12 @@ export default function MailPage() {
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
           >
-            {tab === 'send' && <ComingSoon icon={Send} label="配信機能" hint="メールテンプレートの作成・配信履歴の確認ができるようになります" />}
-            {tab === 'analytics' && <ComingSoon icon={Target} label="分析機能" hint="流入元別のリード一覧・開封率・クリック率・温度感スコアリングを可視化します" />}
-            {tab === 'links' && <LinkDocsView />}
+            {tab === 'send' && <CampaignsView />}
+            {tab === 'docs' && <LinkDocsView />}
+            {tab === 'firstparty' && <FirstPartyView />}
           </motion.div>
         </AnimatePresence>
       </div>
     </ObsPageShell>
-  )
-}
-
-function ComingSoon({
-  icon: Icon,
-  label,
-  hint,
-}: {
-  icon: React.ElementType
-  label: string
-  hint: string
-}) {
-  return (
-    <ObsCard depth="low" padding="lg" radius="xl" className="text-center">
-      <Icon size={32} className="mx-auto mb-3" style={{ color: 'var(--color-obs-text-subtle)' }} />
-      <p className="text-[15px] font-semibold" style={{ color: 'var(--color-obs-text)' }}>
-        {label}は準備中です
-      </p>
-      <p className="text-[13px] mt-1" style={{ color: 'var(--color-obs-text-muted)' }}>
-        {hint}
-      </p>
-    </ObsCard>
   )
 }

@@ -1,7 +1,8 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
-import { ChevronLeft, ExternalLink, MapPin, Phone, Mail, Building2 } from 'lucide-react'
+import { ChevronLeft, ExternalLink, MapPin, Phone, Mail, Building2, Copy, Check } from 'lucide-react'
 import {
   ObsCard,
   ObsChip,
@@ -36,6 +37,22 @@ type Raw = {
   updatedAt?: string | null
   industry?: { name: string; category?: string | null } | null
   serviceTags?: Array<{ tag: { name: string } }>
+  // v2 追加（companies テーブル直）
+  hqPhone?: string | null
+  twitterUrl?: string | null
+  linkedinUrl?: string | null
+  facebookUrl?: string | null
+  youtubeUrl?: string | null
+  instagramUrl?: string | null
+  githubUrl?: string | null
+  noteUrl?: string | null
+  // gBizINFO 由来
+  establishedAt?: string | null
+  capitalStock?: number | null
+  representativeName?: string | null
+  gbizIndustryCode?: string | null
+  businessItems?: string | null
+  isAbmSource?: boolean
   offices?: Array<{
     id: string
     name: string
@@ -44,6 +61,7 @@ type Raw = {
     city: string | null
     address: string | null
     phone: string | null
+    deptPhones?: Record<string, string> | null
     isPrimary: boolean
   }>
   departments?: Array<{
@@ -55,6 +73,10 @@ type Raw = {
     contactPersonName: string | null
     contactPersonTitle: string | null
     headcount: string | null
+    parentDepartmentId?: string | null
+    hierarchyLevel?: number | null
+    sourceUrl?: string | null
+    officeId?: string | null
   }>
   companyIntents?: Array<{
     intentLevel: 'HOT' | 'MIDDLE' | 'LOW' | 'NONE'
@@ -71,6 +93,45 @@ type Raw = {
     publishedAt: string | null
     departmentType: string | null
   }>
+  // CRM 連携：この企業に紐づく取引・コンタクト
+  deals?: Array<{
+    id: string
+    name: string
+    stage: string
+    amount: number | null
+    probability: number | null
+    expectedCloseAt: string | null
+    createdAt: string | null
+    updatedAt: string | null
+    ownerName: string | null
+  }>
+  contacts?: Array<{
+    id: string
+    name: string
+    title: string | null
+    department: string | null
+    email: string | null
+    phone: string | null
+    isDecisionMaker: boolean
+  }>
+}
+
+// 25部門細分化ラベル
+const DEPT_LABELS: Record<string, string> = {
+  sales_is: '営業 IS', sales_fs: '営業 FS', sales_ae: '営業 AE', sales_bdr: '営業 BDR',
+  sales_legal: '営業 法人/エンプラ', sales: '営業',
+  it_corp: 'IT コーポレート', it_engineer: 'IT エンジニア', it_security: 'IT セキュリティ',
+  it_dx: 'IT DX', it_data: 'IT データ', it_dev: 'IT 開発', it: 'IT',
+  hr_recruit: '人事 採用', hr_lnd: '人事 教育研修', hr_labor: '人事 労務',
+  hr_planning: '人事 企画', hr: '人事',
+  fin_acct: '経理', fin_treasury: '財務', fin_audit: '監査', fin_tax: '税務', finance: '財務全般',
+  mkt_digital: 'マーケ デジタル', mkt_pr: '広報', mkt_brand: 'ブランド', marketing: 'マーケ',
+  cs_success: 'CS Success', cs_support: 'CS Support', pdm: 'PdM', cs: 'CS',
+  legal: '法務', management: '経営', rd: 'R&D', operations: '運用', engineering: '技術', other: 'その他',
+}
+function deptLabel(t: string | null | undefined): string {
+  if (!t) return '—'
+  return DEPT_LABELS[t] ?? t
 }
 
 function formatDate(iso: string | null | undefined): string {
@@ -116,12 +177,75 @@ function buildAddress(
   return [prf, cty, adr].filter((s) => s !== '—').join('')
 }
 
+// 取引ステージのラベル / トーン（/pipeline ページの STAGES と完全に揃える）
+const DEAL_STAGE_META: Record<string, { label: string; tone: 'hot' | 'middle' | 'low' | 'neutral' | 'primary' }> = {
+  IS:               { label: 'IS',             tone: 'neutral' },
+  NURTURING:        { label: 'ナーチャリング', tone: 'primary' },
+  MEETING_PLANNED:  { label: '商談予定',       tone: 'primary' },
+  MEETING_DONE:     { label: '商談済み',       tone: 'primary' },
+  PROJECT_PLANNED:  { label: 'PJ化予定あり',   tone: 'low' },
+  MULTI_MEETING:    { label: '複数商談済み',   tone: 'middle' },
+  POC:              { label: 'POC',            tone: 'middle' },
+  CLOSED_WON:       { label: '受注',           tone: 'low' },
+  LOST_DEAL:        { label: '失注',           tone: 'hot' },
+  CHURN:            { label: 'チャーン',       tone: 'hot' },
+  LOST:             { label: 'ロスト',         tone: 'neutral' },
+  // Prisma の DealStage enum 由来のキーが入っても落ちないようフォールバックを用意
+  NEW_LEAD:         { label: 'IS',             tone: 'neutral' },
+  QUALIFIED:        { label: '商談予定',       tone: 'primary' },
+  FIRST_MEETING:    { label: '商談予定',       tone: 'primary' },
+  SOLUTION_FIT:     { label: 'PJ化予定あり',   tone: 'low' },
+  PROPOSAL:         { label: '複数商談済み',   tone: 'middle' },
+  NEGOTIATION:      { label: 'POC',            tone: 'middle' },
+  VERBAL_COMMIT:    { label: 'POC',            tone: 'middle' },
+  CLOSED_LOST:      { label: '失注',           tone: 'hot' },
+}
+function dealStageMeta(stage: string | null | undefined) {
+  if (!stage) return { label: '—', tone: 'neutral' as const }
+  return DEAL_STAGE_META[stage] ?? { label: stage, tone: 'neutral' as const }
+}
+
 const INTENT_LABEL: Record<string, { tone: 'hot' | 'middle' | 'low' | 'neutral'; text: string }> = {
   HOT: { tone: 'hot', text: '● HOT' },
   MIDDLE: { tone: 'middle', text: '● MIDDLE' },
   LOW: { tone: 'low', text: '● LOW' },
   NONE: { tone: 'neutral', text: '—' },
 }
+
+// 紐付けデータがまだ無い企業向けのダミー（UI確認用）
+// 実データが入った段階で自動的に置き換わる
+const DUMMY_DEALS: NonNullable<Raw['deals']> = [
+  {
+    id: 'dummy-d1', name: 'CRM導入 - 2026/03 提案中',
+    stage: 'POC', amount: 4800000, probability: 80,
+    expectedCloseAt: '2026-04-30', createdAt: '2026-03-01', updatedAt: '2026-04-22', ownerName: '田中 太郎',
+  },
+  {
+    id: 'dummy-d2', name: '介護記録AI - 全社展開検討',
+    stage: 'MEETING_DONE', amount: 12000000, probability: 50,
+    expectedCloseAt: '2026-06-30', createdAt: '2026-03-15', updatedAt: '2026-04-15', ownerName: '佐藤 美咲',
+  },
+  {
+    id: 'dummy-d3', name: 'Slack連携トライアル',
+    stage: 'CLOSED_WON', amount: 600000, probability: 100,
+    expectedCloseAt: '2026-02-28', createdAt: '2026-01-20', updatedAt: '2026-02-25', ownerName: '田中 太郎',
+  },
+]
+
+const DUMMY_CONTACTS: NonNullable<Raw['contacts']> = [
+  {
+    id: 'dummy-c1', name: '鈴木 一郎', title: 'CTO', department: '技術本部',
+    email: 'suzuki@example.co.jp', phone: '03-1234-5678', isDecisionMaker: true,
+  },
+  {
+    id: 'dummy-c2', name: '田中 誠', title: '営業部長', department: '営業本部',
+    email: 'tanaka@example.co.jp', phone: '03-1234-5679', isDecisionMaker: false,
+  },
+  {
+    id: 'dummy-c3', name: '高橋 結衣', title: 'マネージャー', department: 'CS部',
+    email: 'takahashi@example.co.jp', phone: null, isDecisionMaker: false,
+  },
+]
 
 export default function CompanyDetailClient({
   id: _id,
@@ -131,6 +255,17 @@ export default function CompanyDetailClient({
   initialData: Raw | null
 }) {
   const c = initialData
+  const [copiedEmail, setCopiedEmail] = useState<string | null>(null)
+
+  async function copyEmail(email: string) {
+    try {
+      await navigator.clipboard.writeText(email)
+      setCopiedEmail(email)
+      setTimeout(() => setCopiedEmail((cur) => (cur === email ? null : cur)), 1500)
+    } catch (err) {
+      console.error('failed to copy email', err)
+    }
+  }
 
   // 初期データが無い（モックIDなど）場合
   if (!c) {
@@ -150,7 +285,6 @@ export default function CompanyDetailClient({
     )
   }
 
-  const topIntent = c.companyIntents?.[0]
   const addrParts = buildAddress(c.prefecture, c.city, c.address)
   const domain = extractDomain(c.websiteUrl)
 
@@ -173,16 +307,7 @@ export default function CompanyDetailClient({
         <ObsHero
           eyebrow={c.industry?.name ?? 'Company Master'}
           title={c.name}
-          caption={[clean(c.nameKana), addrParts]
-            .filter((s) => s && s !== '—')
-            .join(' · ')}
-          action={
-            topIntent ? (
-              <ObsChip tone={INTENT_LABEL[topIntent.intentLevel]?.tone ?? 'neutral'}>
-                {INTENT_LABEL[topIntent.intentLevel]?.text ?? topIntent.intentLevel}
-              </ObsChip>
-            ) : null
-          }
+          caption={c.updatedAt ? `データ更新日 ${formatDate(c.updatedAt)}` : ''}
         />
 
         {/* ── 3-col grid ── */}
@@ -203,15 +328,6 @@ export default function CompanyDetailClient({
                     {c.companyFeatures}
                   </p>
                 )}
-                {c.serviceTags && c.serviceTags.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mt-5">
-                    {c.serviceTags.map((st, i) => (
-                      <ObsChip key={i} tone="primary">
-                        {st.tag.name}
-                      </ObsChip>
-                    ))}
-                  </div>
-                )}
               </ObsCard>
             )}
 
@@ -222,9 +338,7 @@ export default function CompanyDetailClient({
                 columns={2}
                 items={[
                   { label: '正式名称', value: clean(c.name) },
-                  { label: 'カナ', value: clean(c.nameKana) },
                   { label: '法人番号', value: clean(c.corporateNumber) },
-                  { label: '法人種別', value: clean(c.corporateType) },
                   {
                     label: '公式サイト',
                     value: c.websiteUrl ? (
@@ -255,29 +369,54 @@ export default function CompanyDetailClient({
                   },
                   { label: '従業員数', value: clean(c.employeeCount) },
                   { label: '売上', value: clean(c.revenue) },
-                  { label: '代表者', value: clean(c.representative) },
-                  {
-                    label: '代表電話',
-                    value: c.representativePhone ? (
-                      <span className="inline-flex items-center gap-1.5">
-                        <Phone size={13} style={{ color: 'var(--color-obs-text-subtle)' }} />
-                        {c.representativePhone}
-                      </span>
-                    ) : (
-                      '—'
-                    ),
-                  },
-                  {
-                    label: '代表メール',
-                    value: c.representativeEmail ? (
-                      <span className="inline-flex items-center gap-1.5">
-                        <Mail size={13} style={{ color: 'var(--color-obs-text-subtle)' }} />
-                        {c.representativeEmail}
-                      </span>
-                    ) : (
-                      '—'
-                    ),
-                  },
+                  ...(c.isAbmSource
+                    ? [
+                        {
+                          label: '本社代表電話',
+                          value: c.hqPhone ? (
+                            <span className="inline-flex items-center gap-1.5">
+                              <Phone size={13} style={{ color: 'var(--color-obs-text-subtle)' }} />
+                              {c.hqPhone}
+                            </span>
+                          ) : (
+                            '—'
+                          ),
+                        },
+                        {
+                          label: '設立日',
+                          value: c.establishedAt
+                            ? new Date(c.establishedAt).toLocaleDateString('ja-JP', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                              })
+                            : '—',
+                        },
+                      ]
+                    : [
+                        {
+                          label: '代表電話',
+                          value: c.representativePhone ? (
+                            <span className="inline-flex items-center gap-1.5">
+                              <Phone size={13} style={{ color: 'var(--color-obs-text-subtle)' }} />
+                              {c.representativePhone}
+                            </span>
+                          ) : (
+                            '—'
+                          ),
+                        },
+                        {
+                          label: '代表メール',
+                          value: c.representativeEmail ? (
+                            <span className="inline-flex items-center gap-1.5">
+                              <Mail size={13} style={{ color: 'var(--color-obs-text-subtle)' }} />
+                              {c.representativeEmail}
+                            </span>
+                          ) : (
+                            '—'
+                          ),
+                        },
+                      ]),
                 ]}
               />
             </ObsCard>
@@ -316,6 +455,17 @@ export default function CompanyDetailClient({
                               <Phone size={11} /> {o.phone}
                             </p>
                           )}
+                          {o.deptPhones && Object.keys(o.deptPhones).length > 0 && (
+                            <div className="mt-2 flex flex-col gap-1">
+                              {Object.entries(o.deptPhones).map(([dept, phone]) => (
+                                <p key={dept} className="text-xs inline-flex items-center gap-1" style={{ color: 'var(--color-obs-text-muted)' }}>
+                                  <Phone size={10} style={{ color: 'var(--color-obs-text-subtle)' }} />
+                                  <span style={{ color: 'var(--color-obs-text-subtle)' }}>{dept}：</span>
+                                  {phone}
+                                </p>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </ObsCard>
@@ -324,91 +474,73 @@ export default function CompanyDetailClient({
               )}
             </ObsCard>
 
-            {/* 部門 */}
-            <ObsCard depth="high" padding="lg">
-              <ObsSectionHeader
-                title="部門"
-                caption={
-                  c.departments && c.departments.length > 0
-                    ? `${c.departments.length}件`
-                    : 'エンリッチメント実行で取得（Haiku 4.5）'
-                }
-              />
-              {!c.departments || c.departments.length === 0 ? (
-                <p className="text-sm" style={{ color: 'var(--color-obs-text-subtle)' }}>
-                  部門データなし
-                </p>
-              ) : (
-                <div className="flex flex-col gap-2">
-                  {c.departments.map((d) => (
-                    <ObsCard key={d.id} depth="low" padding="md" radius="md">
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium" style={{ color: 'var(--color-obs-text)' }}>
-                              {d.name}
-                            </span>
-                            {d.departmentType && <ObsChip tone="neutral">{d.departmentType}</ObsChip>}
-                          </div>
-                          {d.contactPersonName && (
-                            <p className="text-xs mt-1" style={{ color: 'var(--color-obs-text-muted)' }}>
-                              {d.contactPersonName}
-                              {d.contactPersonTitle && `（${d.contactPersonTitle}）`}
-                            </p>
-                          )}
-                        </div>
-                        <div className="text-right text-xs" style={{ color: 'var(--color-obs-text-subtle)' }}>
-                          {d.phone && <div className="inline-flex items-center gap-1"><Phone size={11} /> {d.phone}</div>}
-                          {d.email && <div className="inline-flex items-center gap-1 mt-1"><Mail size={11} /> {d.email}</div>}
-                        </div>
-                      </div>
-                    </ObsCard>
-                  ))}
-                </div>
-              )}
-            </ObsCard>
 
             {/* インテントシグナル履歴 */}
             {c.intentSignals && c.intentSignals.length > 0 && (
               <ObsCard depth="high" padding="lg">
                 <ObsSectionHeader title="採用シグナル履歴" caption={`最新 ${c.intentSignals.length}件`} />
                 <div className="flex flex-col">
-                  {c.intentSignals.map((s, i) => (
-                    <a
-                      key={s.id}
-                      href={s.sourceUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-4 py-3 transition-colors duration-150"
-                      style={{
-                        borderTop: i === 0 ? 'none' : undefined,
-                        transitionTimingFunction: 'var(--ease-liquid)',
-                      }}
-                      onMouseOver={(e) => {
-                        (e.currentTarget as HTMLAnchorElement).style.backgroundColor = 'var(--color-obs-surface-highest)'
-                      }}
-                      onMouseOut={(e) => {
-                        (e.currentTarget as HTMLAnchorElement).style.backgroundColor = 'transparent'
-                      }}
-                    >
-                      <ObsChip tone="neutral">{s.signalType}</ObsChip>
-                      <span
-                        className="flex-1 text-sm truncate"
-                        style={{ color: 'var(--color-obs-text)' }}
+                  {c.intentSignals.map((s, i) => {
+                    // sourceUrl はサーバー側（page.tsx）で raw_data.original_url を
+                    // 優先採用済み。ここでは http(s) の実URLのみリンク化する。
+                    const hasUrl = !!s.sourceUrl && /^https?:\/\//i.test(s.sourceUrl)
+                    const Wrapper = hasUrl ? 'a' : 'div'
+                    const wrapperProps = hasUrl
+                      ? {
+                          href: s.sourceUrl,
+                          target: '_blank',
+                          rel: 'noopener noreferrer',
+                        }
+                      : {}
+                    return (
+                      <Wrapper
+                        key={s.id}
+                        {...wrapperProps}
+                        className={`flex items-center gap-3 px-2 py-2.5 rounded-[8px] transition-colors duration-150 group ${
+                          hasUrl ? 'cursor-pointer' : ''
+                        }`}
+                        style={{
+                          borderTop: i === 0 ? 'none' : undefined,
+                          transitionTimingFunction: 'var(--ease-liquid)',
+                        }}
+                        onMouseOver={(e) => {
+                          if (hasUrl) {
+                            (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--color-obs-surface-highest)'
+                          }
+                        }}
+                        onMouseOut={(e) => {
+                          (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'
+                        }}
+                        title={hasUrl ? `${s.sourceUrl} を新しいタブで開く` : 'リンク情報なし'}
                       >
-                        {s.title}
-                      </span>
-                      <span className="text-xs shrink-0" style={{ color: 'var(--color-obs-text-subtle)' }}>
-                        {s.departmentType ?? '—'}
-                      </span>
-                      <span
-                        className="text-xs shrink-0 tabular-nums w-20 text-right"
-                        style={{ color: 'var(--color-obs-text-subtle)' }}
-                      >
-                        {formatDate(s.publishedAt)}
-                      </span>
-                    </a>
-                  ))}
+                        <ObsChip tone="neutral">{s.signalType}</ObsChip>
+                        <span
+                          className="flex-1 text-sm truncate"
+                          style={{
+                            color: hasUrl ? 'var(--color-obs-text)' : 'var(--color-obs-text-muted)',
+                          }}
+                        >
+                          {s.title}
+                        </span>
+                        {hasUrl && (
+                          <ExternalLink
+                            size={11}
+                            className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                            style={{ color: 'var(--color-obs-primary)' }}
+                          />
+                        )}
+                        <span className="text-xs shrink-0 whitespace-nowrap" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                          {deptLabel(s.departmentType)}
+                        </span>
+                        <span
+                          className="text-xs shrink-0 tabular-nums whitespace-nowrap"
+                          style={{ color: 'var(--color-obs-text-subtle)' }}
+                        >
+                          {formatDate(s.publishedAt)}
+                        </span>
+                      </Wrapper>
+                    )
+                  })}
                 </div>
               </ObsCard>
             )}
@@ -416,6 +548,138 @@ export default function CompanyDetailClient({
 
           {/* サイドカラム */}
           <div className="col-span-12 lg:col-span-4 flex flex-col gap-6">
+            {/* 取引（紐づくDeal） — 最上部 */}
+            {(() => {
+              const realDeals = c.deals && c.deals.length > 0 ? c.deals : null
+              const dealsToShow = realDeals ?? DUMMY_DEALS
+              const isDummy = !realDeals
+              return (
+                <ObsCard depth="high" padding="lg">
+                  <ObsSectionHeader
+                    title="取引"
+                    caption={isDummy ? `${dealsToShow.length}件 · ダミー表示` : `${dealsToShow.length}件`}
+                  />
+                  <div className="flex flex-col gap-2">
+                    {dealsToShow.map((d) => {
+                      const meta = dealStageMeta(d.stage)
+                      return (
+                        <Link
+                          key={d.id}
+                          href={`/deals/${d.id}`}
+                          className="group flex flex-col gap-1 rounded-[var(--radius-obs-md)] px-3 py-2 transition-colors"
+                          style={{ backgroundColor: 'var(--color-obs-surface-low)' }}
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span
+                              className="flex-1 text-sm truncate group-hover:underline"
+                              style={{ color: 'var(--color-obs-text)', textUnderlineOffset: '3px' }}
+                              title={d.name}
+                            >
+                              {d.name}
+                            </span>
+                            <ObsChip tone={meta.tone}>{meta.label}</ObsChip>
+                          </div>
+                          <div
+                            className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px]"
+                            style={{ color: 'var(--color-obs-text-subtle)' }}
+                          >
+                            <span className="tabular-nums">作成 {formatDate(d.createdAt)}</span>
+                            <span>·</span>
+                            <span>{d.ownerName ?? '—'}</span>
+                          </div>
+                        </Link>
+                      )
+                    })}
+                  </div>
+                </ObsCard>
+              )
+            })()}
+
+            {/* コンタクト（紐づくContact） — 取引の直下 */}
+            {(() => {
+              const realContacts = c.contacts && c.contacts.length > 0 ? c.contacts : null
+              const contactsToShow = realContacts ?? DUMMY_CONTACTS
+              const isDummy = !realContacts
+              return (
+                <ObsCard depth="high" padding="lg">
+                  <ObsSectionHeader
+                    title="コンタクト"
+                    caption={isDummy ? `${contactsToShow.length}名 · ダミー表示` : `${contactsToShow.length}名`}
+                  />
+                  <div className="flex flex-col gap-2">
+                    {contactsToShow.map((p) => (
+                      <div
+                        key={p.id}
+                        className="group flex items-start gap-3 rounded-[var(--radius-obs-md)] px-3 py-2 transition-colors"
+                        style={{ backgroundColor: 'var(--color-obs-surface-low)' }}
+                      >
+                        <Link
+                          href={`/contacts/${p.id}`}
+                          className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-semibold shrink-0 hover:opacity-80 transition-opacity"
+                          style={{
+                            backgroundColor: 'var(--color-obs-primary-container)',
+                            color: 'var(--color-obs-on-primary)',
+                          }}
+                        >
+                          {p.name.slice(0, 1)}
+                        </Link>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <Link
+                              href={`/contacts/${p.id}`}
+                              className="text-sm truncate hover:underline"
+                              style={{ color: 'var(--color-obs-text)', textUnderlineOffset: '3px' }}
+                            >
+                              {p.name}
+                            </Link>
+                            {p.isDecisionMaker && <ObsChip tone="hot">決裁</ObsChip>}
+                          </div>
+                          <div
+                            className="text-[11px] truncate"
+                            style={{ color: 'var(--color-obs-text-subtle)' }}
+                          >
+                            {[p.department, p.title].filter(Boolean).join(' · ') || '—'}
+                          </div>
+                          {p.email && (
+                            <div
+                              className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] mt-1"
+                              style={{ color: 'var(--color-obs-text-subtle)' }}
+                            >
+                              <button
+                                type="button"
+                                onClick={() => copyEmail(p.email!)}
+                                title={
+                                  copiedEmail === p.email
+                                    ? 'コピーしました'
+                                    : 'メールアドレスをコピー'
+                                }
+                                className="inline-flex items-center gap-1 max-w-full px-1.5 py-0.5 -mx-1.5 -my-0.5 rounded-[6px] hover:bg-[var(--color-obs-surface)] hover:text-[var(--color-obs-text)] transition-colors"
+                              >
+                                <Mail size={10} className="shrink-0" />
+                                <span className="truncate">{p.email}</span>
+                                {copiedEmail === p.email ? (
+                                  <Check
+                                    size={10}
+                                    className="shrink-0"
+                                    style={{ color: 'var(--color-obs-low)' }}
+                                  />
+                                ) : (
+                                  <Copy
+                                    size={10}
+                                    className="shrink-0 opacity-50 group-hover:opacity-100 transition-opacity"
+                                  />
+                                )}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </ObsCard>
+              )
+            })()}
+
             {/* インテント集約 */}
             <ObsCard depth="high" padding="lg">
               <ObsSectionHeader title="インテント" caption="部門別の採用動向" />
@@ -432,7 +696,7 @@ export default function CompanyDetailClient({
                       </ObsChip>
                       <div className="flex-1 min-w-0">
                         <div className="text-sm" style={{ color: 'var(--color-obs-text)' }}>
-                          {ci.departmentType}
+                          {deptLabel(ci.departmentType)}
                         </div>
                         <div className="text-[11px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
                           {ci.signalCount}シグナル · {ci.latestSignalAt ? formatDate(ci.latestSignalAt) : '—'}
@@ -444,23 +708,6 @@ export default function CompanyDetailClient({
               )}
             </ObsCard>
 
-            {/* メタ情報 */}
-            <ObsCard depth="high" padding="lg">
-              <ObsSectionHeader title="データ状態" />
-              <ObsDefList
-                columns={1}
-                items={[
-                  {
-                    label: 'エンリッチ状態',
-                    value: <ObsChip tone="neutral">{c.enrichmentStatus ?? '—'}</ObsChip>,
-                  },
-                  { label: '最終クロール', value: formatDate(c.lastCrawledAt) },
-                  { label: '最終エンリッチ', value: formatDate(c.lastEnrichedAt) },
-                  { label: 'データ取得日', value: formatDate(c.createdAt) },
-                  { label: 'データ更新日', value: formatDate(c.updatedAt) },
-                ]}
-              />
-            </ObsCard>
           </div>
         </div>
       </div>

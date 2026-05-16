@@ -19,8 +19,13 @@ export async function GET() {
     process.env.AUTH_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3002'
   const redirectUri = `${baseUrl}/api/slack/oauth-callback`
 
-  // Bot scope（チャンネル一覧 + 履歴 + メッセージ permalink + ユーザー情報）
+  // Bot scope
+  // - チャンネル一覧 + 履歴 + メッセージ permalink + ユーザー情報
+  // - app_mentions:read: メンションBot応答 (/api/slack/events)
+  // - reactions:read: ✅リアクションでFAQ昇格候補化
   const scopes = [
+    'app_mentions:read',
+    'reactions:read',
     'channels:history',
     'channels:read',
     'groups:history',

@@ -126,7 +126,7 @@ export const Security = () => (
             ))}
           </div>
           <p className="mt-5 text-xs text-[#7e7c83] leading-relaxed">
-            これらのプロダクトと同じ前提で、Front Office も設計されています。「やっています」だけでなく、コードで見せます。
+            これらのプロダクトと同じ前提で、KikuCRM も設計されています。「やっています」だけでなく、コードで見せます。
           </p>
         </div>
       </div>

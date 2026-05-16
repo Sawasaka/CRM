@@ -14,7 +14,8 @@
     "crawl:intents:it": "tsx scripts/crawl-intents.ts --department=IT",
     "crawl:intents:sales": "tsx scripts/crawl-intents.ts --department=SALES",
     "enrich:companies": "tsx scripts/enrich-companies.ts",
-    "enrich:orgchart": "tsx scripts/enrich-orgchart.ts"
+    "enrich:orgchart": "tsx scripts/enrich-orgchart.ts",
+    "enrich:dept-phones": "tsx scripts/enrich-department-phones.ts"
   },
   "devDependencies": {
     "turbo": "^2.5.4",

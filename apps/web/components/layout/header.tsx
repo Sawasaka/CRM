@@ -93,9 +93,9 @@ export function Header() {
           transitionTimingFunction: 'var(--ease-liquid)',
         }}
       >
-        {/* ── Service brand (HOME へ戻る) ── */}
+        {/* ── Service brand (HOME = チャット画面 へ戻る) ── */}
         <Link
-          href="/dashboard"
+          href="/"
           aria-label="Front Office ホーム"
           className="flex items-center mr-1 transition-opacity duration-150 hover:opacity-85"
         >

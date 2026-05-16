@@ -39,7 +39,7 @@ export function ObsHero({
 }: {
   eyebrow?: string
   title: string
-  caption?: string
+  caption?: React.ReactNode
   action?: React.ReactNode
 }) {
   return (

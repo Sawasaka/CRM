@@ -1,358 +1,336 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, FileText, Eye, Users, Copy, Upload, X, Link2 } from 'lucide-react'
-import type { ManagedDocument } from '@/types/crm'
-import { ObsCard, ObsChip, ObsButton, ObsInput } from '@/components/obsidian'
+import {
+  FileText,
+  Copy,
+  Upload,
+  Trash2,
+  Check,
+  Link2,
+  Globe,
+  Zap,
+} from 'lucide-react'
+import { ObsCard, ObsButton } from '@/components/obsidian'
 
-const MOCK_DOCS: ManagedDocument[] = [
-  { id: 'doc-1', name: 'BGM サービス紹介資料 v2.1', type: 'service_intro', trackingUrl: 'https://track.bgm.app/d/abc123', totalPages: 12, createdAt: '2026-03-15', createdBy: '田中太郎', totalViews: 45, uniqueViewers: 28, fileSize: 2400000, mimeType: 'application/pdf', isPublished: true, password: null, expiresAt: null, tags: ['サービス紹介', 'v2'] },
-  { id: 'doc-2', name: '株式会社テクノリード向け提案書', type: 'proposal', trackingUrl: 'https://track.bgm.app/d/def456', totalPages: 18, createdAt: '2026-03-20', createdBy: '鈴木花子', totalViews: 12, uniqueViewers: 3, fileSize: 5100000, mimeType: 'application/pdf', isPublished: true, password: 'tech2026', expiresAt: '2026-04-20', tags: ['提案書', 'テクノリード'] },
-  { id: 'doc-3', name: '導入事例集 2026年版', type: 'case_study', trackingUrl: 'https://track.bgm.app/d/ghi789', totalPages: 24, createdAt: '2026-03-10', createdBy: '田中太郎', totalViews: 67, uniqueViewers: 41, fileSize: 8200000, mimeType: 'application/pdf', isPublished: true, password: null, expiresAt: null, tags: ['事例集', '2026'] },
-  { id: 'doc-4', name: '料金プラン比較表', type: 'pricing', trackingUrl: 'https://track.bgm.app/d/jkl012', totalPages: 4, createdAt: '2026-03-22', createdBy: '佐藤次郎', totalViews: 23, uniqueViewers: 18, fileSize: 980000, mimeType: 'application/pdf', isPublished: true, password: null, expiresAt: null, tags: ['料金'] },
-  { id: 'doc-5', name: 'ROI試算シート', type: 'other', trackingUrl: 'https://track.bgm.app/d/mno345', totalPages: 6, createdAt: '2026-03-25', createdBy: '鈴木花子', totalViews: 8, uniqueViewers: 5, fileSize: 1200000, mimeType: 'application/pdf', isPublished: false, password: null, expiresAt: null, tags: ['ROI'] },
-  { id: 'doc-6', name: 'セキュリティチェックシート', type: 'other', trackingUrl: 'https://track.bgm.app/d/pqr678', totalPages: 3, createdAt: '2026-03-26', createdBy: '田中太郎', totalViews: 4, uniqueViewers: 2, fileSize: 450000, mimeType: 'application/pdf', isPublished: true, password: null, expiresAt: null, tags: ['セキュリティ'] },
-]
-
-const TYPE_LABELS: Record<string, string> = {
-  proposal: '提案書',
-  service_intro: 'サービス紹介',
-  case_study: '事例集',
-  pricing: '料金表',
-  other: 'その他',
+interface SimpleDoc {
+  id: string
+  name: string
+  trackingUrl: string
+  uploadedAt: string
 }
 
-function formatSize(bytes: number) {
-  if (bytes >= 1000000) return `${(bytes / 1000000).toFixed(1)}MB`
-  return `${Math.round(bytes / 1000)}KB`
+const INITIAL_DOCS: SimpleDoc[] = [
+  { id: 'doc-1', name: 'BGM サービス紹介資料 v2.1.pdf',  trackingUrl: 'https://track.bgm.app/d/abc123', uploadedAt: '2026-03-15' },
+  { id: 'doc-2', name: '株式会社テクノリード向け提案書.pdf', trackingUrl: 'https://track.bgm.app/d/def456', uploadedAt: '2026-03-20' },
+  { id: 'doc-3', name: '導入事例集 2026年版.pdf',          trackingUrl: 'https://track.bgm.app/d/ghi789', uploadedAt: '2026-03-10' },
+  { id: 'doc-4', name: '料金プラン比較表.pdf',              trackingUrl: 'https://track.bgm.app/d/jkl012', uploadedAt: '2026-03-22' },
+]
+
+function randomToken(len = 8) {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789'
+  let out = ''
+  for (let i = 0; i < len; i++) out += chars[Math.floor(Math.random() * chars.length)]
+  return out
 }
 
 export function LinkDocsView() {
-  const router = useRouter()
-  const [search, setSearch] = useState('')
-  const [typeFilter, setTypeFilter] = useState<string>('all')
-  const [showUpload, setShowUpload] = useState(false)
+  const [docs, setDocs] = useState<SimpleDoc[]>(INITIAL_DOCS)
   const [copied, setCopied] = useState<string | null>(null)
+  const [dragOver, setDragOver] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const filtered = useMemo(() => {
-    let list = MOCK_DOCS
-    if (search.trim()) {
-      const q = search.toLowerCase()
-      list = list.filter(
-        (d) => d.name.toLowerCase().includes(q) || d.tags.some((t) => t.toLowerCase().includes(q)),
-      )
-    }
-    if (typeFilter !== 'all') list = list.filter((d) => d.type === typeFilter)
-    return list
-  }, [search, typeFilter])
-
-  const totalViews = MOCK_DOCS.reduce((s, d) => s + d.totalViews, 0)
-  const totalUnique = MOCK_DOCS.reduce((s, d) => s + d.uniqueViewers, 0)
+  const handleFiles = (files: FileList | null) => {
+    if (!files || files.length === 0) return
+    const today = new Date()
+    const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+    const newDocs: SimpleDoc[] = Array.from(files).map((f) => ({
+      id: `doc-${Date.now()}-${randomToken(4)}`,
+      name: f.name,
+      trackingUrl: `https://track.bgm.app/d/${randomToken(10)}`,
+      uploadedAt: dateStr,
+    }))
+    setDocs((prev) => [...newDocs, ...prev])
+  }
 
   const handleCopy = (url: string, id: string) => {
     navigator.clipboard.writeText(url)
     setCopied(id)
-    setTimeout(() => setCopied(null), 2000)
+    setTimeout(() => setCopied(null), 1800)
+  }
+
+  const handleDelete = (id: string) => {
+    setDocs((prev) => prev.filter((d) => d.id !== id))
   }
 
   return (
-    <>
-      {/* KPI */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
-        {[
-          { label: '総資料数', value: MOCK_DOCS.length },
-          { label: '総閲覧数', value: totalViews },
-          { label: 'ユニーク閲覧者', value: totalUnique },
-          { label: '公開中', value: MOCK_DOCS.filter((d) => d.isPublished).length },
-        ].map((kpi, i) => (
-          <motion.div
-            key={kpi.label}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.28, delay: i * 0.05, ease: [0.16, 1, 0.3, 1] }}
+    <div className="space-y-5">
+      {/* Upload Zone */}
+      <ObsCard depth="high" padding="none" radius="xl" className="overflow-hidden">
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={(e) => {
+            e.preventDefault()
+            setDragOver(false)
+            handleFiles(e.dataTransfer.files)
+          }}
+          className="w-full px-6 py-10 flex flex-col items-center gap-2 transition-colors cursor-pointer"
+          style={{
+            backgroundColor: dragOver ? 'rgba(171,199,255,0.06)' : 'transparent',
+            boxShadow: dragOver ? 'inset 0 0 0 1.5px var(--color-obs-primary)' : 'inset 0 0 0 1px rgba(109,106,111,0.18)',
+          }}
+        >
+          <div
+            className="w-12 h-12 rounded-full flex items-center justify-center"
+            style={{ backgroundColor: 'rgba(171,199,255,0.14)' }}
           >
-            <ObsCard depth="high" padding="md" radius="lg">
-              <p
-                className="text-[11px] font-medium uppercase tracking-[0.1em]"
-                style={{ color: 'var(--color-obs-text-subtle)' }}
-              >
-                {kpi.label}
-              </p>
-              <p
-                className="text-[26px] font-bold tracking-[-0.03em] mt-1.5 tabular-nums"
-                style={{ color: 'var(--color-obs-text)' }}
-              >
-                {kpi.value}
-              </p>
-            </ObsCard>
-          </motion.div>
-        ))}
-      </div>
-
-      {/* Toolbar */}
-      <div className="flex items-center gap-3 mb-6 flex-wrap">
-        <div className="relative flex-1 min-w-[280px] max-w-md">
-          <Search
-            size={14}
-            className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10"
-            style={{ color: 'var(--color-obs-text-subtle)' }}
+            <Upload size={20} style={{ color: 'var(--color-obs-primary)' }} />
+          </div>
+          <div className="text-[14px] font-semibold mt-1" style={{ color: 'var(--color-obs-text)' }}>
+            ファイルをドロップしてリンク化
+          </div>
+          <div className="text-[11.5px]" style={{ color: 'var(--color-obs-text-muted)' }}>
+            またはクリックして選択（PDF / 画像 / Office ファイル）
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            className="hidden"
+            onChange={(e) => handleFiles(e.target.files)}
           />
-          <ObsInput
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="資料名・タグで検索..."
-            className="pl-10"
-          />
+        </button>
+      </ObsCard>
+
+      {/* Docs Table */}
+      <ObsCard depth="high" padding="none" radius="xl" className="overflow-hidden">
+        <div
+          className="grid items-center px-5 py-3 text-[10.5px] font-semibold tracking-[0.08em] uppercase"
+          style={{
+            gridTemplateColumns: '2fr 0.9fr 2.4fr 80px',
+            color: 'var(--color-obs-text-muted)',
+            borderBottom: '1px solid rgba(109,106,111,0.18)',
+          }}
+        >
+          <div>ファイル名</div>
+          <div className="text-center">アップロード日</div>
+          <div>トラッキングURL</div>
+          <div className="text-right">操作</div>
         </div>
 
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {[{ key: 'all', label: '全て' }, ...Object.entries(TYPE_LABELS).map(([k, v]) => ({ key: k, label: v }))].map(
-            (f) => {
-              const active = typeFilter === f.key
-              return (
-                <button
-                  key={f.key}
-                  onClick={() => setTypeFilter(f.key)}
-                  className="h-8 px-3 text-[12px] font-medium rounded-full transition-colors duration-150"
-                  style={{
-                    backgroundColor: active
-                      ? 'var(--color-obs-primary-container)'
-                      : 'var(--color-obs-surface-high)',
-                    color: active ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
-                  }}
-                >
-                  {f.label}
-                </button>
-              )
-            },
-          )}
-        </div>
-
-        <ObsButton variant="primary" size="md" onClick={() => setShowUpload(true)}>
-          <span className="inline-flex items-center gap-1.5">
-            <Upload size={13} />
-            資料アップロード
-          </span>
-        </ObsButton>
-      </div>
-
-      {/* Document cards */}
-      <div className="grid grid-cols-3 gap-4">
-        {filtered.map((doc, i) => (
-          <motion.div
-            key={doc.id}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.28, delay: i * 0.05, ease: [0.16, 1, 0.3, 1] }}
-          >
-            <ObsCard
-              depth="high"
-              padding="md"
-              radius="xl"
-              onClick={() => router.push(`/documents/${doc.id}`)}
-              className="group"
-            >
-              <div className="flex items-start gap-3 mb-4">
-                <div
-                  className="w-10 h-10 rounded-[var(--radius-obs-md)] flex items-center justify-center shrink-0"
-                  style={{ backgroundColor: 'var(--color-obs-surface-highest)' }}
-                >
-                  <FileText size={18} style={{ color: 'var(--color-obs-primary)' }} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p
-                    className="text-[14px] font-semibold truncate leading-tight"
-                    style={{ color: 'var(--color-obs-text)' }}
-                  >
-                    {doc.name}
-                  </p>
-                  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                    <ObsChip tone="primary">{TYPE_LABELS[doc.type]}</ObsChip>
-                    <span className="text-[11px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
-                      {doc.totalPages}ページ
-                    </span>
-                    <span className="text-[11px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
-                      {formatSize(doc.fileSize)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4 mb-4">
-                <div className="flex items-center gap-1.5">
-                  <Eye size={12} style={{ color: 'var(--color-obs-text-muted)' }} />
-                  <span
-                    className="text-[12px] font-semibold tabular-nums"
-                    style={{ color: 'var(--color-obs-text)' }}
-                  >
-                    {doc.totalViews}
-                  </span>
-                  <span className="text-[11px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
-                    閲覧
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Users size={12} style={{ color: 'var(--color-obs-text-muted)' }} />
-                  <span
-                    className="text-[12px] font-semibold tabular-nums"
-                    style={{ color: 'var(--color-obs-text)' }}
-                  >
-                    {doc.uniqueViewers}
-                  </span>
-                  <span className="text-[11px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
-                    ユニーク
-                  </span>
-                </div>
-                {!doc.isPublished && <ObsChip tone="neutral">非公開</ObsChip>}
-              </div>
-
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  handleCopy(doc.trackingUrl, doc.id)
-                }}
-                className="w-full h-9 flex items-center justify-center gap-1.5 text-[12px] font-medium rounded-[var(--radius-obs-md)] transition-colors duration-150"
-                style={{
-                  backgroundColor:
-                    copied === doc.id ? 'rgba(126,198,255,0.14)' : 'var(--color-obs-surface-highest)',
-                  color: copied === doc.id ? 'var(--color-obs-low)' : 'var(--color-obs-text-muted)',
-                }}
-              >
-                {copied === doc.id ? (
-                  <>
-                    <Link2 size={12} />
-                    コピー済み
-                  </>
-                ) : (
-                  <>
-                    <Copy size={12} />
-                    URLコピー
-                  </>
-                )}
-              </button>
-            </ObsCard>
-          </motion.div>
-        ))}
-      </div>
-
-      {filtered.length === 0 && (
-        <div className="text-center py-16">
-          <p className="text-[14px]" style={{ color: 'var(--color-obs-text-muted)' }}>
-            資料が見つかりません
-          </p>
-        </div>
-      )}
-
-      {/* Upload Modal */}
-      <AnimatePresence>
-        {showUpload && (
-          <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
+        {docs.length === 0 ? (
+          <div className="px-6 py-12 text-center">
+            <FileText size={28} className="mx-auto mb-3" style={{ color: 'var(--color-obs-text-subtle)' }} />
+            <p className="text-[13px]" style={{ color: 'var(--color-obs-text-muted)' }}>
+              まだリンク化された資料はありません
+            </p>
+          </div>
+        ) : (
+          docs.map((d, i) => (
             <div
-              className="absolute inset-0"
-              style={{ backgroundColor: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)' }}
-              onClick={() => setShowUpload(false)}
-            />
-            <motion.div
-              className="relative w-[480px]"
-              initial={{ opacity: 0, scale: 0.96, y: 8 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.96, y: 8 }}
-              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+              key={d.id}
+              className="grid items-center px-5 py-3 transition-colors hover:bg-[rgba(171,199,255,0.04)] group"
+              style={{
+                gridTemplateColumns: '2fr 0.9fr 2.4fr 80px',
+                borderBottom: i < docs.length - 1 ? '1px solid rgba(109,106,111,0.10)' : undefined,
+              }}
             >
-              <ObsCard depth="highest" padding="lg" radius="2xl">
-                <div className="flex items-center justify-between mb-5">
-                  <h2
-                    className="text-[17px] font-semibold tracking-[-0.02em]"
-                    style={{ color: 'var(--color-obs-text)' }}
-                  >
-                    資料アップロード
-                  </h2>
-                  <button
-                    onClick={() => setShowUpload(false)}
-                    className="p-1.5 rounded-full transition-colors hover:bg-[var(--color-obs-surface-high)]"
-                  >
-                    <X size={16} style={{ color: 'var(--color-obs-text-muted)' }} />
-                  </button>
-                </div>
-
-                <div
-                  className="rounded-[var(--radius-obs-lg)] p-8 text-center mb-4 transition-colors"
-                  style={{ backgroundColor: 'var(--color-obs-surface-low)' }}
+              <div className="flex items-center gap-2 min-w-0">
+                <FileText size={14} style={{ color: 'var(--color-obs-primary)' }} className="shrink-0" />
+                <span className="text-[13px] font-medium truncate" style={{ color: 'var(--color-obs-text)' }}>{d.name}</span>
+              </div>
+              <div className="text-center text-[11.5px] tabular-nums" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                {d.uploadedAt}
+              </div>
+              <div className="flex items-center gap-2 min-w-0">
+                <Link2 size={12} style={{ color: 'var(--color-obs-text-muted)' }} className="shrink-0" />
+                <code
+                  className="text-[11.5px] font-mono truncate"
+                  style={{ color: 'var(--color-obs-text-muted)' }}
+                >{d.trackingUrl}</code>
+              </div>
+              <div className="flex items-center justify-end gap-1">
+                <button
+                  type="button"
+                  onClick={() => handleCopy(d.trackingUrl, d.id)}
+                  className="w-7 h-7 rounded-[6px] flex items-center justify-center transition-colors hover:bg-[rgba(171,199,255,0.10)]"
+                  title="URLをコピー"
                 >
-                  <Upload
-                    size={32}
-                    style={{ color: 'var(--color-obs-text-muted)' }}
-                    className="mx-auto mb-3"
-                  />
-                  <p className="text-[14px] font-medium" style={{ color: 'var(--color-obs-text)' }}>
-                    ファイルをドラッグ&ドロップ
-                  </p>
-                  <p className="text-[12px] mt-1" style={{ color: 'var(--color-obs-text-subtle)' }}>
-                    PDF, PPTX, DOCX (最大50MB)
-                  </p>
-                  <div className="mt-3">
-                    <ObsButton variant="tertiary" size="sm">
-                      ファイルを選択
-                    </ObsButton>
-                  </div>
-                </div>
+                  {copied === d.id
+                    ? <Check size={13} style={{ color: '#6ee7a1' }} />
+                    : <Copy size={12} style={{ color: 'var(--color-obs-text-muted)' }} />}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDelete(d.id)}
+                  className="w-7 h-7 rounded-[6px] flex items-center justify-center transition-colors hover:bg-[rgba(255,107,107,0.12)] opacity-0 group-hover:opacity-100"
+                  title="削除"
+                >
+                  <Trash2 size={12} style={{ color: 'var(--color-obs-hot)' }} />
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </ObsCard>
 
-                <div className="space-y-3">
-                  <div>
-                    <label
-                      className="text-[11px] font-medium uppercase tracking-[0.1em]"
-                      style={{ color: 'var(--color-obs-text-subtle)' }}
-                    >
-                      資料名
-                    </label>
-                    <div className="mt-1.5">
-                      <ObsInput placeholder="例: サービス紹介資料 v2.1" />
-                    </div>
-                  </div>
-                  <div>
-                    <label
-                      className="text-[11px] font-medium uppercase tracking-[0.1em]"
-                      style={{ color: 'var(--color-obs-text-subtle)' }}
-                    >
-                      種別
-                    </label>
-                    <select
-                      className="mt-1.5 w-full h-10 px-4 text-[14px] rounded-[var(--radius-obs-md)] outline-none transition-all duration-150 focus:ring-2 focus:ring-[var(--color-obs-primary)]/40"
-                      style={{
-                        backgroundColor: 'var(--color-obs-surface-lowest)',
-                        color: 'var(--color-obs-text)',
-                        boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.12)',
-                      }}
-                    >
-                      {Object.entries(TYPE_LABELS).map(([k, v]) => (
-                        <option key={k} value={k}>
-                          {v}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
+      {/* ── 配信ドメイン設定 ── */}
+      <DeliveryDomainSection
+        docCount={docs.length}
+        onCopy={handleCopy}
+        copiedKey={copied}
+      />
 
-                <div className="flex justify-end gap-2 mt-6">
-                  <ObsButton variant="ghost" size="md" onClick={() => setShowUpload(false)}>
-                    キャンセル
-                  </ObsButton>
-                  <ObsButton variant="primary" size="md" onClick={() => setShowUpload(false)}>
-                    アップロード
-                  </ObsButton>
-                </div>
-              </ObsCard>
-            </motion.div>
+      {/* Toast for copy */}
+      <AnimatePresence>
+        {copied && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 12 }}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full text-[12px] font-medium"
+            style={{
+              backgroundColor: 'var(--color-obs-surface-highest)',
+              color: 'var(--color-obs-text)',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(109,106,111,0.24)',
+            }}
+          >
+            URLをコピーしました
           </motion.div>
         )}
       </AnimatePresence>
-    </>
+    </div>
+  )
+}
+
+// ─── Delivery Domain Section ─────────────────────────────────────────────────────
+// 資料DLリンクの発行ドメイン設定。
+// 顧客が自社のベースドメイン(例: zooba.io)を登録すると、Front Office が
+// 自動でサブドメイン(例: docs.zooba.io)を発行して資料DL用に利用する。
+
+const SUBDOMAIN_PREFIX = 'docs'
+
+function deriveSubdomain(baseDomain: string): string {
+  const cleaned = baseDomain.trim().replace(/^https?:\/\//, '').replace(/\/.*$/, '').toLowerCase()
+  if (!cleaned) return ''
+  // 既に prefix が付いている場合は重複させない
+  if (cleaned.startsWith(`${SUBDOMAIN_PREFIX}.`)) return cleaned
+  return `${SUBDOMAIN_PREFIX}.${cleaned}`
+}
+
+function DeliveryDomainSection({
+  docCount,
+  onCopy,
+  copiedKey,
+}: {
+  docCount: number
+  onCopy: (value: string, id: string) => void
+  copiedKey: string | null
+}) {
+  // モック: 既に登録済みの状態
+  const [registeredBase, setRegisteredBase] = useState<string>('zooba.io')
+  const [draftBase, setDraftBase] = useState<string>('')
+
+  const issuedSubdomain = registeredBase ? deriveSubdomain(registeredBase) : ''
+  const previewSubdomain = draftBase ? deriveSubdomain(draftBase) : ''
+
+  const isVerified = !!registeredBase
+
+  return (
+    <div>
+      <h3 className="text-[12px] font-semibold tracking-[0.08em] uppercase mb-3 px-1" style={{ color: 'var(--color-obs-text-muted)' }}>
+        配信ドメイン
+      </h3>
+
+      <ObsCard depth="low" padding="lg" radius="xl">
+        <div className="flex items-start gap-3 mb-4">
+          <div className="w-8 h-8 rounded-[var(--radius-obs-sm)] flex items-center justify-center shrink-0" style={{ backgroundColor: 'var(--color-obs-surface-high)' }}>
+            <Globe size={14} style={{ color: 'var(--color-obs-text)' }} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-[14px] font-semibold" style={{ color: 'var(--color-obs-text)' }}>資料DLリンクの発行ドメイン</div>
+            <p className="text-[12px] mt-0.5" style={{ color: 'var(--color-obs-text-muted)' }}>登録した自社ドメインに <code className="font-mono">{SUBDOMAIN_PREFIX}.</code> サブドメインを自動発行して配信します</p>
+          </div>
+        </div>
+
+        {/* 登録済みドメイン + 発行サブドメイン */}
+        {isVerified && (
+          <div className="ml-11 mb-4">
+            <div className="text-[10.5px] font-semibold tracking-[0.05em] uppercase mb-1.5" style={{ color: 'var(--color-obs-text-subtle)' }}>
+              発行中のサブドメイン
+            </div>
+            <div className="flex items-center gap-2">
+              <code
+                className="flex-1 px-3 h-9 leading-9 rounded-[6px] text-[13px] font-mono"
+                style={{ backgroundColor: 'var(--color-obs-surface-lowest)', color: 'var(--color-obs-text)', boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.18)' }}
+              >
+                {issuedSubdomain}
+              </code>
+              <span className="inline-flex items-center gap-1 h-5 px-1.5 rounded-full text-[10px] font-bold" style={{ backgroundColor: 'rgba(110,231,161,0.12)', color: '#6ee7a1' }}>
+                <Check size={9} strokeWidth={3} />認証済
+              </span>
+              <button
+                type="button"
+                onClick={() => onCopy(issuedSubdomain, 'issued-domain')}
+                className="w-9 h-9 rounded-[6px] flex items-center justify-center transition-colors"
+                style={{ backgroundColor: 'var(--color-obs-surface-high)' }}
+                title="コピー"
+              >
+                {copiedKey === 'issued-domain' ? <Check size={12} style={{ color: '#6ee7a1' }} /> : <Copy size={11} style={{ color: 'var(--color-obs-text-muted)' }} />}
+              </button>
+            </div>
+            <div className="flex items-center gap-3 text-[11px] mt-2" style={{ color: 'var(--color-obs-text-subtle)' }}>
+              <span>登録ベース: <code className="font-mono" style={{ color: 'var(--color-obs-text-muted)' }}>{registeredBase}</code></span>
+              <span>•</span>
+              <span>発行中の資料リンク <span className="tabular-nums font-semibold" style={{ color: 'var(--color-obs-text-muted)' }}>{docCount}</span> 件</span>
+              <button
+                type="button"
+                onClick={() => { setRegisteredBase(''); setDraftBase('') }}
+                className="ml-auto text-[11px] underline-offset-2 hover:underline"
+                style={{ color: 'var(--color-obs-text-subtle)' }}
+              >
+                ドメインを変更
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ベースドメイン入力(未登録時 or 変更時) */}
+        {!isVerified && (
+          <div className="ml-11">
+            <div className="text-[10.5px] font-semibold tracking-[0.05em] uppercase mb-1.5" style={{ color: 'var(--color-obs-text-subtle)' }}>
+              使いたい自社ドメインを登録
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={draftBase}
+                onChange={(e) => setDraftBase(e.target.value)}
+                placeholder="例: zooba.io"
+                className="flex-1 min-w-0 px-3 h-9 rounded-[6px] text-[12.5px] font-mono outline-none"
+                style={{ backgroundColor: 'var(--color-obs-surface-lowest)', color: 'var(--color-obs-text)', boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.18)' }}
+              />
+              <ObsButton
+                size="sm"
+                variant="primary"
+                disabled={!draftBase.trim()}
+                onClick={() => { setRegisteredBase(draftBase.trim()); setDraftBase('') }}
+              >
+                <span className="inline-flex items-center gap-1"><Zap size={11} />登録してサブドメインを発行</span>
+              </ObsButton>
+            </div>
+            {previewSubdomain && (
+              <p className="text-[11px] mt-2" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                発行されるサブドメイン: <code className="font-mono" style={{ color: 'var(--color-obs-primary)' }}>{previewSubdomain}</code>
+              </p>
+            )}
+          </div>
+        )}
+      </ObsCard>
+    </div>
   )
 }

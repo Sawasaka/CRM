@@ -3,7 +3,7 @@ export const Footer = () => (
     <div className="mx-auto max-w-6xl px-6 py-16">
       <div className="grid md:grid-cols-12 gap-10">
         <div className="md:col-span-4">
-          <div className="font-display font-bold text-[1.4rem] fo-gradient-text">Front Office</div>
+          <div className="font-display font-bold text-[1.4rem] fo-gradient-text">KikuCRM</div>
           <div className="text-xs text-[#7e7c83] mt-3 leading-relaxed">
             BGM (Business Growth Management) — レベニュー側を統合する、はじめてのカテゴリ。
           </div>
@@ -32,7 +32,7 @@ export const Footer = () => (
         className="mt-14 pt-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs text-[#7e7c83]"
         style={{ borderTop: '1px solid rgba(65,71,83,0.18)' }}
       >
-        <div>© 2026 RookieSmart Inc. — Front Office is a service of RookieSmart Inc.</div>
+        <div>© 2026 RookieSmart Inc. — KikuCRM is a service of RookieSmart Inc.</div>
         <div className="flex gap-5">
           <a href="#" className="hover:text-aurora">Terms</a>
           <a href="#" className="hover:text-aurora">Privacy</a>
