@@ -89,7 +89,10 @@ export function Header() {
         className="fixed top-0 right-0 h-[56px] flex items-center px-6 gap-2 z-20 transition-[left] duration-200"
         style={{
           left: 'var(--bgm-sidebar-w)',
-          backgroundColor: 'var(--color-obs-surface)',
+          backgroundColor: 'rgba(15,15,17,0.72)',
+          backdropFilter: 'blur(20px) saturate(140%)',
+          WebkitBackdropFilter: 'blur(20px) saturate(140%)',
+          boxShadow: 'inset 0 -1px 0 rgba(171,199,255,0.08)',
           transitionTimingFunction: 'var(--ease-liquid)',
         }}
       >

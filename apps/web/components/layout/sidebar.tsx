@@ -70,10 +70,11 @@ function TopNavItem({
       style={{
         width: 'calc(100% - 16px)',
         backgroundColor: active
-          ? 'var(--color-obs-surface-high)'
+          ? 'rgba(171,199,255,0.12)'
           : hover
-            ? 'var(--color-obs-surface-low)'
+            ? 'rgba(171,199,255,0.05)'
             : 'transparent',
+        boxShadow: active ? 'inset 0 0 0 1px rgba(171,199,255,0.22)' : undefined,
         transitionTimingFunction: 'var(--ease-liquid)',
       }}
     >
@@ -83,6 +84,7 @@ function TopNavItem({
         style={{
           color: active ? 'var(--color-obs-primary)' : 'var(--color-obs-text-muted)',
           flexShrink: 0,
+          filter: active ? 'drop-shadow(0 0 6px rgba(171,199,255,0.45))' : undefined,
         }}
       />
       <span
@@ -120,10 +122,11 @@ function WorkspaceNavItem({
         className="mx-2 flex items-center gap-2.5 px-3 py-[7px] rounded-[var(--radius-obs-md)] transition-colors duration-150"
         style={{
           backgroundColor: active
-            ? 'var(--color-obs-surface-high)'
+            ? 'rgba(171,199,255,0.12)'
             : hover
-              ? 'var(--color-obs-surface-low)'
+              ? 'rgba(171,199,255,0.05)'
               : 'transparent',
+          boxShadow: active ? 'inset 0 0 0 1px rgba(171,199,255,0.22)' : undefined,
           transitionTimingFunction: 'var(--ease-liquid)',
         }}
       >
@@ -133,12 +136,13 @@ function WorkspaceNavItem({
           style={{
             color: active ? 'var(--color-obs-primary)' : 'var(--color-obs-text-muted)',
             flexShrink: 0,
+            filter: active ? 'drop-shadow(0 0 6px rgba(171,199,255,0.45))' : undefined,
           }}
         />
         <span
           className="text-[13px] tracking-[-0.01em] leading-none"
           style={{
-            color: 'var(--color-obs-text)',
+            color: active ? 'var(--color-obs-text)' : 'var(--color-obs-text)',
             fontWeight: active ? 600 : 500,
             opacity: active ? 1 : 0.88,
           }}
@@ -662,7 +666,10 @@ export function Sidebar() {
       <aside
         className="fixed left-0 top-0 bottom-0 w-[244px] flex flex-col z-30 select-none transition-transform duration-200"
         style={{
-          backgroundColor: 'var(--color-obs-surface-lowest)',
+          backgroundColor: 'rgba(11,11,12,0.78)',
+          backdropFilter: 'blur(24px) saturate(140%)',
+          WebkitBackdropFilter: 'blur(24px) saturate(140%)',
+          boxShadow: 'inset -1px 0 0 rgba(171,199,255,0.08)',
           transform: collapsed ? 'translateX(-100%)' : 'translateX(0)',
           transitionTimingFunction: 'var(--ease-liquid)',
         }}
@@ -675,8 +682,7 @@ export function Sidebar() {
             aria-label="Front Office ホーム"
           >
             <span
-              className="font-[family-name:var(--font-display)] text-[16px] font-semibold tracking-[-0.015em]"
-              style={{ color: 'var(--color-obs-text)' }}
+              className="fo-gradient-text font-[family-name:var(--font-display)] text-[16px] font-semibold tracking-[-0.015em]"
             >
               Front Office
             </span>

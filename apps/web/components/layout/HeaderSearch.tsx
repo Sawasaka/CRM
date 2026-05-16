@@ -130,9 +130,10 @@ export function HeaderSearch() {
   return (
     <div ref={wrapRef} className="relative w-[260px] max-w-full">
       <div
-        className="flex items-center gap-2 h-9 px-3 rounded-[var(--radius-obs-md)] transition-colors duration-150"
+        className="flex items-center gap-2 h-9 px-3 rounded-[var(--radius-obs-md)] transition-colors duration-150 fo-glass-rim"
         style={{
-          backgroundColor: 'var(--color-obs-surface-high)',
+          backgroundColor: 'rgba(36,36,38,0.6)',
+          backdropFilter: 'blur(8px)',
         }}
       >
         <Search size={14} strokeWidth={1.9} style={{ color: 'var(--color-obs-text-subtle)' }} />
@@ -153,10 +154,9 @@ export function HeaderSearch() {
 
       {showDropdown && (
         <div
-          className="absolute top-full left-0 right-0 mt-1.5 py-1 rounded-[var(--radius-obs-md)] z-50 max-h-[420px] overflow-y-auto"
+          className="absolute top-full left-0 right-0 mt-1.5 py-1 rounded-[var(--radius-obs-md)] z-50 max-h-[420px] overflow-y-auto fo-glass-strong fo-glass-rim fo-thin-scroll"
           style={{
-            backgroundColor: 'var(--color-obs-surface-highest)',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(109,106,111,0.14)',
+            boxShadow: '0 24px 60px rgba(0,0,0,0.5), inset 1px 1px 0 rgba(171,199,255,0.10), inset -1px -1px 0 rgba(0,0,0,0.25)',
           }}
         >
           {hasResults ? (

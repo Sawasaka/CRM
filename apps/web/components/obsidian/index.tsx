@@ -54,13 +54,7 @@ export function ObsHero({
           </span>
         )}
         <h1
-          className="font-[family-name:var(--font-display)] text-[clamp(2rem,4vw,3.25rem)] font-bold leading-[1.05] tracking-[-0.028em]"
-          style={{
-            background: 'linear-gradient(180deg, var(--color-obs-text) 0%, var(--color-obs-text-muted) 140%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-          }}
+          className="fo-gradient-text font-[family-name:var(--font-display)] text-[clamp(2rem,4vw,3.25rem)] font-bold leading-[1.05] tracking-[-0.028em]"
         >
           {title}
         </h1>
