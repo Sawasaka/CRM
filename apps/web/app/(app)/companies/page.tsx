@@ -746,10 +746,10 @@ export default function CompaniesPage() {
             <div className="flex items-center gap-3">
               {/* 表示スコープ トグル */}
               <div
-                className="inline-flex items-center rounded-full p-0.5"
+                className="inline-flex items-center rounded-full p-0.5 fo-glass-rim"
                 style={{
-                  background: 'var(--color-obs-surface-high)',
-                  boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.18)',
+                  backgroundColor: 'rgba(36,36,38,0.6)',
+                  backdropFilter: 'blur(8px)',
                 }}
               >
                 <button
@@ -777,10 +777,10 @@ export default function CompaniesPage() {
                 </button>
               </div>
               <div
-                className="inline-flex items-center gap-1.5 px-2 py-1.5 rounded-full"
+                className="inline-flex items-center gap-1.5 px-2 py-1.5 rounded-full fo-glass-rim"
                 style={{
-                  background: 'var(--color-obs-surface-high)',
-                  boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.18)',
+                  backgroundColor: 'rgba(36,36,38,0.6)',
+                  backdropFilter: 'blur(8px)',
                 }}
                 title="クリックでインテント別に絞り込み"
               >
@@ -847,10 +847,11 @@ export default function CompaniesPage() {
               className="pl-10 pr-16"
             />
             <span
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-mono px-1.5 py-0.5 rounded hidden sm:inline-block pointer-events-none"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-mono px-1.5 py-0.5 rounded hidden sm:inline-block pointer-events-none fo-glass-rim"
               style={{
                 color: 'var(--color-obs-text-subtle)',
-                backgroundColor: 'var(--color-obs-surface-high)',
+                backgroundColor: 'rgba(36,36,38,0.6)',
+                backdropFilter: 'blur(6px)',
               }}
             >
               ⌘K
@@ -1090,7 +1091,9 @@ export default function CompaniesPage() {
                 className={`grid ${GRID_TEMPLATE} gap-4 px-6 py-4 text-[11px] font-medium tracking-[0.1em] uppercase sticky top-0 z-[1]`}
                 style={{
                   color: 'var(--color-obs-text-subtle)',
-                  backgroundColor: 'var(--color-obs-surface-low)',
+                  backgroundColor: 'rgba(27,27,29,0.72)',
+                  backdropFilter: 'blur(16px) saturate(140%)',
+                  boxShadow: 'inset 0 -1px 0 rgba(171,199,255,0.10)',
                 }}
               >
                 {/* 全選択 (現ページ100件) ヘッダ */}
@@ -1285,9 +1288,10 @@ function FilterTrigger({
   return (
     <button
       onClick={onClick}
-      className="h-10 px-4 inline-flex items-center gap-2 rounded-[var(--radius-obs-md)] text-sm font-medium transition-colors duration-150"
+      className={`h-10 px-4 inline-flex items-center gap-2 rounded-[var(--radius-obs-md)] text-sm font-medium transition-colors duration-150 ${active ? '' : 'fo-glass-rim'}`}
       style={{
-        backgroundColor: active ? 'var(--color-obs-primary-container)' : 'var(--color-obs-surface-high)',
+        backgroundColor: active ? 'var(--color-obs-primary-container)' : 'rgba(36,36,38,0.6)',
+        backdropFilter: active ? undefined : 'blur(8px)',
         color: active ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
       }}
     >
@@ -1333,10 +1337,9 @@ function MultiSelectDropdown<K extends string>({
   const selectedCount = selected.length
   return (
     <div
-      className="absolute z-20 mt-2 w-64 max-h-80 overflow-y-auto rounded-[var(--radius-obs-lg)] py-2 shadow-2xl"
+      className="absolute z-20 mt-2 w-64 max-h-80 overflow-y-auto rounded-[var(--radius-obs-lg)] py-2 shadow-2xl fo-glass-strong fo-glass-rim fo-thin-scroll"
       style={{
-        backgroundColor: 'var(--color-obs-surface-highest)',
-        boxShadow: '0 12px 32px rgba(0,0,0,0.4)',
+        boxShadow: '0 24px 60px rgba(0,0,0,0.5), inset 1px 1px 0 rgba(171,199,255,0.10), inset -1px -1px 0 rgba(0,0,0,0.25)',
       }}
     >
       <button
@@ -1435,10 +1438,10 @@ function CompanyRowItem({
       style={{
         transitionTimingFunction: 'var(--ease-liquid)',
         opacity: isEnriched ? 1 : 0.72,
-        boxShadow: 'inset 0 -1px 0 0 var(--color-obs-surface)',
+        boxShadow: 'inset 0 -1px 0 0 rgba(171,199,255,0.04)',
       }}
       onMouseOver={(e) => {
-        ;(e.currentTarget as HTMLDivElement).style.backgroundColor = 'var(--color-obs-surface-high)'
+        ;(e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(171,199,255,0.04)'
       }}
       onMouseOut={(e) => {
         ;(e.currentTarget as HTMLDivElement).style.backgroundColor = 'transparent'
@@ -1680,10 +1683,9 @@ function IntentCell({ intent }: { intent: ComputedIntent }) {
 
       {open && (
         <div
-          className="absolute z-30 left-0 top-[calc(100%+6px)] min-w-[240px] rounded-[var(--radius-obs-lg)] py-2 shadow-2xl"
+          className="absolute z-30 left-0 top-[calc(100%+6px)] min-w-[240px] rounded-[var(--radius-obs-lg)] py-2 shadow-2xl fo-glass-strong fo-glass-rim"
           style={{
-            backgroundColor: 'var(--color-obs-surface-highest)',
-            boxShadow: '0 12px 32px rgba(0,0,0,0.4)',
+            boxShadow: '0 24px 60px rgba(0,0,0,0.5), inset 1px 1px 0 rgba(171,199,255,0.10), inset -1px -1px 0 rgba(0,0,0,0.25)',
           }}
         >
           <div
@@ -1786,12 +1788,11 @@ function AddCompanyModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => !submitting && onClose()}>
-      <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }} />
+      <div className="absolute inset-0" style={{ background: 'rgba(11,11,12,0.65)', backdropFilter: 'blur(10px)' }} />
       <div
-        className="relative w-full max-w-[480px] rounded-[var(--radius-obs-xl)] overflow-hidden"
+        className="relative w-full max-w-[480px] rounded-[var(--radius-obs-xl)] overflow-hidden fo-glass-strong fo-glass-rim"
         style={{
-          background: 'var(--color-obs-surface-highest)',
-          boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
+          boxShadow: '0 32px 80px rgba(0,0,0,0.65), inset 1px 1px 0 rgba(171,199,255,0.10), inset -1px -1px 0 rgba(0,0,0,0.25)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -1888,34 +1889,18 @@ function LoadingSkeleton() {
         <div
           key={i}
           className={`grid ${GRID_TEMPLATE} gap-4 px-6 py-4 items-center`}
-          style={{ opacity: 1 - i * 0.08 }}
+          style={{ opacity: 1 - i * 0.08, animationDelay: `${i * 80}ms` }}
         >
-          <div
-            className="w-5 h-5 rounded animate-pulse"
-            style={{ backgroundColor: 'var(--color-obs-surface-high)' }}
-          />
+          <div className="w-5 h-5 rounded fo-skeleton" />
           <div className="flex items-center gap-3">
-            <div
-              className="w-9 h-9 rounded-[var(--radius-obs-md)] animate-pulse"
-              style={{ backgroundColor: 'var(--color-obs-surface-high)' }}
-            />
+            <div className="w-9 h-9 rounded-[var(--radius-obs-md)] fo-skeleton" />
             <div className="flex flex-col gap-1.5 flex-1">
-              <div
-                className="h-3.5 rounded animate-pulse"
-                style={{ backgroundColor: 'var(--color-obs-surface-high)', width: '60%' }}
-              />
-              <div
-                className="h-2.5 rounded animate-pulse"
-                style={{ backgroundColor: 'var(--color-obs-surface-high)', width: '35%' }}
-              />
+              <div className="h-3.5 rounded fo-skeleton" style={{ width: '60%' }} />
+              <div className="h-2.5 rounded fo-skeleton" style={{ width: '35%' }} />
             </div>
           </div>
           {Array.from({ length: 6 }).map((_, j) => (
-            <div
-              key={j}
-              className="h-3 rounded animate-pulse"
-              style={{ backgroundColor: 'var(--color-obs-surface-high)', width: '70%' }}
-            />
+            <div key={j} className="h-3 rounded fo-skeleton" style={{ width: '70%' }} />
           ))}
         </div>
       ))}
@@ -1927,8 +1912,11 @@ function EmptyState({ hasFilter, onClear }: { hasFilter: boolean; onClear: () =>
   return (
     <div className="flex flex-col items-center justify-center py-20 gap-3">
       <div
-        className="w-12 h-12 rounded-full flex items-center justify-center"
-        style={{ backgroundColor: 'var(--color-obs-surface-high)' }}
+        className="w-12 h-12 rounded-full flex items-center justify-center fo-glass-rim"
+        style={{
+          backgroundColor: 'rgba(36,36,38,0.6)',
+          backdropFilter: 'blur(10px)',
+        }}
       >
         <Search size={20} style={{ color: 'var(--color-obs-text-subtle)' }} />
       </div>
@@ -1964,7 +1952,7 @@ function Pagination({
   if (totalPages > 1) items.push(totalPages)
 
   const hoverBg = (el: HTMLButtonElement, on: boolean) => {
-    el.style.backgroundColor = on ? 'var(--color-obs-surface-high)' : 'transparent'
+    el.style.backgroundColor = on ? 'rgba(171,199,255,0.06)' : 'transparent'
   }
 
   return (
@@ -2000,6 +1988,7 @@ function Pagination({
             style={{
               backgroundColor: active ? 'var(--color-obs-primary-container)' : 'transparent',
               color: active ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
+              boxShadow: active ? '0 0 18px rgba(171,199,255,0.32), inset 0 0 0 1px rgba(171,199,255,0.32)' : undefined,
             }}
             onMouseOver={(e) => !active && hoverBg(e.currentTarget as HTMLButtonElement, true)}
             onMouseOut={(e) => !active && hoverBg(e.currentTarget as HTMLButtonElement, false)}

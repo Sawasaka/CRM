@@ -117,8 +117,11 @@ export default function DashboardPage() {
           caption="チーム・担当者・マーケ施策のパフォーマンスを一望"
           action={
             <div
-              className="inline-flex items-center gap-1 p-1 rounded-[var(--radius-obs-md)]"
-              style={{ backgroundColor: 'var(--color-obs-surface-high)' }}
+              className="inline-flex items-center gap-1 p-1 rounded-[var(--radius-obs-md)] fo-glass-rim"
+              style={{
+                backgroundColor: 'rgba(36,36,38,0.6)',
+                backdropFilter: 'blur(8px)',
+              }}
             >
               {PERIOD_OPTIONS.map((opt) => {
                 const active = period === opt.value
@@ -271,7 +274,7 @@ export default function DashboardPage() {
           <ObsSectionHeader title="メール配信" caption="マーケ施策のパフォーマンス" />
           <div className="mt-3 grid grid-cols-1 lg:grid-cols-3 gap-3">
           {/* メール配信全体 */}
-          <ObsCard depth="high" padding="lg" radius="xl">
+          <ObsCard depth="high" padding="lg" radius="xl" className="fo-glass-rim fo-lift">
             <ObsSectionHeader title="メール送信" caption="送信通数" />
             <div className="mt-3 flex items-baseline gap-2">
               <span
@@ -285,7 +288,7 @@ export default function DashboardPage() {
           </ObsCard>
 
           {/* メール開封率 */}
-          <ObsCard depth="high" padding="lg" radius="xl">
+          <ObsCard depth="high" padding="lg" radius="xl" className="fo-glass-rim fo-lift">
             <ObsSectionHeader title="メール開封率" caption={`開封 ${marketing.mailOpened.toLocaleString()}`} />
             <div className="mt-3 flex items-baseline gap-2">
               <span
@@ -308,7 +311,7 @@ export default function DashboardPage() {
           </ObsCard>
 
           {/* 資料開封率 */}
-          <ObsCard depth="high" padding="lg" radius="xl">
+          <ObsCard depth="high" padding="lg" radius="xl" className="fo-glass-rim fo-lift">
             <ObsSectionHeader title="資料開封率" caption={`開封 ${marketing.docOpened.toLocaleString()}`} />
             <div className="mt-3 flex items-baseline gap-2">
               <span
