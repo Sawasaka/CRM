@@ -25,6 +25,7 @@ interface Plan {
   maxSeats?: number           // 上限シート数(Freeプラン用)
   baseLabel?: string          // 下位プラン全機能ラベル (例: "Standard全機能")
   additions: string[]         // このプランで追加される機能
+  seatNote?: string           // 「○シートから購入可能」直下に表示する補足 (担当者チャット相談など)
   icon: React.ElementType
   popular?: boolean
   isFree?: boolean            // Freeプラン判定
@@ -37,18 +38,21 @@ const PLANS: Plan[] = [
     tagline: '営業1-3名の小規模チームに最適',
     priceMonthly: 4300,
     priceAnnual: 3000,
-    credits: 300,
+    credits: 500,
     minSeats: 1,
     additions: [
       'AIモデル: Gemini 2.5 Flash Lite / シンキングモード 標準',
-      'CRM全機能 (企業・コンタクト・取引・パイプライン)',
-      'Google Workspace・Microsoft 365 連携 + 議事録自動取得 (BANT自動入力)',
+      'CRM全機能 (企業・コンタクト・取引・パイプライン・チケット管理)',
+      'Google Workspace・Microsoft 365 連携',
+      '議事録自動取得 (BANT自動入力)',
+      'ナレッジ自動生成 (FAQ)',
       'メール配信 + 1stパーティ計測・効果測定',
       '企業DB(290万社) + 求人インテント',
-      '開発優先度分析 (ニーズ・課題の一次情報抽出 → 集計 → 優先順位づけ)',
+      '開発優先度分析',
+      '外部リサーチ (ウェブ検索)',
       '500クレジットで ワンクリック通話 + コール議事録自動作成',
-      '担当者へのチャット相談 (10シート以上で付帯)',
     ],
+    seatNote: '担当者へのチャット相談 (10シート以上で付帯)',
     icon: Zap,
   },
   {
@@ -63,9 +67,8 @@ const PLANS: Plan[] = [
     additions: [
       'AIモデル: GPT-4o mini にアップグレード (品質・精度向上)',
       'シンキングモード: 拡張',
-      '外部リサーチ (ウェブ検索)',
-      '担当者へのチャット相談 (5シート以上で付帯)',
     ],
+    seatNote: '担当者へのチャット相談 (5シート以上で付帯)',
     icon: TrendingUp,
   },
   {
@@ -80,10 +83,9 @@ const PLANS: Plan[] = [
     additions: [
       'AIモデル: GPT-4o mini / GPT-4o を選択可',
       'シンキングモード: 標準 / 拡張 を選択可',
-      '外部リサーチ (ウェブ検索)',
       'エージェントモード (チャットからブラウザ自動操作・データ入力)',
-      '担当者へのチャット相談 (1シートから付帯)',
     ],
+    seatNote: '担当者へのチャット相談 (1シートから付帯)',
     icon: Star,
     popular: true,
   },
@@ -249,7 +251,7 @@ export default function SubscriptionPage() {
     else if (next === 'requests') setTab('requests')
     else if (next === 'subscription' || next === null) setTab('subscription')
   }, [searchParams])
-  const [currentPlan, setCurrentPlan] = useState('pro')
+  const [currentPlan] = useState('pro')
   // サポートティア: none(なし) / chat(担当者へのチャット相談 ¥50,000) / premium(企業担当付きサポート ¥100,000)
   const [supportTier, setSupportTier] = useState<'none' | 'chat' | 'premium'>('none')
   // データ移行サポート: not_requested(未申込) / requested(申込済) / in_progress(移行中) / completed(完了)
@@ -259,7 +261,7 @@ export default function SubscriptionPage() {
     message: string
     confirmLabel: string
     variant: 'primary' | 'danger'
-    onConfirm: () => void
+    onConfirm: () => void | Promise<void>
   } | null>(null)
   const [seats, setSeats] = useState(5)
   // テナント単位の1プール構成。サブスク分(月次失効)と購入分(永久有効・解約時失効)を別管理
@@ -267,6 +269,7 @@ export default function SubscriptionPage() {
   const [purchasedRemaining] = useState(1500) // 購入残(永久有効)
   // 個人クレジットは「今月の自分の消費量」可視化のみ。実際の消費はテナントプールから引かれる
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('annual')
+  const [checkoutLoadingPlan, setCheckoutLoadingPlan] = useState<string | null>(null)
   const [showBuyCredits, setShowBuyCredits] = useState(false)
   const [showNewRequest, setShowNewRequest] = useState(false)
   const [showInviteMember, setShowInviteMember] = useState(false)
@@ -369,6 +372,31 @@ export default function SubscriptionPage() {
   const formatPrice = (n: number) => `¥${n.toLocaleString()}`
   const CREDIT_UNIT_PRICE = 10 // ¥10 per credit (¥5,000 / 500c)
   const CREDIT_STEP = 500 // 500-unit step
+
+  const startStripeCheckout = async (planId: string, minSeats: number) => {
+    setCheckoutLoadingPlan(planId)
+    try {
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          planId,
+          billingCycle,
+          seats: Math.max(seats, minSeats),
+        }),
+      })
+      const data = (await res.json()) as { url?: string; error?: string }
+      if (!res.ok || !data.url) {
+        throw new Error(data.error ?? 'Stripe Checkoutの作成に失敗しました。')
+      }
+      window.location.href = data.url
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Stripe Checkoutの作成に失敗しました。'
+      alert(message)
+      setCheckoutLoadingPlan(null)
+    }
+  }
 
   return (
     <ObsPageShell>
@@ -840,13 +868,21 @@ export default function SubscriptionPage() {
                       月間 {plan.credits.toLocaleString()} クレジット{plan.isFree ? ' (テナント全体)' : '込 / seat'}
                     </p>
                     <p
-                      className="text-[11px] mb-4"
+                      className={plan.seatNote ? 'text-[11px]' : 'text-[11px] mb-4'}
                       style={{ color: 'var(--color-obs-text-subtle)' }}
                     >
                       {plan.maxSeats
                         ? `最大${plan.maxSeats}シートまで`
                         : `${plan.minSeats}シートから購入可能`}
                     </p>
+                    {plan.seatNote && (
+                      <p
+                        className="text-[11px] mb-4"
+                        style={{ color: 'var(--color-obs-low)' }}
+                      >
+                        {plan.seatNote}
+                      </p>
+                    )}
 
 
                     <div
@@ -988,9 +1024,10 @@ export default function SubscriptionPage() {
                                 }`,
                                 confirmLabel: isDowngrade ? 'ダウングレードする' : '変更する',
                                 variant: isDowngrade ? 'danger' : 'primary',
-                                onConfirm: () => setCurrentPlan(plan.id),
+                                onConfirm: () => startStripeCheckout(plan.id, plan.minSeats),
                               })
                             }}
+                            disabled={checkoutLoadingPlan === plan.id}
                             className="w-full h-10 rounded-[var(--radius-obs-md)] text-[13px] font-medium transition-colors"
                             style={
                               isDowngrade
@@ -1007,7 +1044,9 @@ export default function SubscriptionPage() {
                                   }
                             }
                           >
-                            {isDowngrade
+                            {checkoutLoadingPlan === plan.id
+                              ? 'Stripeへ接続中...'
+                              : isDowngrade
                               ? 'ダウングレード'
                               : isFreePlan
                                 ? '無料で始める'
@@ -2117,8 +2156,8 @@ export default function SubscriptionPage() {
                     キャンセル
                   </button>
                   <button
-                    onClick={() => {
-                      confirmDialog.onConfirm()
+                    onClick={async () => {
+                      await confirmDialog.onConfirm()
                       setConfirmDialog(null)
                     }}
                     className="flex-1 h-10 rounded-[var(--radius-obs-md)] text-[13px] font-semibold transition-colors"

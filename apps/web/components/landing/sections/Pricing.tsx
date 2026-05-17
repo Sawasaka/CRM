@@ -7,50 +7,50 @@ export const Pricing = () => {
   // 単一の真実。変更時は両方を必ず揃える。
   const tiers = [
     {
-      eyebrow: 'Free',
-      scale: '¥0',
-      price: '〜3名 ／ テナント全体 300クレジット / 月',
+      eyebrow: 'Lite',
+      scale: '¥3,000',
+      price: '/ 月・seat (年払い) ／ 月払 ¥4,300',
+      seatNote: '担当者へのチャット相談 (10シート以上で付帯)',
       featured: false,
       color: '#abc7ff',
       feats: [
-        'PRO と同等の全機能を利用可能',
-        '最大 3 シートまで',
-        'テナント全体 300 クレジット / 月',
+        'AIモデル: Gemini 2.5 Flash Lite / シンキングモード 標準',
+        'CRM全機能 (企業・コンタクト・取引・パイプライン・チケット管理)',
+        'Google Workspace・Microsoft 365 連携',
+        '議事録自動取得 (BANT自動入力)',
+        'ナレッジ自動生成 (FAQ)',
+        'メール配信 + 1stパーティ計測・効果測定',
+        '企業DB (290万社) + 求人インテント',
+        '開発優先度分析',
+        '外部リサーチ (ウェブ検索)',
         '500クレジットで ワンクリック通話 + コール議事録自動作成',
-        '担当者へのチャット相談 (10シート以上で付帯)',
       ],
     },
     {
       eyebrow: 'Standard',
-      scale: '¥6,000',
-      price: '/ 月・seat (年払い) ／ 月払 ¥8,500',
+      scale: '¥5,800',
+      price: '/ 月・seat (年払い) ／ 月払 ¥8,300',
+      seatNote: '担当者へのチャット相談 (5シート以上で付帯)',
       featured: false,
       color: '#abc7ff',
       feats: [
-        'CRM全機能 (企業・コンタクト・取引・パイプライン)',
-        '議事録自動取得 + BANT 等の自動入力',
-        '企業DB (290万社) 閲覧',
-        'Slack / Gmail 自動連携',
-        '求人インテント・自動エンリッチメント',
+        'Lite 全機能',
+        'AIモデル: GPT-4o mini にアップグレード (品質・精度向上)',
         'シンキングモード: 拡張',
-        '外部リサーチ (ウェブ検索)',
-        '1,000 クレジット / seat',
-        '担当者へのチャット相談 (5シート以上で付帯)',
       ],
     },
     {
       eyebrow: 'PRO',
       scale: '¥9,000',
       price: '/ 月・seat (年払い) ／ 月払 ¥13,000',
+      seatNote: '担当者へのチャット相談 (1シートから付帯)',
       featured: true,
       color: '#abc7ff',
       feats: [
         'Standard 全機能',
         'AIモデル: GPT-4o mini / GPT-4o を選択可',
         'シンキングモード: 標準 / 拡張 を選択可',
-        '外部リサーチ (ウェブ検索)',
-        '2,000 クレジット / seat',
-        '担当者へのチャット相談 (1シートから付帯)',
+        'エージェントモード (チャットからブラウザ自動操作・データ入力)',
       ],
     },
   ]
@@ -104,6 +104,11 @@ export const Pricing = () => {
                     {t.scale}
                   </div>
                   <div className="mt-3 font-mono text-[#9b99a0] text-sm relative">{t.price}</div>
+                  {t.seatNote && (
+                    <div className="mt-2 text-[11.5px] text-aurora relative">
+                      {t.seatNote}
+                    </div>
+                  )}
 
                   {/* Features (flex-1 で高さを揃える) */}
                   <div className="mt-6 space-y-2.5 relative flex-1">
