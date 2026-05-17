@@ -55,8 +55,15 @@ export const Pricing = () => {
         <div className="max-w-3xl">
           <Eyebrow color="#abc7ff">PRICING</Eyebrow>
           <h2 className="font-display font-bold tracking-[-0.025em] text-[2.2rem] md:text-[3rem] leading-[1.06] mt-5">
-            あなたのチームの<span className="fo-gradient-text-soft">ちょうど良いプラン。</span>
+            1 ツールで、
+            <br />
+            <span className="fo-gradient-text-soft">AI 時代の価値を、ぜんぶ。</span>
           </h2>
+          <p className="mt-6 text-[#c7c5c9] text-[1.02rem] leading-relaxed max-w-2xl">
+            CRM + 議事録AI + ABM + ナレッジ + 自動化。
+            <br />
+            AI が 1 つにまとめた、新しいスタンダード。
+          </p>
         </div>
         <div className="grid md:grid-cols-3 gap-5 mt-14 items-stretch">
           {tiers.map((t, i) => {
