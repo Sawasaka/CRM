@@ -2,18 +2,51 @@ import { Check } from 'lucide-react'
 import { Eyebrow, Section } from '../atoms'
 
 export const Pricing = () => {
+  // サービス本体 (/subscription) の PLANS と完全同期する。
+  // 価格・クレジット・機能項目は app/(app)/subscription/page.tsx の PLANS が
+  // 単一の真実。変更時は両方を必ず揃える。
   const tiers = [
     {
-      eyebrow: 'Starter', scale: '〜30名', price: 'お問い合わせ', featured: false, color: '#abc7ff',
-      feats: ['CRM ✓', 'MA 1部門', 'Helpdesk Agent ✓', 'コアエージェント 3体', '標準サポート'],
+      eyebrow: 'Free',
+      scale: '¥0',
+      price: '〜3名 ／ テナント全体 300クレジット / 月',
+      featured: false,
+      color: '#abc7ff',
+      feats: [
+        'PRO と同等の全機能を利用可能',
+        '最大 3 シートまで',
+        'テナント全体 300 クレジット / 月',
+      ],
     },
     {
-      eyebrow: 'Growth', scale: '〜300名', price: 'お問い合わせ', featured: true, color: '#abc7ff',
-      feats: ['全機能 ✓', '全エージェント 5体 ✓', 'インテント全4部門', 'gBizINFO 連携', '99.9% SLA'],
+      eyebrow: 'Standard',
+      scale: '¥6,000',
+      price: '/ 月・seat (年払い) ／ 月払 ¥8,500',
+      featured: false,
+      color: '#abc7ff',
+      feats: [
+        'CRM全機能 (企業・コンタクト・取引・パイプライン)',
+        '議事録自動取得 + BANT 等の自動入力',
+        '企業DB (290万社) 閲覧',
+        'Slack / Gmail 自動連携',
+        '求人インテント・自動エンリッチメント',
+        'ワンクリック通話 + コール議事録',
+        '1,000 クレジット / seat',
+      ],
     },
     {
-      eyebrow: 'Enterprise', scale: '1,000名+', price: 'お問い合わせ', featured: false, color: '#abc7ff',
-      feats: ['全機能フル', 'カスタムエージェント', 'SOC2 / ISO27001', '専任CS', 'セキュリティWP'],
+      eyebrow: 'PRO',
+      scale: '¥9,000',
+      price: '/ 月・seat (年払い) ／ 月払 ¥13,000',
+      featured: true,
+      color: '#abc7ff',
+      feats: [
+        'Standard 全機能',
+        'AIモデル: GPT-4o mini / GPT-4o を選択可',
+        'シンキングモード: 標準 / 拡張 を選択可',
+        '外部リサーチ (ウェブ検索)',
+        '2,000 クレジット / seat',
+      ],
     },
   ]
   return (
@@ -83,7 +116,7 @@ export const Pricing = () => {
                     }`}
                     style={featured ? { background: 'linear-gradient(135deg, #abc7ff, #0071e3)' } : undefined}
                   >
-                    お問い合わせ
+                    無料で始める
                   </button>
                 </div>
               </div>
