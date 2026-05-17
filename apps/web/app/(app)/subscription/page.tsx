@@ -40,18 +40,14 @@ const PLANS: Plan[] = [
     credits: 300,
     minSeats: 1,
     additions: [
-      'AIモデル: Gemini 2.5 Flash Lite',
-      'シンキングモード: 標準',
-      'CRM全機能 (企業・コンタクト・取引・パイプライン管理)',
-      'Google Workspace / Microsoft 365 自動連携',
-      '議事録自動取得 + BANT等の自動入力',
-      'メール配信機能',
-      '企業DB(290万社)閲覧',
-      '求人インテント',
-      '1stパーティデータ取得・足跡分析',
-      'メール自動配信・効果測定',
+      'AIモデル: Gemini 2.5 Flash Lite / シンキングモード 標準',
+      'CRM全機能 (企業・コンタクト・取引・パイプライン)',
+      'Google Workspace・Microsoft 365 連携 + 議事録自動取得 (BANT自動入力)',
+      'メール配信 + 1stパーティ計測・効果測定',
+      '企業DB(290万社) + 求人インテント',
       '開発優先度分析 (ニーズ・課題の一次情報抽出 → 集計 → 優先順位づけ)',
       '500クレジットで ワンクリック通話 + コール議事録自動作成',
+      '担当者へのチャット相談 (10シート以上で付帯)',
     ],
     icon: Zap,
   },
@@ -68,6 +64,7 @@ const PLANS: Plan[] = [
       'AIモデル: GPT-4o mini にアップグレード (品質・精度向上)',
       'シンキングモード: 拡張',
       '外部リサーチ (ウェブ検索)',
+      '担当者へのチャット相談 (5シート以上で付帯)',
     ],
     icon: TrendingUp,
   },
@@ -85,6 +82,7 @@ const PLANS: Plan[] = [
       'シンキングモード: 標準 / 拡張 を選択可',
       '外部リサーチ (ウェブ検索)',
       'エージェントモード (チャットからブラウザ自動操作・データ入力)',
+      '担当者へのチャット相談 (1シートから付帯)',
     ],
     icon: Star,
     popular: true,
@@ -918,7 +916,7 @@ export default function SubscriptionPage() {
                     </div>
 
                     {isCurrent ? (
-                      <div className="w-full">
+                      <div className="w-full flex flex-col" style={{ minHeight: isAdmin ? 88 : 40 }}>
                         {isAdmin && (
                           <button
                             onClick={() => {
@@ -969,6 +967,7 @@ export default function SubscriptionPage() {
                           (PLAN_RANK[plan.id] ?? 0) < (PLAN_RANK[currentPlan] ?? 0)
                         const isFreePlan = plan.id === 'free'
                         return (
+                          <div className="w-full flex flex-col justify-end" style={{ minHeight: 88 }}>
                           <button
                             onClick={() => {
                               const targetPrice =
@@ -1014,18 +1013,21 @@ export default function SubscriptionPage() {
                                 ? '無料で始める'
                                 : 'プランを変更'}
                           </button>
+                          </div>
                         )
                       })()
                     ) : (
-                      <div
-                        className="w-full h-10 rounded-[var(--radius-obs-md)] flex items-center justify-center text-[12px]"
-                        style={{
-                          backgroundColor: 'transparent',
-                          color: 'var(--color-obs-text-subtle)',
-                          boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.06)',
-                        }}
-                      >
-                        管理者のみ変更可
+                      <div className="w-full flex flex-col justify-end" style={{ minHeight: 88 }}>
+                        <div
+                          className="w-full h-10 rounded-[var(--radius-obs-md)] flex items-center justify-center text-[12px]"
+                          style={{
+                            backgroundColor: 'transparent',
+                            color: 'var(--color-obs-text-subtle)',
+                            boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.06)',
+                          }}
+                        >
+                          管理者のみ変更可
+                        </div>
                       </div>
                     )}
                   </ObsCard>
