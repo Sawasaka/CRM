@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CreditCard, Zap, Plus, Minus, Check, Star, Crown, X, Wrench, Send, ChevronRight, Users, Mail, Shield, UserPlus, MessageCircle, Trash2, Sparkles, Database } from 'lucide-react'
+import { CreditCard, Zap, Plus, Minus, Check, Star, Crown, X, Wrench, Send, ChevronRight, Users, Mail, Shield, UserPlus, MessageCircle, Trash2, Sparkles, Database, TrendingUp } from 'lucide-react'
 import {
   ObsButton,
   ObsCard,
@@ -32,45 +32,49 @@ interface Plan {
 
 const PLANS: Plan[] = [
   {
-    id: 'free',
-    name: 'Free',
-    tagline: 'まずはお試しで導入',
-    priceMonthly: 0,
-    priceAnnual: 0,
+    id: 'lite',
+    name: 'Lite',
+    tagline: '営業1-3名の小規模チームに最適',
+    priceMonthly: 4300,
+    priceAnnual: 3000,
     credits: 300,
     minSeats: 1,
-    maxSeats: 3,
     additions: [
-      'プロと同等の全機能を利用可能',
-    ],
-    icon: Sparkles,
-    isFree: true,
-  },
-  {
-    id: 'standard',
-    name: 'Standard',
-    tagline: '社内ナレッジを最速で引き出す',
-    priceMonthly: 8500,
-    priceAnnual: 6000,
-    credits: 1000,
-    minSeats: 1,
-    additions: [
-      'AIモデル: GPT-4o mini',
+      'AIモデル: Gemini 2.5 Flash Lite',
       'シンキングモード: 標準',
       'CRM全機能 (企業・コンタクト・取引・パイプライン管理)',
+      'Google Workspace / Microsoft 365 自動連携',
       '議事録自動取得 + BANT等の自動入力',
+      'メール配信機能',
       '企業DB(290万社)閲覧',
-      'Slack / Gmail 自動連携',
-      '求人インテント・自動エンリッチメント',
-      '自動メール配信・ナーチャリング',
-      'ワンクリック通話 + コール議事録作成',
+      '求人インテント',
+      '1stパーティデータ取得・足跡分析',
+      'メール自動配信・効果測定',
+      '開発優先度分析 (ニーズ・課題の一次情報抽出 → 集計 → 優先順位づけ)',
+      '500クレジットで ワンクリック通話 + コール議事録自動作成',
     ],
     icon: Zap,
   },
   {
+    id: 'standard',
+    name: 'Standard',
+    tagline: 'AI品質と通話機能で営業を本格運用',
+    priceMonthly: 8300,
+    priceAnnual: 5800,
+    credits: 1000,
+    minSeats: 1,
+    baseLabel: 'Lite全機能',
+    additions: [
+      'AIモデル: GPT-4o mini にアップグレード (品質・精度向上)',
+      'シンキングモード: 拡張',
+      '外部リサーチ (ウェブ検索)',
+    ],
+    icon: TrendingUp,
+  },
+  {
     id: 'pro',
     name: 'PRO',
-    tagline: '社内ナレッジ × 外部リサーチで提案価値を最大化',
+    tagline: 'エージェントとブラウザ操作で営業を自動化',
     priceMonthly: 13000,
     priceAnnual: 9000,
     credits: 2000,
@@ -80,6 +84,7 @@ const PLANS: Plan[] = [
       'AIモデル: GPT-4o mini / GPT-4o を選択可',
       'シンキングモード: 標準 / 拡張 を選択可',
       '外部リサーチ (ウェブ検索)',
+      'エージェントモード (チャットからブラウザ自動操作・データ入力)',
     ],
     icon: Star,
     popular: true,
@@ -768,7 +773,7 @@ export default function SubscriptionPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
             {PLANS.map((plan, i) => {
               const Icon = plan.icon
               const isCurrent = currentPlan === plan.id
@@ -959,7 +964,7 @@ export default function SubscriptionPage() {
                       </div>
                     ) : isAdmin ? (
                       (() => {
-                        const PLAN_RANK: Record<string, number> = { free: 0, standard: 1, pro: 2 }
+                        const PLAN_RANK: Record<string, number> = { free: 0, lite: 1, standard: 2, pro: 3 }
                         const isDowngrade =
                           (PLAN_RANK[plan.id] ?? 0) < (PLAN_RANK[currentPlan] ?? 0)
                         const isFreePlan = plan.id === 'free'
