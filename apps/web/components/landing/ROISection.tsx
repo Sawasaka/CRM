@@ -139,14 +139,8 @@ export const ROISection = () => {
           <h2 className="font-display font-bold tracking-[-0.025em] text-[2.4rem] md:text-[3.2rem] leading-[1.04] mt-5">
             <span className="fo-gradient-text">KikuCRM は、</span>
             <br />
-            4ツール契約の<span className="fo-gradient-text-soft"> 1/33</span>、自社内製の<span className="fo-gradient-text-soft"> 1/26</span>。
+            <span className="fo-gradient-text-soft">使った分だけ</span>で。
           </h2>
-          <p className="mt-6 text-[#c7c5c9] text-[1.05rem] leading-relaxed">
-            本当の競合は2つあります。
-            <br />
-            「CRM + 議事録AI + ABM + ナレッジ」の<span className="fo-gradient-text-soft">4ツール契約</span>と、
-            <span className="fo-gradient-text-soft">自社で内製するチーム</span>。30名規模で比較すると、結果は一目瞭然です。
-          </p>
         </div>
 
         {/* Two comparison cards */}
