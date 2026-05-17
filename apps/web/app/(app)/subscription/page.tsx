@@ -771,7 +771,7 @@ export default function SubscriptionPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             {PLANS.map((plan, i) => {
               const Icon = plan.icon
               const isCurrent = currentPlan === plan.id
