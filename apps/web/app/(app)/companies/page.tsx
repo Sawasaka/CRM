@@ -241,26 +241,26 @@ function toggleInArray<T>(arr: T[], v: T): T[] {
 
 // (旧 levelByAge は サーバ提供の intentLevel を信頼する方式に切替えたため削除)
 
-// レベル見た目トークン — LP atoms の Hot/Mid/Low (coral / amber / cyan) と統一
+// レベル見た目トークン
 const LEVEL_STYLE: Record<
   Signal,
   { label: string; color: string; bg: string; border: string }
 > = {
   Hot: {
     label: 'HOT',
-    color: '#ff6b6b',
-    bg: 'rgba(255,107,107,0.16)',
-    border: 'rgba(255,107,107,0.45)',
+    color: 'var(--color-obs-hot)',
+    bg: 'rgba(255,107,107,0.14)',
+    border: 'rgba(255,107,107,0.40)',
   },
   Middle: {
     label: 'MID',
-    color: '#ffcf4a',
-    bg: 'rgba(255,207,74,0.14)',
-    border: 'rgba(255,207,74,0.40)',
+    color: '#4ad98a',
+    bg: 'rgba(74,217,138,0.14)',
+    border: 'rgba(74,217,138,0.40)',
   },
   Low: {
     label: 'LOW',
-    color: '#7ec6ff',
+    color: 'var(--color-obs-low)',
     bg: 'rgba(126,198,255,0.14)',
     border: 'rgba(126,198,255,0.40)',
   },
@@ -389,21 +389,11 @@ function getInitial(name: string): string {
   return clean.slice(0, 1)
 }
 
-// Photon Drift パレット (LP atoms の AGENTS と同系統)
-// aurora / lilac / mint / amber / coral / cyan の 6 トーンを巡回
-const PHOTON_AVATAR_PALETTE: Array<{ bg: string; ring: string; fg: string }> = [
-  { bg: 'rgba(171,199,255,0.18)', ring: 'rgba(171,199,255,0.40)', fg: '#abc7ff' }, // aurora
-  { bg: 'rgba(200,185,255,0.18)', ring: 'rgba(200,185,255,0.40)', fg: '#c8b9ff' }, // lilac
-  { bg: 'rgba(141,255,201,0.16)', ring: 'rgba(141,255,201,0.38)', fg: '#8dffc9' }, // mint
-  { bg: 'rgba(255,207,74,0.16)',  ring: 'rgba(255,207,74,0.38)',  fg: '#ffcf4a' }, // amber
-  { bg: 'rgba(255,141,207,0.16)', ring: 'rgba(255,141,207,0.38)', fg: '#ff8dcf' }, // coral
-  { bg: 'rgba(126,198,255,0.18)', ring: 'rgba(126,198,255,0.40)', fg: '#7ec6ff' }, // cyan
-]
-
-function getAvatarTone(name: string): { bg: string; ring: string; fg: string } {
+function getAvatarColor(name: string): string {
   let h = 0
   for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0
-  return PHOTON_AVATAR_PALETTE[h % PHOTON_AVATAR_PALETTE.length]!
+  const hue = h % 360
+  return `hsl(${hue}, 35%, 22%)`
 }
 
 // グリッドテンプレート — チェックボックス / 企業 / 求人インテント / 1stシグナル / 都道府県 / 業種 / 従業員数 / 売上 / 拠点
@@ -1223,22 +1213,20 @@ function IntentFilterChip({
   count: number
   onClick: () => void
 }) {
-  // LP atoms と統一 (coral #ff6b6b / amber #ffcf4a / cyan #7ec6ff)
   const toneColor =
-    tone === 'hot' ? '#ff6b6b' : tone === 'middle' ? '#ffcf4a' : '#7ec6ff'
+    tone === 'hot' ? 'var(--color-obs-hot)' : tone === 'middle' ? 'var(--color-obs-middle)' : 'var(--color-obs-low)'
   const toneBg =
     tone === 'hot'
       ? 'rgba(255,107,107,0.14)'
       : tone === 'middle'
-        ? 'rgba(255,207,74,0.14)'
+        ? 'rgba(255,184,107,0.14)'
         : 'rgba(126,198,255,0.14)'
   const toneBgActive =
     tone === 'hot'
       ? 'rgba(255,107,107,0.22)'
       : tone === 'middle'
-        ? 'rgba(255,207,74,0.22)'
+        ? 'rgba(255,184,107,0.22)'
         : 'rgba(126,198,255,0.22)'
-  const isHot = tone === 'hot'
 
   return (
     <button
@@ -1255,21 +1243,13 @@ function IntentFilterChip({
         backgroundColor: active ? toneBgActive : toneBg,
         color: toneColor,
         boxShadow: active
-          ? `inset 0 0 0 1.5px ${toneColor}, 0 0 0 2px ${toneColor}26, 0 0 18px ${toneColor}38`
-          : isHot
-            ? `inset 0 0 0 1px ${toneColor}40, 0 0 12px ${toneColor}24`
-            : `inset 0 0 0 1px ${toneColor}30`,
+          ? `inset 0 0 0 1.5px ${toneColor}, 0 0 0 2px ${toneColor}26`
+          : `inset 0 0 0 1px ${toneColor}30`,
       }}
       title={active ? `${label} フィルタを解除` : `${label} で絞り込む`}
       aria-pressed={active}
     >
-      <span
-        className={`w-1.5 h-1.5 rounded-full ${isHot ? 'animate-pulse' : ''}`}
-        style={{
-          backgroundColor: toneColor,
-          boxShadow: isHot ? `0 0 6px ${toneColor}` : undefined,
-        }}
-      />
+      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: toneColor }} />
       <span className="font-semibold">{label}</span>
       <span
         className="tabular-nums px-1 rounded-full text-[10px]"
@@ -1486,22 +1466,15 @@ function CompanyRowItem({
 
       {/* 企業 */}
       <div className="flex items-center gap-3 min-w-0">
-        {(() => {
-          const avatarTone = getAvatarTone(row.name)
-          return (
-            <div
-              className="shrink-0 w-9 h-9 rounded-[var(--radius-obs-md)] flex items-center justify-center text-[12px] font-semibold"
-              style={{
-                backgroundColor: avatarTone.bg,
-                color: avatarTone.fg,
-                boxShadow: `inset 0 0 0 1px ${avatarTone.ring}`,
-                textShadow: `0 0 12px ${avatarTone.ring}`,
-              }}
-            >
-              {getInitial(row.name)}
-            </div>
-          )
-        })()}
+        <div
+          className="shrink-0 w-9 h-9 rounded-[var(--radius-obs-md)] flex items-center justify-center text-[12px] font-semibold"
+          style={{
+            backgroundColor: getAvatarColor(row.name),
+            color: 'var(--color-obs-text)',
+          }}
+        >
+          {getInitial(row.name)}
+        </div>
         <div className="flex flex-col gap-0.5 min-w-0">
           <div className="flex items-center gap-1.5 min-w-0">
             <span
@@ -1690,17 +1663,12 @@ function IntentCell({ intent }: { intent: ComputedIntent }) {
           style={{
             backgroundColor: topStyle.bg,
             color: topStyle.color,
-            boxShadow: topLevel === 'Hot'
-              ? `inset 0 0 0 1px ${topStyle.border}, 0 0 16px ${topStyle.color}38`
-              : `inset 0 0 0 1px ${topStyle.border}`,
+            boxShadow: `inset 0 0 0 1px ${topStyle.border}`,
           }}
         >
           <span
-            className={`w-1.5 h-1.5 rounded-full shrink-0 ${topLevel === 'Hot' ? 'animate-pulse' : ''}`}
-            style={{
-              backgroundColor: topStyle.color,
-              boxShadow: topLevel === 'Hot' ? `0 0 6px ${topStyle.color}` : undefined,
-            }}
+            className="w-1.5 h-1.5 rounded-full shrink-0"
+            style={{ backgroundColor: topStyle.color }}
           />
           <span className="shrink-0 font-semibold">{topStyle.label}</span>
           <span

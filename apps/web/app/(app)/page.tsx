@@ -72,11 +72,12 @@ export default function HomePage() {
 
         {/* ── Chat input box ── */}
         <div
-            className="rounded-[var(--radius-obs-2xl)] p-1.5 transition-shadow duration-300 fo-glass-strong fo-glass-rim"
+            className="rounded-[var(--radius-obs-2xl)] p-1.5 transition-shadow duration-300"
             style={{
+              backgroundColor: 'var(--color-obs-surface-high)',
               boxShadow: prompt
-                ? '0 0 0 2px rgba(171,199,255,0.22), 0 0 48px rgba(171,199,255,0.18), 0 24px 60px rgba(0,0,0,0.45), inset 1px 1px 0 rgba(171,199,255,0.10), inset -1px -1px 0 rgba(0,0,0,0.25)'
-                : '0 16px 40px rgba(0,0,0,0.4), inset 1px 1px 0 rgba(171,199,255,0.10), inset -1px -1px 0 rgba(0,0,0,0.25)',
+                ? '0 0 0 2px rgba(171,199,255,0.18), 0 20px 40px rgba(0,0,0,0.35)'
+                : '0 10px 30px rgba(0,0,0,0.3)',
               transitionTimingFunction: 'var(--ease-liquid)',
             }}
           >
@@ -167,9 +168,7 @@ export default function HomePage() {
                       ? 'linear-gradient(140deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)'
                       : 'var(--color-obs-surface-highest)',
                     color: prompt.trim() ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
-                    boxShadow: prompt.trim()
-                      ? 'inset 0 1px 0 rgba(255,255,255,0.22), 0 0 24px rgba(171,199,255,0.45)'
-                      : 'inset 0 0 0 1px var(--color-obs-border)',
+                    boxShadow: prompt.trim() ? 'inset 0 1px 0 rgba(255,255,255,0.18)' : 'inset 0 0 0 1px var(--color-obs-border)',
                     transitionTimingFunction: 'var(--ease-liquid)',
                   }}
                   title="送信 (Enter)"
