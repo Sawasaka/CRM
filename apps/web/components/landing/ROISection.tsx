@@ -135,11 +135,11 @@ export const ROISection = () => {
       <div className="relative mx-auto max-w-6xl px-6 py-28 md:py-36">
         {/* Header */}
         <div className="max-w-3xl">
-          <Eyebrow color="#abc7ff">ROI ／ DOUBLE COST COMPARISON</Eyebrow>
+          <Eyebrow color="#abc7ff">ROI</Eyebrow>
           <h2 className="font-display font-bold tracking-[-0.025em] text-[2.4rem] md:text-[3.2rem] leading-[1.04] mt-5">
             <span className="fo-gradient-text">KikuCRM は、</span>
             <br />
-            <span className="fo-gradient-text-soft">使った分だけ</span>で。
+            <span className="fo-gradient-text-soft">使った分だけ</span>。
           </h2>
         </div>
 
