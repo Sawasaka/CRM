@@ -5,14 +5,18 @@ import { Eyebrow, NebulaBG, Section } from './atoms'
  *
  * 30名規模の月額で、本当の競合 2 パターンと並べて比較する。
  *
- *   A. 他社 CRM 4ツール契約 (HubSpot + Gong + Sales Marker + Glean) = ¥6,000,000/月
- *   B. 自社で内製する場合 (インフラ + 企業DB運用 + AI原価 + 人件費)   = ¥4,780,000/月
+ *   A. 他社 SaaS 3ツール契約 (HubSpot + MiiTel + SalesNow)            = ¥800,000/月
+ *   B. 自社で内製する場合 (インフラ+DB + AI原価 + 人件費)              = ¥4,780,000/月
  *
  * vs KikuCRM Standard 年払い 30名 = 30 × ¥6,000 = ¥180,000/月
  *
+ * KikuCRM 内訳 (cost-plus モデル):
+ *   - インフラ + クレジット (実費パススルー) ¥120,000
+ *   - メンテナンス (サービス運営費)            ¥40,000
+ *   - 利益 (適正マージン)                       ¥20,000
+ *
  * 自社内製の数値は docs/total_cost_breakdown.md (2026-04-19) を根拠とする。
- *  - インフラ ¥6,020/月 → 切上げ ¥20,000
- *  - 企業DB運用 ¥13,500/月 (180万社想定) → 切上げ ¥14,000
+ *  - インフラ ¥6,020/月 + 企業DB ¥13,500/月 (180万社想定) → ¥34,000 にまとめ
  *  - AI原価 (議事録/通話/RAG/メール 等) ¥43,630 + APIスキル ¥2,000 → ¥46,000
  *  - 人件費: PM ¥1.2M + Eng×3 ¥3M + Designer×0.5 ¥500K = ¥4,700,000
  */
@@ -20,17 +24,22 @@ import { Eyebrow, NebulaBG, Section } from './atoms'
 type Row = { t: string; s: string; v: string }
 
 const others: Row[] = [
-  { t: 'HubSpot Sales Pro', s: 'CRM',     v: '¥450,000' },
-  { t: 'Gong',              s: '議事録AI', v: '¥4,500,000' },
-  { t: 'Sales Marker',      s: 'ABM',     v: '¥600,000' },
-  { t: 'Glean',             s: 'ナレッジ', v: '¥450,000' },
+  { t: 'HubSpot Sales Pro', s: 'CRM',          v: '¥450,000' },
+  { t: 'MiiTel',            s: '議事録AI・通話', v: '¥250,000' },
+  { t: 'SalesNow',          s: '企業DB',        v: '¥100,000' },
 ]
 
 const inhouse: Row[] = [
-  { t: 'インフラ',     s: 'Neon / R2 / Vercel ほか',          v: '¥20,000' },
-  { t: '企業DB運用',   s: '180万社想定 (国税庁 + gBizINFO)',  v: '¥14,000' },
-  { t: 'AI 原価',      s: '議事録 / 通話 / RAG / 配信 等',     v: '¥46,000' },
-  { t: '開発者人件費', s: 'PM + Eng×3 + Designer×0.5',       v: '¥4,700,000' },
+  { t: 'インフラ + 企業DB',  s: 'Neon / R2 / Vercel / 180万社 DB', v: '¥34,000' },
+  { t: 'AI 原価',           s: '議事録 / 通話 / RAG / 配信 等',    v: '¥46,000' },
+  { t: '開発者人件費',       s: 'PM + Eng×3 + Designer×0.5',      v: '¥4,700,000' },
+]
+
+// KikuCRM の cost-plus 構造を透明開示
+const KIKU_BREAKDOWN: Row[] = [
+  { t: 'インフラ + クレジット', s: '実費パススルー',   v: '¥120,000' },
+  { t: 'メンテナンス',          s: 'サービス運営費',   v: '¥40,000' },
+  { t: '利益',                 s: '適正マージン',     v: '¥20,000' },
 ]
 
 const KIKU_PRICE = '¥180,000'
@@ -55,6 +64,7 @@ const ComparisonCard = ({
     <div className="font-semibold uppercase tracking-[0.14em] text-[0.7rem] text-aurora">{eyebrow}</div>
     <div className="text-[0.62rem] uppercase tracking-[0.16em] text-[#7e7c83] mt-1">30名利用想定 ／ 月額</div>
 
+    {/* 競合 3 項目 + 合計 */}
     <div className="mt-5 space-y-2 flex-1">
       {rows.map((r, i) => (
         <div
@@ -78,15 +88,33 @@ const ComparisonCard = ({
       </div>
     </div>
 
-    {/* KikuCRM line */}
+    {/* KikuCRM 3 項目内訳 + 合計 */}
     <div
-      className="rounded-xl p-4 mt-3"
+      className="rounded-xl p-4 mt-4"
       style={{
         background: 'linear-gradient(135deg, rgba(171,199,255,0.10), rgba(0,113,227,0.06))',
         boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.20)',
       }}
     >
-      <div className="flex items-center justify-between">
+      <div className="text-[0.6rem] uppercase tracking-[0.16em] text-aurora">KikuCRM 内訳</div>
+      <div className="mt-2.5 space-y-1.5">
+        {KIKU_BREAKDOWN.map((r, i) => (
+          <div
+            key={i}
+            className="flex items-start justify-between py-0.5"
+          >
+            <div className="min-w-0 pr-3">
+              <div className="text-[0.85rem] text-[#e7e5ea]">{r.t}</div>
+              <div className="text-[10px] text-[#7e7c83] mt-0.5">{r.s}</div>
+            </div>
+            <div className="font-mono text-[#c7c5c9] text-[12.5px] whitespace-nowrap">{r.v}</div>
+          </div>
+        ))}
+      </div>
+      <div
+        className="mt-3 pt-3 border-t flex items-center justify-between"
+        style={{ borderColor: 'rgba(171,199,255,0.22)' }}
+      >
         <div className="text-[#e7e5ea] font-medium">
           KikuCRM
           <span className="ml-2 text-[10px] text-[#9b99a0] font-normal">{KIKU_NOTE}</span>
@@ -122,7 +150,6 @@ export const ROISection = () => {
             'linear-gradient(90deg, transparent 0%, rgba(171,199,255,0.08) 20%, rgba(171,199,255,0.20) 50%, rgba(171,199,255,0.08) 80%, transparent 100%)',
         }}
       />
-      {/* Full-width nebula + faint gradient backdrop */}
       <NebulaBG intensity={0.6} />
       <div
         className="absolute inset-0 pointer-events-none"
@@ -146,12 +173,12 @@ export const ROISection = () => {
         {/* Two comparison cards */}
         <div className="grid md:grid-cols-2 gap-6 mt-12 items-stretch">
           <ComparisonCard
-            eyebrow="VS 他社 CRM 4ツール契約"
+            eyebrow="VS 他社 SaaS 3ツール契約"
             rows={others}
-            totalLabel="4社合算"
-            totalValue="¥6,000,000"
-            reductionLabel="−約 97% 削減"
-            note="※ 各ツールは2026年4月時点の30名規模での標準プラン参考価格。実際の費用は要件・契約により変動します。"
+            totalLabel="3社合算"
+            totalValue="¥800,000"
+            reductionLabel="−約 78% 削減"
+            note="※ HubSpot は 30名規模での Sales Pro 参考価格、MiiTel はフル機能想定の推定値、SalesNow は公表価格帯。実際の費用は要件・契約により変動します。"
           />
           <ComparisonCard
             eyebrow="VS 自社で内製する場合"
