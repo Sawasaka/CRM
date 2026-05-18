@@ -8,9 +8,9 @@ import { Eyebrow, NebulaBG, Section } from './atoms'
  *   A. 他社 SaaS 3ツール契約 (HubSpot + MiiTel + SalesNow)            = ¥800,000/月
  *   B. 自社で内製する場合 (インフラ+DB + AI原価 + 人件費)              = ¥4,780,000/月
  *
- * vs KikuCRM Standard 年払い 30名 = 30 × ¥6,000 = ¥180,000/月
+ * vs ルキスマCRM Standard 年払い 30名 = 30 × ¥6,000 = ¥180,000/月
  *
- * KikuCRM 内訳 (cost-plus モデル):
+ * ルキスマCRM 内訳 (cost-plus モデル):
  *   - インフラ + クレジット (実費パススルー) ¥120,000
  *   - メンテナンス (サービス運営費)            ¥40,000
  *   - 利益 (適正マージン)                       ¥20,000
@@ -34,16 +34,6 @@ const inhouse: Row[] = [
   { t: 'AI 原価',           s: '議事録 / 通話 / RAG / 配信 等',    v: '¥46,000' },
   { t: '開発者人件費',       s: 'PM + Eng×3 + Designer×0.5',      v: '¥4,700,000' },
 ]
-
-// KikuCRM の cost-plus 構造を透明開示
-const KIKU_BREAKDOWN: Row[] = [
-  { t: 'インフラ + クレジット', s: '実費パススルー',   v: '¥120,000' },
-  { t: 'メンテナンス',          s: 'サービス運営費',   v: '¥40,000' },
-  { t: '利益',                 s: '適正マージン',     v: '¥20,000' },
-]
-
-const KIKU_PRICE = '¥180,000'
-const KIKU_NOTE = 'Standard プラン 年払い ／ 30 seats'
 
 const ComparisonCard = ({
   eyebrow,
@@ -88,41 +78,6 @@ const ComparisonCard = ({
       </div>
     </div>
 
-    {/* KikuCRM 3 項目内訳 + 合計 */}
-    <div
-      className="rounded-xl p-4 mt-4"
-      style={{
-        background: 'linear-gradient(135deg, rgba(171,199,255,0.10), rgba(0,113,227,0.06))',
-        boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.20)',
-      }}
-    >
-      <div className="text-[0.6rem] uppercase tracking-[0.16em] text-aurora">KikuCRM 内訳</div>
-      <div className="mt-2.5 space-y-1.5">
-        {KIKU_BREAKDOWN.map((r, i) => (
-          <div
-            key={i}
-            className="flex items-start justify-between py-0.5"
-          >
-            <div className="min-w-0 pr-3">
-              <div className="text-[0.85rem] text-[#e7e5ea]">{r.t}</div>
-              <div className="text-[10px] text-[#7e7c83] mt-0.5">{r.s}</div>
-            </div>
-            <div className="font-mono text-[#c7c5c9] text-[12.5px] whitespace-nowrap">{r.v}</div>
-          </div>
-        ))}
-      </div>
-      <div
-        className="mt-3 pt-3 border-t flex items-center justify-between"
-        style={{ borderColor: 'rgba(171,199,255,0.22)' }}
-      >
-        <div className="text-[#e7e5ea] font-medium">
-          KikuCRM
-          <span className="ml-2 text-[10px] text-[#9b99a0] font-normal">{KIKU_NOTE}</span>
-        </div>
-        <div className="font-mono font-display font-bold text-aurora text-[1.3rem]">{KIKU_PRICE}</div>
-      </div>
-    </div>
-
     {/* reduction banner */}
     <div
       className="rounded-2xl mt-4 p-[1px]"
@@ -164,7 +119,7 @@ export const ROISection = () => {
         <div className="max-w-3xl">
           <Eyebrow color="#abc7ff">ROI</Eyebrow>
           <h2 className="font-display font-bold tracking-[-0.025em] text-[2.4rem] md:text-[3.2rem] leading-[1.04] mt-5">
-            <span className="fo-gradient-text">KikuCRM は、</span>
+            <span className="fo-gradient-text">ルキスマCRM は、</span>
             <br />
             <span className="fo-gradient-text-soft">使った分だけ</span>。
           </h2>
@@ -186,7 +141,7 @@ export const ROISection = () => {
             totalLabel="自社合計"
             totalValue="¥4,780,000"
             reductionLabel="−約 96% 削減"
-            note="※ 技術・インフラ原価は社内コスト総括 (2026-04) 、人件費は東京相場の参考値。詳細は下部 BUILD VS BUY セクションへ。"
+            note="※ 技術・インフラ原価は社内コスト総括 (2026-04) 、人件費は東京相場の参考値。"
           />
         </div>
       </div>

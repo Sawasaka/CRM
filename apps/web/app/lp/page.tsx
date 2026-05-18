@@ -14,7 +14,6 @@ import { DatabaseIntent } from '@/components/landing/sections/DatabaseIntent'
 import { Security } from '@/components/landing/sections/Security'
 import { MetricsBand } from '@/components/landing/sections/MetricsBand'
 import { ROISection } from '@/components/landing/ROISection'
-import { BuildVsBuy } from '@/components/landing/BuildVsBuy'
 import { CustomerVoice } from '@/components/landing/sections/CustomerVoice'
 import { ComplianceBand } from '@/components/landing/sections/ComplianceBand'
 import { HowToStart } from '@/components/landing/sections/HowToStart'
@@ -32,7 +31,6 @@ export default function RukismaCRMLandingPage() {
       <MetricsBand />
       <Pricing />
       <ROISection />
-      <BuildVsBuy />
       <AgentFabricRich />
       <CategoryDefinition />
       <AntiCosmetic />
