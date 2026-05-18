@@ -24,7 +24,7 @@ const DEFAULT_OUR_BUSINESS: OurBusiness = {
   targetCustomer: '日本国内のB2Bセールス組織。特にエンタープライズ営業・ABM運用を行うチーム。',
   successCases: [],
   description:
-    '営業ターゲット選定からアプローチまで、企業データとインテント情報を一元化して提供する。Front Office領域のカテゴリキングを目指す。',
+    '営業ターゲット選定からアプローチまで、企業データとインテント情報を一元化して提供する。営業データから、何でも答えるチャットCRM。',
 }
 
 function storePathFor(orgId?: string): string {

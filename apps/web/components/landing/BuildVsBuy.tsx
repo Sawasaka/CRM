@@ -6,7 +6,7 @@ import { Eyebrow, Section } from './atoms'
 const TcoChart = () => {
   const data = [
     { name: '社内開発',  v: 105,  c: '#9b99a0' },
-    { name: 'KikuCRM',   v: 10.8, c: '#abc7ff' },
+    { name: 'ルキスマCRM',   v: 10.8, c: '#abc7ff' },
   ]
   return (
     <div className="fo-recharts" style={{ width: '100%', height: 280 }}>
@@ -36,7 +36,7 @@ export const BuildVsBuy = () => {
             という選択肢の現実。
           </h2>
           <p className="mt-6 text-[#c7c5c9] text-[1.05rem] leading-relaxed max-w-2xl">
-            社内で内製した場合と KikuCRM を導入した場合の 3年TCO（総保有コスト）を試算しました。
+            社内で内製した場合と ルキスマCRM を導入した場合の 3年TCO（総保有コスト）を試算しました。
           </p>
         </div>
 
@@ -61,7 +61,7 @@ export const BuildVsBuy = () => {
                 className="absolute -top-20 -right-20 w-56 h-56 rounded-full"
                 style={{ background: 'radial-gradient(circle, rgba(171,199,255,0.20), transparent 60%)', filter: 'blur(40px)' }}
               />
-              <div className="font-semibold uppercase tracking-[0.14em] text-[0.72rem] text-aurora relative">KikuCRM</div>
+              <div className="font-semibold uppercase tracking-[0.14em] text-[0.72rem] text-aurora relative">ルキスマCRM</div>
               <div className="font-display font-bold text-[1.4rem] mt-2 fo-gradient-text relative">3年TCO 約 ¥10.8M</div>
               <div className="mt-5 grid grid-cols-2 gap-y-3 text-sm relative">
                 <div className="text-[#7e7c83]">立ち上げ</div><div className="text-[#e7e5ea]">2週間</div>
@@ -78,7 +78,7 @@ export const BuildVsBuy = () => {
           <div className="text-[0.68rem] uppercase tracking-[0.16em] text-[#9b99a0] mb-3">3年TCO 比較</div>
           <TcoChart />
           <div className="mt-2 text-xs text-[#7e7c83]">
-            PMフルタイム ¥1.2M/月、エンジニア ¥1M/月、デザイナー ¥1M/月、KikuCRM は Growth プラン仮価格 ¥298,000/月 想定。
+            PMフルタイム ¥1.2M/月、エンジニア ¥1M/月、デザイナー ¥1M/月、ルキスマCRM は Growth プラン仮価格 ¥298,000/月 想定。
           </div>
         </div>
 
@@ -96,7 +96,7 @@ export const BuildVsBuy = () => {
             4ツール契約で 97% オフ。社内開発で 90% オフ。
           </div>
           <p className="mt-5 text-[#c7c5c9] text-[1.05rem] leading-relaxed">
-            コスト削減の話ではありません。KikuCRM を使うことは、
+            コスト削減の話ではありません。ルキスマCRM を使うことは、
             <br />
             <span className="text-aurora">レベニュー創出のための時間と資金を取り戻すこと</span>です。
           </p>

@@ -7,10 +7,10 @@ export const FinalCTA = () => (
       <ParticleField count={36} seed={42} />
       <div className="relative">
         <div className="flex justify-center">
-          <Eyebrow color="#abc7ff">FRONT OFFICE</Eyebrow>
+          <Eyebrow color="#abc7ff">CHAT CRM</Eyebrow>
         </div>
         <h2 className="font-display font-bold tracking-[-0.025em] text-[2.8rem] sm:text-[3.6rem] md:text-[5rem] leading-[1.04] mt-6 fo-gradient-text">
-          KikuCRM を、
+          ルキスマCRM を、
           <br />
           あなたのチームへ。
         </h2>

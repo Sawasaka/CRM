@@ -209,7 +209,7 @@ export function LinkDocsView() {
 
 // ─── Delivery Domain Section ─────────────────────────────────────────────────────
 // 資料DLリンクの発行ドメイン設定。
-// 顧客が自社のベースドメイン(例: zooba.io)を登録すると、Front Office が
+// 顧客が自社のベースドメイン(例: zooba.io)を登録すると、ルキスマCRM が
 // 自動でサブドメイン(例: docs.zooba.io)を発行して資料DL用に利用する。
 
 const SUBDOMAIN_PREFIX = 'docs'

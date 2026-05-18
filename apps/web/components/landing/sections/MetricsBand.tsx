@@ -31,12 +31,12 @@ export const MetricsBand = () => {
         {/* Heading */}
         <div className="relative text-center mb-10">
           <div className="flex justify-center">
-            <Eyebrow color="#abc7ff">BY THE NUMBERS ／ KikuCRM を、数字で。</Eyebrow>
+            <Eyebrow color="#abc7ff">BY THE NUMBERS ／ ルキスマCRM を、数字で。</Eyebrow>
           </div>
           <h2 className="font-display font-bold tracking-[-0.025em] text-[1.8rem] md:text-[2.6rem] leading-[1.06] mt-5">
             <span className="text-[#9b99a0]">統合された5領域</span>
             <span className="mx-3 text-[#414753]">／</span>
-            <span className="fo-gradient-text">数字で見る KikuCRM</span>
+            <span className="fo-gradient-text">数字で見る ルキスマCRM</span>
           </h2>
         </div>
 

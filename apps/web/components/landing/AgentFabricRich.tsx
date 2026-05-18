@@ -644,7 +644,7 @@ export const AgentFabricRich = () => {
           <span className="fo-gradient-text">あなたの代わりに、働く。</span>
         </h2>
         <p className="mt-7 text-[#c7c5c9] text-[1.05rem] leading-relaxed mx-auto max-w-3xl">
-          KikuCRMには、5つのドメイン特化エージェントが標準搭載されています。
+          ルキスマCRMには、5つのドメイン特化エージェントが標準搭載されています。
           <br />
           それぞれが自律的に動き、必要に応じて互いを呼び出し、人間に確認・承認を求める。
           <br />

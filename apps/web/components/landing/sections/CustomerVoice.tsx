@@ -6,7 +6,7 @@ export const CustomerVoice = () => (
       <Eyebrow color="#abc7ff">CUSTOMER VOICE</Eyebrow>
       <div className="grid md:grid-cols-2 gap-6 mt-10">
         {[
-          { q: 'ツールを5個解約して、KikuCRMだけにした。それでも仕事は速くなった。', who: '中堅SaaS企業 COO',     c: '#abc7ff' },
+          { q: 'ツールを5個解約して、ルキスマCRMだけにした。それでも仕事は速くなった。', who: '中堅SaaS企業 COO',     c: '#abc7ff' },
           { q: 'PDM Agentが議事録から要望機能を自動集計してくれるので、PdMの会議が半減しました。', who: 'B2Bプロダクト責任者', c: '#8dffc9' },
         ].map((v, i) => (
           <div key={i} className="rounded-3xl bg-dusk p-8 fo-lift fo-glass-rim relative overflow-hidden">

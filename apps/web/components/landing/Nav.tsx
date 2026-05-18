@@ -17,7 +17,7 @@ export const Nav = () => {
           className={`rounded-2xl px-4 md:px-5 h-14 flex items-center justify-between transition-all duration-300 fo-glass-rim ${scrolled ? 'fo-glass-strong' : 'fo-glass'}`}
           style={{ background: scrolled ? 'rgba(19,19,21,0.78)' : 'rgba(53,52,55,0.40)' }}
         >
-          <a href="#" className="font-display font-bold text-[1.05rem] fo-gradient-text">KikuCRM</a>
+          <a href="#" className="font-display font-bold text-[1.05rem] fo-gradient-text">ルキスマCRM</a>
           <nav className="hidden md:flex items-center gap-6 text-[0.82rem] text-[#c7c5c9]">
             <a href="#" className="hover:text-aurora flex items-center gap-1">
               プロダクト <ChevronDown size={12} />

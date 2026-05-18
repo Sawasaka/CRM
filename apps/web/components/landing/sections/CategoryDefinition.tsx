@@ -9,14 +9,14 @@ export const CategoryDefinition = () => (
           <h2 className="font-display font-bold tracking-[-0.025em] text-[2.4rem] md:text-[3.4rem] leading-[1.06] mt-5">
             <span className="text-[#9b99a0]">Back Office があるなら、</span>
             <br />
-            <span className="fo-gradient-text">Front Office も、ある。</span>
+            <span className="fo-gradient-text">ルキスマCRM も、ある。</span>
           </h2>
         </div>
         <div className="md:col-span-7 md:pl-10 space-y-4 text-[#c7c5c9] text-[1.05rem] leading-relaxed">
           <p>「会計」「人事」「総務」を統合した Back Office は、もう当たり前になりました。</p>
           <p>けれど、レベニュー側 — 営業・マーケ・サポート・PDM・ヘルプデスク — は、ばらばらのツールに分かれたまま。</p>
-          <p>BGM (Business Growth Management) は、レベニュー側のすべてを束ねる、はじめてのカテゴリです。</p>
-          <p className="text-[#7e7c83]">KikuCRM は、その Front Office カテゴリの第一号です。</p>
+          <p>ルキスマCRMは、営業データに聞けば次の一手まで返ってくる、チャット型のAI CRMです。</p>
+          <p className="text-[#7e7c83]">RookieSmartが提供する、営業データ活用のための新しい業務OSです。</p>
         </div>
       </div>
 
@@ -41,7 +41,7 @@ export const CategoryDefinition = () => (
               style={{ background: 'radial-gradient(circle, rgba(171,199,255,0.18), transparent 60%)', filter: 'blur(40px)' }}
             />
             <div className="font-semibold uppercase tracking-[0.14em] text-[0.72rem] text-aurora relative">
-              FRONT OFFICE ／ BGM
+              CHAT CRM ／ ルキスマCRM
             </div>
             <div className="font-display font-bold text-[1.6rem] mt-3 fo-gradient-text relative">攻める、増やす、育てる。</div>
             <div className="mt-6 flex flex-wrap gap-2 relative">
@@ -59,7 +59,7 @@ export const CategoryDefinition = () => (
                 </span>
               ))}
             </div>
-            <div className="mt-8 text-xs text-aurora/80">KikuCRM by RookieSmart Inc.</div>
+            <div className="mt-8 text-xs text-aurora/80">ルキスマCRM by RookieSmart Inc.</div>
           </div>
         </div>
       </div>

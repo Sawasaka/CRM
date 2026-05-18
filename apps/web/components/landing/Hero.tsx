@@ -1,7 +1,7 @@
 'use client'
 
 /**
- * Hero — KikuCRM ライブチャットデモ
+ * Hero — ルキスマCRM ライブチャットデモ
  * チャット入力 + 5体のサジェストチップで RAG 風の回答を擬似ストリーミング表示。
  */
 
@@ -346,7 +346,7 @@ const ChatMessage = ({ m, streaming }: { m: ChatMsg; streaming: boolean }) => {
           {!streaming && (
             <div className="mt-3 text-[11px] text-[#7e7c83] flex items-center gap-1.5">
               <Sparkles size={12} color="#abc7ff" />
-              これは KikuCRM のRAGデモです。実データで試すには{' '}
+              これは ルキスマCRM のRAGデモです。実データで試すには{' '}
               <a href="#cta" className="text-aurora hover:underline ml-1">無料アカウント発行 →</a>
             </div>
           )}
@@ -594,7 +594,7 @@ export const Hero = () => {
       <div className="relative mx-auto max-w-6xl px-6 pt-32 md:pt-40 pb-24 md:pb-32 min-h-screen flex flex-col justify-center">
         <div className="text-center">
           <div className="flex justify-center mb-6">
-            <Eyebrow color="#abc7ff">FRONT OFFICE ／ KIKU CRM</Eyebrow>
+            <Eyebrow color="#abc7ff">CHAT CRM ／ ルキスマCRM</Eyebrow>
           </div>
           <h1 className="font-display font-bold tracking-[-0.025em] text-[2.6rem] sm:text-[3.4rem] md:text-[4.6rem] leading-[1.04]">
             <span className="block">
@@ -667,7 +667,7 @@ export const Hero = () => {
                   ))}
                 </div>
                 <span className="text-sm text-[#c7c5c9]">
-                  KikuCRM <span className="text-[#7e7c83]">／ Live RAG demo</span>
+                  ルキスマCRM <span className="text-[#7e7c83]">／ Live RAG demo</span>
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -718,7 +718,7 @@ export const Hero = () => {
                         onKeyDown={onKeyDown}
                         className="w-full bg-transparent outline-none text-[1rem] md:text-[1.05rem] text-[#e7e5ea]"
                         style={{ caretColor: '#abc7ff' }}
-                        aria-label="ask KikuCRM"
+                        aria-label="ask ルキスマCRM"
                       />
                       {!input && (
                         <div className="absolute inset-y-0 left-0 flex items-center pointer-events-none">

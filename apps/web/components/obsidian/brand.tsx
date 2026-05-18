@@ -64,7 +64,7 @@ export function ObsLogo({
                 'linear-gradient(160deg, rgba(255,255,255,0.25) 0%, transparent 35%, transparent 65%, rgba(0,0,0,0.15) 100%)',
             }}
           />
-          {/* ワードマーク — Front Office: 抽象的な "F" + accent dot */}
+          {/* ワードマーク — ルキスマCRM: 抽象的な "F" + accent dot */}
           <svg
             width={s * 0.58}
             height={s * 0.58}
@@ -84,7 +84,7 @@ export function ObsLogo({
                 d="M5.4 3.6 H17.8 A1 1 0 0 1 18.8 4.6 V5.6 A1 1 0 0 1 17.8 6.6 H8.6 V10.4 H15.8 A1 1 0 0 1 16.8 11.4 V12.4 A1 1 0 0 1 15.8 13.4 H8.6 V19.4 A1 1 0 0 1 7.6 20.4 H6.4 A1 1 0 0 1 5.4 19.4 Z"
                 strokeLinejoin="round"
               />
-              {/* O accent dot — Front Office の "O" を示唆 */}
+              {/* O accent dot — ルキスマCRM の "O" を示唆 */}
               <circle cx="17.6" cy="18" r="1.7" />
             </g>
           </svg>

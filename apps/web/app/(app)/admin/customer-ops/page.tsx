@@ -169,7 +169,7 @@ export default function CustomerOpsPage() {
             アクセス権限がありません
           </h2>
           <p className="text-[13px]" style={{ color: 'var(--color-obs-text-muted)' }}>
-            このページは Front Office 開発者専用です。
+            このページは ルキスマCRM 開発者専用です。
           </p>
         </div>
       </ObsPageShell>

@@ -412,7 +412,7 @@ interface ProposalContent {
 
 const DEAL_PROPOSALS: Record<string, ProposalContent> = {
   'd1': {
-    service: 'BGM Front Office Pro / Slack連携アドオン',
+    service: 'ルキスマCRM Pro / Slack連携アドオン',
     amount: 4800000,
     paymentCycle: '年額一括',
     contractMonths: 12,
@@ -422,7 +422,7 @@ const DEAL_PROPOSALS: Record<string, ProposalContent> = {
     notes: 'Slack連携+AI議事録要約をフルで含む構成。CTO同席デモ後に最終調整予定。',
   },
   'd2': {
-    service: 'BGM Front Office Enterprise',
+    service: 'ルキスマCRM Enterprise',
     amount: 6000000,
     paymentCycle: '年額一括',
     contractMonths: 24,
@@ -432,7 +432,7 @@ const DEAL_PROPOSALS: Record<string, ProposalContent> = {
     notes: '24ヶ月契約で20%値引き適用済み。契約書ドラフトを法務レビュー中。',
   },
   'd3': {
-    service: 'BGM Front Office Standard',
+    service: 'ルキスマCRM Standard',
     amount: 2400000,
     paymentCycle: '月額',
     contractMonths: 12,
@@ -442,7 +442,7 @@ const DEAL_PROPOSALS: Record<string, ProposalContent> = {
     notes: '初期費用なし・月額固定で提案。決裁者特定後に再見積り想定。',
   },
   'd4': {
-    service: 'BGM Front Office Lite (HR導入特化)',
+    service: 'ルキスマCRM Lite (HR導入特化)',
     amount: 900000,
     paymentCycle: '月額',
     contractMonths: 6,

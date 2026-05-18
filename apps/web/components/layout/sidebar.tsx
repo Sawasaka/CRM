@@ -679,12 +679,12 @@ export function Sidebar() {
           <Link
             href="/"
             className="transition-opacity duration-150 hover:opacity-80"
-            aria-label="Front Office ホーム"
+            aria-label="ルキスマCRM ホーム"
           >
             <span
               className="fo-gradient-text font-[family-name:var(--font-display)] text-[16px] font-semibold tracking-[-0.015em]"
             >
-              Front Office
+              ルキスマCRM
             </span>
           </Link>
         </div>
