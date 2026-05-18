@@ -69,7 +69,7 @@ export const Pricing = () => {
           <h2 className="font-display font-bold tracking-[-0.025em] text-[2.2rem] md:text-[3rem] leading-[1.06] mt-5">
             <span className="fo-gradient-text">ルキスマCRM は、</span>
             <br />
-            <span className="fo-gradient-text-soft">使った分だけ。</span>
+            <span className="fo-gradient-text-soft">使う分だけ。</span>
           </h2>
         </div>
         <div className="grid md:grid-cols-2 gap-5 mt-10 items-stretch max-w-4xl mx-auto">
@@ -139,8 +139,9 @@ export const Pricing = () => {
                   </div>
 
                   {/* CTA — featured のみグラデ、他は ghost */}
-                  <button
-                    className={`mt-6 w-full rounded-lg py-2.5 text-sm font-medium relative transition-colors ${
+                  <a
+                    href="/login?mode=register&callbackUrl=/dashboard"
+                    className={`mt-6 block text-center w-full rounded-lg py-2.5 text-sm font-medium relative transition-colors ${
                       featured
                         ? 'text-[#0a0a0c]'
                         : 'text-aurora bg-shimmer/30 hover:bg-shimmer/60'
@@ -148,7 +149,7 @@ export const Pricing = () => {
                     style={featured ? { background: 'linear-gradient(135deg, #abc7ff, #0071e3)' } : undefined}
                   >
                     無料で始める
-                  </button>
+                  </a>
                 </div>
               </div>
             )
