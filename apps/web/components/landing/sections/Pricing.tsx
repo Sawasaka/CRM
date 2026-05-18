@@ -18,12 +18,10 @@ export const Pricing = () => {
       feats: [
         'AIモデル: Gemini 2.5 Flash Lite / シンキングモード 標準',
         'CRM全機能 (企業・コンタクト・取引・パイプライン・チケット管理)',
-        'Google Workspace・Microsoft 365 連携',
-        '議事録自動取得 (BANT自動入力)',
-        'ナレッジ自動生成 (FAQ)',
+        'Google Workspace・Microsoft 365 連携 + 議事録自動取得 (BANT)',
+        'ナレッジ自動生成 (FAQ) + 開発優先度分析',
         'メール配信 + 1stパーティ計測・効果測定',
         '企業DB (290万社) + 求人インテント',
-        '開発優先度分析',
         '外部リサーチ (ウェブ検索)',
         '500クレジットで ワンクリック通話 + コール議事録自動作成',
       ],
@@ -63,7 +61,7 @@ export const Pricing = () => {
             'radial-gradient(ellipse at 50% 0%, rgba(171,199,255,0.05) 0%, transparent 55%), radial-gradient(ellipse at 80% 100%, rgba(0,113,227,0.04) 0%, transparent 50%)',
         }}
       />
-      <div className="relative mx-auto max-w-6xl px-6 py-32 md:py-40">
+      <div className="relative mx-auto max-w-6xl px-6 py-20 md:py-28">
         <div className="max-w-3xl mx-auto text-center">
           <div className="inline-flex">
             <Eyebrow color="#abc7ff">PRICING</Eyebrow>
@@ -74,7 +72,7 @@ export const Pricing = () => {
             <span className="fo-gradient-text-soft">使った分だけ。</span>
           </h2>
         </div>
-        <div className="grid md:grid-cols-2 gap-5 mt-14 items-stretch max-w-4xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-5 mt-10 items-stretch max-w-4xl mx-auto">
           {tiers.map((t, i) => {
             const featured = t.featured
             return (
@@ -87,7 +85,7 @@ export const Pricing = () => {
                     : 'linear-gradient(135deg, rgba(171,199,255,0.18), rgba(171,199,255,0.04) 60%, transparent 100%)',
                 }}
               >
-                <div className="rounded-3xl p-7 fo-glass-rim flex flex-col w-full bg-dusk relative overflow-hidden">
+                <div className="rounded-3xl p-6 fo-glass-rim flex flex-col w-full bg-dusk relative overflow-hidden">
                   {featured && (
                     <div
                       className="absolute -top-20 -right-20 w-56 h-56 rounded-full pointer-events-none"
@@ -132,7 +130,7 @@ export const Pricing = () => {
                   )}
 
                   {/* Features (flex-1 で高さを揃える) */}
-                  <div className="mt-6 space-y-2.5 relative flex-1">
+                  <div className="mt-5 space-y-2 relative flex-1">
                     {t.feats.map((f) => (
                       <div key={f} className="flex items-center gap-2 text-sm text-[#c7c5c9]">
                         <Check size={14} color={t.color} /> {f}
@@ -142,7 +140,7 @@ export const Pricing = () => {
 
                   {/* CTA — featured のみグラデ、他は ghost */}
                   <button
-                    className={`mt-7 w-full rounded-lg py-3 text-sm font-medium relative transition-colors ${
+                    className={`mt-6 w-full rounded-lg py-2.5 text-sm font-medium relative transition-colors ${
                       featured
                         ? 'text-[#0a0a0c]'
                         : 'text-aurora bg-shimmer/30 hover:bg-shimmer/60'
