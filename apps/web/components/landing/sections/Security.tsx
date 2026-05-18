@@ -1,133 +1,116 @@
-import { Database, Layers, Lock, Shield, Check } from 'lucide-react'
+import { Database, Lock, ShieldCheck, Check } from 'lucide-react'
 import { Eyebrow, Section } from '../atoms'
+
+/**
+ * Security — シンプル版
+ *
+ * 旧版は RLS policy / bucket layout / signed URL のコードを並べていたが、
+ * 「セキュリティに詳しくない人にも伝わる」を最優先に書き直し:
+ *  - コードスニペット全廃止
+ *  - 用語を素人向けに翻訳 (Row-Level Security → 「会社ごとにデータの壁」)
+ *  - データ保管先 (Supabase Storage = Amazon S3 互換) を明示
+ *  - 4 層スタック + 業界事例は箇条書きにして短く
+ *  - Section padding を py-20/28 に圧縮
+ */
+
+const LAYERS = [
+  { l: '認可',     d: '誰がアクセスできるかを毎回チェック' },
+  { l: 'DB 分離',  d: 'データ自体を会社ごとに完全に区切る' },
+  { l: '監査ログ', d: 'すべての操作を時系列で記録' },
+  { l: '暗号化',   d: '通信も保管も AES-256 + TLS 1.3' },
+] as const
+
+const PEERS = ['Notion', 'Linear', 'Vercel', 'Supabase', 'Amazon S3'] as const
 
 export const Security = () => (
   <Section tone="pitch" screenLabel="09 Security">
-    <div className="relative mx-auto max-w-6xl px-6 py-32 md:py-44">
+    <div className="relative mx-auto max-w-6xl px-6 py-20 md:py-28">
       <div className="max-w-3xl">
-        <Eyebrow color="#7ec6ff">SECURITY ARCHITECTURE</Eyebrow>
-        <h2 className="font-display font-bold tracking-[-0.025em] text-[2.4rem] md:text-[3.4rem] leading-[1.06] mt-5">
+        <Eyebrow color="#7ec6ff">SECURITY</Eyebrow>
+        <h2 className="font-display font-bold tracking-[-0.025em] text-[2.2rem] md:text-[3rem] leading-[1.06] mt-5">
           セキュリティは、
           <br />
           <span className="fo-gradient-text">見せないと、信じられない。</span>
         </h2>
       </div>
 
-      <div className="grid md:grid-cols-12 gap-6 mt-14">
-        {/* 9-A RLS */}
-        <div className="md:col-span-7 rounded-3xl bg-dusk p-7 fo-glass-rim">
+      <div className="grid md:grid-cols-3 gap-5 mt-10 items-stretch">
+        {/* 1. テナント遮断 */}
+        <div className="rounded-3xl bg-dusk p-6 fo-glass-rim flex flex-col">
           <div className="flex items-center gap-2">
-            <Database size={16} color="#7ec6ff" strokeWidth={1.5} />
-            <span className="font-semibold uppercase tracking-[0.14em] text-[0.72rem] text-cyan">
-              9-A · ROW-LEVEL SECURITY
+            <Database size={18} color="#7ec6ff" strokeWidth={1.6} />
+            <span className="font-semibold uppercase tracking-[0.14em] text-[0.68rem] text-cyan">
+              データ分離
             </span>
           </div>
-          <div className="font-display font-bold text-[1.4rem] mt-3">DBレベルから、テナントを物理遮断。</div>
-          <div className="mt-5 rounded-xl bg-[#0d0d0f] p-5 font-mono text-[12.5px] leading-relaxed fo-glass-rim">
-            <div className="text-[#7e7c83]">-- PostgreSQL Row-Level Security policy</div>
-            <div>
-              <span className="text-coral">CREATE POLICY</span>{' '}
-              <span className="text-aurora">tenant_isolation</span>{' '}
-              <span className="text-coral">ON</span> deals
-            </div>
-            <div className="pl-4">
-              <span className="text-coral">USING</span> (tenant_id = auth.jwt() <span className="text-amber">-&gt;&gt;</span>{' '}
-              <span className="text-mint">{"'tenant_id'"}</span>);
-            </div>
+          <div className="font-display font-bold text-[1.25rem] mt-3 leading-tight">
+            会社ごとに、<br />データの壁。
           </div>
-          <div className="mt-3 text-xs text-[#7e7c83]">Notion / Linear / Vercel / Supabase 本体も採用</div>
-        </div>
-
-        {/* 9-B Defense in Depth */}
-        <div className="md:col-span-5 rounded-3xl bg-dusk p-7 fo-glass-rim">
-          <div className="flex items-center gap-2">
-            <Layers size={16} color="#7ec6ff" strokeWidth={1.5} />
-            <span className="font-semibold uppercase tracking-[0.14em] text-[0.72rem] text-cyan">
-              9-B · DEFENSE IN DEPTH
-            </span>
-          </div>
-          <div className="font-display font-bold text-[1.4rem] mt-3">4層スタック。</div>
-          <div className="mt-5 space-y-2.5" style={{ perspective: '1200px' }}>
-            {[
-              { l: 'アプリ層 ／ AuthZ',        c: '#abc7ff', o: 0  },
-              { l: 'DB層 ／ RLS',              c: '#7ec6ff', o: 6  },
-              { l: '監査 ／ Audit Log',        c: '#c8b9ff', o: 12 },
-              { l: '暗号化 ／ AES-256 + TLS 1.3', c: '#8dffc9', o: 18 },
-            ].map((s, i) => (
-              <div
-                key={i}
-                className="rounded-xl px-4 py-3 text-sm flex items-center justify-between fo-glass-rim"
-                style={{
-                  background: `linear-gradient(90deg, ${s.c}10, ${s.c}04)`,
-                  transform: `translateX(${s.o}px) translateZ(${i * -8}px)`,
-                  boxShadow: `inset 0 0 0 1px ${s.c}28`,
-                }}
-              >
-                <span className="text-[#e7e5ea]">{s.l}</span>
-                <Check size={14} color={s.c} />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* 9-C File isolation */}
-        <div className="md:col-span-7 rounded-3xl bg-dusk p-7 fo-glass-rim">
-          <div className="flex items-center gap-2">
-            <Lock size={16} color="#7ec6ff" strokeWidth={1.5} />
-            <span className="font-semibold uppercase tracking-[0.14em] text-[0.72rem] text-cyan">
-              9-C · FILE ISOLATION
-            </span>
-          </div>
-          <div className="font-display font-bold text-[1.4rem] mt-3">テナントprefix分離 + 5分失効 Signed URL。</div>
-          <div className="mt-5 grid md:grid-cols-2 gap-3">
-            <div className="rounded-xl bg-[#0d0d0f] p-4 font-mono text-[12.5px] leading-relaxed fo-glass-rim">
-              <div className="text-[#7e7c83]"># bucket layout</div>
-              <div>bucket/</div>
-              <div className="pl-3 text-aurora">├ tnt_aaa/</div>
-              <div className="pl-6 text-[#c7c5c9]">├ deals/2026/...</div>
-              <div className="pl-6 text-[#c7c5c9]">└ meetings/...</div>
-              <div className="pl-3 text-mint">├ tnt_bbb/</div>
-              <div className="pl-6 text-[#c7c5c9]">└ ...</div>
-              <div className="pl-3 text-coral">└ tnt_ccc/</div>
-            </div>
-            <div className="rounded-xl bg-[#0d0d0f] p-4 font-mono text-[12.5px] leading-relaxed fo-glass-rim">
-              <div className="text-[#7e7c83]"># signed URL (5-min expiry)</div>
-              <div>
-                <span className="text-coral">const</span> url = <span className="text-aurora">await</span> sign(file, &#123;
-              </div>
-              <div className="pl-3">
-                tenantId, ttlSec: <span className="text-mint">300</span>,
-              </div>
-              <div className="pl-3">
-                scope: <span className="text-mint">{"'read'"}</span>,
-              </div>
-              <div>&#125;);</div>
-            </div>
-          </div>
-        </div>
-
-        {/* 9-D Industry adoption */}
-        <div className="md:col-span-5 rounded-3xl bg-dusk p-7 fo-glass-rim">
-          <div className="flex items-center gap-2">
-            <Shield size={16} color="#7ec6ff" strokeWidth={1.5} />
-            <span className="font-semibold uppercase tracking-[0.14em] text-[0.72rem] text-cyan">
-              9-D · INDUSTRY STANDARD
-            </span>
-          </div>
-          <div className="font-display font-bold text-[1.4rem] mt-3">RLS は業界標準。</div>
-          <div className="mt-5 grid grid-cols-2 gap-2">
-            {['Notion', 'Linear', 'Vercel', 'Supabase'].map((t) => (
-              <div
-                key={t}
-                className="rounded-xl px-4 py-3 bg-pitch text-center text-sm text-white/60 hover:text-white transition-colors fo-glass-rim"
-              >
-                {t}
-              </div>
-            ))}
-          </div>
-          <p className="mt-5 text-xs text-[#7e7c83] leading-relaxed">
-            これらのプロダクトと同じ前提で、KikuCRM も設計されています。「やっています」だけでなく、コードで見せます。
+          <p className="mt-3 text-[13px] text-[#c7c5c9] leading-relaxed flex-1">
+            あなたの会社の情報は、他社から見えません。データベースの設計レベル
+            (Row-Level Security) で物理的に遮断しています。
           </p>
+          <div className="mt-4 text-[11px] text-[#7e7c83]">
+            Notion / Linear / Supabase 採用済の標準手法
+          </div>
+        </div>
+
+        {/* 2. ファイル保管 */}
+        <div className="rounded-3xl bg-dusk p-6 fo-glass-rim flex flex-col">
+          <div className="flex items-center gap-2">
+            <Lock size={18} color="#7ec6ff" strokeWidth={1.6} />
+            <span className="font-semibold uppercase tracking-[0.14em] text-[0.68rem] text-cyan">
+              ファイル保管
+            </span>
+          </div>
+          <div className="font-display font-bold text-[1.25rem] mt-3 leading-tight">
+            資料も議事録も、<br />安全に保管。
+          </div>
+          <p className="mt-3 text-[13px] text-[#c7c5c9] leading-relaxed flex-1">
+            <span className="text-aurora">Supabase Storage (Amazon S3 互換)</span> に
+            会社別フォルダで保存。共有リンクは 5 分で失効するので、流出しても無効になります。
+          </p>
+          <div className="mt-4 text-[11px] text-[#7e7c83]">
+            AES-256 暗号化 + TLS 1.3 で通信保護
+          </div>
+        </div>
+
+        {/* 3. 4 層の防御 */}
+        <div className="rounded-3xl bg-dusk p-6 fo-glass-rim flex flex-col">
+          <div className="flex items-center gap-2">
+            <ShieldCheck size={18} color="#7ec6ff" strokeWidth={1.6} />
+            <span className="font-semibold uppercase tracking-[0.14em] text-[0.68rem] text-cyan">
+              4 層の防御
+            </span>
+          </div>
+          <div className="font-display font-bold text-[1.25rem] mt-3 leading-tight">
+            破られても、<br />次がある。
+          </div>
+          <div className="mt-3 space-y-2 flex-1">
+            {LAYERS.map((s, i) => (
+              <div key={i} className="flex items-start gap-2 text-[12.5px]">
+                <Check size={13} color="#7ec6ff" strokeWidth={2.4} className="shrink-0 mt-0.5" />
+                <div>
+                  <span className="text-[#e7e5ea] font-medium">{s.l}</span>
+                  <span className="text-[#9b99a0] ml-1.5">— {s.d}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* 業界事例バー */}
+      <div className="mt-8 rounded-2xl bg-dusk/60 px-6 py-4 fo-glass-rim flex flex-wrap items-center gap-x-6 gap-y-2">
+        <span className="text-[11px] uppercase tracking-[0.14em] text-[#9b99a0]">
+          同じ前提で動いているサービス
+        </span>
+        <div className="flex flex-wrap gap-x-5 gap-y-1.5">
+          {PEERS.map((p) => (
+            <span key={p} className="text-[13px] text-[#c7c5c9]">
+              {p}
+            </span>
+          ))}
         </div>
       </div>
     </div>
