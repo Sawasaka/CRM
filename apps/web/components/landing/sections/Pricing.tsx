@@ -62,10 +62,8 @@ export const Pricing = () => {
         }}
       />
       <div className="relative mx-auto max-w-6xl px-6 py-20 md:py-28">
-        <div className="max-w-3xl mx-auto text-center">
-          <div className="inline-flex">
-            <Eyebrow color="#abc7ff">PRICING</Eyebrow>
-          </div>
+        <div className="max-w-3xl">
+          <Eyebrow color="#abc7ff">PRICING</Eyebrow>
           <h2 className="font-display font-bold tracking-[-0.025em] text-[2.2rem] md:text-[3rem] leading-[1.06] mt-5">
             <span className="fo-gradient-text">ルキスマCRM は、</span>
             <br />
