@@ -13,7 +13,6 @@ import { AgentFabricRich } from '@/components/landing/AgentFabricRich'
 import { DatabaseIntent } from '@/components/landing/sections/DatabaseIntent'
 import { Security } from '@/components/landing/sections/Security'
 import { MetricsBand } from '@/components/landing/sections/MetricsBand'
-import { UseCases } from '@/components/landing/sections/UseCases'
 import { ROISection } from '@/components/landing/ROISection'
 import { BuildVsBuy } from '@/components/landing/BuildVsBuy'
 import { CustomerVoice } from '@/components/landing/sections/CustomerVoice'
@@ -40,7 +39,6 @@ export default function RukismaCRMLandingPage() {
       <SixPillars />
       <DatabaseIntent />
       <Security />
-      <UseCases />
       <CustomerVoice />
       <ComplianceBand />
       <HowToStart />
