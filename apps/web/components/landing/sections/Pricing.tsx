@@ -31,26 +31,12 @@ export const Pricing = () => {
       scale: '¥5,800',
       price: '/ 月・seat (年払い) ／ 月払 ¥8,300',
       seatNote: '担当者へのチャット相談 (5シート以上で付帯)',
-      featured: false,
-      color: '#abc7ff',
-      feats: [
-        'Lite 全機能',
-        'AIモデル: GPT-4o mini にアップグレード (品質・精度向上)',
-        'シンキングモード: 拡張',
-      ],
-    },
-    {
-      eyebrow: 'PRO',
-      scale: '¥9,000',
-      price: '/ 月・seat (年払い) ／ 月払 ¥13,000',
-      seatNote: '担当者へのチャット相談 (1シートから付帯)',
       featured: true,
       color: '#abc7ff',
       feats: [
-        'Standard 全機能',
+        'Lite 全機能',
         'AIモデル: GPT-4o mini / GPT-4o を選択可',
         'シンキングモード: 標準 / 拡張 を選択可',
-        'エージェントモード (チャットからブラウザ自動操作・データ入力)',
       ],
     },
   ]
@@ -76,12 +62,12 @@ export const Pricing = () => {
         <div className="max-w-3xl">
           <Eyebrow color="#abc7ff">PRICING</Eyebrow>
           <h2 className="font-display font-bold tracking-[-0.025em] text-[2.2rem] md:text-[3rem] leading-[1.06] mt-5">
-            <span className="fo-gradient-text">KikuCRM は、</span>
+            <span className="fo-gradient-text">ルキスマCRM は、</span>
             <br />
             <span className="fo-gradient-text-soft">使った分だけ。</span>
           </h2>
         </div>
-        <div className="grid md:grid-cols-3 gap-5 mt-14 items-stretch">
+        <div className="grid md:grid-cols-2 gap-5 mt-14 items-stretch max-w-4xl mx-auto">
           {tiers.map((t, i) => {
             const featured = t.featured
             return (
