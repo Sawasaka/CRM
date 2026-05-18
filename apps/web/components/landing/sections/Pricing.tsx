@@ -55,7 +55,23 @@ export const Pricing = () => {
     },
   ]
   return (
-    <Section tone="pitch" screenLabel="17 Pricing">
+    <Section tone="obsidian" screenLabel="17 Pricing" className="relative overflow-hidden">
+      {/* top divider — MetricsBand との境界線 */}
+      <div
+        className="h-px w-full"
+        style={{
+          background:
+            'linear-gradient(90deg, transparent 0%, rgba(171,199,255,0.08) 20%, rgba(171,199,255,0.20) 50%, rgba(171,199,255,0.08) 80%, transparent 100%)',
+        }}
+      />
+      {/* ambient radial — obsidian の単調さを和らげる */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            'radial-gradient(ellipse at 50% 0%, rgba(171,199,255,0.05) 0%, transparent 55%), radial-gradient(ellipse at 80% 100%, rgba(0,113,227,0.04) 0%, transparent 50%)',
+        }}
+      />
       <div className="relative mx-auto max-w-6xl px-6 py-32 md:py-40">
         <div className="max-w-3xl">
           <Eyebrow color="#abc7ff">PRICING</Eyebrow>
