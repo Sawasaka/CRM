@@ -8,8 +8,10 @@ export const Pricing = () => {
   const tiers = [
     {
       eyebrow: 'Lite',
+      tagline: '営業 1-3名の小規模チームに最適',
       scale: '¥3,000',
       price: '/ 月・seat (年払い) ／ 月払 ¥4,300',
+      credits: '500 クレジット / seat',
       seatNote: '担当者へのチャット相談 (10シート以上で付帯)',
       featured: false,
       color: '#abc7ff',
@@ -28,8 +30,10 @@ export const Pricing = () => {
     },
     {
       eyebrow: 'Standard',
+      tagline: 'AI 品質と通話機能で営業を本格運用',
       scale: '¥5,800',
       price: '/ 月・seat (年払い) ／ 月払 ¥8,300',
+      credits: '1,000 クレジット / seat',
       seatNote: '担当者へのチャット相談 (5シート以上で付帯)',
       featured: true,
       color: '#abc7ff',
@@ -37,6 +41,7 @@ export const Pricing = () => {
         'Lite 全機能',
         'AIモデル: GPT-4o mini / GPT-4o を選択可',
         'シンキングモード: 標準 / 拡張 を選択可',
+        'クレジット 2倍 (1,000 / seat) で通話・議事録もたっぷり',
       ],
     },
   ]
@@ -59,8 +64,10 @@ export const Pricing = () => {
         }}
       />
       <div className="relative mx-auto max-w-6xl px-6 py-32 md:py-40">
-        <div className="max-w-3xl">
-          <Eyebrow color="#abc7ff">PRICING</Eyebrow>
+        <div className="max-w-3xl mx-auto text-center">
+          <div className="inline-flex">
+            <Eyebrow color="#abc7ff">PRICING</Eyebrow>
+          </div>
           <h2 className="font-display font-bold tracking-[-0.025em] text-[2.2rem] md:text-[3rem] leading-[1.06] mt-5">
             <span className="fo-gradient-text">ルキスマCRM は、</span>
             <br />
@@ -101,13 +108,25 @@ export const Pricing = () => {
                     )}
                   </div>
 
+                  {/* Tagline */}
+                  {t.tagline && (
+                    <div className="mt-2 text-[12.5px] text-[#9b99a0] relative leading-relaxed">
+                      {t.tagline}
+                    </div>
+                  )}
+
                   {/* Scale */}
-                  <div className={`font-display font-bold text-[1.6rem] mt-3 relative ${featured ? 'fo-gradient-text' : 'text-[#e7e5ea]'}`}>
+                  <div className={`font-display font-bold text-[1.6rem] mt-4 relative ${featured ? 'fo-gradient-text' : 'text-[#e7e5ea]'}`}>
                     {t.scale}
                   </div>
                   <div className="mt-3 font-mono text-[#9b99a0] text-sm relative">{t.price}</div>
+                  {t.credits && (
+                    <div className="mt-2 text-[12.5px] font-medium tabular-nums text-aurora relative">
+                      月間 {t.credits} 込
+                    </div>
+                  )}
                   {t.seatNote && (
-                    <div className="mt-2 text-[11.5px] text-aurora relative">
+                    <div className="mt-1 text-[11.5px] text-aurora relative opacity-80">
                       {t.seatNote}
                     </div>
                   )}
