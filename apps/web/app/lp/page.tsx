@@ -1,6 +1,6 @@
 /**
- * KikuCRM Landing Page (/lp)
- * Front Office カテゴリのフラッグシップ製品 — 公開LP（認証不要）
+ * ルキスマCRM Landing Page (/lp)
+ * 営業データから答えるチャットCRM — 公開LP（認証不要）
  * Photon Drift デザインシステムで構築。ログイン後のサービス本体は /dashboard にある。
  */
 
@@ -12,7 +12,6 @@ import { SixPillars } from '@/components/landing/sections/SixPillars'
 import { AgentFabricRich } from '@/components/landing/AgentFabricRich'
 import { DatabaseIntent } from '@/components/landing/sections/DatabaseIntent'
 import { Security } from '@/components/landing/sections/Security'
-import { Transparency } from '@/components/landing/sections/Transparency'
 import { MetricsBand } from '@/components/landing/sections/MetricsBand'
 import { UseCases } from '@/components/landing/sections/UseCases'
 import { ROISection } from '@/components/landing/ROISection'
@@ -26,7 +25,7 @@ import { DocsStrip } from '@/components/landing/sections/DocsStrip'
 import { FinalCTA } from '@/components/landing/sections/FinalCTA'
 import { Footer } from '@/components/landing/sections/Footer'
 
-export default function KikuCRMLandingPage() {
+export default function RukismaCRMLandingPage() {
   return (
     <div className="relative">
       <Nav />
@@ -41,7 +40,6 @@ export default function KikuCRMLandingPage() {
       <SixPillars />
       <DatabaseIntent />
       <Security />
-      <Transparency />
       <UseCases />
       <CustomerVoice />
       <ComplianceBand />
