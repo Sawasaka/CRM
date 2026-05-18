@@ -6,16 +6,12 @@
 
 import { Nav } from '@/components/landing/Nav'
 import { Hero } from '@/components/landing/Hero'
-import { CategoryDefinition } from '@/components/landing/sections/CategoryDefinition'
-import { AntiCosmetic } from '@/components/landing/sections/AntiCosmetic'
-import { SixPillars } from '@/components/landing/sections/SixPillars'
 import { AgentFabricRich } from '@/components/landing/AgentFabricRich'
 import { DatabaseIntent } from '@/components/landing/sections/DatabaseIntent'
 import { Security } from '@/components/landing/sections/Security'
 import { MetricsBand } from '@/components/landing/sections/MetricsBand'
 import { ROISection } from '@/components/landing/ROISection'
 import { CustomerVoice } from '@/components/landing/sections/CustomerVoice'
-import { ComplianceBand } from '@/components/landing/sections/ComplianceBand'
 import { HowToStart } from '@/components/landing/sections/HowToStart'
 import { Pricing } from '@/components/landing/sections/Pricing'
 import { FAQ } from '@/components/landing/sections/FAQ'
@@ -32,13 +28,9 @@ export default function RukismaCRMLandingPage() {
       <Pricing />
       <ROISection />
       <AgentFabricRich />
-      <CategoryDefinition />
-      <AntiCosmetic />
-      <SixPillars />
       <DatabaseIntent />
       <Security />
       <CustomerVoice />
-      <ComplianceBand />
       <HowToStart />
       <FAQ />
       <DocsStrip />
