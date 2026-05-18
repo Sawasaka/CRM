@@ -16,6 +16,9 @@ importers:
       '@types/node':
         specifier: ^22.15.2
         version: 22.15.3
+      next:
+        specifier: ^15.3.1
+        version: 15.5.14(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       playwright:
         specifier: ^1.58.2
         version: 1.59.1
@@ -64,6 +67,9 @@ importers:
       '@trpc/server':
         specifier: ^11.1.2
         version: 11.14.1(typescript@5.9.2)
+      bullmq:
+        specifier: ^5.46.0
+        version: 5.71.0
       dotenv:
         specifier: ^16.4.7
         version: 16.6.1
@@ -129,6 +135,9 @@ importers:
       '@bgm/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@bgm/integrations-google':
+        specifier: workspace:*
+        version: link:../../packages/integrations/google
       '@bgm/types':
         specifier: workspace:*
         version: link:../../packages/types
@@ -4253,6 +4262,7 @@ packages:
 
   uuid@9.0.1:
     resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   vary@1.1.2:
@@ -5716,7 +5726,7 @@ snapshots:
       '@typescript-eslint/visitor-keys': 8.50.0
       debug: 4.4.3
       minimatch: 9.0.5
-      semver: 7.7.3
+      semver: 7.7.4
       tinyglobby: 0.2.15
       ts-api-utils: 2.1.0(typescript@5.9.2)
       typescript: 5.9.2
@@ -7050,7 +7060,7 @@ snapshots:
 
   is-bun-module@2.0.0:
     dependencies:
-      semver: 7.7.3
+      semver: 7.7.4
 
   is-callable@1.2.7: {}
 
@@ -7961,7 +7971,7 @@ snapshots:
     dependencies:
       '@img/colour': 1.0.0
       detect-libc: 2.1.2
-      semver: 7.7.3
+      semver: 7.7.4
     optionalDependencies:
       '@img/sharp-darwin-arm64': 0.34.5
       '@img/sharp-darwin-x64': 0.34.5

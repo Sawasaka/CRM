@@ -4,10 +4,17 @@
 import { prisma } from '@bgm/db'
 import OpenAI from 'openai'
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+let openai: OpenAI | null = null
+
+function getOpenAI() {
+  const apiKey = process.env.OPENAI_API_KEY
+  if (!apiKey) throw new Error('OPENAI_API_KEY is not configured')
+  openai ??= new OpenAI({ apiKey })
+  return openai
+}
 
 async function generateEmbedding(text: string): Promise<number[]> {
-  const r = await openai.embeddings.create({
+  const r = await getOpenAI().embeddings.create({
     model: 'text-embedding-3-large',
     input: text.replace(/\n/g, ' '),
     dimensions: 1536,
@@ -46,7 +53,7 @@ export async function searchKnowledge(opts: {
      LIMIT $3`,
     vec,
     orgId,
-    limit,
+    limit
   )
 
   const driveRows = await prisma.$queryRawUnsafe<
@@ -61,7 +68,7 @@ export async function searchKnowledge(opts: {
      LIMIT $3`,
     vec,
     orgId,
-    limit,
+    limit
   )
 
   const hits: RagHit[] = [
@@ -119,11 +126,11 @@ export async function answerWithRag(opts: {
   const context = hits
     .map(
       (h, i) =>
-        `[${i + 1}] (${h.source === 'faq' ? '公式FAQ' : 'Drive'}: ${h.title})\n${h.body.slice(0, 1200)}`,
+        `[${i + 1}] (${h.source === 'faq' ? '公式FAQ' : 'Drive'}: ${h.title})\n${h.body.slice(0, 1200)}`
     )
     .join('\n\n')
 
-  const completion = await openai.chat.completions.create({
+  const completion = await getOpenAI().chat.completions.create({
     model: 'gpt-4o-mini',
     temperature: 0.2,
     messages: [

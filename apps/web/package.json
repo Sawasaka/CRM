@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@bgm/db": "workspace:*",
+    "@bgm/integrations-google": "workspace:*",
     "@bgm/types": "workspace:*",
     "@hookform/resolvers": "^5.0.1",
     "@radix-ui/react-avatar": "^1.1.10",

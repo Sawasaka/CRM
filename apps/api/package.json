@@ -20,6 +20,7 @@
     "zod": "^3.24.2",
     "superjson": "^2.2.2",
     "dotenv": "^16.4.7",
+    "bullmq": "^5.46.0",
     "@bgm/integrations-twilio": "workspace:*",
     "@bgm/integrations-slack": "workspace:*",
     "@bgm/integrations-google": "workspace:*"

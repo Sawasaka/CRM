@@ -2,16 +2,23 @@ import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
 import { auth } from '@/lib/auth'
 import { prisma } from '@bgm/db'
-import { buildResearchContext, formatContextForPrompt, type EntityType } from '@/lib/research-context'
+import {
+  buildResearchContext,
+  formatContextForPrompt,
+  type EntityType,
+} from '@/lib/research-context'
 import { getOurBusiness, formatOurBusinessPrompt } from '@/lib/our-business'
 import { RESEARCH_PRESETS } from '@/lib/research-presets'
-import { isResearchAllowed, resolveResearchModel, type ModelKind, type ThinkingDepth } from '@/lib/research-models'
+import {
+  isResearchAllowed,
+  resolveResearchModel,
+  type ModelKind,
+  type ThinkingDepth,
+} from '@/lib/research-models'
 import { buildWebContext } from '@/lib/research-web-search'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
 type Body = {
   entityType: EntityType
@@ -34,7 +41,15 @@ export async function POST(req: NextRequest) {
   if (!userId) return NextResponse.json({ error: 'unauthenticated' }, { status: 401 })
 
   const body = (await req.json().catch(() => ({}))) as Partial<Body>
-  const { entityType, entityId, prompt, presetId, model: reqModel, thinking: reqThinking, history } = body
+  const {
+    entityType,
+    entityId,
+    prompt,
+    presetId,
+    model: reqModel,
+    thinking: reqThinking,
+    history,
+  } = body
 
   if (!entityType || !entityId) {
     return NextResponse.json({ error: 'entityType と entityId は必須です' }, { status: 400 })
@@ -52,7 +67,10 @@ export async function POST(req: NextRequest) {
 
   const plan = user.org.plan
   if (!isResearchAllowed(plan)) {
-    return NextResponse.json({ error: 'リサーチ機能はSTARTERプラン以上で利用できます' }, { status: 403 })
+    return NextResponse.json(
+      { error: 'リサーチ機能はSTARTERプラン以上で利用できます' },
+      { status: 403 }
+    )
   }
 
   // モデル決定
@@ -60,7 +78,7 @@ export async function POST(req: NextRequest) {
 
   // プロンプト本体を組み立て
   const userPrompt = presetId
-    ? RESEARCH_PRESETS.find((p) => p.id === presetId)?.prompt ?? prompt ?? ''
+    ? (RESEARCH_PRESETS.find((p) => p.id === presetId)?.prompt ?? prompt ?? '')
     : (prompt ?? '')
   if (!userPrompt) return NextResponse.json({ error: 'プロンプトが空です' }, { status: 400 })
 
@@ -96,6 +114,11 @@ export async function POST(req: NextRequest) {
 
   const t0 = Date.now()
   try {
+    const apiKey = process.env.OPENAI_API_KEY
+    if (!apiKey) {
+      return NextResponse.json({ error: 'OPENAI_API_KEY が未設定です' }, { status: 500 })
+    }
+    const openai = new OpenAI({ apiKey })
     const completion = await openai.chat.completions.create({
       model: resolved.model,
       messages,
@@ -113,7 +136,7 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     return NextResponse.json(
       { error: `OpenAI 呼び出しに失敗: ${(e as Error).message}` },
-      { status: 502 },
+      { status: 502 }
     )
   }
 }

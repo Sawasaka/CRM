@@ -1,0 +1,12 @@
+.env
+.env.*
+!.env.local.example
+.next
+*.broken-*
+apps/web/.next
+apps/web/.next*
+apps/api/dist
+node_modules
+**/node_modules
+**/.turbo
+**/*.log

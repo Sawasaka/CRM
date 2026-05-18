@@ -29,8 +29,16 @@ const plusJakarta = Plus_Jakarta_Sans({
 })
 
 export const metadata: Metadata = {
-  title: 'BGM — Business Growth Management',
+  title: 'ルキスマCRM — 営業データから、何でも答えるチャットCRM',
   description: 'PDM視点CRM × 企業マスター — 顧客の声をプロダクトに還元する受注実行基盤',
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: '32x32' },
+    ],
+    shortcut: '/icon.svg',
+    apple: '/icon.svg',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

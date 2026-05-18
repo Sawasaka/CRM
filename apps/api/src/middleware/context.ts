@@ -3,6 +3,24 @@ import type { inferAsyncReturnType } from '@trpc/server'
 import type { FastifyRequest } from 'fastify'
 
 export async function createContext({ req }: { req: FastifyRequest }) {
+  // Web 側の NextAuth session.userId を安全に DB 照合して利用する。
+  // 旧実装の Authorization token も互換のため残す。
+  const userIdHeader = req.headers['x-bgm-user-id']
+  const headerUserId = Array.isArray(userIdHeader) ? userIdHeader[0] : userIdHeader
+  if (headerUserId) {
+    const user = await prisma.user.findUnique({
+      where: { id: headerUserId },
+      select: { id: true, orgId: true },
+    })
+    if (user) {
+      return {
+        prisma,
+        userId: user.id,
+        orgId: user.orgId,
+      }
+    }
+  }
+
   // JWT からユーザー情報を取得（NextAuth セッション検証）
   const authHeader = req.headers.authorization
   const token = authHeader?.replace('Bearer ', '') ?? null

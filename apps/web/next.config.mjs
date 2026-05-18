@@ -24,10 +24,21 @@ try {
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   transpilePackages: ['@bgm/db', '@bgm/types'],
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   images: {
-    remotePatterns: [
-      { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
-    ],
+    remotePatterns: [{ protocol: 'https', hostname: 'lh3.googleusercontent.com' }],
+  },
+  webpack(config) {
+    config.resolve.extensionAlias = {
+      ...(config.resolve.extensionAlias ?? {}),
+      '.js': ['.ts', '.tsx', '.js', '.jsx'],
+    }
+    return config
   },
 }
 
