@@ -38,47 +38,48 @@ const inhouse: Row[] = [
 const ComparisonCard = ({
   eyebrow,
   rows,
-  pitchLead,
 }: {
   eyebrow: string
   rows: Row[]
-  /** バナー上段の差別化ワード (カードごとに変える) */
-  pitchLead: string
 }) => (
   <div className="rounded-3xl bg-dusk p-7 fo-glass-rim relative overflow-hidden flex flex-col">
     <div className="font-semibold uppercase tracking-[0.14em] text-[0.7rem] text-aurora">{eyebrow}</div>
     <div className="text-[0.62rem] uppercase tracking-[0.16em] text-[#7e7c83] mt-1">10名利用想定 ／ 月額</div>
 
     {/* 競合項目 (合計行は削除 — 「使った分だけ」訴求にフォーカスするため) */}
-    <div className="mt-5 space-y-2 flex-1">
+    <div className="mt-6 space-y-1 flex-1">
       {rows.map((r, i) => (
         <div
           key={i}
-          className="flex items-start justify-between py-1.5"
+          className="flex items-start justify-between py-2.5"
           style={{ borderTop: i === 0 ? 'none' : '1px solid rgba(171,199,255,0.06)' }}
         >
           <div className="min-w-0 pr-3">
-            <div className="text-[0.92rem] text-[#e7e5ea]">{r.t}</div>
-            <div className="text-[11px] text-[#7e7c83] mt-0.5">{r.s}</div>
+            <div className="text-[0.95rem] text-[#e7e5ea] font-medium tracking-[-0.01em]">{r.t}</div>
+            <div className="text-[11px] text-[#7e7c83] mt-1 leading-relaxed">{r.s}</div>
           </div>
-          <div className="font-mono text-[#c7c5c9] text-sm whitespace-nowrap">{r.v}</div>
+          <div className="font-mono text-[#c7c5c9] text-[0.95rem] whitespace-nowrap tabular-nums">{r.v}</div>
         </div>
       ))}
     </div>
 
-    {/* ルキスマCRM の差別化バナー — 上段にカード固有のリード、下段は共通の「使ったクレジット分だけ」 */}
+    {/* ルキスマCRM の差別化バナー — 両カードで共通の「つくらず、雇わず、使ったクレジット分だけ」 */}
     <div
-      className="rounded-2xl mt-5 p-[1px]"
-      style={{ background: 'linear-gradient(135deg, rgba(171,199,255,0.5), rgba(0,113,227,0.3), transparent 70%)' }}
+      className="rounded-2xl mt-6 p-[1px]"
+      style={{ background: 'linear-gradient(135deg, rgba(171,199,255,0.6), rgba(0,113,227,0.32), transparent 70%)' }}
     >
-      <div className="rounded-2xl bg-pitch px-5 py-5 text-center fo-glass-rim">
-        <div className="text-[10px] uppercase tracking-[0.18em] text-aurora opacity-80">
+      <div className="rounded-2xl bg-pitch px-6 py-6 text-center fo-glass-rim relative overflow-hidden">
+        <div
+          className="absolute -top-16 -right-16 w-48 h-48 rounded-full pointer-events-none"
+          style={{ background: 'radial-gradient(circle, rgba(171,199,255,0.18), transparent 60%)', filter: 'blur(40px)' }}
+        />
+        <div className="relative text-[10px] uppercase tracking-[0.18em] text-aurora opacity-80">
           対して、ルキスマCRM
         </div>
-        <div className="mt-2 font-display font-bold text-[1.4rem] md:text-[1.7rem] leading-tight text-[#e7e5ea]">
-          {pitchLead}
+        <div className="relative mt-2.5 font-display font-bold text-[1.5rem] md:text-[1.8rem] leading-[1.15] tracking-[-0.01em] text-[#e7e5ea]">
+          つくらず、雇わず、
         </div>
-        <div className="mt-1 font-display font-bold text-[1.4rem] md:text-[1.7rem] leading-tight fo-gradient-text">
+        <div className="relative font-display font-bold text-[1.5rem] md:text-[1.8rem] leading-[1.15] tracking-[-0.01em] fo-gradient-text">
           使ったクレジット分だけ。
         </div>
       </div>
@@ -122,12 +123,10 @@ export const ROISection = () => {
           <ComparisonCard
             eyebrow="VS 他社 SaaS 3ツール契約"
             rows={others}
-            pitchLead="シートに縛られず、"
           />
           <ComparisonCard
             eyebrow="VS 自社で内製する場合"
             rows={inhouse}
-            pitchLead="つくらず、雇わず、"
           />
         </div>
       </div>
