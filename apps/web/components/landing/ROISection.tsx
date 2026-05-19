@@ -123,12 +123,12 @@ export const ROISection = () => {
           <ComparisonCard
             eyebrow="VS 他社 SaaS 3ツール契約"
             rows={others}
-            pitch="使ったクレジット分だけ。"
+            pitch="使うクレジット分だけ。"
           />
           <ComparisonCard
             eyebrow="VS 自社で内製する場合"
             rows={inhouse}
-            pitch="クレジット分だけで、ぜんぶ。"
+            pitch="使用するクレジット分だけ。"
           />
         </div>
       </div>
