@@ -38,9 +38,12 @@ const inhouse: Row[] = [
 const ComparisonCard = ({
   eyebrow,
   rows,
+  pitch,
 }: {
   eyebrow: string
   rows: Row[]
+  /** バナー本文 (1 行・カード別) */
+  pitch: string
 }) => (
   <div className="rounded-3xl bg-dusk p-7 fo-glass-rim relative overflow-hidden flex flex-col">
     <div className="font-semibold uppercase tracking-[0.14em] text-[0.7rem] text-aurora">{eyebrow}</div>
@@ -63,7 +66,7 @@ const ComparisonCard = ({
       ))}
     </div>
 
-    {/* ルキスマCRM の差別化バナー — 両カードで共通の「つくらず、雇わず、使ったクレジット分だけ」 */}
+    {/* ルキスマCRM の差別化バナー — 1 行の core pitch (カード別に微差) */}
     <div
       className="rounded-2xl mt-6 p-[1px]"
       style={{ background: 'linear-gradient(135deg, rgba(171,199,255,0.6), rgba(0,113,227,0.32), transparent 70%)' }}
@@ -76,11 +79,8 @@ const ComparisonCard = ({
         <div className="relative text-[10px] uppercase tracking-[0.18em] text-aurora opacity-80">
           対して、ルキスマCRM
         </div>
-        <div className="relative mt-2.5 font-display font-bold text-[1.5rem] md:text-[1.8rem] leading-[1.15] tracking-[-0.01em] text-[#e7e5ea]">
-          つくらず、雇わず、
-        </div>
-        <div className="relative font-display font-bold text-[1.5rem] md:text-[1.8rem] leading-[1.15] tracking-[-0.01em] fo-gradient-text">
-          使ったクレジット分だけ。
+        <div className="relative mt-3 font-display font-bold text-[1.6rem] md:text-[2rem] leading-[1.15] tracking-[-0.01em] fo-gradient-text">
+          {pitch}
         </div>
       </div>
     </div>
@@ -123,10 +123,12 @@ export const ROISection = () => {
           <ComparisonCard
             eyebrow="VS 他社 SaaS 3ツール契約"
             rows={others}
+            pitch="使ったクレジット分だけ。"
           />
           <ComparisonCard
             eyebrow="VS 自社で内製する場合"
             rows={inhouse}
+            pitch="クレジット分だけで、ぜんぶ。"
           />
         </div>
       </div>
