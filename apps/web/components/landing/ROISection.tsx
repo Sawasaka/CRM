@@ -8,9 +8,9 @@ import { Eyebrow, NebulaBG, Section } from './atoms'
  * 訴求するレイアウトに刷新。
  *
  *   A. 他社 SaaS 3ツール契約 (10名)
- *       - HubSpot Sales Hub Starter (CRM)     30,000円
- *       - MiiTel (通話)                        60,000円
- *       - SalesNow (企業DB)                    50,000円
+ *       - HubSpot Starter Plan (CRM)          30,000円
+ *       - MiiTel (通話)                        30,000円
+ *       - SalesNow (企業DB)                   100,000円
  *
  *   B. 自社で内製する場合 (10名・最低限の運用)
  *       - AWS S3 + 周辺インフラ (S3 3,000円 / DB 6,000円 / ホスティング 6,000円) 15,000円
@@ -24,9 +24,9 @@ import { Eyebrow, NebulaBG, Section } from './atoms'
 type Row = { t: string; s: string; v: string }
 
 const others: Row[] = [
-  { t: 'HubSpot Sales Hub Starter', s: 'CRM ／ 3,000円 × 10名',  v: '30,000円' },
-  { t: 'MiiTel',                    s: '通話 ／ 6,000円 × 10名', v: '60,000円' },
-  { t: 'SalesNow',                  s: '企業DB ／ 10名規模 固定費', v: '50,000円' },
+  { t: 'HubSpot Starter Plan', s: 'CRM ／ 3,000円 × 10名',  v: '30,000円' },
+  { t: 'MiiTel',               s: '通話 ／ 3,000円 × 10名', v: '30,000円' },
+  { t: 'SalesNow',             s: '企業DB ／ 10名規模 固定費', v: '100,000円' },
 ]
 
 const inhouse: Row[] = [
