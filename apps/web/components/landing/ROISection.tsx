@@ -114,7 +114,7 @@ export const ROISection = () => {
           <h2 className="font-display font-bold tracking-[-0.025em] text-[2.4rem] md:text-[3.2rem] leading-[1.04] mt-5">
             <span className="fo-gradient-text">ルキスマCRM は、</span>
             <br />
-            <span className="fo-gradient-text-soft">使った分だけ</span>。
+            <span className="fo-gradient-text-soft">こんなにお得</span>。
           </h2>
         </div>
 
