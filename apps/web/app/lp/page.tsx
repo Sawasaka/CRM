@@ -7,15 +7,10 @@
 import { Nav } from '@/components/landing/Nav'
 import { Hero } from '@/components/landing/Hero'
 import { AgentFabricRich } from '@/components/landing/AgentFabricRich'
-import { DatabaseIntent } from '@/components/landing/sections/DatabaseIntent'
-import { Security } from '@/components/landing/sections/Security'
 import { MetricsBand } from '@/components/landing/sections/MetricsBand'
 import { ROISection } from '@/components/landing/ROISection'
 import { CustomerVoice } from '@/components/landing/sections/CustomerVoice'
-import { HowToStart } from '@/components/landing/sections/HowToStart'
 import { Pricing } from '@/components/landing/sections/Pricing'
-import { FAQ } from '@/components/landing/sections/FAQ'
-import { DocsStrip } from '@/components/landing/sections/DocsStrip'
 import { FinalCTA } from '@/components/landing/sections/FinalCTA'
 import { Footer } from '@/components/landing/sections/Footer'
 
@@ -28,12 +23,7 @@ export default function RukismaCRMLandingPage() {
       <Pricing />
       <ROISection />
       <AgentFabricRich />
-      <DatabaseIntent />
-      <Security />
       <CustomerVoice />
-      <HowToStart />
-      <FAQ />
-      <DocsStrip />
       <FinalCTA />
       <Footer />
     </div>

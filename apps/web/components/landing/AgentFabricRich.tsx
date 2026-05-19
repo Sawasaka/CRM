@@ -7,7 +7,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react'
-import { ArrowRight, ArrowUpRight } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { AGENTS, Eyebrow, Orb, Section, type AgentKey } from './atoms'
 
 type AgentId = 'sales' | 'marketing' | 'support' | 'helpdesk' | 'pdm'
@@ -653,7 +653,6 @@ const HandoffDiagram = () => (
 // ---------- Main ----------
 export const AgentFabricRich = () => {
   const [activeId, setActiveId] = useState<AgentId>('sales')
-  const [showBackToTop, setShowBackToTop] = useState(false)
 
   useEffect(() => {
     if (typeof IntersectionObserver === 'undefined') return
@@ -673,12 +672,6 @@ export const AgentFabricRich = () => {
       if (el) io.observe(el)
     })
     return () => io.disconnect()
-  }, [])
-
-  useEffect(() => {
-    const onScroll = () => setShowBackToTop(window.scrollY > 1200)
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
   return (
@@ -713,40 +706,6 @@ export const AgentFabricRich = () => {
         <AgentScene key={a.id} agent={a} isActive={activeId === a.id} />
       ))}
 
-      <div className="relative mx-auto max-w-5xl px-6 py-32 text-center">
-        <h3 className="font-display font-bold tracking-[-0.025em] text-[2rem] md:text-[2.8rem] leading-[1.08] fo-gradient-text">
-          5体のエージェントは、お互いを呼び合う。
-        </h3>
-        <p className="mt-6 text-[#c7c5c9] text-[1.05rem] leading-relaxed mx-auto max-w-2xl">
-          Sales Agent が要望を検知すると、PDM Agent に渡す。
-          <br />
-          Support Agent が解決した内容は、Helpdesk Agent のナレッジになる。
-          <br />
-          <span className="text-[#9b99a0]">ひとつのプラットフォームに揃っているからこそ、エージェントは協調できます。</span>
-        </p>
-
-        <div className="mt-12">
-          <HandoffDiagram />
-        </div>
-
-        <div className="mt-12 flex items-center justify-center gap-3 flex-wrap">
-          <a
-            href="/agents"
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-dusk hover:bg-shimmer transition-colors text-[0.95rem] fo-glass-rim"
-          >
-            📖 すべてのエージェント詳細を見る
-            <ArrowUpRight size={14} color="#abc7ff" />
-          </a>
-          {showBackToTop && (
-            <button
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-pitch hover:bg-dusk transition-colors text-[0.95rem] fo-glass-rim text-[#9b99a0]"
-            >
-              🏠 ホームに戻る
-            </button>
-          )}
-        </div>
-      </div>
     </Section>
   )
 }
