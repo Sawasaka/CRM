@@ -38,11 +38,12 @@ const inhouse: Row[] = [
 const ComparisonCard = ({
   eyebrow,
   rows,
-  note,
+  pitchLead,
 }: {
   eyebrow: string
   rows: Row[]
-  note: string
+  /** バナー上段の差別化ワード (カードごとに変える) */
+  pitchLead: string
 }) => (
   <div className="rounded-3xl bg-dusk p-7 fo-glass-rim relative overflow-hidden flex flex-col">
     <div className="font-semibold uppercase tracking-[0.14em] text-[0.7rem] text-aurora">{eyebrow}</div>
@@ -65,7 +66,7 @@ const ComparisonCard = ({
       ))}
     </div>
 
-    {/* ルキスマCRM の差別化バナー — 削減%ではなく「クレジット分だけ」のブランド訴求に変更 */}
+    {/* ルキスマCRM の差別化バナー — 上段にカード固有のリード、下段は共通の「使ったクレジット分だけ」 */}
     <div
       className="rounded-2xl mt-5 p-[1px]"
       style={{ background: 'linear-gradient(135deg, rgba(171,199,255,0.5), rgba(0,113,227,0.3), transparent 70%)' }}
@@ -74,16 +75,14 @@ const ComparisonCard = ({
         <div className="text-[10px] uppercase tracking-[0.18em] text-aurora opacity-80">
           対して、ルキスマCRM
         </div>
-        <div className="mt-2 font-display font-bold text-[1.6rem] md:text-[1.9rem] leading-tight fo-gradient-text">
-          使ったクレジット分だけ。
+        <div className="mt-2 font-display font-bold text-[1.4rem] md:text-[1.7rem] leading-tight text-[#e7e5ea]">
+          {pitchLead}
         </div>
-        <div className="mt-2 text-[11px] text-[#9b99a0] tracking-[0.04em]">
-          シート固定費なし ／ クレジット課金のみ
+        <div className="mt-1 font-display font-bold text-[1.4rem] md:text-[1.7rem] leading-tight fo-gradient-text">
+          使ったクレジット分だけ。
         </div>
       </div>
     </div>
-
-    <div className="mt-4 text-[10px] text-[#7e7c83] leading-relaxed">{note}</div>
   </div>
 )
 
@@ -123,12 +122,12 @@ export const ROISection = () => {
           <ComparisonCard
             eyebrow="VS 他社 SaaS 3ツール契約"
             rows={others}
-            note="※ HubSpot は 10名規模での Sales Hub Starter 目安、MiiTel は通話プランの推定値、SalesNow は中小規模目安。実際の費用は要件・契約により変動します。"
+            pitchLead="シートに縛られず、"
           />
           <ComparisonCard
             eyebrow="VS 自社で内製する場合"
             rows={inhouse}
-            note="※ AWS S3 ¥3K + DB ¥6K + ホスティング ¥6K の合算実費感、AI API は Gemini / GPT-4o mini を組み合わせた月間トークン消費試算、人件費は月額 ¥300,000 人材を 0.3 人月で運用想定。"
+            pitchLead="つくらず、雇わず、"
           />
         </div>
       </div>
