@@ -3,19 +3,19 @@ import { Eyebrow, NebulaBG, Section } from './atoms'
 /**
  * ROI / Double Cost Comparison
  *
- * 30名規模の月額で、本当の競合 2 パターンと並べて比較する。
+ * 10名規模の月額で、本当の競合 2 パターンと並べて比較する。
  * 合計や削減%は出さず、「対して、ルキスマCRM は使ったクレジット分だけ」を
  * 訴求するレイアウトに刷新。
  *
- *   A. 他社 SaaS 3ツール契約
- *       - HubSpot Sales Hub Starter (CRM)     ¥100,000
- *       - MiiTel (通話)                        ¥250,000
- *       - SalesNow (企業DB)                    ¥100,000
+ *   A. 他社 SaaS 3ツール契約 (10名)
+ *       - HubSpot Sales Hub Starter (CRM)     ¥30,000
+ *       - MiiTel (通話)                        ¥60,000
+ *       - SalesNow (企業DB)                    ¥50,000
  *
- *   B. 自社で内製する場合 (最低限の運用想定)
- *       - AWS S3 (ストレージ・配信)             ¥10,000
- *       - AI API (議事録 / RAG / 配信 等)       ¥50,000
- *       - 開発者人件費 (1人 × 0.3人月、月額 ¥300K)  ¥100,000
+ *   B. 自社で内製する場合 (10名・最低限の運用)
+ *       - AWS S3 + 周辺インフラ (DB / ホスティング / メール送信)  ¥15,000
+ *       - AI API (Gemini 2.5 Flash Lite / GPT-4o mini)            ¥30,000
+ *       - 開発者人件費 (1人 × 0.3人月、月額 ¥300K 相当)             ¥100,000
  *
  * vs ルキスマCRM は cost-plus モデルでクレジット課金のみ。固定費・シート
  * 単価を持たないため、上記いずれと比べても「使った分だけ」が成立する。
@@ -24,15 +24,15 @@ import { Eyebrow, NebulaBG, Section } from './atoms'
 type Row = { t: string; s: string; v: string }
 
 const others: Row[] = [
-  { t: 'HubSpot Sales Hub Starter', s: 'CRM',  v: '¥100,000' },
-  { t: 'MiiTel',                    s: '通話', v: '¥250,000' },
-  { t: 'SalesNow',                  s: '企業DB', v: '¥100,000' },
+  { t: 'HubSpot Sales Hub Starter', s: 'CRM',   v: '¥30,000' },
+  { t: 'MiiTel',                    s: '通話',  v: '¥60,000' },
+  { t: 'SalesNow',                  s: '企業DB', v: '¥50,000' },
 ]
 
 const inhouse: Row[] = [
-  { t: 'AWS S3',         s: 'ストレージ・配信',                v: '¥10,000' },
-  { t: 'AI API',         s: '議事録 / RAG / 配信 等',          v: '¥50,000' },
-  { t: '開発者人件費',    s: '1人 × 0.3人月 (月額 ¥300,000相当)', v: '¥100,000' },
+  { t: 'AWS S3 + 周辺インフラ', s: 'ストレージ / DB / ホスティング / メール送信',   v: '¥15,000' },
+  { t: 'AI API',               s: 'Gemini 2.5 Flash Lite / GPT-4o mini など',     v: '¥30,000' },
+  { t: '開発者人件費',          s: '1人 × 0.3人月 (月額 ¥300,000 相当)',          v: '¥100,000' },
 ]
 
 const ComparisonCard = ({
@@ -46,7 +46,7 @@ const ComparisonCard = ({
 }) => (
   <div className="rounded-3xl bg-dusk p-7 fo-glass-rim relative overflow-hidden flex flex-col">
     <div className="font-semibold uppercase tracking-[0.14em] text-[0.7rem] text-aurora">{eyebrow}</div>
-    <div className="text-[0.62rem] uppercase tracking-[0.16em] text-[#7e7c83] mt-1">30名利用想定 ／ 月額</div>
+    <div className="text-[0.62rem] uppercase tracking-[0.16em] text-[#7e7c83] mt-1">10名利用想定 ／ 月額</div>
 
     {/* 競合項目 (合計行は削除 — 「使った分だけ」訴求にフォーカスするため) */}
     <div className="mt-5 space-y-2 flex-1">
@@ -123,12 +123,12 @@ export const ROISection = () => {
           <ComparisonCard
             eyebrow="VS 他社 SaaS 3ツール契約"
             rows={others}
-            note="※ HubSpot は 30名規模での Sales Hub Starter 目安、MiiTel は通話プランの推定値、SalesNow は公表価格帯。実際の費用は要件・契約により変動します。"
+            note="※ HubSpot は 10名規模での Sales Hub Starter 目安、MiiTel は通話プランの推定値、SalesNow は中小規模目安。実際の費用は要件・契約により変動します。"
           />
           <ComparisonCard
             eyebrow="VS 自社で内製する場合"
             rows={inhouse}
-            note="※ AWS S3 はストレージ・配信の目安、AI API は議事録/RAG/配信のトークン消費試算、人件費は月額 ¥300,000 人材を 0.3 人月で運用想定。"
+            note="※ AWS S3 + DB + ホスティング + メール送信を合算した実費感、AI API は Gemini / GPT-4o mini を組み合わせた月間トークン消費試算、人件費は月額 ¥300,000 人材を 0.3 人月で運用想定。"
           />
         </div>
       </div>
