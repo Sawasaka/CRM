@@ -13,9 +13,9 @@ import { Eyebrow, NebulaBG, Section } from './atoms'
  *       - SalesNow (企業DB)                    ¥50,000
  *
  *   B. 自社で内製する場合 (10名・最低限の運用)
- *       - AWS S3 + 周辺インフラ (DB / ホスティング / メール送信)  ¥15,000
- *       - AI API (Gemini 2.5 Flash Lite / GPT-4o mini)            ¥30,000
- *       - 開発者人件費 (1人 × 0.3人月、月額 ¥300K 相当)             ¥100,000
+ *       - AWS S3 + 周辺インフラ (S3 ¥3K / DB ¥6K / ホスティング ¥6K) ¥15,000
+ *       - AI API (Gemini 2.5 Flash Lite / GPT-4o mini)               ¥30,000
+ *       - 開発者人件費 (1人 × 0.3人月、月額 ¥300K 相当)                ¥100,000
  *
  * vs ルキスマCRM は cost-plus モデルでクレジット課金のみ。固定費・シート
  * 単価を持たないため、上記いずれと比べても「使った分だけ」が成立する。
@@ -24,15 +24,15 @@ import { Eyebrow, NebulaBG, Section } from './atoms'
 type Row = { t: string; s: string; v: string }
 
 const others: Row[] = [
-  { t: 'HubSpot Sales Hub Starter', s: 'CRM',   v: '¥30,000' },
-  { t: 'MiiTel',                    s: '通話',  v: '¥60,000' },
-  { t: 'SalesNow',                  s: '企業DB', v: '¥50,000' },
+  { t: 'HubSpot Sales Hub Starter', s: 'CRM ／ ¥3,000 × 10名',  v: '¥30,000' },
+  { t: 'MiiTel',                    s: '通話 ／ ¥6,000 × 10名', v: '¥60,000' },
+  { t: 'SalesNow',                  s: '企業DB ／ 10名規模 固定費', v: '¥50,000' },
 ]
 
 const inhouse: Row[] = [
-  { t: 'AWS S3 + 周辺インフラ', s: 'ストレージ / DB / ホスティング / メール送信',   v: '¥15,000' },
-  { t: 'AI API',               s: 'Gemini 2.5 Flash Lite / GPT-4o mini など',     v: '¥30,000' },
-  { t: '開発者人件費',          s: '1人 × 0.3人月 (月額 ¥300,000 相当)',          v: '¥100,000' },
+  { t: 'AWS S3 + 周辺インフラ', s: 'S3 ¥3K ／ DB ¥6K ／ ホスティング ¥6K',     v: '¥15,000' },
+  { t: 'AI API',               s: 'Gemini 2.5 Flash Lite / GPT-4o mini など',  v: '¥30,000' },
+  { t: '開発者人件費',          s: '1人 × 0.3人月 (月額 ¥300,000 相当)',         v: '¥100,000' },
 ]
 
 const ComparisonCard = ({
@@ -128,7 +128,7 @@ export const ROISection = () => {
           <ComparisonCard
             eyebrow="VS 自社で内製する場合"
             rows={inhouse}
-            note="※ AWS S3 + DB + ホスティング + メール送信を合算した実費感、AI API は Gemini / GPT-4o mini を組み合わせた月間トークン消費試算、人件費は月額 ¥300,000 人材を 0.3 人月で運用想定。"
+            note="※ AWS S3 ¥3K + DB ¥6K + ホスティング ¥6K の合算実費感、AI API は Gemini / GPT-4o mini を組み合わせた月間トークン消費試算、人件費は月額 ¥300,000 人材を 0.3 人月で運用想定。"
           />
         </div>
       </div>
