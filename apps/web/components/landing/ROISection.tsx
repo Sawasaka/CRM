@@ -38,23 +38,17 @@ const inhouse: Row[] = [
 const ComparisonCard = ({
   eyebrow,
   rows,
-  totalLabel,
-  totalValue,
-  reductionLabel,
   note,
 }: {
   eyebrow: string
   rows: Row[]
-  totalLabel: string
-  totalValue: string
-  reductionLabel: string
   note: string
 }) => (
   <div className="rounded-3xl bg-dusk p-7 fo-glass-rim relative overflow-hidden flex flex-col">
     <div className="font-semibold uppercase tracking-[0.14em] text-[0.7rem] text-aurora">{eyebrow}</div>
     <div className="text-[0.62rem] uppercase tracking-[0.16em] text-[#7e7c83] mt-1">30名利用想定 ／ 月額</div>
 
-    {/* 競合 3 項目 + 合計 */}
+    {/* 競合項目 (合計行は削除 — 「使った分だけ」訴求にフォーカスするため) */}
     <div className="mt-5 space-y-2 flex-1">
       {rows.map((r, i) => (
         <div
@@ -69,23 +63,22 @@ const ComparisonCard = ({
           <div className="font-mono text-[#c7c5c9] text-sm whitespace-nowrap">{r.v}</div>
         </div>
       ))}
-      <div
-        className="flex items-center justify-between py-3 border-t"
-        style={{ borderColor: 'rgba(171,199,255,0.16)' }}
-      >
-        <div className="text-[#e7e5ea] font-medium">{totalLabel}</div>
-        <div className="font-mono font-display font-bold text-coral text-[1.15rem]">{totalValue}</div>
-      </div>
     </div>
 
-    {/* reduction banner */}
+    {/* ルキスマCRM の差別化バナー — 削減%ではなく「クレジット分だけ」のブランド訴求に変更 */}
     <div
-      className="rounded-2xl mt-4 p-[1px]"
+      className="rounded-2xl mt-5 p-[1px]"
       style={{ background: 'linear-gradient(135deg, rgba(171,199,255,0.5), rgba(0,113,227,0.3), transparent 70%)' }}
     >
-      <div className="rounded-2xl bg-pitch px-5 py-4 text-center fo-glass-rim">
-        <div className="font-display font-bold text-[1.9rem] md:text-[2.2rem] leading-none fo-gradient-text">
-          {reductionLabel}
+      <div className="rounded-2xl bg-pitch px-5 py-5 text-center fo-glass-rim">
+        <div className="text-[10px] uppercase tracking-[0.18em] text-aurora opacity-80">
+          対して、ルキスマCRM
+        </div>
+        <div className="mt-2 font-display font-bold text-[1.6rem] md:text-[1.9rem] leading-tight fo-gradient-text">
+          使ったクレジット分だけ。
+        </div>
+        <div className="mt-2 text-[11px] text-[#9b99a0] tracking-[0.04em]">
+          シート固定費なし ／ クレジット課金のみ
         </div>
       </div>
     </div>
@@ -130,17 +123,11 @@ export const ROISection = () => {
           <ComparisonCard
             eyebrow="VS 他社 SaaS 3ツール契約"
             rows={others}
-            totalLabel="3社合算"
-            totalValue="¥800,000"
-            reductionLabel="−約 78% 削減"
             note="※ HubSpot は 30名規模での Sales Pro 参考価格、MiiTel はフル機能想定の推定値、SalesNow は公表価格帯。実際の費用は要件・契約により変動します。"
           />
           <ComparisonCard
             eyebrow="VS 自社で内製する場合"
             rows={inhouse}
-            totalLabel="自社合計"
-            totalValue="¥4,780,000"
-            reductionLabel="−約 96% 削減"
             note="※ 技術・インフラ原価は社内コスト総括 (2026-04) 、人件費は東京相場の参考値。"
           />
         </div>
