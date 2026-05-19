@@ -33,13 +33,28 @@ export const Pricing = () => {
       price: '/ 月・seat (年払い) ／ 月払 ¥8,300',
       credits: '1,000 クレジット / seat',
       seatNote: '担当者へのチャット相談 (5シート以上で付帯)',
-      featured: true,
+      featured: false,
       color: '#abc7ff',
       feats: [
         'Lite 全機能',
+        'AIモデル: GPT-4o mini にアップグレード (品質・精度向上)',
+        'シンキングモード: 拡張',
+      ],
+    },
+    {
+      eyebrow: 'PRO',
+      tagline: 'エージェントとブラウザ操作で営業を自動化',
+      scale: '¥9,000',
+      price: '/ 月・seat (年払い) ／ 月払 ¥13,000',
+      credits: '2,000 クレジット / seat',
+      seatNote: '担当者へのチャット相談 (1シートから付帯)',
+      featured: true,
+      color: '#abc7ff',
+      feats: [
+        'Standard 全機能',
         'AIモデル: GPT-4o mini / GPT-4o を選択可',
         'シンキングモード: 標準 / 拡張 を選択可',
-        'クレジット 2倍 (1,000 / seat) で通話・議事録もたっぷり',
+        'エージェントモード (チャットからブラウザ自動操作・データ入力)',
       ],
     },
   ]
@@ -72,7 +87,7 @@ export const Pricing = () => {
             <span className="fo-gradient-text-soft">使う分だけ。</span>
           </h2>
         </div>
-        <div className="grid md:grid-cols-2 gap-5 mt-10 items-stretch max-w-4xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-5 mt-10 items-stretch">
           {tiers.map((t, i) => {
             const featured = t.featured
             return (
@@ -138,9 +153,9 @@ export const Pricing = () => {
                     ))}
                   </div>
 
-                  {/* CTA — featured のみグラデ、他は ghost */}
+                  {/* CTA — featured のみグラデ、他は ghost。リリース前のため先行予約に統一。 */}
                   <a
-                    href="/login?mode=register&callbackUrl=/dashboard"
+                    href="#waitlist"
                     className={`mt-6 block text-center w-full rounded-lg py-2.5 text-sm font-medium relative transition-colors ${
                       featured
                         ? 'text-[#0a0a0c]'
@@ -148,7 +163,7 @@ export const Pricing = () => {
                     }`}
                     style={featured ? { background: 'linear-gradient(135deg, #abc7ff, #0071e3)' } : undefined}
                   >
-                    無料で始める
+                    先行予約に登録
                   </a>
                 </div>
               </div>

@@ -9,6 +9,7 @@ import {
   Plus,
   Minus,
   Check,
+  Star,
   Crown,
   X,
   Wrench,
@@ -79,11 +80,28 @@ const PLANS: Plan[] = [
     minSeats: 1,
     baseLabel: 'Lite全機能',
     additions: [
-      'AIモデル: GPT-4o mini / GPT-4o を選択可',
-      'シンキングモード: 標準 / 拡張 を選択可',
+      'AIモデル: GPT-4o mini にアップグレード (品質・精度向上)',
+      'シンキングモード: 拡張',
     ],
     seatNote: '担当者へのチャット相談 (5シート以上で付帯)',
     icon: TrendingUp,
+  },
+  {
+    id: 'pro',
+    name: 'PRO',
+    tagline: 'エージェントとブラウザ操作で営業を自動化',
+    priceMonthly: 13000,
+    priceAnnual: 9000,
+    credits: 2000,
+    minSeats: 1,
+    baseLabel: 'Standard全機能',
+    additions: [
+      'AIモデル: GPT-4o mini / GPT-4o を選択可',
+      'シンキングモード: 標準 / 拡張 を選択可',
+      'エージェントモード (チャットからブラウザ自動操作・データ入力)',
+    ],
+    seatNote: '担当者へのチャット相談 (1シートから付帯)',
+    icon: Star,
     popular: true,
   },
 ]
@@ -938,7 +956,7 @@ function SubscriptionPageContent() {
               </span>
             </label>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 max-w-4xl">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               {PLANS.map((plan, i) => {
                 const Icon = plan.icon
                 const isCurrent = currentPlan === plan.id
@@ -1145,6 +1163,7 @@ function SubscriptionPageContent() {
                             free: 0,
                             lite: 1,
                             standard: 2,
+                            pro: 3,
                           }
                           const isDowngrade =
                             (PLAN_RANK[plan.id] ?? 0) < (PLAN_RANK[currentPlan] ?? 0)
