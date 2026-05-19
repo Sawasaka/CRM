@@ -8,7 +8,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { ArrowRight, ArrowUpRight } from 'lucide-react'
-import { Eyebrow, Orb, Section } from './atoms'
+import { AGENTS, Eyebrow, Orb, Section, type AgentKey } from './atoms'
 
 type AgentId = 'sales' | 'marketing' | 'support' | 'helpdesk' | 'pdm'
 type MockType = 'deal-detail' | 'automation-flow' | 'ticket-inbox' | 'helpdesk-chat' | 'issue-board'
@@ -507,6 +507,53 @@ const AgentScene = ({ agent, isActive }: { agent: AgentEntry; isActive: boolean 
 }
 
 // ---------- Picker chips ----------
+// ---------- Hero orb cluster (5 オーブ + データストリーム) ----------
+// AgenticEra から移植。ヘッダ直下に「5 体が連携している」イメージを概観表示する。
+const AgentOrbCluster = () => {
+  const agents: { agent: AgentKey; x: string }[] = [
+    { agent: 'sales',     x: '14%' },
+    { agent: 'marketing', x: '32%' },
+    { agent: 'pdm',       x: '50%' },
+    { agent: 'helpdesk',  x: '68%' },
+    { agent: 'support',   x: '86%' },
+  ]
+  return (
+    <div className="relative mt-12 mx-auto max-w-4xl h-[220px] md:h-[260px]">
+      <svg viewBox="0 0 1000 320" className="absolute inset-0 w-full h-full" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="agentClusterStream" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%"   stopColor="#abc7ff" stopOpacity="0" />
+            <stop offset="50%"  stopColor="#abc7ff" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#0071e3" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <path
+          d="M140,160 C 280,40 380,260 500,160 S 720,40 860,160"
+          stroke="url(#agentClusterStream)" strokeWidth="1.4" fill="none" className="fo-line-pulse"
+        />
+        <path
+          d="M140,160 C 300,260 400,80 500,160 S 740,240 860,160"
+          stroke="url(#agentClusterStream)" strokeWidth="1.0" fill="none" className="fo-line-pulse"
+          style={{ animationDelay: '-2s' }}
+        />
+      </svg>
+      {agents.map((o, i) => (
+        <div key={o.agent} className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2" style={{ left: o.x }}>
+          <div className="fo-orb-drift" style={{ animationDelay: `-${i * 1.2}s` }}>
+            <Orb color={AGENTS[o.agent].color} size={48} glow={1.4} />
+          </div>
+          <div
+            className="text-[11px] mt-3 text-center uppercase tracking-[0.14em]"
+            style={{ color: AGENTS[o.agent].color }}
+          >
+            {AGENTS[o.agent].name.replace(' Agent', '')}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 const AgentPicker = ({ activeId }: { activeId: AgentId }) => {
   const onClick = (id: AgentId) => {
     const el = document.getElementById(`agent-${id}`)
@@ -644,12 +691,15 @@ export const AgentFabricRich = () => {
           <span className="fo-gradient-text">あなたの代わりに、働く。</span>
         </h2>
         <p className="mt-7 text-[#c7c5c9] text-[1.05rem] leading-relaxed mx-auto max-w-3xl">
-          KikuCRMには、5つのドメイン特化エージェントが標準搭載されています。
+          ルキスマCRMには、5つのドメイン特化エージェントが標準搭載されています。
           <br />
           それぞれが自律的に動き、必要に応じて互いを呼び出し、人間に確認・承認を求める。
           <br />
           <span className="text-[#9b99a0]">「人がツールを使う」のではなく、「エージェントが働き、人が判断する」が、新しい働き方です。</span>
         </p>
+
+        {/* 5 オーブ + データストリーム概観 */}
+        <AgentOrbCluster />
 
         <div className="mt-10">
           <AgentPicker activeId={activeId} />

@@ -6,7 +6,6 @@
 
 import { Nav } from '@/components/landing/Nav'
 import { Hero } from '@/components/landing/Hero'
-import { AgenticEra } from '@/components/landing/sections/AgenticEra'
 import { AgentFabricRich } from '@/components/landing/AgentFabricRich'
 import { DatabaseIntent } from '@/components/landing/sections/DatabaseIntent'
 import { Security } from '@/components/landing/sections/Security'
@@ -28,7 +27,6 @@ export default function RukismaCRMLandingPage() {
       <MetricsBand />
       <Pricing />
       <ROISection />
-      <AgenticEra />
       <AgentFabricRich />
       <DatabaseIntent />
       <Security />
