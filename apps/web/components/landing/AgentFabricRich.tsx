@@ -8,7 +8,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { ArrowRight } from 'lucide-react'
-import { AGENTS, Eyebrow, Orb, Section, type AgentKey } from './atoms'
+import { AGENTS, Orb, Section, type AgentKey } from './atoms'
 
 type AgentId = 'sales' | 'marketing' | 'support' | 'helpdesk' | 'pdm'
 type MockType = 'deal-detail' | 'automation-flow' | 'ticket-inbox' | 'helpdesk-chat' | 'issue-board'
@@ -554,101 +554,6 @@ const AgentOrbCluster = () => {
   )
 }
 
-const AgentPicker = ({ activeId }: { activeId: AgentId }) => {
-  const onClick = (id: AgentId) => {
-    const el = document.getElementById(`agent-${id}`)
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
-  return (
-    <div className="sticky md:static top-0 z-20 -mx-6 md:mx-0 px-6 md:px-0 py-4 md:py-0 bg-pitch/90 backdrop-blur md:bg-transparent md:backdrop-blur-0">
-      <div className="flex items-center justify-center gap-2 md:gap-4 flex-wrap">
-        {AGENTS_DATA.map((a) => {
-          const active = a.id === activeId
-          return (
-            <button
-              key={a.id}
-              onClick={() => onClick(a.id)}
-              className="group flex items-center gap-2 px-3 py-1.5 rounded-full transition-all"
-              style={{
-                background: active ? `${a.accent}1a` : 'rgba(36,36,38,0.5)',
-                boxShadow: active ? `inset 0 0 0 1px ${a.accent}55` : 'inset 0 0 0 1px rgba(255,255,255,0.04)',
-              }}
-            >
-              <span
-                className={`block rounded-full transition-all ${active ? 'fo-orb-active' : ''}`}
-                style={
-                  {
-                    width: active ? 10 : 8,
-                    height: active ? 10 : 8,
-                    background: `radial-gradient(circle at 30% 30%, #ffffff 0%, ${a.accent} 40%, ${a.accent}80 80%)`,
-                    boxShadow: `0 0 ${active ? 14 : 6}px ${a.accent}`,
-                    ['--orb-color' as string]: `${a.accent}80`,
-                  } as React.CSSProperties
-                }
-              />
-              <span className="text-[11px] uppercase tracking-[0.14em]" style={{ color: active ? a.accent : '#9b99a0' }}>
-                {a.name.replace(' Agent', '')}
-              </span>
-            </button>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
-// ---------- Closing handoff diagram ----------
-const HandoffDiagram = () => (
-  <div className="relative h-[260px] md:h-[320px] mx-auto max-w-3xl">
-    <svg viewBox="0 0 600 320" className="absolute inset-0 w-full h-full" preserveAspectRatio="xMidYMid meet">
-      <defs>
-        <linearGradient id="handoffG" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="#abc7ff" stopOpacity="0" />
-          <stop offset="50%" stopColor="#abc7ff" stopOpacity="0.6" />
-          <stop offset="100%" stopColor="#0071e3" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      {([
-        ['M120,80 C 220,40 380,40 480,80', 0],
-        ['M480,80 C 540,160 540,160 480,240', 0.6],
-        ['M480,240 C 380,280 220,280 120,240', 1.2],
-        ['M120,240 C 60,160 60,160 120,80', 1.8],
-        ['M120,80 L480,240', 2.4],
-        ['M480,80 L120,240', 3],
-        ['M300,40 L300,280', 3.6],
-      ] as Array<[string, number]>).map(([d, delay], i) => (
-        <path
-          key={i}
-          d={d}
-          stroke="url(#handoffG)"
-          strokeWidth="1.2"
-          fill="none"
-          className="fo-line-pulse"
-          style={{ animationDelay: `-${delay}s` }}
-        />
-      ))}
-    </svg>
-    {[
-      { id: 'sales',     left: '18%', top: '20%' },
-      { id: 'marketing', left: '76%', top: '20%' },
-      { id: 'pdm',       left: '50%', top: '8%'  },
-      { id: 'helpdesk',  left: '18%', top: '72%' },
-      { id: 'support',   left: '76%', top: '72%' },
-    ].map((p, i) => {
-      const a = AGENTS_DATA.find((x) => x.id === (p.id as AgentId))!
-      return (
-        <div key={p.id} className="absolute -translate-x-1/2 -translate-y-1/2 text-center" style={{ left: p.left, top: p.top }}>
-          <div className="fo-orb-drift mx-auto" style={{ animationDelay: `-${i * 1.1}s` }}>
-            <Orb color={a.accent} size={42} glow={1.6} />
-          </div>
-          <div className="text-[10px] font-mono uppercase tracking-[0.14em] mt-2" style={{ color: a.accent }}>
-            {a.name.replace(' Agent', '')}
-          </div>
-        </div>
-      )
-    })}
-  </div>
-)
 
 // ---------- Main ----------
 export const AgentFabricRich = () => {
@@ -676,27 +581,9 @@ export const AgentFabricRich = () => {
 
   return (
     <Section tone="pitch" screenLabel="07 Agent Fabric">
-      <div className="relative mx-auto max-w-6xl px-6 pt-32 md:pt-44 pb-12 text-center">
-        <Eyebrow color="#abc7ff" className="justify-center">AGENT FABRIC</Eyebrow>
-        <h2 className="font-display font-bold tracking-[-0.025em] text-[2.6rem] md:text-[4rem] leading-[1.04] mt-5 mx-auto max-w-4xl">
-          <span className="fo-gradient-text-soft">5体のエージェントが、</span>
-          <br />
-          <span className="fo-gradient-text">あなたの代わりに、働く。</span>
-        </h2>
-        <p className="mt-7 text-[#c7c5c9] text-[1.05rem] leading-relaxed mx-auto max-w-3xl">
-          ルキスマCRMには、5つのドメイン特化エージェントが標準搭載されています。
-          <br />
-          それぞれが自律的に動き、必要に応じて互いを呼び出し、人間に確認・承認を求める。
-          <br />
-          <span className="text-[#9b99a0]">「人がツールを使う」のではなく、「エージェントが働き、人が判断する」が、新しい働き方です。</span>
-        </p>
-
-        {/* 5 オーブ + データストリーム概観 */}
+      <div className="relative mx-auto max-w-6xl px-6 py-16 md:py-20 text-center">
+        {/* 5 オーブ + データストリームのみ表示 (heading / subtitle / picker は撤去) */}
         <AgentOrbCluster />
-
-        <div className="mt-10">
-          <AgentPicker activeId={activeId} />
-        </div>
       </div>
 
       {/* 個別エージェント詳細 (AGENT FABRIC / 01-05 / xxx Agent) は LP 非表示に。
