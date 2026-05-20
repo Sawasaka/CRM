@@ -18,7 +18,7 @@ async function getSessionUser() {
   const { redirect } = await import('next/navigation')
   const session = await auth()
   if (!session?.user) {
-    redirect('/login')
+    redirect('/login?callbackUrl=/dashboard')
   }
   return (session as NonNullable<typeof session>).user
 }

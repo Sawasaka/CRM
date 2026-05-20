@@ -11,9 +11,17 @@ CRM が Slack のメッセージをコンタクトに紐付けるために、Sla
 ### OAuth & Permissions
 
 - **Redirect URLs** に以下を追加:
+
   ```
   http://localhost:3002/api/slack/oauth-callback
   ```
+
+  本番の独自ドメイン公開後:
+
+  ```text
+  https://app.example.com/api/slack/oauth-callback
+  ```
+
   （本番ドメインができたらそちらも追加）
 
 - **Scopes → Bot Token Scopes** に以下を追加:
@@ -32,9 +40,11 @@ CRM が Slack のメッセージをコンタクトに紐付けるために、Sla
   ```
 
 ### Basic Information
+
 - **Client ID** と **Client Secret** をコピー（`.env.local` に貼る）
 
 ### Display Information
+
 - App Name: `BGM CRM`
 - アイコン任意
 

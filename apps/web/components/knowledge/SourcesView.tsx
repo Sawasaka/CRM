@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { useSession } from 'next-auth/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Database,
@@ -160,10 +161,12 @@ function ConnectionsRow() {
 // ────────────────────────────────────────────────────────────────────
 
 function DriveSection() {
+  const { data: session } = useSession()
+  const userId = (session as unknown as { userId?: string } | null)?.userId
   const [pickerOpen, setPickerOpen] = useState(false)
   const [showFolders, setShowFolders] = useState(false)
 
-  const listQuery = trpc.driveFolders.list.useQuery()
+  const listQuery = trpc.driveFolders.list.useQuery(undefined, { enabled: !!userId })
   const toggleMutation = trpc.driveFolders.setEnabled.useMutation({
     onSuccess: () => listQuery.refetch(),
   })

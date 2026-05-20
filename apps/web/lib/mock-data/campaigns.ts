@@ -8,11 +8,11 @@ export type CampaignStatus = 'draft' | 'scheduled' | 'sending' | 'sent'
 export type LinkKind = 'homepage' | 'schedule' | 'doc' | 'other'
 
 export interface CampaignLink {
-  id: string                  // BGM 中継URLに使う識別子
+  id: string                  // ルキスマCRM 中継URLに使う識別子
   kind: LinkKind
   label: string               // 本文上の表示テキスト
   originalUrl: string         // 実際の遷移先
-  trackingUrl: string         // BGM 中継URL: https://track.bgm.app/c/<id>
+  trackingUrl: string         // ルキスマCRM 中継URL: https://track.bgm.app/c/<id>
   clicks: number              // この回のクリック数
 }
 
@@ -106,12 +106,12 @@ export const MOCK_CAMPAIGNS: MailCampaign[] = [
       {
         round: 1,
         sentAt: '2026-04-15 10:00',
-        subject: '【BGM】営業組織のパフォーマンスを一望できる新機能のご案内',
-        body: 'いつもお世話になっております。\nBGMでは4月度より、メール配信から受注までを1画面で追える新機能をリリースしました。\nご興味あれば30分のお時間をいただけますと幸いです。',
+        subject: '【ルキスマCRM】営業組織のパフォーマンスを一望できる新機能のご案内',
+        body: 'いつもお世話になっております。\nルキスマCRMでは4月度より、メール配信から受注までを1画面で追える新機能をリリースしました。\nご興味あれば30分のお時間をいただけますと幸いです。',
         recipients: 240,
         filter: 'all',
         links: [
-          { id: 'lnk-1-1-hp',  kind: 'homepage', label: 'BGM サービスサイト',     originalUrl: 'https://bgm.app/',                       trackingUrl: 'https://track.bgm.app/c/lnk-1-1-hp',  clicks: 14 },
+          { id: 'lnk-1-1-hp',  kind: 'homepage', label: 'ルキスマCRM サービスサイト', originalUrl: 'https://bgm.app/',                       trackingUrl: 'https://track.bgm.app/c/lnk-1-1-hp',  clicks: 14 },
           { id: 'lnk-1-1-sc',  kind: 'schedule', label: '30分の打合せをご予約',   originalUrl: 'https://timerex.net/s/sawasaka/30min',  trackingUrl: 'https://track.bgm.app/c/lnk-1-1-sc',  clicks: 12 },
           { id: 'lnk-1-1-d1',  kind: 'doc',      label: 'サービス紹介資料 v2.1',  originalUrl: 'https://track.bgm.app/d/abc123',         trackingUrl: 'https://track.bgm.app/c/lnk-1-1-d1',  clicks: 18 },
           { id: 'lnk-1-1-d2',  kind: 'doc',      label: '導入事例集 2026年版',    originalUrl: 'https://track.bgm.app/d/ghi789',         trackingUrl: 'https://track.bgm.app/c/lnk-1-1-d2',  clicks: 6  },
@@ -127,7 +127,7 @@ export const MOCK_CAMPAIGNS: MailCampaign[] = [
         recipients: 185, // 1回目に未クリックの人へ
         filter: 'no_click',
         links: [
-          { id: 'lnk-1-2-hp', kind: 'homepage', label: '3分でわかる BGM',         originalUrl: 'https://bgm.app/quick',                  trackingUrl: 'https://track.bgm.app/c/lnk-1-2-hp', clicks: 18 },
+          { id: 'lnk-1-2-hp', kind: 'homepage', label: '3分でわかる ルキスマCRM', originalUrl: 'https://bgm.app/quick',                  trackingUrl: 'https://track.bgm.app/c/lnk-1-2-hp', clicks: 18 },
           { id: 'lnk-1-2-sc', kind: 'schedule', label: '15分のショートMTG',       originalUrl: 'https://timerex.net/s/sawasaka/15min',  trackingUrl: 'https://track.bgm.app/c/lnk-1-2-sc', clicks: 9  },
           { id: 'lnk-1-2-d1', kind: 'doc',      label: 'サービス紹介資料 v2.1',  originalUrl: 'https://track.bgm.app/d/abc123',         trackingUrl: 'https://track.bgm.app/c/lnk-1-2-d1', clicks: 11 },
         ],
@@ -213,7 +213,7 @@ export const MOCK_CAMPAIGNS: MailCampaign[] = [
       {
         round: 1,
         sentAt: '2026-05-01 14:00',
-        subject: '他社比較資料 — BGMが選ばれている3つの理由',
+        subject: '他社比較資料 — ルキスマCRMが選ばれている3つの理由',
         body: '貴社のご検討を後押しできればと思い、競合比較資料を作成しました。',
         recipients: 420,
         filter: 'all',

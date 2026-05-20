@@ -5,18 +5,18 @@ export const CategoryDefinition = () => (
     <div className="relative mx-auto max-w-6xl px-6 py-32 md:py-44">
       <div className="grid md:grid-cols-12 gap-10 items-start">
         <div className="md:col-span-5">
-          <Eyebrow color="#abc7ff">A NEW CATEGORY</Eyebrow>
+          <Eyebrow color="#abc7ff">CHAT CRM</Eyebrow>
           <h2 className="font-display font-bold tracking-[-0.025em] text-[2.4rem] md:text-[3.4rem] leading-[1.06] mt-5">
-            <span className="text-[#9b99a0]">Back Office があるなら、</span>
+            <span className="text-[#9b99a0]">CRMに入力する時代から、</span>
             <br />
-            <span className="fo-gradient-text">Front Office も、ある。</span>
+            <span className="fo-gradient-text">営業データに聞く時代へ。</span>
           </h2>
         </div>
         <div className="md:col-span-7 md:pl-10 space-y-4 text-[#c7c5c9] text-[1.05rem] leading-relaxed">
-          <p>「会計」「人事」「総務」を統合した Back Office は、もう当たり前になりました。</p>
-          <p>けれど、レベニュー側 — 営業・マーケ・サポート・PDM・ヘルプデスク — は、ばらばらのツールに分かれたまま。</p>
-          <p>BGM (Business Growth Management) は、レベニュー側のすべてを束ねる、はじめてのカテゴリです。</p>
-          <p className="text-[#7e7c83]">KikuCRM は、その Front Office カテゴリの第一号です。</p>
+          <p>CRMは、入力するだけの台帳ではなく、営業判断を返す場所になります。</p>
+          <p>商談・メール・議事録・求人インテント・企業DBを横断し、いま動くべき企業と理由をチャットで返す。</p>
+          <p>ルキスマCRMは、RookieSmartが提供するチャット型のAI CRMです。</p>
+          <p className="text-[#7e7c83]">会社ブランド配下で、今後の営業・サポート・AIサービス群へ広げていける名前です。</p>
         </div>
       </div>
 
@@ -41,9 +41,9 @@ export const CategoryDefinition = () => (
               style={{ background: 'radial-gradient(circle, rgba(171,199,255,0.18), transparent 60%)', filter: 'blur(40px)' }}
             />
             <div className="font-semibold uppercase tracking-[0.14em] text-[0.72rem] text-aurora relative">
-              FRONT OFFICE ／ BGM
+              ルキスマCRM
             </div>
-            <div className="font-display font-bold text-[1.6rem] mt-3 fo-gradient-text relative">攻める、増やす、育てる。</div>
+            <div className="font-display font-bold text-[1.6rem] mt-3 fo-gradient-text relative">聞く、判断する、動く。</div>
             <div className="mt-6 flex flex-wrap gap-2 relative">
               {[
                 ['Sales', '#abc7ff'], ['Marketing', '#ffcf4a'], ['Support', '#ff8dcf'],
@@ -59,7 +59,7 @@ export const CategoryDefinition = () => (
                 </span>
               ))}
             </div>
-            <div className="mt-8 text-xs text-aurora/80">KikuCRM by RookieSmart Inc.</div>
+            <div className="mt-8 text-xs text-aurora/80">ルキスマCRM by RookieSmart Inc.</div>
           </div>
         </div>
       </div>

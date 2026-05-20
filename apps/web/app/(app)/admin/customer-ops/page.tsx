@@ -169,7 +169,7 @@ export default function CustomerOpsPage() {
             アクセス権限がありません
           </h2>
           <p className="text-[13px]" style={{ color: 'var(--color-obs-text-muted)' }}>
-            このページは Front Office 開発者専用です。
+            このページは ルキスマCRM 開発者専用です。
           </p>
         </div>
       </ObsPageShell>
@@ -476,7 +476,7 @@ export default function CustomerOpsPage() {
           <ul className="text-[12.5px] space-y-1.5" style={{ color: 'var(--color-obs-text-muted)' }}>
             <li>・テナント数・MRR・クレジット消費は5分おきに集計更新されます。</li>
             <li>・テナント詳細ページで購入履歴・機能リクエスト・サポート利用状況を確認できます。</li>
-            <li>・アクセスは BGM 開発者専用です。閲覧操作はすべて監査ログに記録されます。</li>
+            <li>・アクセスは ルキスマCRM 開発者専用です。閲覧操作はすべて監査ログに記録されます。</li>
           </ul>
         </ObsCard>
       </div>

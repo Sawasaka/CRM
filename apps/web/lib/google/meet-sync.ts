@@ -88,7 +88,7 @@ export async function syncMeetForUser(userId: string): Promise<SyncResult> {
 
     // Drive 上の議事録 Doc のリンクが docsDestination にある
     if (transcript.docsDestination?.document) {
-      googleDocId = transcript.docsDestination.document
+      googleDocId = normalizeGoogleDocId(transcript.docsDestination.document)
       googleDocUrl = transcript.docsDestination.exportUri ?? null
       // Doc 本文を export で取得
       try {
@@ -209,4 +209,9 @@ async function advanceMeetingAndDeal(meetingEventId: string, userId: string): Pr
     return true
   }
   return false
+}
+
+function normalizeGoogleDocId(documentRef: string): string {
+  const parts = documentRef.split('/')
+  return parts[parts.length - 1] || documentRef
 }

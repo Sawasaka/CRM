@@ -34,9 +34,9 @@ import {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type PriorityCategory = '要望機能' | 'ニーズ' | '課題' | '問題'
+export type PriorityCategory = '要望機能' | 'ニーズ' | '課題' | '問題'
 
-interface PriorityEvidence {
+export interface PriorityEvidence {
   companyId: string
   companyName: string
   /** ISO date (YYYY-MM-DD) */
@@ -49,7 +49,7 @@ interface PriorityEvidence {
   sourceType?: 'meeting' | 'ticket'
 }
 
-interface PriorityItem {
+export interface PriorityItem {
   id: string
   category: PriorityCategory
   /** AI がまとめた見出し (例: "カスタムレポートの柔軟性") */
@@ -109,7 +109,7 @@ const CATEGORY_META: Record<PriorityCategory, {
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
-const MOCK_ITEMS: PriorityItem[] = [
+export const MOCK_PRIORITY_ITEMS: PriorityItem[] = [
   // ── 要望機能 ────────────────────────────────────────────────────────────────
   {
     id: 'f-1',
@@ -523,7 +523,7 @@ export default function DevelopmentPriorityPage() {
       課題: [],
       問題: [],
     }
-    for (const it of MOCK_ITEMS) out[it.category].push(it)
+    for (const it of MOCK_PRIORITY_ITEMS) out[it.category].push(it)
     for (const cat of ALL_CATEGORIES) {
       out[cat].sort((a, b) => uniqueCompanyCount(b) - uniqueCompanyCount(a))
     }
@@ -534,7 +534,7 @@ export default function DevelopmentPriorityPage() {
   const overall = useMemo(() => {
     const docs = new Set<string>()
     const companies = new Set<string>()
-    for (const it of MOCK_ITEMS) {
+    for (const it of MOCK_PRIORITY_ITEMS) {
       for (const ev of it.evidence) {
         docs.add(ev.meetingDocUrl)
         companies.add(ev.companyId)

@@ -57,7 +57,7 @@ export const HeroSidebar = ({ active, onSelect }: HeroSidebarProps) => {
           >
             <span className="text-[10px] font-bold text-[#0a0a0c]">K</span>
           </div>
-          <span className="text-[13px] font-medium text-[#e7e5ea]">KikuCRM</span>
+          <span className="text-[13px] font-medium text-[#e7e5ea]">ルキスマCRM</span>
         </button>
       </div>
 

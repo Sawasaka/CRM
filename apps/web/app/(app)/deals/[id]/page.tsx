@@ -9,7 +9,6 @@ import {
   ChevronLeft,
   Phone,
   Building2,
-  User,
   Target,
   Calendar,
   TrendingUp,
@@ -39,13 +38,25 @@ import {
   MapPin,
   ExternalLink,
   LifeBuoy,
+  Radio,
+  Sparkles,
+  Upload,
+  AlertTriangle,
+  Ticket,
 } from 'lucide-react'
 import { ObsPageShell } from '@/components/obsidian'
 // コンタクト詳細と同じアクティビティ仕様を再利用 (タブ: すべて / コール / メール / 会議)
 import { ContactHistoryTimeline } from '@/app/(app)/contacts/[id]/page'
+// 開発優先度ページから抽出データを取り込み (議事録 + 問い合わせチケット起点)
+import {
+  MOCK_PRIORITY_ITEMS,
+  type PriorityCategory,
+  type PriorityItem,
+} from '@/app/(app)/priority/page'
 import { CreateTicketModal } from '@/app/(app)/tickets/_components/CreateTicketModal'
 import { StatusBadge as TicketStatusBadge } from '@/app/(app)/tickets/_components/StatusBadge'
 import type { TicketListItem } from '@/app/(app)/tickets/_types'
+import { getCompanyFirstPartySignal } from '@/lib/mock-data/firstPartySignals'
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Types
@@ -74,24 +85,30 @@ type ConfidenceLevel = 'High' | 'Medium' | 'Low'
 
 type ActivityType = 'call' | 'email' | 'note' | 'deal_advance'
 
-// ISフィールドキー（電話・メールから自動抽出される項目）
-type ISFieldKey =
-  | '検討フェーズ'
-  | 'サービス認知度'
-  | '興味の対象'
-  | '求めているもの'
-  | '次の進め方'
-  | '担当部署・役割'
-  | '興味度'
-  | '依頼済みタスク'
-  | '電話可否'
-  | 'IS所見メモ'
+// ISフィールドの既定キー（電話とメール文から事実に基づき抽出される項目）
+// カスタム項目もユーザーが自由に追加可能なため key は string で扱う
+const DEFAULT_IS_FIELD_KEYS = [
+  '担当部署',
+  '役割',
+  '検討フェーズ',
+  'どこでサービスを知ったか',
+  '会社やサービスを知っているか',
+  '興味やニーズ',
+  '背景',
+  '課題や問題',
+  '求めているもの',
+  '解決したいことや達成したいこと',
+  '次の進めかた',
+  'タスク',
+  '希望連絡手段',
+] as const
+type DefaultISFieldKey = (typeof DEFAULT_IS_FIELD_KEYS)[number]
+type ISFieldKey = DefaultISFieldKey | string
 
 // IS段階の選択値（チップで表示する系）
 type ISConsiderationPhase = '情報収集' | '検討中' | '比較検討' | '導入決定間近' | '未確認'
 type ISServiceAwareness = '未認知' | '名前は知っている' | '内容を理解' | '導入経験あり' | '未確認'
-type ISInterestLevel = '高（前向き）' | '中（要育成）' | '低（情報収集のみ）' | '未測定'
-type ISCallability = '可' | '時間帯指定あり' | '不可' | '未確認'
+type ISContactPreference = '電話' | 'メール' | 'Slack' | 'Web会議' | '対面' | '未確認'
 type ISRequestedItem = '資料' | 'お見積もり' | 'デモ' | 'トライアル' | '事例紹介' | '個別相談'
 type ISTaskItem = '資料請求' | 'デモ依頼' | '見積依頼' | '事例提供' | '社内共有' | '稟議用情報'
 
@@ -99,63 +116,53 @@ interface ISField {
   key: ISFieldKey
   label: string
   value: string | null
+  isDefault: boolean   // true = 既定項目(電話・メールから自動抽出) / false = ユーザー追加カスタム
   // チップ表示用の構造化データ（任意）
-  chipValue?: ISConsiderationPhase | ISServiceAwareness | ISInterestLevel | ISCallability
+  chipValue?: ISConsiderationPhase | ISServiceAwareness | ISContactPreference
   chipList?: (ISRequestedItem | ISTaskItem)[]
 }
 
-// 営業フィールドキー（議事録から自動抽出される項目）
-type SalesFieldKey =
-  | '課題'
-  | '予算'
-  | '希望サービス'
-  | 'タイムライン'
-  | '決裁者'
-  | '稟議プロセス'
-  | '競合'
-  | '障壁'
-  | 'その他'
-  | '現状システム'
-  | '理想システム'
-  | 'ニーズ'
-  | '要望機能'
-  | '出席者'
+// 営業フィールドの既定キー（議事録から自動抽出される項目）
+// カスタム項目もユーザーが自由に追加可能なため key は string で扱う
+const DEFAULT_SALES_FIELD_KEYS = [
+  '出席者',
+  '商談に至った背景',
+  '社内状況',
+  '課題',
+  'ニーズ',
+  '達成したい事',
+  '必要なこと',
+  '現状',
+  '理想',
+  'タイムライン',
+  '検討フェーズ',
+  '予算',
+  '稟議プロセス',
+  '競合',
+  '導入の選定基準',
+  '期待すること',
+  '障壁',
+  '今後の流れ',
+] as const
+type DefaultSalesFieldKey = (typeof DEFAULT_SALES_FIELD_KEYS)[number]
+type SalesFieldKey = DefaultSalesFieldKey | string
 
-// プロダクトフィールドキー（開発・PDM 視点で扱う項目）
-type ProductFieldKey =
-  | '機能要件サマリ'
-  | '優先度'
-  | '想定利用シーン'
-  | '想定ユーザー'
-  | '統合・連携要件'
-  | 'セキュリティ要件'
-  | 'パフォーマンス要件'
-  | 'カスタマイズ範囲'
-  | '段階導入計画'
-  | '技術スタック制約'
-  | 'KPI／成果指標'
-  | 'リスク・懸念'
-
-// 出席者：職種・任務・成し遂げたいこと の3軸でいい感じにまとめる
+// 出席者：取引に参加した人。コンタクトIDで紐付けて詳細ページへワンクリック遷移
 interface Participant {
   name: string
-  role: string         // 職種や担当範囲
-  mission: string      // 任務
-  vision: string       // 成し遂げたいこと / 目指していること
+  contactId?: string   // コンタクトIDがあればワンクリックで /contacts/[id] へ
+  department: string   // 部署
+  title: string        // 役職 (CTO / 部長 / マネージャー 等)
+  role: string         // この取引における役割 (決裁者 / 技術評価 / 推進担当 等)
 }
 
 interface SalesField {
   key: SalesFieldKey
   label: string
   value: string | null
+  isDefault: boolean              // true = 既定項目(議事録から自動抽出) / false = ユーザー追加カスタム
   confidence?: ConfidenceLevel   // ※UI表示は廃止、データは互換のため残置
   participants?: Participant[]   // '出席者' のときに使用
-}
-
-interface ProductField {
-  key: ProductFieldKey
-  label: string
-  value: string | null
 }
 
 interface DealDetail {
@@ -398,8 +405,25 @@ function dealDeptLabel(t: string | null | undefined): string {
 
 // ─── 提案内容（取引で提案中のサービス・契約条件） ─────────────────────
 type ProposalPaymentCycle = '月額' | '年額一括' | '半年一括' | '一括買い切り'
+type AttachmentType = '契約書' | 'NDA' | '見積書' | '提案書' | 'その他'
 
-interface ProposalContent {
+interface CustomField {
+  id: string
+  label: string
+  value: string
+}
+
+interface ProposalAttachment {
+  id: string
+  name: string                // ファイル名
+  type: AttachmentType        // 種別
+  sizeKb: number              // 容量（KB）
+  uploadedAt: string          // ISO日付
+}
+
+interface Proposal {
+  id: string
+  name: string                // 提案名（例: A案 / Enterprise版）
   service: string             // 提案サービス・プラン名
   amount: number              // 提案金額（税抜）
   paymentCycle: ProposalPaymentCycle
@@ -408,49 +432,86 @@ interface ProposalContent {
   startAt: string | null      // 開始予定日 (ISO)
   initialFee: number | null   // 初期費用 (null=なし)
   notes: string               // 提案メモ
+  customFields: CustomField[]
+  attachments: ProposalAttachment[]
 }
 
-const DEAL_PROPOSALS: Record<string, ProposalContent> = {
-  'd1': {
-    service: 'BGM Front Office Pro / Slack連携アドオン',
-    amount: 4800000,
-    paymentCycle: '年額一括',
-    contractMonths: 12,
-    licenseCount: 30,
-    startAt: '2026-04-01',
-    initialFee: 300000,
-    notes: 'Slack連携+AI議事録要約をフルで含む構成。CTO同席デモ後に最終調整予定。',
-  },
-  'd2': {
-    service: 'BGM Front Office Enterprise',
-    amount: 6000000,
-    paymentCycle: '年額一括',
-    contractMonths: 24,
-    licenseCount: 80,
-    startAt: '2026-04-15',
-    initialFee: 500000,
-    notes: '24ヶ月契約で20%値引き適用済み。契約書ドラフトを法務レビュー中。',
-  },
-  'd3': {
-    service: 'BGM Front Office Standard',
-    amount: 2400000,
-    paymentCycle: '月額',
-    contractMonths: 12,
-    licenseCount: 15,
-    startAt: '2026-05-01',
-    initialFee: null,
-    notes: '初期費用なし・月額固定で提案。決裁者特定後に再見積り想定。',
-  },
-  'd4': {
-    service: 'BGM Front Office Lite (HR導入特化)',
-    amount: 900000,
-    paymentCycle: '月額',
-    contractMonths: 6,
-    licenseCount: 10,
-    startAt: '2026-06-01',
-    initialFee: 100000,
-    notes: '小規模スタートで6ヶ月運用→拡張提案を想定。',
-  },
+const DEAL_PROPOSALS: Record<string, Proposal[]> = {
+  'd1': [
+    {
+      id: 'p-d1-1',
+      name: '本命プラン',
+      service: 'ルキスマCRM Pro / Slack連携アドオン',
+      amount: 4800000,
+      paymentCycle: '年額一括',
+      contractMonths: 12,
+      licenseCount: 30,
+      startAt: '2026-04-01',
+      initialFee: 300000,
+      notes: 'Slack連携+AI議事録要約をフルで含む構成。CTO同席デモ後に最終調整予定。',
+      customFields: [],
+      attachments: [
+        { id: 'a-d1-1-1', name: '提案書_ルキスマCRM_Pro_v3.pdf', type: '提案書', sizeKb: 1240, uploadedAt: '2026-03-15' },
+        { id: 'a-d1-1-2', name: 'NDA_締結済.pdf', type: 'NDA', sizeKb: 320, uploadedAt: '2026-02-20' },
+      ],
+    },
+  ],
+  'd2': [
+    {
+      id: 'p-d2-1',
+      name: 'Enterprise案',
+      service: 'ルキスマCRM Enterprise',
+      amount: 6000000,
+      paymentCycle: '年額一括',
+      contractMonths: 24,
+      licenseCount: 80,
+      startAt: '2026-04-15',
+      initialFee: 500000,
+      notes: '24ヶ月契約で20%値引き適用済み。契約書ドラフトを法務レビュー中。',
+      customFields: [],
+      attachments: [],
+    },
+  ],
+  'd3': [
+    {
+      id: 'p-d3-1',
+      name: 'Standard',
+      service: 'ルキスマCRM Standard',
+      amount: 2400000,
+      paymentCycle: '月額',
+      contractMonths: 12,
+      licenseCount: 15,
+      startAt: '2026-05-01',
+      initialFee: null,
+      notes: '初期費用なし・月額固定で提案。決裁者特定後に再見積り想定。',
+      customFields: [],
+      attachments: [],
+    },
+  ],
+  'd4': [
+    {
+      id: 'p-d4-1',
+      name: 'HR導入特化版',
+      service: 'ルキスマCRM Lite (HR導入特化)',
+      amount: 900000,
+      paymentCycle: '月額',
+      contractMonths: 6,
+      licenseCount: 10,
+      startAt: '2026-06-01',
+      initialFee: 100000,
+      notes: '小規模スタートで6ヶ月運用→拡張提案を想定。',
+      customFields: [],
+      attachments: [],
+    },
+  ],
+}
+
+const ATTACHMENT_TYPE_TONE: Record<AttachmentType, { bg: string; color: string }> = {
+  '契約書':   { bg: 'rgba(110,231,161,0.14)', color: '#6ee7a1' },
+  'NDA':     { bg: 'rgba(255,184,107,0.16)', color: 'var(--color-obs-middle)' },
+  '見積書':   { bg: 'rgba(171,199,255,0.14)', color: 'var(--color-obs-primary)' },
+  '提案書':   { bg: 'rgba(126,198,255,0.14)', color: 'var(--color-obs-low)' },
+  'その他':   { bg: 'rgba(109,106,111,0.18)', color: 'var(--color-obs-text-muted)' },
 }
 
 const PAYMENT_CYCLE_TONE: Record<ProposalPaymentCycle, { bg: string; color: string }> = {
@@ -458,6 +519,26 @@ const PAYMENT_CYCLE_TONE: Record<ProposalPaymentCycle, { bg: string; color: stri
   '年額一括':   { bg: 'rgba(171,199,255,0.14)', color: 'var(--color-obs-primary)' },
   '半年一括':   { bg: 'rgba(255,184,107,0.14)', color: 'var(--color-obs-middle)' },
   '一括買い切り': { bg: 'rgba(255,107,107,0.14)', color: 'var(--color-obs-hot)' },
+}
+
+const ATTACHMENT_TYPE_OPTIONS: AttachmentType[] = ['契約書', 'NDA', '見積書', '提案書', 'その他']
+const PAYMENT_CYCLE_OPTIONS: ProposalPaymentCycle[] = ['月額', '年額一括', '半年一括', '一括買い切り']
+
+function createEmptyProposal(): Proposal {
+  return {
+    id: `p-new-${Date.now()}`,
+    name: '新規提案',
+    service: '',
+    amount: 0,
+    paymentCycle: '年額一括',
+    contractMonths: 12,
+    licenseCount: null,
+    startAt: null,
+    initialFee: null,
+    notes: '',
+    customFields: [],
+    attachments: [],
+  }
 }
 
 const DEAL_CONTACTS: Record<string, ISContact[]> = {
@@ -476,207 +557,186 @@ const DEAL_CONTACTS: Record<string, ISContact[]> = {
   ],
 }
 
-// ─── ISフィールド（電話・メールから自動抽出される項目） ──────────────────
-// IS段階のヒアリング情報。電話の文字起こし＋メールの本文・件名から AI が抽出
+// ─── ISフィールド（電話とメール文から事実に基づき抽出される項目） ─────────
+// IS段階のヒアリング情報。電話の文字起こし＋メール本文・件名から AI が事実ベースで抽出
 const MOCK_IS_FIELDS: Record<string, ISField[]> = {
   'd1': [
-    { key: '検討フェーズ', label: '検討フェーズ', value: '検討中', chipValue: '検討中' },
-    { key: 'サービス認知度', label: 'サービス認知度', value: '内容を理解', chipValue: '内容を理解' },
-    { key: '興味の対象', label: '興味の対象', value: 'AI議事録要約 / Slackリアルタイム連携 / 営業マネージャ向けKPIダッシュボード' },
+    { isDefault: true, key: '担当部署', label: '担当部署', value: '営業部' },
+    { isDefault: true, key: '役割', label: '役割', value: '部長（実務推進担当） / 決裁関与あり（最終決裁は社長）' },
+    { isDefault: true, key: '検討フェーズ', label: '検討フェーズ', value: '検討中', chipValue: '検討中' },
+    { isDefault: true, key: 'どこでサービスを知ったか', label: 'どこでサービスを知ったか', value: '展示会で初回接触 → 自社サイト経由で問い合わせ' },
+    { isDefault: true, key: '会社やサービスを知っているか', label: '会社やサービスを知っているか', value: '内容を理解', chipValue: '内容を理解' },
+    { isDefault: true, key: '興味やニーズ', label: '興味やニーズ', value: 'AI議事録要約 / Slackリアルタイム連携 / 営業マネージャ向けKPIダッシュボード' },
+    { isDefault: true, key: '背景', label: '背景', value: '社内でCRM未導入。週次の数字集約をマネージャが手作業で行っており、深夜労働が常態化。' },
+    { isDefault: true, key: '課題や問題', label: '課題や問題', value: '商談管理の属人化 / 議事録作成負荷が高い / 数字確定までのリードタイムが長い' },
     {
+      isDefault: true,
       key: '求めているもの', label: '求めているもの', value: 'デモ / お見積もり / 事例紹介',
       chipList: ['デモ', 'お見積もり', '事例紹介'],
     },
-    { key: '次の進め方', label: '次の進め方', value: '4/25にCTO同席で最終デモ → 4/末までに見積回答 → 5月導入判定' },
-    { key: '担当部署・役割', label: '担当部署・役割', value: '営業部 部長（実務推進担当） / 決裁関与あり（最終決裁は社長）' },
-    { key: '興味度', label: '興味度', value: '高（前向き）', chipValue: '高（前向き）' },
+    { isDefault: true, key: '解決したいことや達成したいこと', label: '解決したいことや達成したいこと', value: '商談プロセスを標準化し、週次数字を即時可視化することでマネージャ負担をゼロにしたい' },
+    { isDefault: true, key: '次の進めかた', label: '次の進めかた', value: '4/25にCTO同席で最終デモ → 4/末までに見積回答 → 5月導入判定' },
     {
-      key: '依頼済みタスク', label: '依頼済みタスク', value: '資料請求 / デモ依頼 / 稟議用情報',
+      isDefault: true,
+      key: 'タスク', label: 'タスク', value: '資料請求 / デモ依頼 / 稟議用情報',
       chipList: ['資料請求', 'デモ依頼', '稟議用情報'],
     },
-    { key: '電話可否', label: '電話可否', value: '可（平日10-12時優先）', chipValue: '時間帯指定あり' },
-    { key: 'IS所見メモ', label: 'IS所見メモ', value: '初期コール時はSlack連携の可否を最重視。CTO鈴木氏は技術的な深い質問が多く、営業ツール導入経験あり。資料は技術観点で訴求するとフィット。' },
+    { isDefault: true, key: '希望連絡手段', label: '希望連絡手段', value: 'メール優先（緊急時は電話可・平日10-12時）', chipValue: 'メール' },
   ],
   'd2': [
-    { key: '検討フェーズ', label: '検討フェーズ', value: '導入決定間近', chipValue: '導入決定間近' },
-    { key: 'サービス認知度', label: 'サービス認知度', value: '内容を理解', chipValue: '内容を理解' },
-    { key: '興味の対象', label: '興味の対象', value: '契約管理機能 / 役員向けダッシュボード' },
-    { key: '求めているもの', label: '求めているもの', value: 'お見積もり / 事例紹介', chipList: ['お見積もり', '事例紹介'] },
-    { key: '次の進め方', label: '次の進め方', value: '契約書ドラフトを4/26に確認 → 即押印 → 5月導入' },
-    { key: '担当部署・役割', label: '担当部署・役割', value: '代表取締役 / 決裁権限あり（即決可）' },
-    { key: '興味度', label: '興味度', value: '高（前向き）', chipValue: '高（前向き）' },
-    { key: '依頼済みタスク', label: '依頼済みタスク', value: '見積依頼 / 事例提供', chipList: ['見積依頼', '事例提供'] },
-    { key: '電話可否', label: '電話可否', value: '可', chipValue: '可' },
-    { key: 'IS所見メモ', label: 'IS所見メモ', value: '即決型の代表者。技術的な細部より導入後の効果と実績を重視。事例3件 + ROI試算で押すと刺さる。' },
+    { isDefault: true, key: '担当部署', label: '担当部署', value: '代表取締役室' },
+    { isDefault: true, key: '役割', label: '役割', value: '代表取締役 / 決裁権限あり（即決可）' },
+    { isDefault: true, key: '検討フェーズ', label: '検討フェーズ', value: '導入決定間近', chipValue: '導入決定間近' },
+    { isDefault: true, key: 'どこでサービスを知ったか', label: 'どこでサービスを知ったか', value: '既存顧客(株式会社グロース)からの紹介' },
+    { isDefault: true, key: '会社やサービスを知っているか', label: '会社やサービスを知っているか', value: '内容を理解', chipValue: '内容を理解' },
+    { isDefault: true, key: '興味やニーズ', label: '興味やニーズ', value: '契約管理機能 / 役員向けダッシュボード' },
+    { isDefault: true, key: '背景', label: '背景', value: '大型案件を立て続けに受注しており、契約管理と経営KPIの一元化が急務。' },
+    { isDefault: true, key: '課題や問題', label: '課題や問題', value: '契約書管理がスプレッドシート / 経営会議用のKPI集計が月次の手作業' },
+    { isDefault: true, key: '求めているもの', label: '求めているもの', value: 'お見積もり / 事例紹介', chipList: ['お見積もり', '事例紹介'] },
+    { isDefault: true, key: '解決したいことや達成したいこと', label: '解決したいことや達成したいこと', value: '契約と経営指標を一元管理し、役員会議の意思決定スピードを倍にしたい' },
+    { isDefault: true, key: '次の進めかた', label: '次の進めかた', value: '契約書ドラフトを4/26に確認 → 即押印 → 5月導入' },
+    { isDefault: true, key: 'タスク', label: 'タスク', value: '見積依頼 / 事例提供', chipList: ['見積依頼', '事例提供'] },
+    { isDefault: true, key: '希望連絡手段', label: '希望連絡手段', value: '電話（即決スタイル）', chipValue: '電話' },
   ],
   'd3': [
-    { key: '検討フェーズ', label: '検討フェーズ', value: '比較検討', chipValue: '比較検討' },
-    { key: 'サービス認知度', label: 'サービス認知度', value: '名前は知っている', chipValue: '名前は知っている' },
-    { key: '興味の対象', label: '興味の対象', value: '問い合わせキュー機能 / SLAアラート' },
-    { key: '求めているもの', label: '求めているもの', value: '資料 / お見積もり', chipList: ['資料', 'お見積もり'] },
-    { key: '次の進め方', label: '次の進め方', value: 'Zoho比較表を4/末に提示 → 上長同席で再ヒアリング' },
-    { key: '担当部署・役割', label: '担当部署・役割', value: '現場マネージャー / 決裁権限なし（決裁者は別途特定が必要）' },
-    { key: '興味度', label: '興味度', value: '中（要育成）', chipValue: '中（要育成）' },
-    { key: '依頼済みタスク', label: '依頼済みタスク', value: '資料請求 / 見積依頼', chipList: ['資料請求', '見積依頼'] },
-    { key: '電話可否', label: '電話可否', value: '可（火・木のみ）', chipValue: '時間帯指定あり' },
-    { key: 'IS所見メモ', label: 'IS所見メモ', value: '現場の問題意識は明確だが決裁者の特定が課題。次回上長同席アポを取り付ける必要あり。' },
+    { isDefault: true, key: '担当部署', label: '担当部署', value: '購買部' },
+    { isDefault: true, key: '役割', label: '役割', value: '現場マネージャー / 決裁権限なし（決裁者は別途特定が必要）' },
+    { isDefault: true, key: '検討フェーズ', label: '検討フェーズ', value: '比較検討', chipValue: '比較検討' },
+    { isDefault: true, key: 'どこでサービスを知ったか', label: 'どこでサービスを知ったか', value: '展示会・イベントで名刺交換 → メールフォロー' },
+    { isDefault: true, key: '会社やサービスを知っているか', label: '会社やサービスを知っているか', value: '名前は知っている', chipValue: '名前は知っている' },
+    { isDefault: true, key: '興味やニーズ', label: '興味やニーズ', value: '問い合わせキュー機能 / SLAアラート' },
+    { isDefault: true, key: '背景', label: '背景', value: 'Zoho CRM を導入済みだが現場利用が定着せず、再選定中。' },
+    { isDefault: true, key: '課題や問題', label: '課題や問題', value: 'SLA遵守率の計測ができない / 既存ツールが現場で使われていない' },
+    { isDefault: true, key: '求めているもの', label: '求めているもの', value: '資料 / お見積もり', chipList: ['資料', 'お見積もり'] },
+    { isDefault: true, key: '解決したいことや達成したいこと', label: '解決したいことや達成したいこと', value: '現場が自然に使えるUIで、SLA遵守率を可視化したい' },
+    { isDefault: true, key: '次の進めかた', label: '次の進めかた', value: 'Zoho比較表を4/末に提示 → 上長同席で再ヒアリング' },
+    { isDefault: true, key: 'タスク', label: 'タスク', value: '資料請求 / 見積依頼', chipList: ['資料請求', '見積依頼'] },
+    { isDefault: true, key: '希望連絡手段', label: '希望連絡手段', value: 'Slack(社外ゲスト)もしくはメール（火・木のみ電話可）', chipValue: 'Slack' },
   ],
   'd4': [
-    { key: '検討フェーズ', label: '検討フェーズ', value: '情報収集', chipValue: '情報収集' },
-    { key: 'サービス認知度', label: 'サービス認知度', value: '名前は知っている', chipValue: '名前は知っている' },
-    { key: '興味の対象', label: '興味の対象', value: '採用ファネル管理 / 部長向けKPIレポート' },
-    { key: '求めているもの', label: '求めているもの', value: '資料 / 個別相談', chipList: ['資料', '個別相談'] },
-    { key: '次の進め方', label: '次の進め方', value: '比較資料送付 → フォローコール → 人事部長を巻き込めるか打診' },
-    { key: '担当部署・役割', label: '担当部署・役割', value: '購買担当 / 最終決裁は人事部長' },
-    { key: '興味度', label: '興味度', value: '低（情報収集のみ）', chipValue: '低（情報収集のみ）' },
-    { key: '依頼済みタスク', label: '依頼済みタスク', value: '資料請求', chipList: ['資料請求'] },
-    { key: '電話可否', label: '電話可否', value: '可', chipValue: '可' },
-    { key: 'IS所見メモ', label: 'IS所見メモ', value: '購買担当起点のため決裁者プロセスが長い見込み。100万円予算の制約をクリアする機能絞り込み案を提示する必要あり。' },
+    { isDefault: true, key: '担当部署', label: '担当部署', value: '購買部' },
+    { isDefault: true, key: '役割', label: '役割', value: '購買担当 / 最終決裁は人事部長' },
+    { isDefault: true, key: '検討フェーズ', label: '検討フェーズ', value: '情報収集', chipValue: '情報収集' },
+    { isDefault: true, key: 'どこでサービスを知ったか', label: 'どこでサービスを知ったか', value: '検索広告（HRTech系キーワード）経由でWebフォーム流入' },
+    { isDefault: true, key: '会社やサービスを知っているか', label: '会社やサービスを知っているか', value: '名前は知っている', chipValue: '名前は知っている' },
+    { isDefault: true, key: '興味やニーズ', label: '興味やニーズ', value: '採用ファネル管理 / 部長向けKPIレポート' },
+    { isDefault: true, key: '背景', label: '背景', value: '採用人数が前年比2倍に増え、応募者管理がスプレッドシートで限界。' },
+    { isDefault: true, key: '課題や問題', label: '課題や問題', value: '応募者ステージ管理が不透明 / 部長報告用のレポート作成に毎週2hかかる' },
+    { isDefault: true, key: '求めているもの', label: '求めているもの', value: '資料 / 個別相談', chipList: ['資料', '個別相談'] },
+    { isDefault: true, key: '解決したいことや達成したいこと', label: '解決したいことや達成したいこと', value: '採用ファネルを自動可視化し、部長報告レポートをワンクリックで作りたい' },
+    { isDefault: true, key: '次の進めかた', label: '次の進めかた', value: '比較資料送付 → フォローコール → 人事部長を巻き込めるか打診' },
+    { isDefault: true, key: 'タスク', label: 'タスク', value: '資料請求', chipList: ['資料請求'] },
+    { isDefault: true, key: '希望連絡手段', label: '希望連絡手段', value: 'メール', chipValue: 'メール' },
   ],
 }
 
-// ─── 営業フィールド（議事録から自動抽出される基本8項目 + 現状システム + ニーズ + 要望機能） ─
+// ─── 営業フィールド（議事録から自動抽出される既定項目 + ユーザーカスタム追加可） ─
+// 既定項目は議事録の文章からAI抽出。出席者はコンタクトと連動。
 const MOCK_SALES_FIELDS: Record<string, SalesField[]> = {
   'd1': [
-    { key: '課題',         label: '課題',         value: 'CRM未導入による商談管理の属人化。週次の数字集約で営業マネージャが深夜労働。' },
-    { key: 'ニーズ',       label: 'ニーズ',       value: '営業組織全体で商談進捗を即時可視化し、マネージャ負担ゼロで週次数字を確定させたい' },
-    { key: '予算',         label: '予算',         value: '初年度500万円以内 / 追加機能は段階的に検討' },
-    { key: '希望サービス', label: '希望サービス', value: 'CRM基本機能 + AI商談サポート(議事録自動要約)' },
-    { key: '要望機能',     label: '要望機能',     value: '議事録AI要約 / Slackリアルタイム通知 / パイプラインKPIダッシュボード / 商談録音→文字起こし' },
-    { key: 'タイムライン', label: 'タイムライン', value: '2026年4月導入 → 5月全社展開' },
-    { key: '決裁者',       label: '決裁者',       value: '鈴木 一郎(CTO) / 最終稟議は社長決裁' },
-    { key: '稟議プロセス', label: '稟議プロセス', value: '部門責任者 → CTO技術承認 → 経営会議 → 社長最終決裁。社内ワークフローはGaroon。3/27 起票 → 4/1 完了予定。' },
-    { key: '競合',         label: '競合',         value: 'Salesforce / HubSpot の2社を比較中' },
-    { key: '障壁',         label: '障壁',         value: '既存スプレッドシート運用からの移行コスト / Slack連携要件' },
-    { key: 'その他',       label: 'その他',       value: '導入後はIS/FS両チームに同時展開を希望' },
-    { key: '現状システム', label: '現状システム', value: 'Google Sheets(商談管理) + Slack(連絡) + Notion(ナレッジ)' },
-    { key: '理想システム', label: '理想システム', value: 'CRM(商談・案件管理) + Slack双方向連携 + AI議事録要約 + KPIダッシュボード（属人ツールを統合）' },
     {
-      key: '出席者', label: '出席者', value: null,
+      key: '出席者', label: '出席者', value: null, isDefault: true,
       participants: [
-        {
-          name: '鈴木 一郎（CTO）',
-          role: 'CTO / 技術評価・基盤選定の最終承認者',
-          mission: '今期内に開発・営業横断のデータ基盤を整え、Slackをハブにした業務オペを実現する',
-          vision: '属人化を排除し、技術組織が経営にスピードで貢献できる状態を作る',
-        },
-        {
-          name: '田中 誠（営業部長）',
-          role: '営業統括 / 商談プロセス改善の推進担当',
-          mission: '週次の数字集約コストをゼロにし、マネージャがコーチングに集中できる体制を作る',
-          vision: '受注予測精度を高め、半期計画の達成確度を経営に対して説明できるようになる',
-        },
-        {
-          name: '佐藤 由香（情シス）',
-          role: '情シス / セキュリティ・既存システム統合担当',
-          mission: 'Slack/Google/Notionの既存資産を壊さず、移行リスクを最小化する',
-          vision: 'シャドウITをなくし、社内SaaS全体の運用負担を半減させる',
-        },
+        { name: '鈴木 一郎', contactId: '9', department: '技術本部',    title: 'CTO',         role: '技術評価・基盤選定の最終承認者' },
+        { name: '田中 誠',   contactId: '1', department: '営業部',       title: '部長',        role: '商談プロセス改善の推進担当' },
+        { name: '佐藤 由香',                  department: '情シス',       title: 'マネージャー', role: 'セキュリティ・既存システム統合担当' },
       ],
     },
+    { key: '商談に至った背景',  label: '商談に至った背景',  value: '営業組織の急拡大でスプレッドシート運用が限界。展示会で当社サービスを認知 → 自社サイトから問い合わせに至る。', isDefault: true },
+    { key: '社内状況',          label: '社内状況',          value: 'CRM未導入。Slack + Google Sheets + Notion の組み合わせで運用。情シス部門がSlack中心の運用標準化を推進中。', isDefault: true },
+    { key: '課題',              label: '課題',              value: '商談管理の属人化。週次の数字集約に毎週4-5時間を要し、営業マネージャが深夜労働を強いられている。',                isDefault: true },
+    { key: 'ニーズ',            label: 'ニーズ',            value: '商談進捗を即時可視化し、マネージャ負担ゼロで週次数字を確定したい。AIで議事録作成も自動化したい。',          isDefault: true },
+    { key: '達成したい事',      label: '達成したい事',      value: '半期内に営業組織のデータ基盤を統合し、受注予測精度を経営に対して説明可能なレベルまで引き上げる。',          isDefault: true },
+    { key: '必要なこと',        label: '必要なこと',        value: 'Slack双方向連携 / AI議事録要約 / KPIダッシュボード / 既存スプレッドシートからの移行支援',                  isDefault: true },
+    { key: '現状',              label: '現状',              value: 'Google Sheets(商談管理) + Slack(連絡) + Notion(ナレッジ)で属人ツール乱立。',                              isDefault: true },
+    { key: '理想',              label: '理想',              value: 'CRM(商談管理) + Slack双方向連携 + AI議事録要約 + KPIダッシュボード(属人ツールを統合)',                    isDefault: true },
+    { key: 'タイムライン',      label: 'タイムライン',      value: '2026年4月導入 → 5月全社展開',                                                                            isDefault: true },
+    { key: '検討フェーズ',      label: '検討フェーズ',      value: 'POC実施中 / 4月末までに最終評価 → 5月契約締結を希望',                                                    isDefault: true },
+    { key: '予算',              label: '予算',              value: '初年度500万円以内 / 追加機能は段階的に検討',                                                              isDefault: true },
+    { key: '稟議プロセス',      label: '稟議プロセス',      value: '部門責任者 → CTO技術承認 → 経営会議 → 社長最終決裁。社内ワークフローはGaroon。3/27 起票 → 4/1 完了予定。', isDefault: true },
+    { key: '競合',              label: '競合',              value: 'Salesforce / HubSpot の2社を比較中。Salesforceは機能過多・コスト高で見送り傾向。',                       isDefault: true },
+    { key: '導入の選定基準',    label: '導入の選定基準',    value: '①Slack連携の深さ ②議事録AIの精度 ③初期サポートの厚み ④契約後の運用支援体制',                              isDefault: true },
+    { key: '期待すること',      label: '期待すること',      value: '導入3ヶ月で属人化を解消し、マネージャの数字集約工数を50%削減。AI議事録の活用で商談振り返り時間を半減。',  isDefault: true },
+    { key: '障壁',              label: '障壁',              value: '既存スプレッドシート運用からの移行コスト / 現場メンバーの新ツール習熟負担',                              isDefault: true },
+    { key: '今後の流れ',        label: '今後の流れ',        value: '4/25にCTO同席で最終デモ → 4/末までに見積回答 → 5月導入判定 → 5月中旬全社展開',                            isDefault: true },
   ],
   'd2': [
-    { key: '課題',         label: '課題',         value: '契約管理が属人化しており、役員レポートに2日かかる',                                      confidence: 'High'   },
-    { key: 'ニーズ',       label: 'ニーズ',       value: '契約状況を役員がリアルタイムに把握でき、レポート作業をゼロにしたい',                     confidence: 'High'   },
-    { key: '予算',         label: '予算',         value: '600万円程度を想定',                                                                      confidence: 'High'   },
-    { key: '希望サービス', label: '希望サービス', value: 'CRM + 契約管理連携',                                                                     confidence: 'Medium' },
-    { key: '要望機能',     label: '要望機能',     value: '契約書バージョン管理 / 役員向けダッシュボード / 電子契約連携(クラウドサイン)',             confidence: 'High'   },
-    { key: 'タイムライン', label: 'タイムライン', value: '4月末までに契約締結希望',                                                                confidence: 'High'   },
-    { key: '決裁者',       label: '決裁者',       value: '佐々木 拓也(代表取締役)',                                                                confidence: 'High'   },
-    { key: '競合',         label: '競合',         value: '検討済 / 当社で決定方向',                                                                confidence: 'High'   },
-    { key: '障壁',         label: '障壁',         value: '特になし',                                                                                confidence: 'Medium' },
-    { key: 'その他',       label: 'その他',       value: '— AI未収集',                                                                              confidence: 'Low'    },
-    { key: '現状システム', label: '現状システム', value: '紙+Excel',                                                                                 confidence: 'Medium' },
+    {
+      key: '出席者', label: '出席者', value: null, isDefault: true,
+      participants: [
+        { name: '佐々木 拓也', contactId: '3', department: '経営',     title: '代表取締役',  role: '最終決裁者' },
+      ],
+    },
+    { key: '商談に至った背景',  label: '商談に至った背景',  value: '既存顧客(株式会社グロース)からの紹介で問い合わせ。代表自らヒアリング担当。', isDefault: true },
+    { key: '社内状況',          label: '社内状況',          value: '大型案件を立て続けに受注しており、契約管理と経営KPIの一元化が急務。', isDefault: true },
+    { key: '課題',              label: '課題',              value: '契約管理がスプレッドシート / 経営会議用のKPI集計が月次の手作業', isDefault: true },
+    { key: 'ニーズ',            label: 'ニーズ',            value: '契約状況を役員がリアルタイムに把握でき、レポート作業をゼロにしたい', isDefault: true },
+    { key: '達成したい事',      label: '達成したい事',      value: '契約と経営指標を一元管理し、役員会議の意思決定スピードを倍にしたい', isDefault: true },
+    { key: '必要なこと',        label: '必要なこと',        value: '契約書バージョン管理 / 役員向けダッシュボード / 電子契約連携(クラウドサイン)', isDefault: true },
+    { key: '現状',              label: '現状',              value: '紙 + Excel での契約管理。役員レポート作成に毎月2日。', isDefault: true },
+    { key: '理想',              label: '理想',              value: 'CRM + 契約管理 + 電子契約の一元化。役員ダッシュボードはリアルタイム反映。', isDefault: true },
+    { key: 'タイムライン',      label: 'タイムライン',      value: '4月末までに契約締結 → 5月運用開始', isDefault: true },
+    { key: '検討フェーズ',      label: '検討フェーズ',      value: '導入決定間近 / 契約書ドラフト確認中', isDefault: true },
+    { key: '予算',              label: '予算',              value: '600万円程度を想定 / 即決可', isDefault: true },
+    { key: '稟議プロセス',      label: '稟議プロセス',      value: '代表取締役の即決 / 役員報告のみ', isDefault: true },
+    { key: '競合',              label: '競合',              value: '検討済 / 当社で決定方向', isDefault: true },
+    { key: '導入の選定基準',    label: '導入の選定基準',    value: '①事例の質 ②ROI試算 ③スピード導入の実績', isDefault: true },
+    { key: '期待すること',      label: '期待すること',      value: '導入後即効果。役員会議のレポート作業を完全に廃止。', isDefault: true },
+    { key: '障壁',              label: '障壁',              value: '特になし', isDefault: true },
+    { key: '今後の流れ',        label: '今後の流れ',        value: '4/26 契約書ドラフト確認 → 即押印 → 5月導入', isDefault: true },
   ],
   'd3': [
-    { key: '課題',         label: '課題',         value: '問い合わせ管理の抜け漏れ',                                                                confidence: 'Medium' },
-    { key: 'ニーズ',       label: 'ニーズ',       value: '問い合わせごとの対応状況をチーム内で一元化し取りこぼしを防ぎたい',                         confidence: 'Medium' },
-    { key: '予算',         label: '予算',         value: '200〜300万円',                                                                             confidence: 'Low'    },
-    { key: '希望サービス', label: '希望サービス', value: 'CRM基本機能のみ',                                                                          confidence: 'Medium' },
-    { key: '要望機能',     label: '要望機能',     value: '問い合わせキュー / 担当アサイン自動化 / SLAアラート',                                      confidence: 'Medium' },
-    { key: 'タイムライン', label: 'タイムライン', value: '4月中旬〜',                                                                                confidence: 'Medium' },
-    { key: '決裁者',       label: '決裁者',       value: '— AI未収集',                                                                                confidence: 'Low'    },
-    { key: '競合',         label: '競合',         value: 'ZohoCRMを比較中',                                                                           confidence: 'Medium' },
-    { key: '障壁',         label: '障壁',         value: '— AI未収集',                                                                                confidence: 'Low'    },
-    { key: 'その他',       label: 'その他',       value: '— AI未収集',                                                                                confidence: 'Low'    },
-    { key: '現状システム', label: '現状システム', value: 'スプレッドシート',                                                                          confidence: 'High'   },
+    {
+      key: '出席者', label: '出席者', value: null, isDefault: true,
+      participants: [
+        { name: '山本 佳子', contactId: '2', department: '購買部', title: 'マネージャー', role: '現場推進・要件取りまとめ' },
+      ],
+    },
+    { key: '商談に至った背景',  label: '商談に至った背景',  value: '展示会で名刺交換 → メールフォロー経由で初回商談に至る。Zoho CRM導入済みだが定着せず再選定中。', isDefault: true },
+    { key: '社内状況',          label: '社内状況',          value: '購買部のSLA管理が課題。決裁者は不在で現場マネージャー起点の検討。', isDefault: true },
+    { key: '課題',              label: '課題',              value: '問い合わせ管理の抜け漏れ / 既存ツールが現場で使われていない / SLA遵守率の計測ができない', isDefault: true },
+    { key: 'ニーズ',            label: 'ニーズ',            value: '問い合わせごとの対応状況をチーム内で一元化し取りこぼしを防ぎたい', isDefault: true },
+    { key: '達成したい事',      label: '達成したい事',      value: '現場が自然に使えるUIで、SLA遵守率を可視化したい', isDefault: true },
+    { key: '必要なこと',        label: '必要なこと',        value: '問い合わせキュー / 担当アサイン自動化 / SLAアラート', isDefault: true },
+    { key: '現状',              label: '現状',              value: 'Zoho CRM + スプレッドシート併用 / 現場利用率が低い', isDefault: true },
+    { key: '理想',              label: '理想',              value: 'シンプルなUIで現場が自然に使えるCRM。SLAアラートが自動で飛ぶ。', isDefault: true },
+    { key: 'タイムライン',      label: 'タイムライン',      value: '4月中旬〜の比較検討、6月までに方向性決定', isDefault: true },
+    { key: '検討フェーズ',      label: '検討フェーズ',      value: '比較検討 / Zoho・当社の2択', isDefault: true },
+    { key: '予算',              label: '予算',              value: '200〜300万円', isDefault: true },
+    { key: '稟議プロセス',      label: '稟議プロセス',      value: '上長(購買部長)同席ヒアリング → 経営判断。決裁者特定が課題。', isDefault: true },
+    { key: '競合',              label: '競合',              value: 'Zoho CRM(既存) / 機能の現場フィット感で比較', isDefault: true },
+    { key: '導入の選定基準',    label: '導入の選定基準',    value: '①現場メンバーの定着率 ②SLA計測精度 ③コスト', isDefault: true },
+    { key: '期待すること',      label: '期待すること',      value: '現場が自然に使い始め、SLA遵守率を継続計測できること', isDefault: true },
+    { key: '障壁',              label: '障壁',              value: '決裁者の特定が未完了 / 上長の関与が必要', isDefault: true },
+    { key: '今後の流れ',        label: '今後の流れ',        value: 'Zoho比較表を4月末に提示 → 上長同席で再ヒアリング → 5月以降に決裁プロセス', isDefault: true },
   ],
   'd4': [
-    { key: '課題',         label: '課題',         value: '採用管理がチーム横断で分散',                                                                confidence: 'Medium' },
-    { key: 'ニーズ',       label: 'ニーズ',       value: '採用ファネル全体を一元管理し、人事部長向けのKPI報告を自動化したい',                         confidence: 'Medium' },
-    { key: '予算',         label: '予算',         value: '100万円以下を希望',                                                                          confidence: 'Medium' },
-    { key: '希望サービス', label: '希望サービス', value: 'HR向け簡易CRM',                                                                               confidence: 'Medium' },
-    { key: '要望機能',     label: '要望機能',     value: '候補者ステージ管理 / 面接予約リマインド / 部長向けKPIレポート',                               confidence: 'Medium' },
-    { key: 'タイムライン', label: 'タイムライン', value: '検討継続',                                                                                    confidence: 'Low'    },
-    { key: '決裁者',       label: '決裁者',       value: '中村 理恵(購買担当) / 最終は人事部長',                                                       confidence: 'Medium' },
-    { key: '競合',         label: '競合',         value: '未検討',                                                                                       confidence: 'Low'    },
-    { key: '障壁',         label: '障壁',         value: '予算と優先度',                                                                                 confidence: 'Medium' },
-    { key: 'その他',       label: 'その他',       value: '— AI未収集',                                                                                   confidence: 'Low'    },
-    { key: '現状システム', label: '現状システム', value: 'Excel + メール',                                                                               confidence: 'Medium' },
+    {
+      key: '出席者', label: '出席者', value: null, isDefault: true,
+      participants: [
+        { name: '中村 理恵', contactId: '4', department: '人事部', title: '購買担当', role: '比較検討の実務担当' },
+      ],
+    },
+    { key: '商談に至った背景',  label: '商談に至った背景',  value: '検索広告(HRTech系キーワード)経由でWebフォームから問い合わせ。', isDefault: true },
+    { key: '社内状況',          label: '社内状況',          value: '採用人数が前年比2倍に増え、応募者管理がスプレッドシートで限界。人事部長が最終決裁者。', isDefault: true },
+    { key: '課題',              label: '課題',              value: '採用ファネル管理がスプレッドシートで分散 / 部長報告レポート作成に毎週2h', isDefault: true },
+    { key: 'ニーズ',            label: 'ニーズ',            value: '採用ファネル全体を一元管理し、人事部長向けのKPI報告を自動化したい', isDefault: true },
+    { key: '達成したい事',      label: '達成したい事',      value: '採用ファネルを自動可視化し、部長報告レポートをワンクリックで作りたい', isDefault: true },
+    { key: '必要なこと',        label: '必要なこと',        value: '候補者ステージ管理 / 面接予約リマインド / 部長向けKPIレポート', isDefault: true },
+    { key: '現状',              label: '現状',              value: 'Excel + メールで採用管理。複数チームで分散運用。', isDefault: true },
+    { key: '理想',              label: '理想',              value: '採用ファネルの一元管理 + 部長レポート自動生成', isDefault: true },
+    { key: 'タイムライン',      label: 'タイムライン',      value: '検討継続 / 6月以降の判断', isDefault: true },
+    { key: '検討フェーズ',      label: '検討フェーズ',      value: '情報収集 / 比較資料を求めている', isDefault: true },
+    { key: '予算',              label: '予算',              value: '100万円以下を希望', isDefault: true },
+    { key: '稟議プロセス',      label: '稟議プロセス',      value: '購買担当ヒアリング → 人事部長確認 → 最終決裁', isDefault: true },
+    { key: '競合',              label: '競合',              value: '未検討 / 比較資料を要求', isDefault: true },
+    { key: '導入の選定基準',    label: '導入の選定基準',    value: '①予算内 ②シンプルさ ③人事部長への報告のしやすさ', isDefault: true },
+    { key: '期待すること',      label: '期待すること',      value: '小さく始めて効果検証 → 拡張提案を受けられること', isDefault: true },
+    { key: '障壁',              label: '障壁',              value: '予算と優先度の両面で社内調整が必要', isDefault: true },
+    { key: '今後の流れ',        label: '今後の流れ',        value: '比較資料送付 → フォローコール → 人事部長を巻き込めるか打診', isDefault: true },
   ],
 }
 
-// ─── プロダクトフィールド（開発・PDM 視点で扱う項目） ─────────────────────
-const MOCK_PRODUCT_FIELDS: Record<string, ProductField[]> = {
-  'd1': [
-    { key: '機能要件サマリ',     label: '機能要件サマリ',     value: '商談管理 + AI 自動議事録要約 + パイプライン KPI ダッシュボード' },
-    { key: '優先度',             label: '優先度',             value: '商談管理 高 / KPI ダッシュボード 中 / AI 議事録 高' },
-    { key: '想定利用シーン',     label: '想定利用シーン',     value: '営業1日5商談 × 4チーム同時利用、議事録は商談直後に確認' },
-    { key: '想定ユーザー',       label: '想定ユーザー',       value: '営業20名・マネ4名・経営2名 (合計26名)' },
-    { key: '統合・連携要件',     label: '統合・連携要件',     value: 'Salesforce読み取り同期、Slack通知、SAP顧客マスタ連携' },
-    { key: 'セキュリティ要件',   label: 'セキュリティ要件',   value: 'SAML SSO (Okta) 必須、IP制限、監査ログCSV出力' },
-    { key: 'パフォーマンス要件', label: 'パフォーマンス要件', value: 'ダッシュボード初期表示3秒以内、100名同時アクセス' },
-    { key: 'カスタマイズ範囲',   label: 'カスタマイズ範囲',   value: 'ステージ・項目のカスタマイズ可、レポートテンプレ独自定義' },
-    { key: '段階導入計画',       label: '段階導入計画',       value: 'フェーズ1: 商談管理 (4月) → フェーズ2: AI議事録 (5月) → フェーズ3: BI連携 (Q3)' },
-    { key: '技術スタック制約',   label: '技術スタック制約',   value: 'VPC内デプロイ希望なし、SaaS可、データ保管 東京リージョン' },
-    { key: 'KPI／成果指標',      label: 'KPI／成果指標',      value: '商談入力工数50%削減、月次レポ作成3時間→30分、解約率改善' },
-    { key: 'リスク・懸念',       label: 'リスク・懸念',       value: '現場の入力負荷、既存Salesforce資産との二重管理リスク' },
-  ],
-  'd2': [
-    { key: '機能要件サマリ',     label: '機能要件サマリ',     value: '契約管理 + 役員ダッシュボード + 電子契約(クラウドサイン)連携' },
-    { key: '優先度',             label: '優先度',             value: '契約バージョン管理 高 / 役員レポート 高 / 電子契約連携 中' },
-    { key: '想定利用シーン',     label: '想定利用シーン',     value: '代表+法務2名が日次で契約状況を確認、役員レポートは月初に自動生成' },
-    { key: '想定ユーザー',       label: '想定ユーザー',       value: '代表1名・法務2名・役員3名 (合計6名)' },
-    { key: '統合・連携要件',     label: '統合・連携要件',     value: 'クラウドサインAPI連携、freee会計連携(将来検討)' },
-    { key: 'セキュリティ要件',   label: 'セキュリティ要件',   value: 'IPアドレス制限、契約書アクセスログ必須' },
-    { key: 'パフォーマンス要件', label: 'パフォーマンス要件', value: '契約一覧100件未満想定、レスポンス重視ではない' },
-    { key: 'カスタマイズ範囲',   label: 'カスタマイズ範囲',   value: '標準フォームでOK、最低限のカテゴリ追加のみ' },
-    { key: '段階導入計画',       label: '段階導入計画',       value: 'フェーズ1: 契約管理 (5月) → フェーズ2: 役員ダッシュボード (6月)' },
-    { key: '技術スタック制約',   label: '技術スタック制約',   value: 'SaaS可、特になし' },
-    { key: 'KPI／成果指標',      label: 'KPI／成果指標',      value: '役員レポート作成2日→0日、契約書差戻し率20%改善' },
-    { key: 'リスク・懸念',       label: 'リスク・懸念',       value: '法務レビューの社内プロセスとの整合、押印フローの社内浸透' },
-  ],
-  'd3': [
-    { key: '機能要件サマリ',     label: '機能要件サマリ',     value: '問い合わせキュー + 担当自動アサイン + SLAアラート' },
-    { key: '優先度',             label: '優先度',             value: 'SLAアラート 高 / 担当自動アサイン 高 / レポート 中' },
-    { key: '想定利用シーン',     label: '想定利用シーン',     value: 'CSチーム5名がリアルタイムに問い合わせ対応、SLA超過は即Slack通知' },
-    { key: '想定ユーザー',       label: '想定ユーザー',       value: 'CS担当5名・上長1名 (合計6名)' },
-    { key: '統合・連携要件',     label: '統合・連携要件',     value: 'メール取り込み(IMAP)、Slack通知' },
-    { key: 'セキュリティ要件',   label: 'セキュリティ要件',   value: '一般的なSaaS水準で問題なし' },
-    { key: 'パフォーマンス要件', label: 'パフォーマンス要件', value: '' },
-    { key: 'カスタマイズ範囲',   label: 'カスタマイズ範囲',   value: 'SLA時間閾値・問い合わせカテゴリのカスタマイズが必要' },
-    { key: '段階導入計画',       label: '段階導入計画',       value: 'フェーズ1: 基本キュー (5月) → フェーズ2: SLAアラート (6月)' },
-    { key: '技術スタック制約',   label: '技術スタック制約',   value: '' },
-    { key: 'KPI／成果指標',      label: 'KPI／成果指標',      value: '問い合わせ取りこぼしゼロ、SLA遵守率95%以上' },
-    { key: 'リスク・懸念',       label: 'リスク・懸念',       value: '' },
-  ],
-  'd4': [
-    { key: '機能要件サマリ',     label: '機能要件サマリ',     value: '候補者ステージ管理 + 面接リマインド + 人事部長KPIレポート' },
-    { key: '優先度',             label: '優先度',             value: '候補者ステージ管理 高 / 面接リマインド 中 / レポート 中' },
-    { key: '想定利用シーン',     label: '想定利用シーン',     value: '人事3名が候補者管理、月次で部長向けKPIレポート提出' },
-    { key: '想定ユーザー',       label: '想定ユーザー',       value: '人事3名・人事部長1名 (合計4名)' },
-    { key: '統合・連携要件',     label: '統合・連携要件',     value: 'Googleカレンダー連携(面接予約)' },
-    { key: 'セキュリティ要件',   label: 'セキュリティ要件',   value: '個人情報管理に準拠、アクセスログ取得' },
-    { key: 'パフォーマンス要件', label: 'パフォーマンス要件', value: '' },
-    { key: 'カスタマイズ範囲',   label: 'カスタマイズ範囲',   value: '採用フェーズの自由設定が必須' },
-    { key: '段階導入計画',       label: '段階導入計画',       value: '一括導入想定、フェーズ分けなし' },
-    { key: '技術スタック制約',   label: '技術スタック制約',   value: '' },
-    { key: 'KPI／成果指標',      label: 'KPI／成果指標',      value: '採用ファネル可視化、KPIレポ作成工数80%削減' },
-    { key: 'リスク・懸念',       label: 'リスク・懸念',       value: '予算100万円制約下で機能絞り込み調整が必要' },
-  ],
-}
-
-// ─── 議事録 一覧（全取引 3件ずつ） ────────────────────────────────────────
 const MOCK_MEETINGS: Record<string, MeetingRecord[]> = {
   'd1': [
     {
@@ -889,22 +949,19 @@ const IS_CHIP_TONE: Record<string, ChipTone> = {
   '検討中': 'low',
   '比較検討': 'middle',
   '導入決定間近': 'primary',
-  // サービス認知度
+  // 会社やサービスを知っているか
   '未認知': 'neutral',
   '名前は知っている': 'low',
   '内容を理解': 'primary',
   '導入経験あり': 'primary',
-  // 興味度
-  '高（前向き）': 'primary',
-  '中（要育成）': 'middle',
-  '低（情報収集のみ）': 'neutral',
-  // 電話可否
-  '可': 'primary',
-  '時間帯指定あり': 'middle',
-  '不可': 'hot',
+  // 希望連絡手段
+  '電話': 'primary',
+  'メール': 'low',
+  'Slack': 'middle',
+  'Web会議': 'low',
+  '対面': 'primary',
   // 共通
   '未確認': 'neutral',
-  '未測定': 'neutral',
 }
 
 const CHIP_TONE_STYLE: Record<ChipTone, React.CSSProperties> = {
@@ -1023,40 +1080,324 @@ function StageBadge({ stage }: { stage: DealStage }) {
   )
 }
 
-// 出席者：職種・任務・成し遂げたいことを縦積みカードで表示
+// 出席者：部署/役職/役割をコンパクトに表示。コンタクト紐付けがあればワンクリックで詳細へ。
 function ParticipantsList({ participants }: { participants: Participant[] }) {
+  const router = useRouter()
   return (
     <div className="flex flex-col gap-2">
-      {participants.map((p, i) => (
-        <div
-          key={i}
-          className="rounded-[var(--radius-obs-md)] p-3"
-          style={{
-            background: 'var(--color-obs-surface-low)',
-            boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.10)',
+      {participants.map((p, i) => {
+        const clickable = !!p.contactId
+        const handleClick = clickable
+          ? () => router.push(`/contacts/${p.contactId}`)
+          : undefined
+        return (
+          <div
+            key={i}
+            onClick={handleClick}
+            className={`group rounded-[var(--radius-obs-md)] p-3 transition-colors ${clickable ? 'cursor-pointer' : ''}`}
+            style={{
+              background: 'var(--color-obs-surface-low)',
+              boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.10)',
+            }}
+            onMouseOver={(e) => {
+              if (clickable) (e.currentTarget as HTMLDivElement).style.background = 'var(--color-obs-surface-high)'
+            }}
+            onMouseOut={(e) => {
+              if (clickable) (e.currentTarget as HTMLDivElement).style.background = 'var(--color-obs-surface-low)'
+            }}
+            title={clickable ? `${p.name} のコンタクト詳細を開く` : undefined}
+          >
+            <div className="flex items-center gap-1.5 mb-2">
+              <span
+                className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold shrink-0"
+                style={{
+                  background: 'linear-gradient(135deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
+                  color: 'var(--color-obs-on-primary)',
+                }}
+              >
+                {p.name[0]}
+              </span>
+              <span
+                className={`text-[13px] font-semibold tracking-[-0.01em] ${clickable ? 'group-hover:text-[var(--color-obs-primary)] transition-colors' : ''}`}
+                style={{ color: 'var(--color-obs-text)' }}
+              >
+                {p.name}
+              </span>
+              {clickable && (
+                <ExternalLink
+                  size={11}
+                  className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                  style={{ color: 'var(--color-obs-primary)' }}
+                />
+              )}
+              {!clickable && (
+                <span
+                  className="ml-auto text-[10px] px-1.5 py-0.5 rounded-[4px]"
+                  style={{
+                    background: 'rgba(143,140,144,0.12)',
+                    color: 'var(--color-obs-text-subtle)',
+                  }}
+                >
+                  未紐付け
+                </span>
+              )}
+            </div>
+            <div className="grid grid-cols-[56px_1fr] gap-x-3 gap-y-1 text-[12px] leading-relaxed">
+              <span className="text-[10.5px] font-medium tracking-[0.06em] uppercase pt-0.5" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                部署
+              </span>
+              <span style={{ color: 'var(--color-obs-text)' }}>{p.department || '—'}</span>
+
+              <span className="text-[10.5px] font-medium tracking-[0.06em] uppercase pt-0.5" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                役職
+              </span>
+              <span style={{ color: 'var(--color-obs-text)' }}>{p.title || '—'}</span>
+
+              <span className="text-[10.5px] font-medium tracking-[0.06em] uppercase pt-0.5" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                役割
+              </span>
+              <span style={{ color: 'var(--color-obs-text-muted)' }}>{p.role || '—'}</span>
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// ─── 編集可能なフィールド行（IS/営業の値項目で共用） ─────────────────────────
+// クリックで編集モードに入り、テキストエリアで値を編集できる。
+// 既定項目(isDefault=true)は削除不可、カスタム項目は削除可。
+function EditableFieldRow({
+  label, value, isDefault, onChange, onDelete, leftWidth = 100, children,
+}: {
+  label: string
+  value: string | null
+  isDefault: boolean
+  onChange: (next: string | null) => void
+  onDelete?: () => void
+  leftWidth?: number
+  /** 値の代わりに任意要素を描画する場合(出席者など) */
+  children?: React.ReactNode
+}) {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState(value ?? '')
+  const taRef = React.useRef<HTMLTextAreaElement | null>(null)
+
+  React.useEffect(() => {
+    if (editing) {
+      setDraft(value ?? '')
+      // フォーカス + 末尾にキャレット
+      setTimeout(() => {
+        const el = taRef.current
+        if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length) }
+      }, 0)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editing])
+
+  const commit = () => {
+    const next = draft.trim()
+    onChange(next === '' ? null : next)
+    setEditing(false)
+  }
+  const cancel = () => {
+    setDraft(value ?? '')
+    setEditing(false)
+  }
+
+  return (
+    <div className="group flex items-start gap-3 px-5 py-3">
+      <span
+        className="text-[12px] shrink-0 pt-0.5 leading-tight font-medium flex items-center gap-1"
+        style={{ color: 'var(--color-obs-text-subtle)', width: leftWidth }}
+      >
+        {label}
+        {!isDefault && (
+          <span
+            className="inline-flex items-center px-1 py-0.5 rounded-[3px] text-[8.5px] font-semibold"
+            style={{ background: 'rgba(255,184,107,0.14)', color: 'var(--color-obs-middle)' }}
+            title="ユーザーが追加したカスタム項目"
+          >
+            CUSTOM
+          </span>
+        )}
+      </span>
+      <div className="flex-1 min-w-0">
+        {editing ? (
+          <div className="flex flex-col gap-1.5">
+            <textarea
+              ref={taRef}
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') cancel()
+                if ((e.key === 'Enter' && (e.metaKey || e.ctrlKey))) commit()
+              }}
+              rows={Math.min(8, Math.max(2, draft.split('\n').length))}
+              className="w-full px-2.5 py-1.5 rounded-[6px] text-[13px] leading-relaxed outline-none resize-y"
+              style={{
+                background: 'var(--color-obs-surface-lowest)',
+                color: 'var(--color-obs-text)',
+                boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.42)',
+              }}
+              placeholder="内容を入力..."
+            />
+            <div className="flex items-center gap-2 text-[11px]">
+              <button
+                type="button"
+                onClick={commit}
+                className="px-2.5 py-1 rounded-[5px] font-semibold transition-colors"
+                style={{
+                  background: 'var(--color-obs-primary-container)',
+                  color: 'var(--color-obs-on-primary)',
+                }}
+              >
+                保存
+              </button>
+              <button
+                type="button"
+                onClick={cancel}
+                className="px-2.5 py-1 rounded-[5px] font-medium transition-colors"
+                style={{ color: 'var(--color-obs-text-muted)' }}
+                onMouseOver={(e) => {
+                  ;(e.currentTarget as HTMLButtonElement).style.background = 'var(--color-obs-surface-high)'
+                }}
+                onMouseOut={(e) => {
+                  ;(e.currentTarget as HTMLButtonElement).style.background = 'transparent'
+                }}
+              >
+                キャンセル
+              </button>
+              <span style={{ color: 'var(--color-obs-text-subtle)' }}>
+                ⌘/Ctrl + Enter で保存・Esc でキャンセル
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div
+            onClick={() => setEditing(true)}
+            className="cursor-text rounded-[5px] -mx-1.5 px-1.5 py-1 transition-colors"
+            style={{ background: 'transparent' }}
+            onMouseOver={(e) => {
+              ;(e.currentTarget as HTMLDivElement).style.background = 'var(--color-obs-surface-low)'
+            }}
+            onMouseOut={(e) => {
+              ;(e.currentTarget as HTMLDivElement).style.background = 'transparent'
+            }}
+            title="クリックして編集"
+          >
+            {children ? (
+              children
+            ) : (
+              <span className="text-[13px] leading-relaxed block whitespace-pre-wrap" style={{ color: value ? 'var(--color-obs-text)' : 'var(--color-obs-text-subtle)' }}>
+                {value ?? '— 未入力（クリックして入力）'}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+      {onDelete && !isDefault && !editing && (
+        <button
+          type="button"
+          onClick={onDelete}
+          className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 w-6 h-6 rounded-[4px] flex items-center justify-center"
+          style={{ color: 'var(--color-obs-text-subtle)' }}
+          onMouseOver={(e) => {
+            ;(e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,107,107,0.14)'
+            ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-obs-hot)'
           }}
+          onMouseOut={(e) => {
+            ;(e.currentTarget as HTMLButtonElement).style.background = 'transparent'
+            ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-obs-text-subtle)'
+          }}
+          title="カスタム項目を削除"
         >
-          <div className="text-[13px] font-semibold mb-2" style={{ color: 'var(--color-obs-text)' }}>
-            {p.name}
-          </div>
-          <div className="grid grid-cols-[68px_1fr] gap-x-3 gap-y-1.5 text-[12px] leading-relaxed">
-            <span className="text-[10.5px] font-medium tracking-[0.06em] uppercase pt-0.5" style={{ color: 'var(--color-obs-text-subtle)' }}>
-              職種
-            </span>
-            <span style={{ color: 'var(--color-obs-text-muted)' }}>{p.role}</span>
+          <Trash2 size={12} />
+        </button>
+      )}
+    </div>
+  )
+}
 
-            <span className="text-[10.5px] font-medium tracking-[0.06em] uppercase pt-0.5" style={{ color: 'var(--color-obs-text-subtle)' }}>
-              任務
-            </span>
-            <span style={{ color: 'var(--color-obs-text-muted)' }}>{p.mission}</span>
+// ─── カスタム項目を追加するボタン行 ────────────────────────────────────────
+function AddCustomFieldRow({ onAdd }: { onAdd: (label: string) => void }) {
+  const [adding, setAdding] = useState(false)
+  const [label, setLabel] = useState('')
+  const inputRef = React.useRef<HTMLInputElement | null>(null)
 
-            <span className="text-[10.5px] font-medium tracking-[0.06em] uppercase pt-0.5" style={{ color: 'var(--color-obs-text-subtle)' }}>
-              目指す姿
-            </span>
-            <span style={{ color: 'var(--color-obs-text-muted)' }}>{p.vision}</span>
-          </div>
-        </div>
-      ))}
+  React.useEffect(() => {
+    if (adding) setTimeout(() => inputRef.current?.focus(), 0)
+  }, [adding])
+
+  const commit = () => {
+    const v = label.trim()
+    if (v) onAdd(v)
+    setLabel('')
+    setAdding(false)
+  }
+  const cancel = () => {
+    setLabel('')
+    setAdding(false)
+  }
+
+  if (!adding) {
+    return (
+      <button
+        type="button"
+        onClick={() => setAdding(true)}
+        className="flex items-center gap-1.5 px-5 py-3 w-full text-left text-[12px] font-medium transition-colors"
+        style={{ color: 'var(--color-obs-primary)' }}
+        onMouseOver={(e) => {
+          ;(e.currentTarget as HTMLButtonElement).style.background = 'rgba(171,199,255,0.05)'
+        }}
+        onMouseOut={(e) => {
+          ;(e.currentTarget as HTMLButtonElement).style.background = 'transparent'
+        }}
+      >
+        <Plus size={12} strokeWidth={2.5} />
+        カスタム項目を追加
+      </button>
+    )
+  }
+
+  return (
+    <div className="flex items-center gap-2 px-5 py-3">
+      <input
+        ref={inputRef}
+        value={label}
+        onChange={(e) => setLabel(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') commit()
+          if (e.key === 'Escape') cancel()
+        }}
+        placeholder="項目名を入力 (例: 想定利用シーン)"
+        className="flex-1 h-8 px-2.5 rounded-[6px] text-[12.5px] outline-none"
+        style={{
+          background: 'var(--color-obs-surface-lowest)',
+          color: 'var(--color-obs-text)',
+          boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.42)',
+        }}
+      />
+      <button
+        type="button"
+        onClick={commit}
+        className="h-8 px-3 rounded-[5px] text-[11.5px] font-semibold"
+        style={{
+          background: 'var(--color-obs-primary-container)',
+          color: 'var(--color-obs-on-primary)',
+        }}
+      >
+        追加
+      </button>
+      <button
+        type="button"
+        onClick={cancel}
+        className="h-8 px-3 rounded-[5px] text-[11.5px] font-medium"
+        style={{ color: 'var(--color-obs-text-muted)' }}
+      >
+        キャンセル
+      </button>
     </div>
   )
 }
@@ -1384,10 +1725,59 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
 
   // 取引に紐づく IS / 営業 / プロダクト フィールド / 議事録 / 集約
   // (フェーズ1はモック。id に紐づくデータが無い場合は d1 のダミーで埋める)
-  const isFields = MOCK_IS_FIELDS[id] ?? MOCK_IS_FIELDS['d1']!
-  const salesFields = MOCK_SALES_FIELDS[id] ?? MOCK_SALES_FIELDS['d1']!
-  const productFields = MOCK_PRODUCT_FIELDS[id] ?? MOCK_PRODUCT_FIELDS['d1']!
+  // IS / 営業フィールドは編集可能 + カスタム追加に対応するため state で管理
+  const [isFields, setIsFields] = useState<ISField[]>(
+    () => MOCK_IS_FIELDS[id] ?? MOCK_IS_FIELDS['d1'] ?? [],
+  )
+  const [salesFields, setSalesFields] = useState<SalesField[]>(
+    () => MOCK_SALES_FIELDS[id] ?? MOCK_SALES_FIELDS['d1'] ?? [],
+  )
+  // 取引切替時にフィールドも初期化
+  React.useEffect(() => {
+    setIsFields(MOCK_IS_FIELDS[id] ?? MOCK_IS_FIELDS['d1'] ?? [])
+    setSalesFields(MOCK_SALES_FIELDS[id] ?? MOCK_SALES_FIELDS['d1'] ?? [])
+  }, [id])
+
+  // IS フィールド操作
+  const updateISFieldValue = (key: ISFieldKey, next: string | null) => {
+    setIsFields((prev) => prev.map((f) => (f.key === key ? { ...f, value: next } : f)))
+  }
+  const addISCustomField = (label: string) => {
+    const key = `custom_is_${Date.now()}_${label}`
+    setIsFields((prev) => [...prev, { key, label, value: null, isDefault: false }])
+  }
+  const deleteISField = (key: ISFieldKey) => {
+    setIsFields((prev) => prev.filter((f) => f.key !== key || f.isDefault))
+  }
+
+  // 営業フィールド操作
+  const updateSalesFieldValue = (key: SalesFieldKey, next: string | null) => {
+    setSalesFields((prev) => prev.map((f) => (f.key === key ? { ...f, value: next } : f)))
+  }
+  const addSalesCustomField = (label: string) => {
+    const key = `custom_sales_${Date.now()}_${label}`
+    setSalesFields((prev) => [...prev, { key, label, value: null, isDefault: false }])
+  }
+  const deleteSalesField = (key: SalesFieldKey) => {
+    setSalesFields((prev) => prev.filter((f) => f.key !== key || f.isDefault))
+  }
+  // プロダクトフィールドは開発優先度ページのデータと連動するため、MOCK_PRODUCT_FIELDS は廃止
   const meetings = MOCK_MEETINGS[id] ?? MOCK_MEETINGS['d1'] ?? []
+
+  // 提案内容（複数提案を保持・編集・追加可能）
+  const [proposals, setProposals] = useState<Proposal[]>(
+    () => DEAL_PROPOSALS[id] ?? DEAL_PROPOSALS['d1'] ?? [],
+  )
+  const [activeProposalId, setActiveProposalId] = useState<string | null>(
+    () => (DEAL_PROPOSALS[id] ?? DEAL_PROPOSALS['d1'] ?? [])[0]?.id ?? null,
+  )
+  const [editingProposal, setEditingProposal] = useState<Proposal | null>(null)
+  React.useEffect(() => {
+    const list = DEAL_PROPOSALS[id] ?? DEAL_PROPOSALS['d1'] ?? []
+    setProposals(list)
+    setActiveProposalId(list[0]?.id ?? null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id])
 
   // 議事録タブ: デフォルト最新
   const [activeMeetingId, setActiveMeetingId] = useState<string | null>(
@@ -1614,7 +2004,7 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
                     style={{ background: 'rgba(126,198,255,0.12)', color: 'var(--color-obs-low)' }}
                   >
                     <Headphones size={9} />
-                    電話・メールから自動抽出
+                    電話とメール文から事実に基づき抽出
                   </span>
                 }
               />
@@ -1673,30 +2063,26 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
                 )
               })()}
 
-              <motion.div
-                initial="hidden"
-                animate="visible"
-                variants={{ visible: { transition: { staggerChildren: 0.03 } } }}
-              >
+              <div>
                 {isFields.map((field, i) => {
                   const chipTone: ChipTone | null = field.chipValue ? (IS_CHIP_TONE[field.chipValue] ?? 'neutral') : null
+                  const hasChips = (field.chipList && field.chipList.length > 0) || !!chipTone
                   return (
-                    <motion.div
+                    <div
                       key={field.key}
-                      variants={{
-                        hidden: { opacity: 0, y: 5 },
-                        visible: { opacity: 1, y: 0, transition: { duration: 0.18, ease: [0.16, 1, 0.3, 1] } },
-                      }}
-                      className="flex items-start gap-3 px-5 py-3"
                       style={i < isFields.length - 1 ? OBS_ROW_DIVIDER : undefined}
                     >
-                      <span className="text-[12px] w-[110px] shrink-0 pt-0.5 leading-tight font-medium" style={{ color: 'var(--color-obs-text-subtle)' }}>
-                        {field.label}
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        {field.chipList && field.chipList.length > 0 ? (
+                      <EditableFieldRow
+                        label={field.label}
+                        value={field.value}
+                        isDefault={field.isDefault}
+                        leftWidth={110}
+                        onChange={(next) => updateISFieldValue(field.key, next)}
+                        onDelete={() => deleteISField(field.key)}
+                      >
+                        {hasChips ? (
                           <div className="flex flex-wrap items-center gap-1.5">
-                            {field.chipList.map((c) => (
+                            {field.chipList && field.chipList.map((c) => (
                               <span
                                 key={c}
                                 className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium"
@@ -1705,36 +2091,28 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
                                 {c}
                               </span>
                             ))}
-                            {field.value && (
-                              <span className="text-[12px] ml-1" style={{ color: 'var(--color-obs-text-subtle)' }}>
-                                {/* チップ集合の補足は表示しない（chipList が主） */}
+                            {chipTone && (
+                              <span
+                                className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold"
+                                style={CHIP_TONE_STYLE[chipTone]}
+                              >
+                                {field.chipValue}
                               </span>
                             )}
-                          </div>
-                        ) : chipTone ? (
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span
-                              className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold"
-                              style={CHIP_TONE_STYLE[chipTone]}
-                            >
-                              {field.chipValue}
-                            </span>
                             {field.value && field.value !== field.chipValue && (
                               <span className="text-[12px]" style={{ color: 'var(--color-obs-text-muted)' }}>
                                 {field.value}
                               </span>
                             )}
                           </div>
-                        ) : (
-                          <span className="text-[13px] leading-relaxed block" style={{ color: 'var(--color-obs-text)' }}>
-                            {field.value ?? <span style={{ color: 'var(--color-obs-text-subtle)' }}>— AI未収集</span>}
-                          </span>
-                        )}
-                      </div>
-                    </motion.div>
+                        ) : undefined}
+                      </EditableFieldRow>
+                    </div>
                   )
                 })}
-              </motion.div>
+                <div style={OBS_ROW_DIVIDER}></div>
+                <AddCustomFieldRow onAdd={addISCustomField} />
+              </div>
             </motion.div>
 
             {/* ─── 営業フィールド（議事録から自動抽出） ─────────────── */}
@@ -1760,90 +2138,192 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
                 }
               />
 
-              <motion.div
-                initial="hidden"
-                animate="visible"
-                variants={{ visible: { transition: { staggerChildren: 0.03 } } }}
-              >
+              <div>
                 {salesFields.map((field, i) => (
-                  <motion.div
+                  <div
                     key={field.key}
-                    variants={{
-                      hidden: { opacity: 0, y: 5 },
-                      visible: { opacity: 1, y: 0, transition: { duration: 0.18, ease: [0.16, 1, 0.3, 1] } },
-                    }}
-                    className="flex items-start gap-3 px-5 py-3"
                     style={i < salesFields.length - 1 ? OBS_ROW_DIVIDER : undefined}
                   >
-                    <span className="text-[12px] w-[100px] shrink-0 pt-0.5 leading-tight font-medium" style={{ color: 'var(--color-obs-text-subtle)' }}>
-                      {field.label}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      {field.key === '出席者' && field.participants ? (
-                        <ParticipantsList participants={field.participants} />
-                      ) : (
-                        <span className="text-[13px] leading-relaxed block" style={{ color: 'var(--color-obs-text)' }}>
-                          {field.value ?? <span style={{ color: 'var(--color-obs-text-subtle)' }}>— AI未収集</span>}
+                    {field.key === '出席者' && field.participants ? (
+                      // 出席者は専用UIで表示(編集はコンタクトページから)
+                      <div className="flex items-start gap-3 px-5 py-3">
+                        <span className="text-[12px] w-[110px] shrink-0 pt-0.5 leading-tight font-medium" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                          {field.label}
                         </span>
-                      )}
-                    </div>
-                  </motion.div>
+                        <div className="flex-1 min-w-0">
+                          <ParticipantsList participants={field.participants} />
+                        </div>
+                      </div>
+                    ) : (
+                      <EditableFieldRow
+                        label={field.label}
+                        value={field.value}
+                        isDefault={field.isDefault}
+                        leftWidth={110}
+                        onChange={(next) => updateSalesFieldValue(field.key, next)}
+                        onDelete={() => deleteSalesField(field.key)}
+                      />
+                    )}
+                  </div>
                 ))}
-              </motion.div>
+                <div style={OBS_ROW_DIVIDER}></div>
+                <AddCustomFieldRow onAdd={addSalesCustomField} />
+              </div>
             </motion.div>
 
-            {/* ─── プロダクトフィールド（議事録から自動抽出 / 開発・PDM 視点） ─── */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.06, ease: [0.16, 1, 0.3, 1] }}
-              className="rounded-[var(--radius-obs-xl)] overflow-hidden"
-              style={OBS_CARD_STYLE}
-            >
-              <CardHeader
-                icon={Cpu}
-                title="プロダクトフィールド"
-                iconTint="low"
-                right={
-                  <span
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold"
-                    style={{ background: 'rgba(171,199,255,0.12)', color: 'var(--color-obs-primary)' }}
-                  >
-                    <Zap size={9} />
-                    議事録から自動抽出
-                  </span>
-                }
-              />
+            {/* ─── プロダクトフィールド（開発優先度と連動: 課題/要望機能/問題） ─── */}
+            {(() => {
+              // 開発優先度ページのデータをこの取引の企業名で絞り込み
+              const companyName = deal.company
+              type CatConfig = {
+                key: Extract<PriorityCategory, '課題' | '要望機能' | '問題'>
+                Icon: React.ElementType
+                tint: string
+                bg: string
+                source: string
+              }
+              const CATEGORIES: CatConfig[] = [
+                { key: '課題',     Icon: AlertTriangle, tint: 'var(--color-obs-hot)',     bg: 'rgba(255,107,107,0.10)', source: '議事録から自動抽出' },
+                { key: '要望機能', Icon: Sparkles,      tint: 'var(--color-obs-primary)', bg: 'rgba(171,199,255,0.10)', source: '議事録から自動抽出' },
+                { key: '問題',     Icon: Ticket,        tint: '#c8b9ff',                  bg: 'rgba(200,185,255,0.10)', source: 'チケット連動' },
+              ]
 
-              <motion.div
-                initial="hidden"
-                animate="visible"
-                variants={{ visible: { transition: { staggerChildren: 0.03 } } }}
-              >
-                {productFields.map((field, i) => (
-                  <motion.div
-                    key={field.key}
-                    variants={{
-                      hidden: { opacity: 0, y: 5 },
-                      visible: { opacity: 1, y: 0, transition: { duration: 0.18, ease: [0.16, 1, 0.3, 1] } },
-                    }}
-                    className="flex items-start gap-3 px-5 py-3"
-                    style={i < productFields.length - 1 ? OBS_ROW_DIVIDER : undefined}
-                  >
-                    <span className="text-[12px] w-[100px] shrink-0 pt-0.5 leading-tight font-medium" style={{ color: 'var(--color-obs-text-subtle)' }}>
-                      {field.label}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <span className="text-[13px] leading-relaxed block" style={{ color: 'var(--color-obs-text)' }}>
-                        {field.value
-                          ? field.value
-                          : <span style={{ color: 'var(--color-obs-text-subtle)' }}>— AI未収集</span>}
-                      </span>
-                    </div>
-                  </motion.div>
-                ))}
-              </motion.div>
-            </motion.div>
+              const itemsByCategory: Record<string, Array<{ item: PriorityItem; companyQuotes: { quote: string; meetingDate: string; meetingDocUrl: string; sourceType?: 'meeting' | 'ticket' }[] }>> = {
+                '課題': [],
+                '要望機能': [],
+                '問題': [],
+              }
+              for (const item of MOCK_PRIORITY_ITEMS) {
+                if (!itemsByCategory[item.category]) continue
+                const myQuotes = item.evidence.filter((e) => e.companyName === companyName)
+                if (myQuotes.length === 0) continue
+                itemsByCategory[item.category]!.push({
+                  item,
+                  companyQuotes: myQuotes.map((e) => ({
+                    quote: e.quote,
+                    meetingDate: e.meetingDate,
+                    meetingDocUrl: e.meetingDocUrl,
+                    sourceType: e.sourceType,
+                  })),
+                })
+              }
+
+              return (
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.06, ease: [0.16, 1, 0.3, 1] }}
+                  className="rounded-[var(--radius-obs-xl)] overflow-hidden"
+                  style={OBS_CARD_STYLE}
+                >
+                  <CardHeader
+                    icon={Cpu}
+                    title="プロダクトフィールド"
+                    iconTint="low"
+                    right={
+                      <Link
+                        href="/priority"
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold transition-colors hover:bg-[rgba(171,199,255,0.18)]"
+                        style={{ background: 'rgba(171,199,255,0.12)', color: 'var(--color-obs-primary)' }}
+                      >
+                        <Zap size={9} />
+                        開発優先度と連動
+                        <ExternalLink size={9} />
+                      </Link>
+                    }
+                  />
+
+                  {CATEGORIES.map((cat, ci) => {
+                    const items = itemsByCategory[cat.key] ?? []
+                    const Icon = cat.Icon
+                    return (
+                      <div
+                        key={cat.key}
+                        style={ci < CATEGORIES.length - 1 ? OBS_ROW_DIVIDER : undefined}
+                      >
+                        {/* カテゴリヘッダ */}
+                        <div className="flex items-center gap-2 px-5 py-2.5">
+                          <span
+                            className="inline-flex items-center justify-center w-5 h-5 rounded-[var(--radius-obs-sm)] shrink-0"
+                            style={{ background: cat.bg }}
+                          >
+                            <Icon size={11} style={{ color: cat.tint }} />
+                          </span>
+                          <span className="text-[12.5px] font-semibold tracking-[-0.01em]" style={{ color: 'var(--color-obs-text)' }}>
+                            {cat.key}
+                          </span>
+                          <span className="text-[10.5px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                            （{cat.source}）
+                          </span>
+                          <span
+                            className="ml-auto inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full text-[10px] font-bold tabular-nums"
+                            style={{ background: cat.bg, color: cat.tint }}
+                          >
+                            {items.length}
+                          </span>
+                        </div>
+
+                        {/* アイテム一覧 */}
+                        {items.length === 0 ? (
+                          <div
+                            className="px-5 pb-3 pt-1 text-[11.5px]"
+                            style={{ color: 'var(--color-obs-text-subtle)' }}
+                          >
+                            この企業に紐づく{cat.key}は抽出されていません
+                          </div>
+                        ) : (
+                          <div className="pb-2">
+                            {items.map(({ item, companyQuotes }) => (
+                              <div key={item.id} className="px-5 py-2">
+                                <Link
+                                  href="/priority"
+                                  className="group inline-flex items-center gap-1.5 mb-1.5"
+                                >
+                                  <span
+                                    className="text-[12.5px] font-medium tracking-[-0.01em] group-hover:text-[var(--color-obs-primary)] transition-colors"
+                                    style={{ color: 'var(--color-obs-text)' }}
+                                  >
+                                    {item.title}
+                                  </span>
+                                  <ExternalLink size={10} className="opacity-50 group-hover:opacity-100 transition-opacity" style={{ color: 'var(--color-obs-primary)' }} />
+                                </Link>
+                                <div className="flex flex-col gap-1.5">
+                                  {companyQuotes.map((q, qi) => (
+                                    <div
+                                      key={qi}
+                                      className="pl-3 text-[11.5px] leading-relaxed"
+                                      style={{
+                                        color: 'var(--color-obs-text-muted)',
+                                        boxShadow: `inset 2px 0 0 ${cat.tint}`,
+                                      }}
+                                    >
+                                      <span className="block">「{q.quote}」</span>
+                                      <a
+                                        href={q.meetingDocUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-1 mt-0.5 text-[10.5px] hover:text-[var(--color-obs-primary)] transition-colors"
+                                        style={{ color: 'var(--color-obs-text-subtle)' }}
+                                      >
+                                        <Calendar size={9} />
+                                        {q.meetingDate.replace(/-/g, '/')}
+                                        <span className="opacity-60">·</span>
+                                        {q.sourceType === 'ticket' ? 'チケットを開く' : '議事録を開く'}
+                                        <ExternalLink size={9} />
+                                      </a>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </motion.div>
+              )
+            })()}
 
             {/* ─── 議事録 (タブ切替型) ─────────────────────────── */}
             <motion.div
@@ -1897,12 +2377,12 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
                             boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.12)',
                           }}
                         >
-                          <span className="tabular-nums">第{m.sequence}回</span>
+                          <span className="tabular-nums font-semibold">{m.sequence}</span>
                           <span
-                            className="text-[10px] tabular-nums"
+                            className="text-[11px] tabular-nums"
                             style={{ opacity: active ? 0.85 : 0.7 }}
                           >
-                            ({formatDateShort(m.date)})
+                            {formatDateShort(m.date)}
                           </span>
                         </button>
                       )
@@ -1972,24 +2452,18 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
                           </div>
                         </div>
 
-                        {/* Summary */}
-                        <p className="text-[12.5px] leading-relaxed mb-3 pl-12" style={{ color: 'var(--color-obs-text)' }}>
-                          {activeMeeting.summary}
-                        </p>
-
-                        {/* Key points */}
+                        {/* エグゼクティブサマリ (文章体プロセに統合) */}
                         <div className="pl-12">
                           <p className="text-[10px] font-bold uppercase tracking-[0.08em] mb-1.5" style={{ color: 'var(--color-obs-text-subtle)' }}>
-                            キーポイント
+                            エグゼクティブサマリ
                           </p>
-                          <ul className="space-y-1">
-                            {activeMeeting.keyPoints.map((kp, j) => (
-                              <li key={j} className="flex gap-2 text-[12px] leading-relaxed" style={{ color: 'var(--color-obs-text-muted)' }}>
-                                <span className="shrink-0 font-bold" style={{ color: 'var(--color-obs-low)' }}>▸</span>
-                                <span>{kp}</span>
-                              </li>
-                            ))}
-                          </ul>
+                          <p className="text-[12.5px] leading-relaxed" style={{ color: 'var(--color-obs-text)' }}>
+                            {[activeMeeting.summary, ...activeMeeting.keyPoints]
+                              .map((s) => s.trim().replace(/。$/, ''))
+                              .filter((s) => s.length > 0)
+                              .join('。')}
+                            。
+                          </p>
                         </div>
                       </motion.div>
                     </AnimatePresence>
@@ -2547,10 +3021,45 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
               </motion.div>
             </motion.div>
 
-            {/* 提案内容（サービス・契約条件） */}
+            {/* 提案内容（複数提案・編集・カスタム項目・添付対応） */}
             {(() => {
-              const proposal = DEAL_PROPOSALS[id] ?? DEAL_PROPOSALS['d1']
-              if (!proposal) return null
+              const proposal = proposals.find((p) => p.id === activeProposalId) ?? proposals[0]
+              if (!proposal) {
+                return (
+                  <motion.div
+                    initial={{ opacity: 0, x: 12 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.3, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                    className="rounded-[var(--radius-obs-xl)] overflow-hidden"
+                    style={OBS_CARD_STYLE}
+                  >
+                    <CardHeader icon={Briefcase} title="提案内容" iconTint="primary" />
+                    <div className="px-4 py-6 text-center">
+                      <p className="text-[11.5px] mb-3" style={{ color: 'var(--color-obs-text-muted)' }}>
+                        提案がまだありません
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const np = createEmptyProposal()
+                          setProposals([np])
+                          setActiveProposalId(np.id)
+                          setEditingProposal(np)
+                        }}
+                        className="inline-flex items-center gap-1 px-3 h-7 rounded-[var(--radius-obs-md)] text-[11.5px] font-semibold transition-colors"
+                        style={{
+                          background: 'rgba(171,199,255,0.14)',
+                          color: 'var(--color-obs-primary)',
+                          boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.42)',
+                        }}
+                      >
+                        <Plus size={11} strokeWidth={2.4} />
+                        提案を作成
+                      </button>
+                    </div>
+                  </motion.div>
+                )
+              }
               const cycleTone = PAYMENT_CYCLE_TONE[proposal.paymentCycle]
               const totalContractValue =
                 proposal.paymentCycle === '月額'
@@ -2569,14 +3078,75 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
                     title="提案内容"
                     iconTint="primary"
                     right={
-                      <span
-                        className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9.5px] font-semibold"
-                        style={{ background: cycleTone.bg, color: cycleTone.color }}
-                      >
-                        {proposal.paymentCycle}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9.5px] font-semibold"
+                          style={{ background: cycleTone.bg, color: cycleTone.color }}
+                        >
+                          {proposal.paymentCycle}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setEditingProposal(proposal)}
+                          title="この提案を編集"
+                          className="inline-flex items-center justify-center w-6 h-6 rounded-[6px] transition-colors hover:bg-[var(--color-obs-surface-high)]"
+                          style={{ color: 'var(--color-obs-text-muted)' }}
+                        >
+                          <Pencil size={11} />
+                        </button>
+                      </div>
                     }
                   />
+
+                  {/* 提案タブ＋新規追加 */}
+                  <div
+                    className="flex items-center gap-1 px-3 py-2 flex-wrap"
+                    style={{ boxShadow: 'inset 0 -1px 0 rgba(109,106,111,0.10)' }}
+                  >
+                    {proposals.map((p) => {
+                      const active = p.id === proposal.id
+                      return (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => setActiveProposalId(p.id)}
+                          className="inline-flex items-center gap-1 px-2.5 h-7 rounded-[8px] text-[11px] font-semibold transition-colors max-w-[140px]"
+                          style={
+                            active
+                              ? {
+                                  background: 'rgba(171,199,255,0.18)',
+                                  color: 'var(--color-obs-primary)',
+                                  boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.45)',
+                                }
+                              : {
+                                  background: 'var(--color-obs-surface-lowest)',
+                                  color: 'var(--color-obs-text-muted)',
+                                  boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.16)',
+                                }
+                          }
+                        >
+                          <span className="truncate">{p.name || '無題の提案'}</span>
+                        </button>
+                      )
+                    })}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const np = createEmptyProposal()
+                        setProposals((prev) => [...prev, np])
+                        setActiveProposalId(np.id)
+                        setEditingProposal(np)
+                      }}
+                      title="新しい提案を追加"
+                      className="inline-flex items-center justify-center w-7 h-7 rounded-[8px] transition-colors hover:bg-[var(--color-obs-surface-high)]"
+                      style={{
+                        color: 'var(--color-obs-text-muted)',
+                        boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.16)',
+                      }}
+                    >
+                      <Plus size={12} strokeWidth={2.4} />
+                    </button>
+                  </div>
 
                   {/* サービス */}
                   <div
@@ -2593,7 +3163,7 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
                       className="text-[12.5px] font-semibold leading-snug"
                       style={{ color: 'var(--color-obs-text)' }}
                     >
-                      {proposal.service}
+                      {proposal.service || '—'}
                     </div>
                   </div>
 
@@ -2624,7 +3194,7 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
                         ¥{totalContractValue.toLocaleString()}
                       </span>
                     </div>
-                    {proposal.initialFee && (
+                    {proposal.initialFee != null && proposal.initialFee > 0 && (
                       <div className="flex items-baseline justify-between text-[11px] mt-1">
                         <span style={{ color: 'var(--color-obs-text-subtle)' }}>
                           初期費用
@@ -2636,15 +3206,15 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
                     )}
                   </div>
 
-                  {/* 契約条件 */}
+                  {/* 契約条件 + カスタム項目 */}
                   <div
                     className="px-4 py-3"
-                    style={{ boxShadow: proposal.notes ? 'inset 0 -1px 0 rgba(109,106,111,0.10)' : undefined }}
+                    style={{ boxShadow: 'inset 0 -1px 0 rgba(109,106,111,0.10)' }}
                   >
                     <div className="flex flex-col gap-1.5 text-[11.5px]">
                       <div className="flex items-center gap-1.5">
                         <Calendar size={9} style={{ color: 'var(--color-obs-text-subtle)' }} className="shrink-0" />
-                        <span className="w-16 shrink-0" style={{ color: 'var(--color-obs-text-subtle)' }}>契約期間</span>
+                        <span className="w-20 shrink-0" style={{ color: 'var(--color-obs-text-subtle)' }}>契約期間</span>
                         <span className="tabular-nums" style={{ color: 'var(--color-obs-text)' }}>
                           {proposal.contractMonths}ヶ月
                         </span>
@@ -2652,7 +3222,7 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
                       {proposal.licenseCount !== null && (
                         <div className="flex items-center gap-1.5">
                           <Users size={9} style={{ color: 'var(--color-obs-text-subtle)' }} className="shrink-0" />
-                          <span className="w-16 shrink-0" style={{ color: 'var(--color-obs-text-subtle)' }}>ライセンス</span>
+                          <span className="w-20 shrink-0" style={{ color: 'var(--color-obs-text-subtle)' }}>ライセンス</span>
                           <span className="tabular-nums" style={{ color: 'var(--color-obs-text)' }}>
                             {proposal.licenseCount}名分
                           </span>
@@ -2661,13 +3231,91 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
                       {proposal.startAt && (
                         <div className="flex items-center gap-1.5">
                           <Zap size={9} style={{ color: 'var(--color-obs-text-subtle)' }} className="shrink-0" />
-                          <span className="w-16 shrink-0" style={{ color: 'var(--color-obs-text-subtle)' }}>開始予定</span>
+                          <span className="w-20 shrink-0" style={{ color: 'var(--color-obs-text-subtle)' }}>開始予定</span>
                           <span className="tabular-nums" style={{ color: 'var(--color-obs-text)' }}>
                             {formatDate(proposal.startAt)}
                           </span>
                         </div>
                       )}
+                      {/* カスタム項目 */}
+                      {proposal.customFields.map((cf) => (
+                        <div key={cf.id} className="flex items-start gap-1.5">
+                          <Sparkles size={9} style={{ color: 'var(--color-obs-primary)' }} className="shrink-0 mt-[3px]" />
+                          <span className="w-20 shrink-0 truncate" style={{ color: 'var(--color-obs-text-subtle)' }} title={cf.label}>{cf.label}</span>
+                          <span className="flex-1 break-words" style={{ color: 'var(--color-obs-text)' }}>
+                            {cf.value || '—'}
+                          </span>
+                        </div>
+                      ))}
                     </div>
+                  </div>
+
+                  {/* 添付ファイル */}
+                  <div
+                    className="px-4 py-3"
+                    style={{ boxShadow: proposal.notes ? 'inset 0 -1px 0 rgba(109,106,111,0.10)' : undefined }}
+                  >
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <FileText size={10} style={{ color: 'var(--color-obs-text-subtle)' }} />
+                      <span
+                        className="text-[10px] font-semibold tracking-[0.06em] uppercase"
+                        style={{ color: 'var(--color-obs-text-subtle)' }}
+                      >
+                        添付ファイル
+                      </span>
+                      <span
+                        className="text-[10px] tabular-nums"
+                        style={{ color: 'var(--color-obs-text-muted)' }}
+                      >
+                        {proposal.attachments.length}件
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setEditingProposal(proposal)}
+                        title="添付ファイルを追加・編集"
+                        className="ml-auto inline-flex items-center gap-0.5 text-[10.5px] font-medium transition-colors hover:text-[var(--color-obs-primary)]"
+                        style={{ color: 'var(--color-obs-text-muted)' }}
+                      >
+                        <Plus size={10} strokeWidth={2.4} />
+                        追加
+                      </button>
+                    </div>
+                    {proposal.attachments.length === 0 ? (
+                      <p className="text-[11px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                        契約書・NDA・見積書などをここに格納できます
+                      </p>
+                    ) : (
+                      <div className="flex flex-col gap-1">
+                        {proposal.attachments.map((a) => {
+                          const tone = ATTACHMENT_TYPE_TONE[a.type]
+                          return (
+                            <div
+                              key={a.id}
+                              className="flex items-center gap-2 px-2 py-1.5 rounded-[var(--radius-obs-sm)]"
+                              style={{ background: 'var(--color-obs-surface-lowest)' }}
+                            >
+                              <FileText size={11} style={{ color: 'var(--color-obs-text-muted)' }} className="shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="text-[11.5px] font-medium truncate" style={{ color: 'var(--color-obs-text)' }} title={a.name}>
+                                    {a.name}
+                                  </span>
+                                  <span
+                                    className="inline-flex items-center px-1.5 py-0.5 rounded-[4px] text-[9px] font-semibold shrink-0"
+                                    style={{ background: tone.bg, color: tone.color }}
+                                  >
+                                    {a.type}
+                                  </span>
+                                </div>
+                                <div className="text-[9.5px] tabular-nums" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                                  {a.sizeKb >= 1024 ? `${(a.sizeKb / 1024).toFixed(1)}MB` : `${a.sizeKb}KB`} · {formatDate(a.uploadedAt)}
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
                   </div>
 
                   {/* 提案メモ */}
@@ -2763,49 +3411,107 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
                     </button>
 
                     {linkedCompany ? (
-                      <div className="flex flex-col gap-1.5 text-[11.5px]">
-                        <div className="flex items-center gap-1.5">
-                          <Users size={9} style={{ color: 'var(--color-obs-text-subtle)' }} className="shrink-0" />
-                          <span className="w-12 shrink-0" style={{ color: 'var(--color-obs-text-subtle)' }}>従業員</span>
-                          <span style={{ color: 'var(--color-obs-text)' }}>{linkedCompany.employees}</span>
-                        </div>
-                        {linkedCompany.representative && (
-                          <div className="flex items-center gap-1.5">
-                            <User size={9} style={{ color: 'var(--color-obs-text-subtle)' }} className="shrink-0" />
-                            <span className="w-12 shrink-0" style={{ color: 'var(--color-obs-text-subtle)' }}>代表</span>
-                            <span className="truncate" style={{ color: 'var(--color-obs-text)' }}>{linkedCompany.representative}</span>
+                      (() => {
+                        // 求人インテント: 部門別の最上位レベルを採用
+                        const intentRows = DEAL_INTENTS[id] ?? []
+                        const intentRank: Record<DealIntentRow['intentLevel'], number> = {
+                          HOT: 3, MIDDLE: 2, LOW: 1, NONE: 0,
+                        }
+                        const topIntent = intentRows.reduce<DealIntentRow['intentLevel']>(
+                          (acc, r) => (intentRank[r.intentLevel] > intentRank[acc] ? r.intentLevel : acc),
+                          'NONE' as DealIntentRow['intentLevel'],
+                        )
+                        const totalSignals = intentRows.reduce((sum, r) => sum + r.signalCount, 0)
+                        const intentStyle = topIntent === 'HOT'
+                          ? { fg: 'var(--color-obs-hot)', bg: 'rgba(255,107,107,0.14)', label: 'HOT' }
+                          : topIntent === 'MIDDLE'
+                            ? { fg: 'var(--color-obs-middle)', bg: 'rgba(255,184,107,0.14)', label: 'MID' }
+                            : topIntent === 'LOW'
+                              ? { fg: 'var(--color-obs-low)', bg: 'rgba(126,198,255,0.14)', label: 'LOW' }
+                              : { fg: 'var(--color-obs-text-subtle)', bg: 'rgba(109,106,111,0.14)', label: 'NONE' }
+
+                        // ファーストパーティ情報
+                        const fp = getCompanyFirstPartySignal(deal.company)
+                        const fpStyle = fp === 'Hot'
+                          ? { fg: 'var(--color-obs-hot)', bg: 'rgba(255,107,107,0.14)', label: '強' }
+                          : fp === 'Middle'
+                            ? { fg: 'var(--color-obs-middle)', bg: 'rgba(255,184,107,0.14)', label: '中' }
+                            : fp === 'Low'
+                              ? { fg: 'var(--color-obs-low)', bg: 'rgba(126,198,255,0.14)', label: '弱' }
+                              : { fg: 'var(--color-obs-text-subtle)', bg: 'rgba(109,106,111,0.14)', label: '—' }
+
+                        return (
+                          <div className="flex flex-col gap-1.5 text-[11.5px]">
+                            <div className="flex items-center gap-1.5">
+                              <Users size={9} style={{ color: 'var(--color-obs-text-subtle)' }} className="shrink-0" />
+                              <span className="w-12 shrink-0" style={{ color: 'var(--color-obs-text-subtle)' }}>従業員</span>
+                              <span style={{ color: 'var(--color-obs-text)' }}>{linkedCompany.employees}</span>
+                            </div>
+                            <div className="flex items-start gap-1.5">
+                              <MapPin size={9} style={{ color: 'var(--color-obs-text-subtle)' }} className="shrink-0 mt-0.5" />
+                              <span className="w-12 shrink-0 mt-0.5" style={{ color: 'var(--color-obs-text-subtle)' }}>所在地</span>
+                              <span className="leading-snug min-w-0 flex-1" style={{ color: 'var(--color-obs-text)' }}>{linkedCompany.address}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <Globe size={9} style={{ color: 'var(--color-obs-text-subtle)' }} className="shrink-0" />
+                              <span className="w-12 shrink-0" style={{ color: 'var(--color-obs-text-subtle)' }}>Web</span>
+                              <a
+                                href={linkedCompany.websiteUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="group inline-flex items-center gap-1 min-w-0 transition-colors hover:opacity-80"
+                                style={{ color: 'var(--color-obs-primary)' }}
+                              >
+                                <span className="truncate min-w-0">{websiteHost}</span>
+                                <ExternalLink size={9} className="shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
+                              </a>
+                            </div>
+                            {/* 求人インテント — クリックで企業詳細の求人インテントへ */}
+                            <button
+                              type="button"
+                              onClick={() => router.push(`/companies/${deal.companyId}#intent`)}
+                              className="group flex items-center gap-1.5 -mx-1 px-1 py-0.5 rounded-[6px] transition-colors text-left cursor-pointer hover:bg-[rgba(171,199,255,0.06)]"
+                              title="企業の求人インテント詳細を開く"
+                            >
+                              <Zap size={9} style={{ color: 'var(--color-obs-text-subtle)' }} className="shrink-0" />
+                              <span className="w-12 shrink-0" style={{ color: 'var(--color-obs-text-subtle)' }}>求人</span>
+                              <span
+                                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-[5px] text-[10px] font-bold"
+                                style={{ background: intentStyle.bg, color: intentStyle.fg }}
+                              >
+                                {intentStyle.label}
+                              </span>
+                              {intentRows.length > 0 && (
+                                <span
+                                  className="underline decoration-dotted underline-offset-[3px] group-hover:decoration-solid transition-colors"
+                                  style={{ color: 'var(--color-obs-primary)' }}
+                                >
+                                  {intentRows.length}部門·{totalSignals}件
+                                </span>
+                              )}
+                              <ExternalLink
+                                size={9}
+                                className="ml-auto opacity-0 group-hover:opacity-80 transition-opacity shrink-0"
+                                style={{ color: 'var(--color-obs-primary)' }}
+                              />
+                            </button>
+                            {/* ファーストパーティ */}
+                            <div className="flex items-center gap-1.5">
+                              <Radio size={9} style={{ color: 'var(--color-obs-text-subtle)' }} className="shrink-0" />
+                              <span className="w-12 shrink-0" style={{ color: 'var(--color-obs-text-subtle)' }}>1st</span>
+                              <span
+                                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-[5px] text-[10px] font-bold"
+                                style={{ background: fpStyle.bg, color: fpStyle.fg }}
+                              >
+                                {fpStyle.label}
+                              </span>
+                              <span className="text-[10.5px]" style={{ color: 'var(--color-obs-text-muted)' }}>
+                                {fp ? '接点あり' : '接点なし'}
+                              </span>
+                            </div>
                           </div>
-                        )}
-                        <div className="flex items-start gap-1.5">
-                          <MapPin size={9} style={{ color: 'var(--color-obs-text-subtle)' }} className="shrink-0 mt-0.5" />
-                          <span className="w-12 shrink-0 mt-0.5" style={{ color: 'var(--color-obs-text-subtle)' }}>所在地</span>
-                          <span className="leading-snug min-w-0 flex-1" style={{ color: 'var(--color-obs-text)' }}>{linkedCompany.address}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <Phone size={9} style={{ color: 'var(--color-obs-text-subtle)' }} className="shrink-0" />
-                          <span className="w-12 shrink-0" style={{ color: 'var(--color-obs-text-subtle)' }}>電話</span>
-                          <a
-                            href={`tel:${linkedCompany.phone}`}
-                            className="tabular-nums hover:text-[var(--color-obs-primary)] transition-colors truncate"
-                            style={{ color: 'var(--color-obs-text)' }}
-                          >
-                            {linkedCompany.phone}
-                          </a>
-                        </div>
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <Globe size={9} style={{ color: 'var(--color-obs-text-subtle)' }} className="shrink-0" />
-                          <span className="w-12 shrink-0" style={{ color: 'var(--color-obs-text-subtle)' }}>Web</span>
-                          <a
-                            href={linkedCompany.websiteUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="hover:text-[var(--color-obs-primary)] transition-colors truncate min-w-0"
-                            style={{ color: 'var(--color-obs-text)' }}
-                          >
-                            {websiteHost}
-                          </a>
-                        </div>
-                      </div>
+                        )
+                      })()
                     ) : (
                       <div
                         className="text-[11.5px]"
@@ -2995,7 +3701,490 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
             }}
           />
         )}
+
+        {/* 提案編集モーダル */}
+        {editingProposal && (
+          <ProposalEditModal
+            proposal={editingProposal}
+            onClose={() => setEditingProposal(null)}
+            onSave={(updated) => {
+              setProposals((prev) => {
+                const idx = prev.findIndex((p) => p.id === updated.id)
+                if (idx >= 0) {
+                  const next = [...prev]
+                  next[idx] = updated
+                  return next
+                }
+                return [...prev, updated]
+              })
+              setActiveProposalId(updated.id)
+              setEditingProposal(null)
+            }}
+            onDelete={(proposalId) => {
+              setProposals((prev) => {
+                const next = prev.filter((p) => p.id !== proposalId)
+                if (activeProposalId === proposalId) {
+                  setActiveProposalId(next[0]?.id ?? null)
+                }
+                return next
+              })
+              setEditingProposal(null)
+            }}
+          />
+        )}
       </div>
     </ObsPageShell>
   )
+}
+
+// ─── 提案編集モーダル ─────────────────────────────────────────────
+function ProposalEditModal({
+  proposal,
+  onClose,
+  onSave,
+  onDelete,
+}: {
+  proposal: Proposal
+  onClose: () => void
+  onSave: (updated: Proposal) => void
+  onDelete: (proposalId: string) => void
+}) {
+  const [draft, setDraft] = useState<Proposal>(() => ({
+    ...proposal,
+    customFields: [...proposal.customFields],
+    attachments: [...proposal.attachments],
+  }))
+
+  function patch<K extends keyof Proposal>(key: K, value: Proposal[K]) {
+    setDraft((prev) => ({ ...prev, [key]: value }))
+  }
+
+  function addCustomField() {
+    setDraft((prev) => ({
+      ...prev,
+      customFields: [
+        ...prev.customFields,
+        { id: `cf-${Date.now()}`, label: '', value: '' },
+      ],
+    }))
+  }
+  function updateCustomField(id: string, patch: Partial<CustomField>) {
+    setDraft((prev) => ({
+      ...prev,
+      customFields: prev.customFields.map((cf) =>
+        cf.id === id ? { ...cf, ...patch } : cf,
+      ),
+    }))
+  }
+  function removeCustomField(id: string) {
+    setDraft((prev) => ({
+      ...prev,
+      customFields: prev.customFields.filter((cf) => cf.id !== id),
+    }))
+  }
+
+  function onFilesPicked(files: FileList | null) {
+    if (!files || files.length === 0) return
+    const newOnes: ProposalAttachment[] = Array.from(files).map((f) => ({
+      id: `a-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      name: f.name,
+      type: guessAttachmentType(f.name),
+      sizeKb: Math.max(1, Math.round(f.size / 1024)),
+      uploadedAt: new Date().toISOString().slice(0, 10),
+    }))
+    setDraft((prev) => ({ ...prev, attachments: [...prev.attachments, ...newOnes] }))
+  }
+  function updateAttachment(id: string, patch: Partial<ProposalAttachment>) {
+    setDraft((prev) => ({
+      ...prev,
+      attachments: prev.attachments.map((a) => (a.id === id ? { ...a, ...patch } : a)),
+    }))
+  }
+  function removeAttachment(id: string) {
+    setDraft((prev) => ({
+      ...prev,
+      attachments: prev.attachments.filter((a) => a.id !== id),
+    }))
+  }
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.15 }}
+        className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+        onClick={onClose}
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96, y: 8 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.96, y: 8 }}
+          transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+          className="w-full max-w-[560px] max-h-[88vh] rounded-[var(--radius-obs-xl)] overflow-hidden flex flex-col"
+          style={{
+            backgroundColor: 'var(--color-obs-surface-highest)',
+            boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div
+            className="flex items-center justify-between px-5 py-3.5 shrink-0"
+            style={{ boxShadow: 'inset 0 -1px 0 0 var(--color-obs-surface-low)' }}
+          >
+            <h2 className="text-[14px] font-bold inline-flex items-center gap-1.5" style={{ color: 'var(--color-obs-text)' }}>
+              <Briefcase size={14} style={{ color: 'var(--color-obs-primary)' }} />
+              提案内容を編集
+            </h2>
+            <button
+              onClick={onClose}
+              type="button"
+              className="w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-[var(--color-obs-surface-high)]"
+              style={{ color: 'var(--color-obs-text-muted)' }}
+            >
+              <X size={14} />
+            </button>
+          </div>
+
+          {/* Body (scrollable) */}
+          <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-4">
+            {/* 提案名 */}
+            <Field label="提案名">
+              <input
+                type="text"
+                value={draft.name}
+                onChange={(e) => patch('name', e.target.value)}
+                placeholder="例: 本命プラン / A案"
+                className="modal-input"
+              />
+            </Field>
+
+            <Field label="提案サービス・プラン名">
+              <input
+                type="text"
+                value={draft.service}
+                onChange={(e) => patch('service', e.target.value)}
+                placeholder="例: ルキスマCRM Pro / Slack連携アドオン"
+                className="modal-input"
+              />
+            </Field>
+
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="提案金額（税抜）">
+                <input
+                  type="number"
+                  min={0}
+                  step={10000}
+                  value={draft.amount}
+                  onChange={(e) => patch('amount', Number(e.target.value) || 0)}
+                  className="modal-input tabular-nums"
+                />
+              </Field>
+              <Field label="課金サイクル">
+                <select
+                  value={draft.paymentCycle}
+                  onChange={(e) => patch('paymentCycle', e.target.value as ProposalPaymentCycle)}
+                  className="modal-input"
+                >
+                  {PAYMENT_CYCLE_OPTIONS.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </Field>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="契約期間（ヶ月）">
+                <input
+                  type="number"
+                  min={1}
+                  value={draft.contractMonths}
+                  onChange={(e) => patch('contractMonths', Math.max(1, Number(e.target.value) || 1))}
+                  className="modal-input tabular-nums"
+                />
+              </Field>
+              <Field label="ライセンス数">
+                <input
+                  type="number"
+                  min={0}
+                  value={draft.licenseCount ?? ''}
+                  onChange={(e) => {
+                    const v = e.target.value
+                    patch('licenseCount', v === '' ? null : Number(v))
+                  }}
+                  placeholder="該当なし"
+                  className="modal-input tabular-nums"
+                />
+              </Field>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="開始予定日">
+                <input
+                  type="date"
+                  value={draft.startAt ?? ''}
+                  onChange={(e) => patch('startAt', e.target.value || null)}
+                  className="modal-input"
+                />
+              </Field>
+              <Field label="初期費用">
+                <input
+                  type="number"
+                  min={0}
+                  step={10000}
+                  value={draft.initialFee ?? ''}
+                  onChange={(e) => {
+                    const v = e.target.value
+                    patch('initialFee', v === '' ? null : Number(v))
+                  }}
+                  placeholder="なし"
+                  className="modal-input tabular-nums"
+                />
+              </Field>
+            </div>
+
+            <Field label="提案メモ">
+              <textarea
+                value={draft.notes}
+                onChange={(e) => patch('notes', e.target.value)}
+                rows={3}
+                placeholder="補足・社内メモ"
+                className="modal-input resize-y"
+              />
+            </Field>
+
+            {/* カスタム項目 */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-semibold inline-flex items-center gap-1.5" style={{ color: 'var(--color-obs-text-muted)' }}>
+                  <Sparkles size={11} style={{ color: 'var(--color-obs-primary)' }} />
+                  カスタム項目
+                  <span className="text-[10px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                    {draft.customFields.length}件
+                  </span>
+                </span>
+                <button
+                  type="button"
+                  onClick={addCustomField}
+                  className="inline-flex items-center gap-1 px-2 h-6 rounded-[6px] text-[10.5px] font-semibold transition-colors"
+                  style={{
+                    background: 'rgba(171,199,255,0.14)',
+                    color: 'var(--color-obs-primary)',
+                  }}
+                >
+                  <Plus size={10} strokeWidth={2.4} />
+                  項目を追加
+                </button>
+              </div>
+              {draft.customFields.length === 0 ? (
+                <p className="text-[11px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                  サポート範囲・支払い条件など、自由に項目を追加できます
+                </p>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {draft.customFields.map((cf) => (
+                    <div key={cf.id} className="flex items-start gap-2">
+                      <input
+                        type="text"
+                        value={cf.label}
+                        onChange={(e) => updateCustomField(cf.id, { label: e.target.value })}
+                        placeholder="ラベル"
+                        className="modal-input flex-[0_0_30%]"
+                      />
+                      <input
+                        type="text"
+                        value={cf.value}
+                        onChange={(e) => updateCustomField(cf.id, { value: e.target.value })}
+                        placeholder="値"
+                        className="modal-input flex-1"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeCustomField(cf.id)}
+                        title="この項目を削除"
+                        className="shrink-0 w-7 h-7 rounded-[6px] flex items-center justify-center transition-colors hover:bg-[rgba(255,107,107,0.10)]"
+                        style={{ color: 'var(--color-obs-hot)' }}
+                      >
+                        <Trash2 size={11} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* 添付ファイル */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-semibold inline-flex items-center gap-1.5" style={{ color: 'var(--color-obs-text-muted)' }}>
+                  <FileText size={11} />
+                  添付ファイル
+                  <span className="text-[10px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                    {draft.attachments.length}件
+                  </span>
+                </span>
+                <label
+                  className="inline-flex items-center gap-1 px-2 h-6 rounded-[6px] text-[10.5px] font-semibold transition-colors cursor-pointer"
+                  style={{
+                    background: 'rgba(171,199,255,0.14)',
+                    color: 'var(--color-obs-primary)',
+                  }}
+                  title="ファイルを選択してアップロード"
+                >
+                  <Upload size={10} strokeWidth={2.4} />
+                  ファイルを追加
+                  <input
+                    type="file"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => {
+                      onFilesPicked(e.target.files)
+                      e.currentTarget.value = ''
+                    }}
+                  />
+                </label>
+              </div>
+              {draft.attachments.length === 0 ? (
+                <p className="text-[11px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                  契約書・NDA・見積書などをアップロードできます
+                </p>
+              ) : (
+                <div className="flex flex-col gap-1.5">
+                  {draft.attachments.map((a) => (
+                    <div
+                      key={a.id}
+                      className="flex items-center gap-2 px-2 py-1.5 rounded-[var(--radius-obs-sm)]"
+                      style={{ background: 'var(--color-obs-surface-low)' }}
+                    >
+                      <FileText size={11} style={{ color: 'var(--color-obs-text-muted)' }} className="shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[11.5px] font-medium truncate" style={{ color: 'var(--color-obs-text)' }} title={a.name}>
+                          {a.name}
+                        </div>
+                        <div className="text-[9.5px] tabular-nums" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                          {a.sizeKb >= 1024 ? `${(a.sizeKb / 1024).toFixed(1)}MB` : `${a.sizeKb}KB`} · {a.uploadedAt}
+                        </div>
+                      </div>
+                      <select
+                        value={a.type}
+                        onChange={(e) => updateAttachment(a.id, { type: e.target.value as AttachmentType })}
+                        className="modal-input !h-6 !py-0 !px-1.5 !text-[10.5px] !w-20 shrink-0"
+                      >
+                        {ATTACHMENT_TYPE_OPTIONS.map((t) => (
+                          <option key={t} value={t}>{t}</option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => removeAttachment(a.id)}
+                        title="この添付を削除"
+                        className="shrink-0 w-6 h-6 rounded-[6px] flex items-center justify-center transition-colors hover:bg-[rgba(255,107,107,0.10)]"
+                        style={{ color: 'var(--color-obs-hot)' }}
+                      >
+                        <Trash2 size={11} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div
+            className="flex items-center gap-2 px-5 py-3 shrink-0"
+            style={{ boxShadow: 'inset 0 1px 0 0 var(--color-obs-surface-low)' }}
+          >
+            <button
+              type="button"
+              onClick={() => {
+                if (confirm(`「${draft.name || '無題の提案'}」を削除しますか?`)) {
+                  onDelete(draft.id)
+                }
+              }}
+              className="inline-flex items-center gap-1 h-8 px-2.5 rounded-[var(--radius-obs-md)] text-[11.5px] font-medium transition-colors hover:bg-[rgba(255,107,107,0.10)]"
+              style={{ color: 'var(--color-obs-hot)' }}
+            >
+              <Trash2 size={11} />
+              この提案を削除
+            </button>
+            <div className="flex-1" />
+            <button
+              type="button"
+              onClick={onClose}
+              className="h-8 px-3 rounded-[var(--radius-obs-md)] text-[12px] font-medium transition-colors hover:bg-[var(--color-obs-surface-high)]"
+              style={{ color: 'var(--color-obs-text-muted)' }}
+            >
+              キャンセル
+            </button>
+            <button
+              type="button"
+              onClick={() => onSave(draft)}
+              className="h-8 px-3 rounded-[var(--radius-obs-md)] text-[12px] font-semibold transition-colors"
+              style={{
+                background: 'var(--color-obs-primary)',
+                color: 'var(--color-obs-on-primary)',
+              }}
+            >
+              保存
+            </button>
+          </div>
+
+          <style jsx>{`
+            .modal-input {
+              width: 100%;
+              height: 32px;
+              padding: 0 10px;
+              border-radius: var(--radius-obs-md);
+              background: var(--color-obs-surface-low);
+              color: var(--color-obs-text);
+              font-size: 12.5px;
+              border: 1px solid rgba(109, 106, 111, 0.18);
+              outline: none;
+              transition: border-color 0.15s, background-color 0.15s;
+            }
+            .modal-input:focus {
+              border-color: var(--color-obs-primary);
+              background: var(--color-obs-surface);
+            }
+            textarea.modal-input {
+              height: auto;
+              padding: 8px 10px;
+              line-height: 1.55;
+            }
+            select.modal-input {
+              cursor: pointer;
+              appearance: none;
+              padding-right: 24px;
+              background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+              background-repeat: no-repeat;
+              background-position: right 8px center;
+            }
+          `}</style>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  )
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="flex flex-col gap-1">
+      <span className="text-[10.5px] font-semibold tracking-[0.05em] uppercase" style={{ color: 'var(--color-obs-text-subtle)' }}>
+        {label}
+      </span>
+      {children}
+    </label>
+  )
+}
+
+function guessAttachmentType(filename: string): AttachmentType {
+  const lower = filename.toLowerCase()
+  if (lower.includes('nda')) return 'NDA'
+  if (lower.includes('契約') || lower.includes('contract')) return '契約書'
+  if (lower.includes('見積') || lower.includes('quote') || lower.includes('estimate')) return '見積書'
+  if (lower.includes('提案') || lower.includes('proposal')) return '提案書'
+  return 'その他'
 }

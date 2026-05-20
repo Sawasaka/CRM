@@ -1,9 +1,31 @@
 import NextAuth from 'next-auth'
+import Credentials from 'next-auth/providers/credentials'
 import Google from 'next-auth/providers/google'
 import { prisma } from '@bgm/db'
+import { verifyPassword } from '@/lib/password'
+import { ensureUser } from '@/lib/user-provisioning'
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
+    Credentials({
+      credentials: {
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' },
+      },
+      async authorize(credentials) {
+        const email = String(credentials.email ?? '').trim().toLowerCase()
+        const password = String(credentials.password ?? '')
+        if (!email || !password) return null
+
+        const user = await prisma.user.findFirst({ where: { email } })
+        if (!user?.passwordHash) return null
+
+        const ok = await verifyPassword(password, user.passwordHash)
+        if (!ok) return null
+
+        return { id: user.id, email: user.email, name: user.name }
+      },
+    }),
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
@@ -18,7 +40,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, account, profile }) {
+    async jwt({ token, account, profile, user }) {
+      if (user?.id) {
+        token.userId = user.id
+        token.email = user.email
+      }
+
       // 初回ログイン時に Google account を DB へ保存
       if (account && profile && account.provider === 'google') {
         token.accessToken = account.access_token
@@ -29,10 +56,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const userId = await ensureUser({
           email: profile.email as string,
           name: (profile.name as string) ?? (profile.email as string),
+          googleUserId: account.providerAccountId,
         })
         token.userId = userId
 
         if (account.refresh_token) {
+          const existing = await prisma.userGoogleAccount.findUnique({ where: { userId } })
           await prisma.userGoogleAccount.upsert({
             where: { userId },
             create: {
@@ -48,18 +77,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               googleSub: account.providerAccountId,
               email: profile.email as string,
               accessToken: account.access_token ?? null,
-              refreshToken: account.refresh_token,
+              refreshToken: account.refresh_token ?? existing?.refreshToken ?? null,
               expiresAt: account.expires_at ? new Date(account.expires_at * 1000) : null,
-              scope: (account.scope as string) ?? null,
+              scope: mergeScopes(existing?.scope ?? null, (account.scope as string) ?? ''),
             },
           })
         }
       }
+
       return token
     },
     async session({ session, token }) {
       session.accessToken = token.accessToken as string
       ;(session as unknown as { userId?: string }).userId = token.userId as string | undefined
+      if (session.user && typeof token.userId === 'string') {
+        session.user.id = token.userId
+      }
       return session
     },
   },
@@ -69,28 +102,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
 })
 
-// User がなければ作成。orgId は環境変数 DEFAULT_ORG_ID か、最初の Organization を使う。
-async function ensureUser({ email, name }: { email: string; name: string }): Promise<string> {
-  const existing = await prisma.user.findFirst({ where: { email } })
-  if (existing) return existing.id
-
-  const orgId =
-    process.env.DEFAULT_ORG_ID ??
-    (await prisma.organization.findFirst({ orderBy: { createdAt: 'asc' } }))?.id
-
-  if (!orgId) {
-    // 組織がまだ無い: 自動作成
-    const org = await prisma.organization.create({
-      data: { name: 'Default', slug: 'default' },
-    })
-    const user = await prisma.user.create({
-      data: { orgId: org.id, email, name, role: 'ADMIN' },
-    })
-    return user.id
-  }
-
-  const user = await prisma.user.create({
-    data: { orgId, email, name, role: 'REP' },
-  })
-  return user.id
+function mergeScopes(existing: string | null, incoming: string): string {
+  const set = new Set<string>()
+  if (existing) for (const s of existing.split(/\s+/)) if (s) set.add(s)
+  for (const s of incoming.split(/\s+/)) if (s) set.add(s)
+  return Array.from(set).join(' ')
 }

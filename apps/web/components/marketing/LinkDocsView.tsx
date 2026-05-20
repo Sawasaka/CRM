@@ -22,7 +22,7 @@ interface SimpleDoc {
 }
 
 const INITIAL_DOCS: SimpleDoc[] = [
-  { id: 'doc-1', name: 'BGM サービス紹介資料 v2.1.pdf',  trackingUrl: 'https://track.bgm.app/d/abc123', uploadedAt: '2026-03-15' },
+  { id: 'doc-1', name: 'ルキスマCRM サービス紹介資料 v2.1.pdf',  trackingUrl: 'https://track.bgm.app/d/abc123', uploadedAt: '2026-03-15' },
   { id: 'doc-2', name: '株式会社テクノリード向け提案書.pdf', trackingUrl: 'https://track.bgm.app/d/def456', uploadedAt: '2026-03-20' },
   { id: 'doc-3', name: '導入事例集 2026年版.pdf',          trackingUrl: 'https://track.bgm.app/d/ghi789', uploadedAt: '2026-03-10' },
   { id: 'doc-4', name: '料金プラン比較表.pdf',              trackingUrl: 'https://track.bgm.app/d/jkl012', uploadedAt: '2026-03-22' },
@@ -209,7 +209,7 @@ export function LinkDocsView() {
 
 // ─── Delivery Domain Section ─────────────────────────────────────────────────────
 // 資料DLリンクの発行ドメイン設定。
-// 顧客が自社のベースドメイン(例: zooba.io)を登録すると、Front Office が
+// 顧客が自社のベースドメイン(例: zooba.io)を登録すると、ルキスマCRM が
 // 自動でサブドメイン(例: docs.zooba.io)を発行して資料DL用に利用する。
 
 const SUBDOMAIN_PREFIX = 'docs'

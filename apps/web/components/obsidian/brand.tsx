@@ -1,7 +1,7 @@
 /**
  * Liquid Obsidian — Brand & Gamification Primitives
  *
- * - ObsLogo        : 多層グラデーションの"obsidian crystal"ロゴ
+ * - ObsLogo        : ルキスマCRM の "R" ロゴ（多層グラデーションの obsidian crystal 上に配置）
  * - ObsLevelBadge  : LVxx バッジ（プレイヤーレベル）
  * - ObsXpRing      : 進捗リング（SVG、 primary gradient）
  * - ObsStreak      : 連続日数の炎（静かな発光）
@@ -19,8 +19,8 @@ function cx(...p: Array<string | false | null | undefined>): string {
 export function ObsLogo({
   size = 30,
   withLabel = false,
-  labelPrimary = 'BGM',
-  labelSecondary = 'Business Growth Management',
+  labelPrimary = 'ルキスマCRM',
+  labelSecondary = 'Chat CRM',
   className,
 }: {
   size?: number
@@ -32,63 +32,24 @@ export function ObsLogo({
   const s = size
   return (
     <div className={cx('flex items-center gap-3', className)}>
-      {/* 結晶風マーク（3層構造） */}
+      {/* ワードマークと同じグラデーション/displayフォントで描く "R" アイコン */}
       <div
-        className="relative shrink-0"
-        style={{ width: s, height: s }}
+        className="relative shrink-0 flex items-center justify-center font-[family-name:var(--font-display)]"
+        style={{
+          width: s,
+          height: s,
+          fontSize: s * 0.9,
+          fontWeight: 700,
+          lineHeight: 1,
+          letterSpacing: '-0.05em',
+          background: 'linear-gradient(120deg, #ffffff 0%, #abc7ff 45%, #0071e3 100%)',
+          WebkitBackgroundClip: 'text',
+          backgroundClip: 'text',
+          color: 'transparent',
+        }}
+        aria-hidden
       >
-        {/* 背景の外周グロー */}
-        <div
-          className="absolute inset-0 rounded-[30%]"
-          style={{
-            background:
-              'radial-gradient(circle at 30% 20%, rgba(171,199,255,0.45) 0%, rgba(0,113,227,0.12) 40%, transparent 70%)',
-            filter: 'blur(4px)',
-          }}
-        />
-        {/* メインシェイプ */}
-        <div
-          className="absolute inset-0 rounded-[30%] flex items-center justify-center overflow-hidden"
-          style={{
-            background:
-              'linear-gradient(135deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 55%, #003d8f 100%)',
-            boxShadow:
-              'inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -1px 0 rgba(0,0,0,0.25), 0 0 0 1px rgba(171,199,255,0.18)',
-          }}
-        >
-          {/* 内側ハイライト（ガラス反射） */}
-          <div
-            className="absolute inset-0"
-            style={{
-              background:
-                'linear-gradient(160deg, rgba(255,255,255,0.25) 0%, transparent 35%, transparent 65%, rgba(0,0,0,0.15) 100%)',
-            }}
-          />
-          {/* ワードマーク — Front Office: 抽象的な "F" + accent dot */}
-          <svg
-            width={s * 0.58}
-            height={s * 0.58}
-            viewBox="0 0 24 24"
-            fill="none"
-            style={{ position: 'relative', zIndex: 1 }}
-          >
-            <defs>
-              <linearGradient id="fo-mark" x1="0" y1="0" x2="0" y2="24" gradientUnits="userSpaceOnUse">
-                <stop offset="0" stopColor="#ffffff" stopOpacity="1" />
-                <stop offset="1" stopColor="#eef3ff" stopOpacity="0.88" />
-              </linearGradient>
-            </defs>
-            <g fill="url(#fo-mark)">
-              {/* F glyph（縦軸 + 上アーム + 中アーム） */}
-              <path
-                d="M5.4 3.6 H17.8 A1 1 0 0 1 18.8 4.6 V5.6 A1 1 0 0 1 17.8 6.6 H8.6 V10.4 H15.8 A1 1 0 0 1 16.8 11.4 V12.4 A1 1 0 0 1 15.8 13.4 H8.6 V19.4 A1 1 0 0 1 7.6 20.4 H6.4 A1 1 0 0 1 5.4 19.4 Z"
-                strokeLinejoin="round"
-              />
-              {/* O accent dot — Front Office の "O" を示唆 */}
-              <circle cx="17.6" cy="18" r="1.7" />
-            </g>
-          </svg>
-        </div>
+        R
       </div>
 
       {withLabel && (

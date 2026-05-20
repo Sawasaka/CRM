@@ -6,7 +6,7 @@ import { GoogleService, SCOPES_BY_SERVICE } from '@/lib/google/scopes'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-const ALL: GoogleService[] = ['gmail', 'calendar', 'meet', 'chat']
+const ALL: GoogleService[] = ['gmail', 'drive', 'calendar', 'meet', 'chat']
 
 /**
  * 機能別または全体の切断。

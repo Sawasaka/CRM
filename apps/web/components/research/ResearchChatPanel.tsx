@@ -231,24 +231,26 @@ export function ResearchChatPanel({
             プリセット
           </div>
           <div className="flex flex-wrap gap-1.5">
-            {presets.map((p) => (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => applyPreset(p.id)}
-                disabled={isLoading}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-[var(--radius-obs-md)] text-[12px] transition-colors duration-150"
-                style={{
-                  backgroundColor: 'var(--color-obs-surface-highest)',
-                  color: 'var(--color-obs-text)',
-                  border: '1px solid var(--color-obs-border)',
-                }}
-                title={p.description ? `${p.description}（クリックでプロンプトを入力欄にセット）` : 'クリックでプロンプトを入力欄にセット'}
-              >
-                <span>{p.emoji}</span>
-                {p.label}
-              </button>
-            ))}
+            {presets
+              .filter((p) => p.label !== '商談前の提案におけるリサーチ')
+              .map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => applyPreset(p.id)}
+                  disabled={isLoading}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-[var(--radius-obs-md)] text-[12px] transition-colors duration-150"
+                  style={{
+                    backgroundColor: 'var(--color-obs-surface-highest)',
+                    color: 'var(--color-obs-text)',
+                    border: '1px solid var(--color-obs-border)',
+                  }}
+                  title={p.description ? `${p.description}（クリックでプロンプトを入力欄にセット）` : 'クリックでプロンプトを入力欄にセット'}
+                >
+                  <span>{p.emoji}</span>
+                  {p.label}
+                </button>
+              ))}
           </div>
         </div>
       )}
@@ -381,11 +383,13 @@ export function ResearchChatPanel({
               className="text-[10.5px] tabular-nums"
               style={{ color: 'var(--color-obs-text-muted)' }}
             >
-              {history.length}件
+              {history.length > 3
+                ? `最新3件 / 全${history.length}件`
+                : `${history.length}件`}
             </span>
           </div>
           <div className="flex flex-col gap-2">
-            {history.map((h) => {
+            {history.slice(0, 3).map((h) => {
               const isOpen = expandedHistoryId === h.id
               return (
                 <div

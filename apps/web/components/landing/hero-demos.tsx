@@ -189,12 +189,12 @@ export const ContactsDemo = () => {
 // ===== Deals =====
 export const DealsDemo = () => {
   const rows = [
-    { code: 'BGM-0842', n: 'グローバルERP統合計画',    co: 'テクノリード',    a: '¥12.5M', s: 'Hot',    col: '#ff6b6b' },
-    { code: 'BGM-0992', n: '次世代CRM導入検討',       co: 'フューチャー',     a: '¥8.9M',  s: 'Hot',    col: '#ff6b6b' },
-    { code: 'BGM-1066', n: '物流最適化システム提案',   co: 'イノベーション',  a: '¥3.6M',  s: 'Middle', col: '#ffcf4a' },
-    { code: 'BGM-1122', n: '基幹システムクラウド移行', co: 'グロース',         a: '¥18.5M', s: 'Hot',    col: '#ff6b6b' },
-    { code: 'BGM-0901', n: 'AI解析エンジン検証',      co: 'ネクスト',         a: '¥6.8M',  s: 'Hot',    col: '#ff6b6b' },
-    { code: 'BGM-0718', n: 'エンタープライズ契約2期', co: 'テクノリード',    a: '¥48M',   s: 'Hot',    col: '#ff6b6b' },
+    { code: 'RKS-0842', n: 'グローバルERP統合計画',    co: 'テクノリード',    a: '¥12.5M', s: 'Hot',    col: '#ff6b6b' },
+    { code: 'RKS-0992', n: '次世代CRM導入検討',       co: 'フューチャー',     a: '¥8.9M',  s: 'Hot',    col: '#ff6b6b' },
+    { code: 'RKS-1066', n: '物流最適化システム提案',   co: 'イノベーション',  a: '¥3.6M',  s: 'Middle', col: '#ffcf4a' },
+    { code: 'RKS-1122', n: '基幹システムクラウド移行', co: 'グロース',         a: '¥18.5M', s: 'Hot',    col: '#ff6b6b' },
+    { code: 'RKS-0901', n: 'AI解析エンジン検証',      co: 'ネクスト',         a: '¥6.8M',  s: 'Hot',    col: '#ff6b6b' },
+    { code: 'RKS-0718', n: 'エンタープライズ契約2期', co: 'テクノリード',    a: '¥48M',   s: 'Hot',    col: '#ff6b6b' },
   ]
   return (
     <div className="flex-1 flex flex-col">

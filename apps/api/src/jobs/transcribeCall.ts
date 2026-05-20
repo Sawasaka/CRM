@@ -2,7 +2,6 @@ import { Worker } from 'bullmq'
 import { redis, JOB_NAMES } from '@bgm/queue'
 import { prisma } from '@bgm/db'
 import { transcribeFromUrl } from '@bgm/ai'
-import { extractMeetingFields } from '@bgm/ai'
 import { getRecordingUrl } from '@bgm/integrations-twilio'
 
 export const transcribeCallWorker = new Worker(

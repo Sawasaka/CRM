@@ -66,6 +66,15 @@ export async function exportDriveFile(
   return res.data as string
 }
 
+export async function downloadDriveFile(auth: OAuth2Client, fileId: string): Promise<string> {
+  const drive = google.drive({ version: 'v3', auth })
+  const res = await drive.files.get(
+    { fileId, alt: 'media', supportsAllDrives: true },
+    { responseType: 'text' }
+  )
+  return res.data as string
+}
+
 export async function watchDriveFolder(
   auth: OAuth2Client,
   folderId: string,

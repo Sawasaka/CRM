@@ -27,7 +27,7 @@ export async function POST(req: Request) {
 
   if (type === 'ADDED_TO_SPACE') {
     return NextResponse.json({
-      text: 'BGM ナレッジBotです。このスペースの会話から自動的にFAQを抽出します。FAQ化したい質疑応答には ✅ リアクションを付けるか、メッセージに `#faq` を含めてください。',
+      text: 'ルキスマCRM ナレッジBotです。このスペースの会話から自動的にFAQを抽出します。FAQ化したい質疑応答には ✅ リアクションを付けるか、メッセージに `#faq` を含めてください。',
     })
   }
 
@@ -86,7 +86,7 @@ export async function POST(req: Request) {
       console.error('faq extraction failed', e),
     )
     return NextResponse.json({
-      text: '✅ FAQ候補として登録しました。BGMの「ナレッジ」→ チームFAQ で承認できます。',
+      text: '✅ FAQ候補として登録しました。ルキスマCRMの「ナレッジ」→ チームFAQ で承認できます。',
       thread: message.thread ? { name: message.thread.name } : undefined,
     })
   }

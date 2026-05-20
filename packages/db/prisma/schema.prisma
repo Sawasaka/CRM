@@ -21,18 +21,21 @@ model Organization {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  users         User[]
-  companies     Company[]
-  contacts      Contact[]
-  deals         Deal[]
-  activities    Activity[]
-  sequences     Sequence[]
-  knowledgeDocs KnowledgeDoc[]
-  ragQueries    RagQuery[]
-  faqEntries    FaqEntry[]
-  driveFolders  DriveFolderConnection[]
-  rulebook      KnowledgeRulebook?
-  tickets       Ticket[]
+  users                User[]
+  companies            Company[]
+  contacts             Contact[]
+  deals                Deal[]
+  activities           Activity[]
+  sequences            Sequence[]
+  knowledgeDocs        KnowledgeDoc[]
+  ragQueries           RagQuery[]
+  faqEntries           FaqEntry[]
+  driveFolders         DriveFolderConnection[]
+  rulebook             KnowledgeRulebook?
+  tickets              Ticket[]
+  billingAccount       BillingAccount?
+  billingSubscriptions BillingSubscription[]
+  billingPayments      BillingPayment[]
 }
 
 enum Plan {
@@ -43,18 +46,128 @@ enum Plan {
 }
 
 // ============================
+// BILLING — Stripe
+// ============================
+model BillingAccount {
+  id               String   @id @default(cuid())
+  orgId            String   @unique
+  stripeCustomerId String?  @unique
+  billingEmail     String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  org           Organization          @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  subscriptions BillingSubscription[]
+  payments      BillingPayment[]
+
+  @@index([stripeCustomerId])
+}
+
+model BillingSubscription {
+  id                   String                    @id @default(cuid())
+  orgId                String
+  billingAccountId     String
+  stripeSubscriptionId String                    @unique
+  stripePriceId        String
+  stripeProductId      String?
+  plan                 Plan
+  status               BillingSubscriptionStatus
+  interval             BillingInterval
+  seats                Int                       @default(1)
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean                   @default(false)
+  canceledAt           DateTime?
+  trialEnd             DateTime?
+  createdAt            DateTime                  @default(now())
+  updatedAt            DateTime                  @updatedAt
+
+  org            Organization   @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  billingAccount BillingAccount @relation(fields: [billingAccountId], references: [id], onDelete: Cascade)
+
+  @@index([orgId])
+  @@index([billingAccountId])
+  @@index([status])
+}
+
+model BillingPayment {
+  id                    String               @id @default(cuid())
+  orgId                 String
+  billingAccountId      String?
+  kind                  BillingPaymentKind
+  status                BillingPaymentStatus
+  title                 String
+  description           String?
+  amount                Int
+  refundedAmount        Int                  @default(0)
+  currency              String               @default("jpy")
+  paidAt                DateTime?
+  refundedAt            DateTime?
+  stripeInvoiceId       String?              @unique
+  stripePaymentIntentId String?              @unique
+  stripeReceiptUrl      String?
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+
+  org            Organization    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  billingAccount BillingAccount? @relation(fields: [billingAccountId], references: [id], onDelete: SetNull)
+
+  @@index([orgId, paidAt(sort: Desc)])
+  @@index([billingAccountId])
+  @@index([kind])
+  @@index([status])
+}
+
+enum BillingSubscriptionStatus {
+  INCOMPLETE
+  INCOMPLETE_EXPIRED
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  UNPAID
+  PAUSED
+}
+
+enum BillingInterval {
+  MONTHLY
+  ANNUAL
+}
+
+enum BillingPaymentKind {
+  PLAN
+  CREDIT_PURCHASE
+  FEATURE_REQUEST
+  MIGRATION
+  SUPPORT_OPTION
+}
+
+enum BillingPaymentStatus {
+  SUCCEEDED
+  REFUNDED
+  PARTIAL_REFUND
+  PENDING
+  FAILED
+}
+
+// ============================
 // USER
 // ============================
 model User {
-  id           String   @id @default(cuid())
-  orgId        String
-  email        String
-  name         String
-  role         UserRole @default(REP)
-  avatarUrl    String?
-  googleUserId String?
-  slackUserId  String?
-  createdAt    DateTime @default(now())
+  id                       String    @id @default(cuid())
+  orgId                    String
+  email                    String
+  name                     String
+  role                     UserRole  @default(REP)
+  avatarUrl                String?
+  passwordHash             String?
+  passwordResetTokenHash   String?
+  passwordResetExpiresAt   DateTime?
+  passwordResetRequestedAt DateTime?
+  passwordUpdatedAt        DateTime?
+  googleUserId             String?
+  slackUserId              String?
+  createdAt                DateTime  @default(now())
 
   org             Organization       @relation(fields: [orgId], references: [id], onDelete: Cascade)
   ownedDeals      Deal[]             @relation("DealOwner")
@@ -401,7 +514,7 @@ model FaqEntry {
   body         String // 回答（Markdown）
   department   String? // 大分類: 部門 (営業/人事/経理/法務/IT/プロダクト/その他)
   category     String? // 中分類: 部門内のカテゴリ (例: 業務フロー、規定、ノウハウ)
-  tags         String[] @default([]) // 小分類: タグ (例: ["育休", "復帰", "面談"]) 複数可
+  tags         String[]                     @default([]) // 小分類: タグ (例: ["育休", "復帰", "面談"]) 複数可
   status       FaqStatus                    @default(CANDIDATE)
   sourceType   FaqSourceType                @default(MANUAL)
   sourceUrl    String? // 引用元URL (Slack permalink / Drive fileUrl など)
@@ -949,11 +1062,13 @@ model UserGoogleAccount {
   calendarSyncToken  String?
   // 最終同期時刻（観測用）
   lastGmailSyncAt    DateTime?
+  lastDriveSyncAt    DateTime?
   lastCalendarSyncAt DateTime?
   lastMeetSyncAt     DateTime?
   lastChatSyncAt     DateTime?
   // 機能ごとの有効/無効（ユーザーが個別に ON/OFF できる）
   gmailEnabled       Boolean   @default(true)
+  driveEnabled       Boolean   @default(true)
   calendarEnabled    Boolean   @default(true)
   meetEnabled        Boolean   @default(true)
   chatEnabled        Boolean   @default(false)

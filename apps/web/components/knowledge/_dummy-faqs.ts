@@ -344,7 +344,7 @@ export const DUMMY_FAQS: DummyFaq[] = [
     title: 'Salesforceとの同期が失敗したらどう対応する？',
     body: [
       '【まず試す】',
-      'BGM 設定 → 連携設定 → Salesforce → 「再認証」',
+      'ルキスマCRM 設定 → 連携設定 → Salesforce → 「再認証」',
       '',
       '【復旧しない場合】',
       '- @プロダクト 桑原（@kuwabara）にメンション',

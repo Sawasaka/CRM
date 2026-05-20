@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
+import { getAppBaseUrl } from '@/lib/app-url'
 import { GoogleService, SCOPES_BY_SERVICE, scopesForServices } from '@/lib/google/scopes'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-const ALL_SERVICES: GoogleService[] = ['gmail', 'calendar', 'meet', 'chat']
+const ALL_SERVICES: GoogleService[] = ['gmail', 'drive', 'calendar', 'meet', 'chat']
 
 /**
  * 機能別の Google OAuth フロー開始。
@@ -39,15 +40,9 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: 'google_not_configured' }, { status: 500 })
   }
 
-  const baseUrl = process.env.AUTH_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3002'
-  const redirectUri = `${baseUrl}/api/google/oauth-callback`
+  const redirectUri = `${getAppBaseUrl()}/api/google/oauth-callback`
 
-  const scope = [
-    'openid',
-    'email',
-    'profile',
-    ...scopesForServices(services),
-  ].join(' ')
+  const scope = ['openid', 'email', 'profile', ...scopesForServices(services)].join(' ')
 
   const state = crypto.randomUUID()
 

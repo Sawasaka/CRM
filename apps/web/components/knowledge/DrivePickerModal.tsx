@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useSession } from 'next-auth/react'
 import {
   X,
   Loader2,
@@ -37,6 +38,8 @@ export function DrivePickerModal({
   onClose: () => void
   onPicked: () => void // 追加完了時に親で list を refetch する用
 }) {
+  const { data: session } = useSession()
+  const userId = (session as unknown as { userId?: string } | null)?.userId
   const [stack, setStack] = useState<Crumb[]>([{ id: null, name: 'マイドライブ・共有ドライブ' }])
   const current = stack[stack.length - 1]!
   const isRoot = current.id === null
@@ -47,7 +50,7 @@ export function DrivePickerModal({
       driveId: current.driveId,
     },
     {
-      enabled: open,
+      enabled: open && !!userId,
       staleTime: 30 * 1000,
       refetchOnWindowFocus: false,
     },
@@ -188,7 +191,9 @@ export function DrivePickerModal({
 
               {/* 一覧 */}
               <div className="flex-1 overflow-y-auto">
-                {browseQuery.isLoading ? (
+                {!userId ? (
+                  <DriveAccessError message="Google Drive を使うには、先に連携設定から Google にログインしてください。" />
+                ) : browseQuery.isLoading ? (
                   <div
                     className="flex items-center justify-center py-16 gap-2"
                     style={{ color: 'var(--color-obs-text-subtle)' }}
@@ -197,39 +202,7 @@ export function DrivePickerModal({
                     <span className="text-[12.5px]">読み込み中...</span>
                   </div>
                 ) : browseQuery.error ? (
-                  <div
-                    className="m-5 p-4 rounded-[var(--radius-obs-md)] flex items-start gap-2"
-                    style={{
-                      backgroundColor: 'rgba(255,184,107,0.08)',
-                      boxShadow: 'inset 0 0 0 1px rgba(255,184,107,0.28)',
-                    }}
-                  >
-                    <AlertTriangle
-                      size={14}
-                      style={{ color: 'var(--color-obs-middle)', marginTop: 2 }}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p
-                        className="text-[13px] font-medium"
-                        style={{ color: 'var(--color-obs-text)' }}
-                      >
-                        Drive にアクセスできませんでした
-                      </p>
-                      <p
-                        className="text-[11.5px] mt-1 leading-relaxed"
-                        style={{ color: 'var(--color-obs-text-muted)' }}
-                      >
-                        {browseQuery.error.message}
-                      </p>
-                      <a
-                        href="/settings/integrations"
-                        className="inline-flex items-center gap-1 mt-3 text-[12px] font-medium"
-                        style={{ color: 'var(--color-obs-primary)' }}
-                      >
-                        連携設定を開く
-                      </a>
-                    </div>
-                  </div>
+                  <DriveAccessError message={browseQuery.error.message} />
                 ) : (
                   <div className="py-2">
                     {/* ルート時: 共有ドライブ */}
@@ -330,6 +303,44 @@ export function DrivePickerModal({
         </>
       )}
     </AnimatePresence>
+  )
+}
+
+function DriveAccessError({ message }: { message: string }) {
+  return (
+    <div
+      className="m-5 p-4 rounded-[var(--radius-obs-md)] flex items-start gap-2"
+      style={{
+        backgroundColor: 'rgba(255,184,107,0.08)',
+        boxShadow: 'inset 0 0 0 1px rgba(255,184,107,0.28)',
+      }}
+    >
+      <AlertTriangle
+        size={14}
+        style={{ color: 'var(--color-obs-middle)', marginTop: 2 }}
+      />
+      <div className="flex-1 min-w-0">
+        <p
+          className="text-[13px] font-medium"
+          style={{ color: 'var(--color-obs-text)' }}
+        >
+          Drive にアクセスできませんでした
+        </p>
+        <p
+          className="text-[11.5px] mt-1 leading-relaxed"
+          style={{ color: 'var(--color-obs-text-muted)' }}
+        >
+          {message}
+        </p>
+        <a
+          href="/settings/integrations"
+          className="inline-flex items-center gap-1 mt-3 text-[12px] font-medium"
+          style={{ color: 'var(--color-obs-primary)' }}
+        >
+          連携設定を開く
+        </a>
+      </div>
+    </div>
   )
 }
 

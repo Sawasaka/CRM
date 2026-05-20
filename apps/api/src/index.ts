@@ -1,4 +1,4 @@
-import 'dotenv/config'
+import './env'
 import Fastify from 'fastify'
 import cors from '@fastify/cors'
 import helmet from '@fastify/helmet'
@@ -9,10 +9,6 @@ import { createContext } from './middleware/context'
 const fastify = Fastify({
   logger: {
     level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
-    transport:
-      process.env.NODE_ENV !== 'production'
-        ? { target: 'pino-pretty', options: { colorize: true } }
-        : undefined,
   },
 })
 
@@ -24,9 +20,7 @@ async function bootstrap() {
 
   // CORS
   await fastify.register(cors, {
-    origin: [
-      process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000',
-    ],
+    origin: getAllowedOrigins(),
     credentials: true,
   })
 
@@ -54,3 +48,31 @@ bootstrap().catch((err) => {
   console.error(err)
   process.exit(1)
 })
+
+function getAllowedOrigins() {
+  return Array.from(
+    new Set(
+      [
+        process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3002',
+        process.env.AUTH_URL,
+        process.env.NEXTAUTH_URL,
+        ...splitCsv(process.env.API_CORS_ORIGINS),
+        'http://localhost:3002',
+        'http://127.0.0.1:3002',
+      ]
+        .filter(Boolean)
+        .map((origin) => trimTrailingSlash(origin as string))
+    )
+  )
+}
+
+function splitCsv(value: string | undefined) {
+  return (value ?? '')
+    .split(',')
+    .map((v) => v.trim())
+    .filter(Boolean)
+}
+
+function trimTrailingSlash(value: string) {
+  return value.replace(/\/+$/, '')
+}

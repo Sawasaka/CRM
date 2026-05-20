@@ -390,7 +390,7 @@ const USER_MENU_SECTIONS: MenuSection[] = [
     items: [
       { href: '/subscription',              icon: CreditCard, label: 'プラン・クレジット' },
       { href: '/subscription?tab=members',  icon: Users,      label: 'メンバー管理' },
-      { href: '/subscription?tab=requests', icon: Wrench,     label: '機能リクエスト' },
+      { href: '/subscription#feature-requests', icon: Wrench,     label: '機能リクエスト' },
       { href: '/settings/integrations',     icon: Plug,       label: '連携設定' },
     ],
   },
@@ -403,7 +403,7 @@ const USER_MENU_SECTIONS: MenuSection[] = [
   },
 ]
 
-// BGM テナント (開発者) のみに表示する管理者メニュー
+// ルキスマCRM テナント (開発者) のみに表示する管理者メニュー
 // 本番では NEXT_PUBLIC_BGM_TENANT_ID とログイン中テナントの一致でガード
 const ADMIN_MENU_SECTION: MenuSection = {
   title: '開発者専用',
@@ -679,12 +679,12 @@ export function Sidebar() {
           <Link
             href="/"
             className="transition-opacity duration-150 hover:opacity-80"
-            aria-label="Front Office ホーム"
+            aria-label="ルキスマCRM ホーム"
           >
             <span
               className="fo-gradient-text font-[family-name:var(--font-display)] text-[16px] font-semibold tracking-[-0.015em]"
             >
-              Front Office
+              ルキスマCRM
             </span>
           </Link>
         </div>

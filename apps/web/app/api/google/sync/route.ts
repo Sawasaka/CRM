@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@bgm/db'
 import { syncGmailForUser } from '@/lib/google/gmail-sync'
+import { syncDriveForUser } from '@/lib/google/drive-sync'
 import { syncCalendarForUser } from '@/lib/google/calendar-sync'
 import { syncMeetForUser } from '@/lib/google/meet-sync'
 import { syncChatForUser } from '@/lib/google/chat-sync'
@@ -12,7 +13,7 @@ export const dynamic = 'force-dynamic'
 
 /**
  * Google 連携の手動同期エンドポイント。
- * POST /api/google/sync?scope=gmail|calendar|meet|chat|all
+ * POST /api/google/sync?scope=gmail|drive|calendar|meet|chat|all
  */
 export async function POST(req: Request) {
   const session = await auth()
@@ -22,6 +23,7 @@ export async function POST(req: Request) {
   const url = new URL(req.url)
   const scope = (url.searchParams.get('scope') ?? 'all') as
     | 'gmail'
+    | 'drive'
     | 'calendar'
     | 'meet'
     | 'chat'
@@ -33,6 +35,7 @@ export async function POST(req: Request) {
       where: { userId },
       select: {
         gmailEnabled: true,
+        driveEnabled: true,
         calendarEnabled: true,
         meetEnabled: true,
         chatEnabled: true,
@@ -40,7 +43,7 @@ export async function POST(req: Request) {
     })
     if (!account) throw new GoogleAccountNotConnectedError(userId)
 
-    const shouldRun = (s: 'gmail' | 'calendar' | 'meet' | 'chat') => {
+    const shouldRun = (s: 'gmail' | 'drive' | 'calendar' | 'meet' | 'chat') => {
       if (scope !== 'all' && scope !== s) return false
       if (scope === 'all') {
         // all のときは enabled なものだけ実行
@@ -51,6 +54,7 @@ export async function POST(req: Request) {
 
     const out: Record<string, unknown> = {}
     if (shouldRun('gmail')) out.gmail = await syncGmailForUser(userId)
+    if (shouldRun('drive')) out.drive = await syncDriveForUser(userId)
     if (shouldRun('calendar')) out.calendar = await syncCalendarForUser(userId)
     if (shouldRun('meet')) out.meet = await syncMeetForUser(userId)
     if (shouldRun('chat')) out.chat = await syncChatForUser(userId)

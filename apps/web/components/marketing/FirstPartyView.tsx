@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Mail,
@@ -201,9 +202,14 @@ export function FirstPartyView() {
                 <div className="flex items-center gap-3 mt-3 text-[12px] flex-wrap" style={{ color: 'var(--color-obs-text-muted)' }}>
                   <span className="font-mono" style={{ color: 'var(--color-obs-text)' }}>sales@zooba.io</span>
                   <span style={{ color: 'var(--color-obs-text-subtle)' }}>最終同期 2分前</span>
-                  <button type="button" className="ml-auto inline-flex items-center gap-1 text-[12px] font-medium" style={{ color: 'var(--color-obs-primary)' }}>
+                  <Link
+                    href="/settings/integrations"
+                    className="ml-auto inline-flex items-center gap-1 text-[12px] font-medium hover:underline"
+                    style={{ color: 'var(--color-obs-primary)' }}
+                    title="Gmail連携の設定画面を開く"
+                  >
                     管理 <ArrowRight size={11} />
-                  </button>
+                  </Link>
                 </div>
               </div>
             </div>
@@ -320,6 +326,11 @@ export function FirstPartyView() {
             </div>
 
             <div className="ml-11 mb-3">
+              {/* 設置場所の案内 */}
+              <div className="text-[11.5px] mb-2" style={{ color: 'var(--color-obs-text-muted)' }}>
+                サイト共通の <code className="font-mono px-1 py-0.5 rounded" style={{ backgroundColor: 'var(--color-obs-surface-lowest)', color: 'var(--color-obs-text)' }}>&lt;/head&gt;</code> 直前にこのタグを貼り付けてください(1回貼ると全ページに反映)
+              </div>
+
               <div className="flex items-stretch gap-2">
                 <code
                   className="flex-1 min-w-0 px-3 h-9 leading-9 rounded-[6px] text-[11.5px] font-mono truncate"
@@ -335,6 +346,24 @@ export function FirstPartyView() {
                 >
                   {copied === 'tag-snippet' ? <><Check size={11} style={{ color: '#6ee7a1' }} /> コピー済</> : <><Copy size={11} /> コピー</>}
                 </button>
+              </div>
+
+              {/* プラットフォーム別の設置場所ヒント */}
+              <div className="mt-2 p-2.5 rounded-[6px]" style={{ backgroundColor: 'rgba(171,199,255,0.05)', boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.14)' }}>
+                <div className="text-[10.5px] font-semibold tracking-[0.04em] uppercase mb-1.5" style={{ color: 'var(--color-obs-primary)' }}>
+                  ✦ 主なサイト基盤での貼り付け先
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-1 text-[11px]" style={{ color: 'var(--color-obs-text-muted)' }}>
+                  <div>• <strong>WordPress</strong>: テーマの <code className="font-mono">header.php</code> または「ヘッダー追加」プラグイン</div>
+                  <div>• <strong>Next.js / Nuxt</strong>: <code className="font-mono">_app.tsx</code> / <code className="font-mono">layout.tsx</code></div>
+                  <div>• <strong>Shopify</strong>: テーマ編集の <code className="font-mono">theme.liquid</code></div>
+                  <div>• <strong>STUDIO / Wix / Webflow</strong>: 設定 → 「カスタムコード(Head)」</div>
+                  <div>• <strong>静的HTML</strong>: 共通インクルードファイル or 全ページ</div>
+                  <div>• <strong>Google Tag Manager</strong>: カスタムHTMLタグとして配信</div>
+                </div>
+                <div className="text-[10.5px] mt-1.5 pt-1.5" style={{ color: 'var(--color-obs-text-subtle)', borderTop: '1px solid rgba(171,199,255,0.14)' }}>
+                  サブドメイン(<code className="font-mono">blog.zooba.io</code> 等)は別サイト扱いになるため、それぞれ1回ずつ設置が必要です
+                </div>
               </div>
             </div>
 

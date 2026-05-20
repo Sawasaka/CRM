@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { getAppBaseUrl } from '@/lib/app-url'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -12,12 +13,10 @@ export async function GET() {
   if (!clientId) {
     return NextResponse.json(
       { error: 'slack_not_configured', message: 'SLACK_CLIENT_ID が未設定です。' },
-      { status: 500 },
+      { status: 500 }
     )
   }
-  const baseUrl =
-    process.env.AUTH_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3002'
-  const redirectUri = `${baseUrl}/api/slack/oauth-callback`
+  const redirectUri = `${getAppBaseUrl()}/api/slack/oauth-callback`
 
   // Bot scope
   // - チャンネル一覧 + 履歴 + メッセージ permalink + ユーザー情報

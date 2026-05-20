@@ -29,3 +29,7 @@ pnpm-debug.log*
 
 # Prisma
 *.db
+.vercel
+
+# Next.js build retry snapshots (huge, never commit)
+.next.broken-*/

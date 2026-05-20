@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
+import { getAppBaseUrl } from '@/lib/app-url'
 import { prisma } from '@bgm/db'
 import type { GoogleService } from '@/lib/google/scopes'
 
@@ -24,7 +25,7 @@ export async function GET(req: Request) {
   const cookies = parseCookies(req.headers.get('cookie'))
   if (!code || !state || state !== cookies['google_install_state']) {
     return NextResponse.redirect(
-      new URL('/settings/integrations?google_error=invalid_state', req.url),
+      new URL('/settings/integrations?google_error=invalid_state', req.url)
     )
   }
 
@@ -36,12 +37,11 @@ export async function GET(req: Request) {
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET
   if (!clientId || !clientSecret) {
     return NextResponse.redirect(
-      new URL('/settings/integrations?google_error=not_configured', req.url),
+      new URL('/settings/integrations?google_error=not_configured', req.url)
     )
   }
 
-  const baseUrl = process.env.AUTH_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3002'
-  const redirectUri = `${baseUrl}/api/google/oauth-callback`
+  const redirectUri = `${getAppBaseUrl()}/api/google/oauth-callback`
 
   // code を access_token / refresh_token / id_token に交換
   const tokenResp = await fetch('https://oauth2.googleapis.com/token', {
@@ -66,7 +66,7 @@ export async function GET(req: Request) {
   if (!tokenJson.access_token) {
     console.error('[google oauth callback] token exchange failed', tokenJson)
     return NextResponse.redirect(
-      new URL('/settings/integrations?google_error=token_exchange_failed', req.url),
+      new URL('/settings/integrations?google_error=token_exchange_failed', req.url)
     )
   }
 
@@ -89,9 +89,7 @@ export async function GET(req: Request) {
         // refresh_token は再認可で発行されないことがあるため、existing を優先
         accessToken: tokenJson.access_token,
         refreshToken: tokenJson.refresh_token ?? existing.refreshToken,
-        expiresAt: tokenJson.expires_in
-          ? new Date(Date.now() + tokenJson.expires_in * 1000)
-          : null,
+        expiresAt: tokenJson.expires_in ? new Date(Date.now() + tokenJson.expires_in * 1000) : null,
         scope: mergedScopes,
         ...enableFlags,
       },
@@ -100,7 +98,7 @@ export async function GET(req: Request) {
     if (!tokenJson.refresh_token) {
       // 初回連携で refresh_token が出ないと致命的
       return NextResponse.redirect(
-        new URL('/settings/integrations?google_error=no_refresh_token', req.url),
+        new URL('/settings/integrations?google_error=no_refresh_token', req.url)
       )
     }
     await prisma.userGoogleAccount.create({
@@ -110,11 +108,10 @@ export async function GET(req: Request) {
         email: profile?.email ?? '',
         accessToken: tokenJson.access_token,
         refreshToken: tokenJson.refresh_token,
-        expiresAt: tokenJson.expires_in
-          ? new Date(Date.now() + tokenJson.expires_in * 1000)
-          : null,
+        expiresAt: tokenJson.expires_in ? new Date(Date.now() + tokenJson.expires_in * 1000) : null,
         scope: mergedScopes,
         gmailEnabled: services.includes('gmail'),
+        driveEnabled: services.includes('drive'),
         calendarEnabled: services.includes('calendar'),
         meetEnabled: services.includes('meet'),
         chatEnabled: services.includes('chat'),
@@ -124,10 +121,7 @@ export async function GET(req: Request) {
 
   // クッキーを掃除
   const res = NextResponse.redirect(
-    new URL(
-      `/settings/integrations?google_connected=${services.join(',') || 'all'}`,
-      req.url,
-    ),
+    new URL(`/settings/integrations?google_connected=${services.join(',') || 'all'}`, req.url)
   )
   res.cookies.delete('google_install_state')
   res.cookies.delete('google_install_services')
@@ -160,7 +154,7 @@ function decodeIdToken(idToken: string | undefined): { sub?: string; email?: str
     const payload = parts[1] ?? ''
     const padded = payload + '='.repeat((4 - (payload.length % 4)) % 4)
     const json = JSON.parse(
-      Buffer.from(padded.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8'),
+      Buffer.from(padded.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8')
     ) as { sub?: string; email?: string }
     return json
   } catch {

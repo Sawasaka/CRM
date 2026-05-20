@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   ArrowUpRight,
   Coins,
@@ -234,6 +234,28 @@ export default function BillingHistoryPage() {
   const [keyword, setKeyword] = useState('')
   const [kindFilter, setKindFilter] = useState<PaymentKind | 'all'>('all')
   const [periodFilter, setPeriodFilter] = useState<'30d' | '6m' | '1y' | 'all'>('all')
+  const [portalLoading, setPortalLoading] = useState(false)
+  const [payments, setPayments] = useState<Payment[]>(SAMPLE_PAYMENTS)
+
+  useEffect(() => {
+    let cancelled = false
+    async function loadBillingHistory() {
+      try {
+        const res = await fetch('/api/stripe/billing-history')
+        if (!res.ok) return
+        const data = (await res.json()) as { payments?: Payment[] }
+        if (!cancelled && data.payments) {
+          setPayments(data.payments)
+        }
+      } catch {
+        // モック表示を維持する
+      }
+    }
+    void loadBillingHistory()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   if (!isSuperAdmin) {
     return (
@@ -265,7 +287,7 @@ export default function BillingHistoryPage() {
     }
     const cutoff = new Date(now.getTime() - periodDays[periodFilter] * 24 * 60 * 60 * 1000)
 
-    return SAMPLE_PAYMENTS.filter((p) => {
+    return payments.filter((p) => {
       if (kindFilter !== 'all' && p.kind !== kindFilter) return false
       if (new Date(p.paidAt) < cutoff) return false
       if (keyword.trim()) {
@@ -280,16 +302,16 @@ export default function BillingHistoryPage() {
       }
       return true
     }).sort((a, b) => b.paidAt.localeCompare(a.paidAt))
-  }, [keyword, kindFilter, periodFilter])
+  }, [keyword, kindFilter, payments, periodFilter])
 
   // 集計
   const totals = useMemo(() => {
-    const totalPaid = SAMPLE_PAYMENTS.filter((p) => p.status === 'succeeded').reduce(
+    const totalPaid = payments.filter((p) => p.status === 'succeeded').reduce(
       (s, p) => s + p.amount,
       0,
     )
-    const totalRefunded = SAMPLE_PAYMENTS.reduce((s, p) => s + (p.refundedAmount ?? 0), 0)
-    const thisMonth = SAMPLE_PAYMENTS.filter((p) => {
+    const totalRefunded = payments.reduce((s, p) => s + (p.refundedAmount ?? 0), 0)
+    const thisMonth = payments.filter((p) => {
       const d = new Date(p.paidAt)
       const now = new Date()
       return (
@@ -298,15 +320,24 @@ export default function BillingHistoryPage() {
         p.status === 'succeeded'
       )
     }).reduce((s, p) => s + p.amount, 0)
-    return { totalPaid, totalRefunded, thisMonth, count: SAMPLE_PAYMENTS.length }
-  }, [])
+    return { totalPaid, totalRefunded, thisMonth, count: payments.length }
+  }, [payments])
 
-  // Stripe Customer Portal URL (本番: stripe.billingPortal.sessions.create で生成)
-  const handleOpenStripePortal = () => {
-    // TODO: 本番では POST /api/stripe/portal を叩いてセッションURLを取得 → リダイレクト
-    alert(
-      '【MVP モック】Stripe Customer Portal を開きます。\n本番では stripe.billingPortal.sessions.create() でセッションを生成し、Stripe ホストの管理画面にリダイレクトします。',
-    )
+  const handleOpenStripePortal = async () => {
+    setPortalLoading(true)
+    try {
+      const res = await fetch('/api/stripe/portal', { method: 'POST' })
+      const data = (await res.json()) as { url?: string; error?: string }
+      if (!res.ok || !data.url) {
+        throw new Error(data.error ?? 'Stripe管理画面の作成に失敗しました。')
+      }
+      window.location.href = data.url
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Stripe管理画面の作成に失敗しました。'
+      alert(message)
+      setPortalLoading(false)
+    }
   }
 
   const filterTabs: Array<{ key: PaymentKind | 'all'; label: string }> = [
@@ -344,6 +375,7 @@ export default function BillingHistoryPage() {
               <button
                 type="button"
                 onClick={handleOpenStripePortal}
+                disabled={portalLoading}
                 className="inline-flex items-center gap-1.5 h-9 px-4 rounded-[var(--radius-obs-md)] text-[12.5px] font-semibold transition-colors"
                 style={{
                   background:
@@ -352,7 +384,7 @@ export default function BillingHistoryPage() {
                 }}
               >
                 <CreditCard size={13} />
-                Stripe管理画面で詳細を見る
+                {portalLoading ? 'Stripeへ接続中...' : 'Stripe管理画面で詳細を見る'}
                 <ExternalLink size={11} />
               </button>
             </div>

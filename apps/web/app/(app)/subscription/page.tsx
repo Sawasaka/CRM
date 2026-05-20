@@ -19,7 +19,6 @@ import {
   Mail,
   Shield,
   UserPlus,
-  MessageCircle,
   Trash2,
   Sparkles,
   Database,
@@ -40,69 +39,95 @@ interface Plan {
   maxSeats?: number // 上限シート数(Freeプラン用)
   baseLabel?: string // 下位プラン全機能ラベル (例: "Standard全機能")
   additions: string[] // このプランで追加される機能
-  seatNote?: string // 「○シートから購入可能」直下に表示する補足 (担当者チャット相談など)
+  seatNote?: string // 「○シートから購入可能」直下に表示する補足
   icon: React.ElementType
   popular?: boolean
-  isFree?: boolean // Freeプラン判定
+  // 実行支援モデル用フィールド
+  isTenantPrice?: boolean // true: 価格はテナント単位 (/月) / false or undef: /seat /月
+  slotsTotal?: number // 総受付枠数 (例: 5社限定)
+  slotsRemaining?: number // 残り枠数
+  contractTerm?: string // 例: "3ヶ月契約・3ヶ月ごとに更新"
 }
 
+// 実行支援パートナーシップ (5社限定)
+// 戦略: HubSpot等の大手とは戦わない。属人性を極めた高単価コンサル+CRMバンドル。
+// 5社契約 + 1年経過後に一般プラン公開予定。
+// カードの並び: 左から「プラチナム → プレミアム → スタンダード」(高単価→低単価)
 const PLANS: Plan[] = [
   {
-    id: 'lite',
-    name: 'Lite',
-    tagline: '営業1-3名の小規模チームに最適',
-    priceMonthly: 4300,
-    priceAnnual: 3000,
-    credits: 500,
+    id: 'platinum',
+    name: 'プラチナム',
+    tagline: '専任実行支援(1社限定) + ルキスマCRM',
+    priceMonthly: 500000,
+    priceAnnual: 500000,
+    credits: 5000,
     minSeats: 1,
+    isTenantPrice: true,
+    slotsTotal: 1,
+    slotsRemaining: 1,
+    contractTerm: '3ヶ月契約・3ヶ月ごとに更新',
     additions: [
-      'AIモデル: Gemini 2.5 Flash Lite / シンキングモード 標準',
-      'CRM全機能 (企業・コンタクト・取引・パイプライン・チケット管理)',
-      'Google Workspace・Microsoft 365 連携',
-      '議事録自動取得 (BANT自動入力)',
-      'ナレッジ自動生成 (FAQ)',
-      'メール配信 + 1stパーティ計測・効果測定',
-      '企業DB(290万社) + 求人インテント',
-      '開発優先度分析',
-      '外部リサーチ (ウェブ検索)',
-      '500クレジットで ワンクリック通話 + コール議事録自動作成',
+      '【実行支援】営業同行・実行支援 (1日2商談まで・平日全営業日)',
+      '【実行支援】専任体制・最優先対応',
+      '【実行支援】3ヶ月契約 ・ 3ヶ月ごとに更新',
+      '【CRM特典】ルキスマCRM PROプラン (無料バンドル)',
+      '【CRM特典】5,000クレジット / 月 (チーム合計)',
+      'GPT-4o 優先利用 + エージェントモード',
+      'CRM全機能 + 議事録BANT + 企業DB(290万社)',
+      '機能リクエスト 優先開発 (本来¥10,000/枠 が無料)',
+      'カスタムフィールド・カスタムオブジェクト',
+      'API・Webhook 連携',
     ],
-    seatNote: '担当者へのチャット相談 (10シート以上で付帯)',
-    icon: Zap,
+    icon: Star,
+  },
+  {
+    id: 'premium',
+    name: 'プレミアム',
+    tagline: '営業実行支援(平日全営業日) + ルキスマCRM',
+    priceMonthly: 300000,
+    priceAnnual: 300000,
+    credits: 5000,
+    minSeats: 1,
+    isTenantPrice: true,
+    slotsTotal: 2,
+    slotsRemaining: 2,
+    contractTerm: '3ヶ月契約・3ヶ月ごとに更新',
+    additions: [
+      '【実行支援】営業同行・実行支援 (1日1商談まで・平日全営業日)',
+      '【実行支援】3ヶ月契約 ・ 3ヶ月ごとに更新',
+      '【CRM特典】ルキスマCRM PROプラン (無料バンドル)',
+      '【CRM特典】5,000クレジット / 月 (チーム合計)',
+      'GPT-4o mini / GPT-4o を選択可',
+      'エージェントモード (ブラウザ自動操作)',
+      'CRM全機能 + 議事録BANT + 企業DB(290万社)',
+      '優先レスポンス (Slackチャンネル即応)',
+    ],
+    icon: TrendingUp,
+    popular: true,
   },
   {
     id: 'standard',
-    name: 'Standard',
-    tagline: 'AI品質と通話機能で営業を本格運用',
-    priceMonthly: 8300,
-    priceAnnual: 5800,
-    credits: 1000,
+    name: 'スタンダード',
+    tagline: '営業実行支援(週4・月曜休み)+ ルキスマCRM',
+    priceMonthly: 200000,
+    priceAnnual: 200000,
+    credits: 5000,
     minSeats: 1,
-    baseLabel: 'Lite全機能',
+    isTenantPrice: true,
+    slotsTotal: 2,
+    slotsRemaining: 2,
+    contractTerm: '3ヶ月契約・3ヶ月ごとに更新',
     additions: [
-      'AIモデル: GPT-4o mini にアップグレード (品質・精度向上)',
-      'シンキングモード: 拡張',
+      '【実行支援】営業同行・実行支援 (1日1商談まで・月曜休み)',
+      '【実行支援】3ヶ月契約 ・ 3ヶ月ごとに更新',
+      '【CRM特典】ルキスマCRM PROプラン (無料バンドル)',
+      '【CRM特典】5,000クレジット / 月 (チーム合計・フル機能)',
+      'GPT-4o mini / GPT-4o を選択可',
+      'エージェントモード (チャットからブラウザ自動操作)',
+      'CRM全機能 + 議事録BANT + 企業DB(290万社)',
+      'Google Workspace / Microsoft 365 連携',
     ],
-    seatNote: '担当者へのチャット相談 (5シート以上で付帯)',
-    icon: TrendingUp,
-  },
-  {
-    id: 'pro',
-    name: 'PRO',
-    tagline: 'エージェントとブラウザ操作で営業を自動化',
-    priceMonthly: 13000,
-    priceAnnual: 9000,
-    credits: 2000,
-    minSeats: 1,
-    baseLabel: 'Standard全機能',
-    additions: [
-      'AIモデル: GPT-4o mini / GPT-4o を選択可',
-      'シンキングモード: 標準 / 拡張 を選択可',
-      'エージェントモード (チャットからブラウザ自動操作・データ入力)',
-    ],
-    seatNote: '担当者へのチャット相談 (1シートから付帯)',
-    icon: Star,
-    popular: true,
+    icon: Zap,
   },
 ]
 
@@ -282,26 +307,23 @@ export default function SubscriptionPage() {
 }
 
 function SubscriptionPageContent() {
-  // タブ: subscription(プラン・クレジット) / members(メンバー管理) / requests(機能リクエスト)
+  // タブ: subscription(プラン・クレジット・機能リクエスト含む) / members(メンバー管理)
   const searchParams = useSearchParams()
   const initialTab = (() => {
     const t = searchParams?.get('tab')
     if (t === 'members') return 'members'
-    if (t === 'requests') return 'requests'
+    // 旧URL ?tab=requests は機能リクエスト統合により subscription タブへフォールバック
     return 'subscription'
   })()
-  const [tab, setTab] = useState<'subscription' | 'members' | 'requests'>(initialTab)
+  const [tab, setTab] = useState<'subscription' | 'members'>(initialTab)
 
-  // URL ?tab=members / ?tab=requests を反映 (例: メニューから直接遷移した場合)
+  // URL ?tab=members を反映 (例: メニューから直接遷移した場合)
   useEffect(() => {
     const next = searchParams?.get('tab')
     if (next === 'members') setTab('members')
-    else if (next === 'requests') setTab('requests')
-    else if (next === 'subscription' || next === null) setTab('subscription')
+    else setTab('subscription')
   }, [searchParams])
   const [currentPlan, setCurrentPlan] = useState('standard')
-  // サポートティア: none(なし) / chat(担当者へのチャット相談 ¥50,000) / premium(企業担当付きサポート ¥100,000)
-  const [supportTier, setSupportTier] = useState<'none' | 'chat' | 'premium'>('none')
   // データ移行サポート: not_requested(未申込) / requested(申込済) / in_progress(移行中) / completed(完了)
   const [migrationStatus, setMigrationStatus] = useState<
     'not_requested' | 'requested' | 'in_progress' | 'completed'
@@ -319,8 +341,6 @@ function SubscriptionPageContent() {
   const [purchasedRemaining] = useState(1500) // 購入残(永久有効)
   // 個人クレジットは「今月の自分の消費量」可視化のみ。実際の消費はテナントプールから引かれる
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('annual')
-  const [billingLegalAccepted, setBillingLegalAccepted] = useState(false)
-  const [checkoutLoadingPlan, setCheckoutLoadingPlan] = useState<string | null>(null)
   const [showBuyCredits, setShowBuyCredits] = useState(false)
   const [showNewRequest, setShowNewRequest] = useState(false)
   const [showInviteMember, setShowInviteMember] = useState(false)
@@ -447,38 +467,6 @@ function SubscriptionPageContent() {
   const CREDIT_UNIT_PRICE = 10 // ¥10 per credit (¥5,000 / 500c)
   const CREDIT_STEP = 500 // 500-unit step
 
-  const startStripeCheckout = async (planId: string, minSeats: number) => {
-    if (!billingLegalAccepted) {
-      alert(
-        '決済に進む前に、利用規約・プライバシーポリシー・特定商取引法に基づく表記への同意が必要です。'
-      )
-      return
-    }
-
-    setCheckoutLoadingPlan(planId)
-    try {
-      const res = await fetch('/api/stripe/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          planId,
-          billingCycle,
-          seats: Math.max(seats, minSeats),
-        }),
-      })
-      const data = (await res.json()) as { url?: string; error?: string }
-      if (!res.ok || !data.url) {
-        throw new Error(data.error ?? 'Stripe Checkoutの作成に失敗しました。')
-      }
-      window.location.href = data.url
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Stripe Checkoutの作成に失敗しました。'
-      alert(message)
-      setCheckoutLoadingPlan(null)
-    }
-  }
-
   return (
     <ObsPageShell>
       <div className="w-full px-8 xl:px-12 2xl:px-16 pb-16">
@@ -505,7 +493,6 @@ function SubscriptionPageContent() {
             [
               { key: 'subscription', label: 'プラン・クレジット', icon: CreditCard },
               { key: 'members', label: 'メンバー管理', icon: Users },
-              { key: 'requests', label: '機能リクエスト', icon: Wrench },
             ] as const
           ).map((t) => {
             const active = tab === t.key
@@ -848,113 +835,12 @@ function SubscriptionPageContent() {
             <div className="flex items-end justify-between mb-5">
               <div>
                 <ObsSectionHeader
-                  title="プランを選択"
-                  caption="シート単位の課金。年間契約で約30%お得になります"
+                  title="営業実行支援パートナーシップ (5社限定)"
+                  caption="HubSpotには勝てない。だから属人性を極めた高密度実行 + ルキスマCRMをセットで。1年経過後に一般プラン公開予定"
                 />
               </div>
-              {/* Billing cycle toggle */}
-              <div
-                className="inline-flex p-1 rounded-[var(--radius-obs-md)]"
-                style={{ backgroundColor: 'var(--color-obs-surface-high)' }}
-              >
-                <button
-                  onClick={() => setBillingCycle('monthly')}
-                  className="px-4 py-1.5 rounded-[var(--radius-obs-sm)] text-[12px] font-medium transition-colors"
-                  style={{
-                    backgroundColor:
-                      billingCycle === 'monthly'
-                        ? 'var(--color-obs-surface-highest)'
-                        : 'transparent',
-                    color:
-                      billingCycle === 'monthly'
-                        ? 'var(--color-obs-text)'
-                        : 'var(--color-obs-text-muted)',
-                  }}
-                >
-                  月間
-                </button>
-                <button
-                  onClick={() => setBillingCycle('annual')}
-                  className="px-4 py-1.5 rounded-[var(--radius-obs-sm)] text-[12px] font-medium transition-colors flex items-center gap-1.5"
-                  style={{
-                    backgroundColor:
-                      billingCycle === 'annual'
-                        ? 'var(--color-obs-surface-highest)'
-                        : 'transparent',
-                    color:
-                      billingCycle === 'annual'
-                        ? 'var(--color-obs-text)'
-                        : 'var(--color-obs-text-muted)',
-                  }}
-                >
-                  年間
-                  <span
-                    className="text-[9px] font-semibold px-1.5 py-[1px] rounded-full"
-                    style={{
-                      backgroundColor: 'rgba(171,199,255,0.18)',
-                      color: 'var(--color-obs-primary)',
-                    }}
-                  >
-                    約30%お得
-                  </span>
-                </button>
-              </div>
+              {/* 実行支援モデルは固定価格のため、月額/年額トグルは非表示 */}
             </div>
-
-            <label
-              className="mb-5 flex items-start gap-3 rounded-[var(--radius-obs-md)] px-4 py-3 text-[12px] leading-relaxed"
-              style={{
-                backgroundColor: 'var(--color-obs-surface-high)',
-                color: 'var(--color-obs-text-muted)',
-                boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.12)',
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={billingLegalAccepted}
-                onChange={(event) => setBillingLegalAccepted(event.target.checked)}
-                className="mt-0.5 h-4 w-4 shrink-0 accent-[#abc7ff]"
-              />
-              <span>
-                決済に進む前に、
-                <a
-                  href="/legal/terms"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="font-semibold text-[#abc7ff] hover:text-white"
-                >
-                  利用規約
-                </a>
-                、
-                <a
-                  href="/legal/privacy"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="font-semibold text-[#abc7ff] hover:text-white"
-                >
-                  プライバシーポリシー
-                </a>
-                、
-                <a
-                  href="/legal/ai-policy"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="font-semibold text-[#abc7ff] hover:text-white"
-                >
-                  AI利用ポリシー
-                </a>
-                、
-                <a
-                  href="/legal/tokushoho"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="font-semibold text-[#abc7ff] hover:text-white"
-                >
-                  特定商取引法に基づく表記
-                </a>
-                の内容に同意します。
-              </span>
-            </label>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               {PLANS.map((plan, i) => {
@@ -997,37 +883,51 @@ function SubscriptionPageContent() {
                         {plan.tagline}
                       </p>
                       <div className="flex items-baseline gap-1 mb-1">
-                        {plan.isFree ? (
-                          <span
-                            className="font-[family-name:var(--font-display)] text-[30px] font-bold tracking-[-0.03em]"
-                            style={{ color: 'var(--color-obs-text)' }}
-                          >
-                            ¥0
-                          </span>
-                        ) : (
-                          <>
-                            <span
-                              className="font-[family-name:var(--font-display)] text-[30px] font-bold tracking-[-0.03em]"
-                              style={{ color: 'var(--color-obs-text)' }}
-                            >
-                              {formatPrice(price)}
-                            </span>
-                            <span
-                              className="text-[13px]"
-                              style={{ color: 'var(--color-obs-text-muted)' }}
-                            >
-                              /seat /月
-                            </span>
-                          </>
-                        )}
+                        <span
+                          className="font-[family-name:var(--font-display)] text-[30px] font-bold tracking-[-0.03em]"
+                          style={{ color: 'var(--color-obs-text)' }}
+                        >
+                          {formatPrice(price)}
+                        </span>
+                        <span
+                          className="text-[13px]"
+                          style={{ color: 'var(--color-obs-text-muted)' }}
+                        >
+                          {plan.isTenantPrice ? '/月' : '/seat /月'}
+                        </span>
                       </div>
+                      {/* 残り枠バッジ (実行支援モデル) */}
+                      {plan.slotsTotal !== undefined && (
+                        <div className="flex items-center gap-1.5 mb-2">
+                          <span
+                            className="inline-flex items-center gap-1 text-[10.5px] font-semibold px-2 py-[3px] rounded-full uppercase tracking-[0.08em]"
+                            style={{
+                              backgroundColor:
+                                (plan.slotsRemaining ?? 0) > 0
+                                  ? 'rgba(255,193,7,0.14)'
+                                  : 'rgba(255,90,90,0.14)',
+                              color: (plan.slotsRemaining ?? 0) > 0 ? '#FFC107' : '#FF5A5A',
+                            }}
+                          >
+                            🔥 残り {plan.slotsRemaining ?? 0} 枠 / {plan.slotsTotal}社限定
+                          </span>
+                        </div>
+                      )}
                       <p
                         className="text-[12px] font-medium tabular-nums mb-1"
                         style={{ color: 'var(--color-obs-primary)' }}
                       >
                         月間 {plan.credits.toLocaleString()} クレジット
-                        {plan.isFree ? ' (テナント全体)' : '込 / seat'}
+                        {plan.isTenantPrice ? ' (チーム合計)' : '込 / seat'}
                       </p>
+                      {plan.contractTerm && (
+                        <p
+                          className="text-[11px] mb-1"
+                          style={{ color: 'var(--color-obs-text-subtle)' }}
+                        >
+                          {plan.contractTerm}
+                        </p>
+                      )}
                       <p
                         className={plan.seatNote ? 'text-[11px]' : 'text-[11px] mb-4'}
                         style={{ color: 'var(--color-obs-text-subtle)' }}
@@ -1042,13 +942,7 @@ function SubscriptionPageContent() {
                         </p>
                       )}
 
-                      <div
-                        className={
-                          plan.isFree
-                            ? 'mb-6 flex-1 flex flex-col justify-center'
-                            : 'space-y-2 mb-6 flex-1'
-                        }
-                      >
+                      <div className="space-y-2 mb-6 flex-1">
                         {/* 下位プラン継承 */}
                         {plan.baseLabel && (
                           <>
@@ -1084,17 +978,10 @@ function SubscriptionPageContent() {
 
                         {/* 追加機能 */}
                         {plan.additions.map((f, j) => (
-                          <div
-                            key={j}
-                            className={
-                              plan.isFree
-                                ? 'flex items-center justify-center gap-2'
-                                : 'flex items-start gap-2'
-                            }
-                          >
+                          <div key={j} className="flex items-start gap-2">
                             <Check
                               size={13}
-                              className={plan.isFree ? 'shrink-0' : 'shrink-0 mt-0.5'}
+                              className="shrink-0 mt-0.5"
                               strokeWidth={2.5}
                               style={{ color: 'var(--color-obs-low)' }}
                             />
@@ -1159,15 +1046,15 @@ function SubscriptionPageContent() {
                         </div>
                       ) : isAdmin ? (
                         (() => {
+                          // 実行支援モデルは「枠」ベース。料金高い順 = ランク高い。
                           const PLAN_RANK: Record<string, number> = {
-                            free: 0,
-                            lite: 1,
-                            standard: 2,
-                            pro: 3,
+                            standard: 1,
+                            premium: 2,
+                            platinum: 3,
                           }
                           const isDowngrade =
                             (PLAN_RANK[plan.id] ?? 0) < (PLAN_RANK[currentPlan] ?? 0)
-                          const isFreePlan = plan.id === 'free'
+                          const isSoldOut = (plan.slotsRemaining ?? 1) <= 0
                           return (
                             <div
                               className="w-full flex flex-col justify-end"
@@ -1175,51 +1062,49 @@ function SubscriptionPageContent() {
                             >
                               <button
                                 onClick={() => {
-                                  const targetPrice =
-                                    billingCycle === 'annual' ? plan.priceAnnual : plan.priceMonthly
-                                  const priceMessage = isFreePlan
-                                    ? '無料プランへ切り替えます。'
-                                    : `変更後の料金は ¥${targetPrice.toLocaleString()}/seat/月 になります。`
+                                  if (isSoldOut) return
                                   setConfirmDialog({
-                                    title: isDowngrade
-                                      ? `${plan.name} プランへダウングレード`
-                                      : `${plan.name} プランへ変更`,
-                                    message: `${priceMessage}${
-                                      isDowngrade
-                                        ? isFreePlan
-                                          ? '\n\nFreeプランの制約: 最大3シート / 月300クレジットのみ。クレジット切れ時は全機能停止します。一部機能(求人インテント / GPT-4o / 外部リサーチなど)は利用できなくなります。'
-                                          : '\n\n一部機能(GPT-4o / 外部リサーチなど)は利用できなくなります。'
-                                        : ''
-                                    }`,
-                                    confirmLabel: isDowngrade ? 'ダウングレードする' : '変更する',
-                                    variant: isDowngrade ? 'danger' : 'primary',
-                                    onConfirm: () => startStripeCheckout(plan.id, plan.minSeats),
+                                    title: `${plan.name} プランの面談を予約`,
+                                    message: `${plan.name} プラン (¥${plan.priceMonthly.toLocaleString()}/月・${plan.contractTerm ?? '3ヶ月契約'}) の導入相談を承ります。\n\n面談では、現在の営業課題のヒアリング、実行支援の進め方、ルキスマCRMの初期セットアップまでをすり合わせます。\n\n本フォーム送信後、担当より24時間以内に日程候補をご連絡します。`,
+                                    confirmLabel: '面談を予約する',
+                                    variant: 'primary',
+                                    onConfirm: () => {
+                                      // TODO: 面談予約 API 実装後に接続
+                                      alert(
+                                        `${plan.name} プランの面談予約を受け付けました。担当より日程をご連絡します。`,
+                                      )
+                                    },
                                   })
                                 }}
-                                disabled={!billingLegalAccepted || checkoutLoadingPlan === plan.id}
+                                disabled={isSoldOut}
                                 className="w-full h-10 rounded-[var(--radius-obs-md)] text-[13px] font-medium transition-colors"
                                 style={
-                                  isDowngrade
+                                  isSoldOut
                                     ? {
                                         backgroundColor: 'transparent',
-                                        color: 'var(--color-obs-text-muted)',
-                                        boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.08)',
+                                        color: 'var(--color-obs-text-subtle)',
+                                        boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.06)',
+                                        cursor: 'not-allowed',
                                       }
-                                    : {
-                                        background:
-                                          'linear-gradient(135deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
-                                        color: 'var(--color-obs-on-primary)',
-                                        fontWeight: 600,
-                                      }
+                                    : isDowngrade
+                                      ? {
+                                          backgroundColor: 'transparent',
+                                          color: 'var(--color-obs-text-muted)',
+                                          boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.08)',
+                                        }
+                                      : {
+                                          background:
+                                            'linear-gradient(135deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
+                                          color: 'var(--color-obs-on-primary)',
+                                          fontWeight: 600,
+                                        }
                                 }
                               >
-                                {checkoutLoadingPlan === plan.id
-                                  ? 'Stripeへ接続中...'
+                                {isSoldOut
+                                  ? '満枠 (キャンセル待ち)'
                                   : isDowngrade
-                                    ? 'ダウングレード'
-                                    : isFreePlan
-                                      ? '無料で始める'
-                                      : 'プランを変更'}
+                                    ? 'このプランへ変更を相談'
+                                    : '面談を予約する'}
                               </button>
                             </div>
                           )
@@ -1242,376 +1127,6 @@ function SubscriptionPageContent() {
                   </motion.div>
                 )
               })}
-            </div>
-          </div>
-        )}
-
-        {/* ── サポートオプション (特権管理者のみ・お金回り) ── */}
-        {tab === 'subscription' && isSuperAdmin && (
-          <div className="mt-12">
-            <ObsSectionHeader
-              title="サポートオプション"
-              caption="運用の伴走レベルに応じて2つのプランから選択。テナント単位の追加オプション"
-            />
-
-            <div className="grid gap-4 md:grid-cols-2">
-              {/* チャット相談プラン (¥50,000) */}
-              <ObsCard
-                depth="high"
-                padding="lg"
-                radius="xl"
-                className={
-                  supportTier === 'chat'
-                    ? 'relative overflow-hidden h-full flex flex-col ring-2 ring-[var(--color-obs-primary)]'
-                    : 'relative overflow-hidden h-full flex flex-col'
-                }
-              >
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: '-30%',
-                    right: '-10%',
-                    width: '320px',
-                    height: '320px',
-                    background:
-                      supportTier === 'chat'
-                        ? 'radial-gradient(circle, rgba(75,200,140,0.10) 0%, transparent 70%)'
-                        : 'radial-gradient(circle, rgba(171,199,255,0.08) 0%, transparent 70%)',
-                    pointerEvents: 'none',
-                  }}
-                />
-                <div className="relative flex flex-col flex-1">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div
-                      className="w-11 h-11 rounded-[var(--radius-obs-md)] flex items-center justify-center"
-                      style={{
-                        background:
-                          'linear-gradient(135deg, var(--color-obs-surface-highest) 0%, var(--color-obs-surface-high) 100%)',
-                        boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.20)',
-                      }}
-                    >
-                      <MessageCircle size={20} style={{ color: 'var(--color-obs-primary)' }} />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <h3
-                          className="font-[family-name:var(--font-display)] text-lg font-semibold tracking-[-0.02em]"
-                          style={{ color: 'var(--color-obs-text)' }}
-                        >
-                          担当者へのチャット相談
-                        </h3>
-                        {supportTier === 'chat' && (
-                          <span
-                            className="text-[10px] font-semibold px-2 py-[3px] rounded-full uppercase tracking-[0.08em] flex items-center gap-1"
-                            style={{
-                              backgroundColor: 'rgba(75,200,140,0.14)',
-                              color: '#4BC88C',
-                            }}
-                          >
-                            <Check size={10} strokeWidth={3} />
-                            利用中
-                          </span>
-                        )}
-                      </div>
-                      <p
-                        className="text-[12px] mt-0.5"
-                        style={{ color: 'var(--color-obs-text-subtle)' }}
-                      >
-                        お困りごとを気軽にチャットで相談
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2 mb-5">
-                    {['担当者へのチャット相談 (専属対応)'].map((f, j) => (
-                      <div key={j} className="flex items-start gap-2">
-                        <Check
-                          size={13}
-                          className="shrink-0 mt-0.5"
-                          strokeWidth={2.5}
-                          style={{ color: 'var(--color-obs-low)' }}
-                        />
-                        <span
-                          className="text-[12.5px] leading-relaxed"
-                          style={{ color: 'var(--color-obs-text-muted)' }}
-                        >
-                          {f}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div
-                    className="flex items-end justify-between pt-4 border-t mt-auto"
-                    style={{ borderColor: 'rgba(255,255,255,0.06)' }}
-                  >
-                    <div>
-                      <div className="flex items-baseline gap-1">
-                        <span
-                          className="text-[13px]"
-                          style={{ color: 'var(--color-obs-text-muted)' }}
-                        >
-                          +
-                        </span>
-                        <span
-                          className="font-[family-name:var(--font-display)] text-[28px] font-bold tabular-nums tracking-[-0.03em]"
-                          style={{ color: 'var(--color-obs-text)' }}
-                        >
-                          ¥50,000
-                        </span>
-                      </div>
-                      <p className="text-[11px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
-                        /月 (テナント単位)
-                      </p>
-                    </div>
-                    {supportTier === 'chat' ? (
-                      <button
-                        onClick={() =>
-                          setConfirmDialog({
-                            title: '担当者へのチャット相談 を解除',
-                            message:
-                              '解除すると、専属担当者へのチャット相談が利用できなくなります。次回請求から ¥50,000/月 が差し引かれます。',
-                            confirmLabel: '解除する',
-                            variant: 'danger',
-                            onConfirm: () => setSupportTier('none'),
-                          })
-                        }
-                        className="px-4 py-2 rounded-[var(--radius-obs-md)] text-[13px] font-medium transition-colors"
-                        style={{
-                          backgroundColor: 'transparent',
-                          color: 'var(--color-obs-text-muted)',
-                          boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.08)',
-                        }}
-                      >
-                        解除する
-                      </button>
-                    ) : (
-                      <ObsButton
-                        variant={supportTier === 'premium' ? 'ghost' : 'primary'}
-                        size="md"
-                        onClick={() =>
-                          setConfirmDialog({
-                            title:
-                              supportTier === 'premium'
-                                ? '担当者へのチャット相談 へ変更'
-                                : '担当者へのチャット相談 を追加',
-                            message:
-                              supportTier === 'premium'
-                                ? '企業担当付きサポート (¥100,000/月) を解除し、担当者へのチャット相談 (¥50,000/月) に切り替えます。次回請求から差額が反映されます。'
-                                : '担当者への専属チャット相談がご利用いただけます。月額 ¥50,000(テナント単位) が請求に追加されます。',
-                            confirmLabel: supportTier === 'premium' ? '変更する' : '追加する',
-                            variant: 'primary',
-                            onConfirm: () => setSupportTier('chat'),
-                          })
-                        }
-                      >
-                        {supportTier === 'premium' ? 'このプランへ変更' : '追加する'}
-                      </ObsButton>
-                    )}
-                  </div>
-                </div>
-              </ObsCard>
-
-              {/* 企業担当付きサポート (¥100,000) */}
-              <ObsCard
-                depth="high"
-                padding="lg"
-                radius="xl"
-                className={
-                  supportTier === 'premium'
-                    ? 'relative overflow-hidden h-full flex flex-col ring-2 ring-[var(--color-obs-primary)]'
-                    : 'relative overflow-hidden h-full flex flex-col'
-                }
-              >
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: '-30%',
-                    right: '-10%',
-                    width: '320px',
-                    height: '320px',
-                    background:
-                      supportTier === 'premium'
-                        ? 'radial-gradient(circle, rgba(75,200,140,0.10) 0%, transparent 70%)'
-                        : 'radial-gradient(circle, rgba(171,199,255,0.10) 0%, transparent 70%)',
-                    pointerEvents: 'none',
-                  }}
-                />
-                <div className="relative flex flex-col flex-1">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div
-                      className="w-11 h-11 rounded-[var(--radius-obs-md)] flex items-center justify-center"
-                      style={{
-                        background:
-                          'linear-gradient(135deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
-                      }}
-                    >
-                      <Crown size={20} style={{ color: 'var(--color-obs-on-primary)' }} />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <h3
-                          className="font-[family-name:var(--font-display)] text-lg font-semibold tracking-[-0.02em]"
-                          style={{ color: 'var(--color-obs-text)' }}
-                        >
-                          企業担当付きサポート
-                        </h3>
-                        {supportTier === 'premium' && (
-                          <span
-                            className="text-[10px] font-semibold px-2 py-[3px] rounded-full uppercase tracking-[0.08em] flex items-center gap-1"
-                            style={{
-                              backgroundColor: 'rgba(75,200,140,0.14)',
-                              color: '#4BC88C',
-                            }}
-                          >
-                            <Check size={10} strokeWidth={3} />
-                            利用中
-                          </span>
-                        )}
-                      </div>
-                      <p
-                        className="text-[12px] mt-0.5"
-                        style={{ color: 'var(--color-obs-text-subtle)' }}
-                      >
-                        ご導入から運用までの伴走サポート
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2 mb-5">
-                    {/* 下位プラン継承: 担当者へのチャット相談全機能 */}
-                    <div className="flex items-start gap-2">
-                      <Check
-                        size={13}
-                        className="shrink-0 mt-0.5"
-                        strokeWidth={2.5}
-                        style={{ color: 'var(--color-obs-low)' }}
-                      />
-                      <span
-                        className="text-[12.5px] leading-relaxed font-medium"
-                        style={{ color: 'var(--color-obs-text)' }}
-                      >
-                        担当者へのチャット相談 全機能
-                      </span>
-                    </div>
-
-                    {/* + 区切り */}
-                    <div className="flex items-center gap-2 pl-[3px] py-1">
-                      <Plus
-                        size={12}
-                        strokeWidth={3}
-                        style={{ color: 'var(--color-obs-primary)' }}
-                      />
-                      <div
-                        className="flex-1 h-px"
-                        style={{ backgroundColor: 'rgba(171,199,255,0.18)' }}
-                      />
-                    </div>
-
-                    {/* 追加: 定例ミーティング + 内訳 */}
-                    <div className="flex items-start gap-2">
-                      <Check
-                        size={13}
-                        className="shrink-0 mt-0.5"
-                        strokeWidth={2.5}
-                        style={{ color: 'var(--color-obs-low)' }}
-                      />
-                      <div className="flex-1">
-                        <p
-                          className="text-[12.5px] leading-relaxed"
-                          style={{ color: 'var(--color-obs-text-muted)' }}
-                        >
-                          月1回 1時間 定例ミーティング
-                        </p>
-                        <ul className="mt-1.5 space-y-1 pl-3">
-                          {['設計レビュー', 'カスタム提案', 'ビジネスサポート'].map((sub, k) => (
-                            <li
-                              key={k}
-                              className="text-[11.5px] leading-relaxed flex items-center gap-1.5"
-                              style={{ color: 'var(--color-obs-text-subtle)' }}
-                            >
-                              <span
-                                className="w-1 h-1 rounded-full shrink-0"
-                                style={{ backgroundColor: 'var(--color-obs-text-subtle)' }}
-                              />
-                              {sub}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div
-                    className="flex items-end justify-between pt-4 border-t mt-auto"
-                    style={{ borderColor: 'rgba(255,255,255,0.06)' }}
-                  >
-                    <div>
-                      <div className="flex items-baseline gap-1">
-                        <span
-                          className="text-[13px]"
-                          style={{ color: 'var(--color-obs-text-muted)' }}
-                        >
-                          +
-                        </span>
-                        <span
-                          className="font-[family-name:var(--font-display)] text-[28px] font-bold tabular-nums tracking-[-0.03em]"
-                          style={{ color: 'var(--color-obs-text)' }}
-                        >
-                          ¥100,000
-                        </span>
-                      </div>
-                      <p className="text-[11px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
-                        /月 (テナント単位)
-                      </p>
-                    </div>
-                    {supportTier === 'premium' ? (
-                      <button
-                        onClick={() =>
-                          setConfirmDialog({
-                            title: '企業担当付きサポート を解除',
-                            message:
-                              '解除すると、専属担当者によるサポート・月次定例ミーティングが利用できなくなります。次回請求から ¥100,000/月 が差し引かれます。',
-                            confirmLabel: '解除する',
-                            variant: 'danger',
-                            onConfirm: () => setSupportTier('none'),
-                          })
-                        }
-                        className="px-4 py-2 rounded-[var(--radius-obs-md)] text-[13px] font-medium transition-colors"
-                        style={{
-                          backgroundColor: 'transparent',
-                          color: 'var(--color-obs-text-muted)',
-                          boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.08)',
-                        }}
-                      >
-                        解除する
-                      </button>
-                    ) : (
-                      <ObsButton
-                        variant="primary"
-                        size="md"
-                        onClick={() =>
-                          setConfirmDialog({
-                            title:
-                              supportTier === 'chat'
-                                ? '企業担当付きサポート へ変更'
-                                : '企業担当付きサポート を追加',
-                            message:
-                              supportTier === 'chat'
-                                ? '担当者へのチャット相談 (¥50,000/月) を解除し、企業担当付きサポート (¥100,000/月) に切り替えます。次回請求から差額が反映されます。'
-                                : '専属担当者によるサポート・月次定例ミーティングがご利用いただけます。月額 ¥100,000(テナント単位) が請求に追加されます。',
-                            confirmLabel: supportTier === 'chat' ? '変更する' : '追加する',
-                            variant: 'primary',
-                            onConfirm: () => setSupportTier('premium'),
-                          })
-                        }
-                      >
-                        {supportTier === 'chat' ? 'このプランへ変更' : '追加する'}
-                      </ObsButton>
-                    )}
-                  </div>
-                </div>
-              </ObsCard>
             </div>
           </div>
         )}
@@ -2193,9 +1708,9 @@ function SubscriptionPageContent() {
           </div>
         )}
 
-        {/* ── Custom Dev Requests (機能リクエストタブ・特権管理者のみ) ── */}
-        {tab === 'requests' && isSuperAdmin && (
-          <div className="mt-12">
+        {/* ── Custom Dev Requests (初期費用オプションの直下・特権管理者のみ) ── */}
+        {tab === 'subscription' && isSuperAdmin && (
+          <div id="feature-requests" className="mt-12 scroll-mt-24">
             <ObsSectionHeader
               title="機能リクエスト"
               caption="追加機能を1万円単位の希望額で開発依頼。承認時のみ課金され、スキルもしくは全体機能としてサービスに追加されます"

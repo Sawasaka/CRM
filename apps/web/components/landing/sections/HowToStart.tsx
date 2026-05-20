@@ -3,10 +3,9 @@ import { Eyebrow, Section } from '../atoms'
 
 export const HowToStart = () => {
   const steps = [
-    { n: '01', t: '無料登録 30秒',   d: 'メールアドレスのみ。クレカ不要。' },
-    { n: '02', t: 'キックオフ 60分', d: '専任CSと利用範囲・連携対象を整理。' },
-    { n: '03', t: 'データ連携',      d: 'Google Workspace / Slack / 既存CRM。' },
-    { n: '04', t: '本番稼働 2週間',  d: '標準テンプレートで即起動。' },
+    { n: '01', t: 'ログイン',    d: 'メールアドレスのみ。クレカ不要。' },
+    { n: '02', t: 'データ連携',  d: 'Google Workspace / Slack / 既存CRM。' },
+    { n: '03', t: '利用開始',    d: '標準テンプレートで即起動。' },
   ]
   return (
     <Section tone="obsidian" screenLabel="16 HowToStart">
@@ -17,7 +16,7 @@ export const HowToStart = () => {
             <span className="fo-gradient-text">2週間</span>で、本番稼働。
           </h2>
         </div>
-        <div className="grid md:grid-cols-4 gap-4 mt-14">
+        <div className="grid md:grid-cols-3 gap-4 mt-14">
           {steps.map((s, i) => (
             <div key={i} className="rounded-3xl bg-dusk p-6 fo-lift fo-glass-rim relative">
               <div className="font-mono text-[0.72rem] text-[#7e7c83]">{s.n}</div>

@@ -519,8 +519,10 @@ CREATE TABLE IF NOT EXISTS "UserGoogleAccount" (
     "gmailHistoryId" TEXT,
     "calendarSyncToken" TEXT,
     "lastGmailSyncAt" TIMESTAMP(3),
+    "lastDriveSyncAt" TIMESTAMP(3),
     "lastCalendarSyncAt" TIMESTAMP(3),
     "lastMeetSyncAt" TIMESTAMP(3),
+    "driveEnabled" BOOLEAN NOT NULL DEFAULT TRUE,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -931,8 +933,10 @@ DO $$ BEGIN ALTER TABLE "UserGoogleAccount" ADD COLUMN IF NOT EXISTS "scope" TEX
 DO $$ BEGIN ALTER TABLE "UserGoogleAccount" ADD COLUMN IF NOT EXISTS "gmailHistoryId" TEXT ; EXCEPTION WHEN others THEN raise notice 'col UserGoogleAccount.gmailHistoryId already ok'; END $$;
 DO $$ BEGIN ALTER TABLE "UserGoogleAccount" ADD COLUMN IF NOT EXISTS "calendarSyncToken" TEXT ; EXCEPTION WHEN others THEN raise notice 'col UserGoogleAccount.calendarSyncToken already ok'; END $$;
 DO $$ BEGIN ALTER TABLE "UserGoogleAccount" ADD COLUMN IF NOT EXISTS "lastGmailSyncAt" TIMESTAMP(3) ; EXCEPTION WHEN others THEN raise notice 'col UserGoogleAccount.lastGmailSyncAt already ok'; END $$;
+DO $$ BEGIN ALTER TABLE "UserGoogleAccount" ADD COLUMN IF NOT EXISTS "lastDriveSyncAt" TIMESTAMP(3) ; EXCEPTION WHEN others THEN raise notice 'col UserGoogleAccount.lastDriveSyncAt already ok'; END $$;
 DO $$ BEGIN ALTER TABLE "UserGoogleAccount" ADD COLUMN IF NOT EXISTS "lastCalendarSyncAt" TIMESTAMP(3) ; EXCEPTION WHEN others THEN raise notice 'col UserGoogleAccount.lastCalendarSyncAt already ok'; END $$;
 DO $$ BEGIN ALTER TABLE "UserGoogleAccount" ADD COLUMN IF NOT EXISTS "lastMeetSyncAt" TIMESTAMP(3) ; EXCEPTION WHEN others THEN raise notice 'col UserGoogleAccount.lastMeetSyncAt already ok'; END $$;
+DO $$ BEGIN ALTER TABLE "UserGoogleAccount" ADD COLUMN IF NOT EXISTS "driveEnabled" BOOLEAN NOT NULL DEFAULT TRUE ; EXCEPTION WHEN others THEN raise notice 'col UserGoogleAccount.driveEnabled already ok'; END $$;
 DO $$ BEGIN ALTER TABLE "UserGoogleAccount" ADD COLUMN IF NOT EXISTS "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP ; EXCEPTION WHEN others THEN raise notice 'col UserGoogleAccount.createdAt already ok'; END $$;
 DO $$ BEGIN ALTER TABLE "UserGoogleAccount" ADD COLUMN IF NOT EXISTS "updatedAt" TIMESTAMP(3) NOT NULL ; EXCEPTION WHEN others THEN raise notice 'col UserGoogleAccount.updatedAt already ok'; END $$;
 
@@ -1355,4 +1359,3 @@ DO $$ BEGIN ALTER TABLE "MeetingEvent" ADD CONSTRAINT "MeetingEvent_companyId_fk
 
 -- AddForeignKey
 DO $$ BEGIN ALTER TABLE "MeetingEvent" ADD CONSTRAINT "MeetingEvent_dealId_fkey" FOREIGN KEY ("dealId") REFERENCES "Deal"("id") ON DELETE SET NULL ON UPDATE CASCADE ; EXCEPTION WHEN duplicate_object THEN raise notice 'constraint MeetingEvent_dealId_fkey already exists'; END $$;
-

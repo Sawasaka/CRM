@@ -4,6 +4,7 @@
  */
 export const SCOPES_BY_SERVICE = {
   gmail: ['https://www.googleapis.com/auth/gmail.modify'],
+  drive: ['https://www.googleapis.com/auth/drive.readonly'],
   calendar: [
     'https://www.googleapis.com/auth/calendar',
     'https://www.googleapis.com/auth/calendar.events',
@@ -36,6 +37,7 @@ export function availabilityFromScope(scope: string | null | undefined): Record<
   const s = scope ?? ''
   return {
     gmail: SCOPES_BY_SERVICE.gmail.every((x) => s.includes(x)),
+    drive: SCOPES_BY_SERVICE.drive.every((x) => s.includes(x)),
     calendar: SCOPES_BY_SERVICE.calendar.every((x) => s.includes(x)),
     meet: SCOPES_BY_SERVICE.meet.every((x) => s.includes(x)),
     chat: SCOPES_BY_SERVICE.chat.every((x) => s.includes(x)),

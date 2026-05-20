@@ -1,3 +1,19 @@
+# BGM CRM
+
+## Deploy
+
+独自ドメインで公開する場合は [docs/domain-deployment.md](./docs/domain-deployment.md) を参照してください。
+
+よく使うコマンド:
+
+```sh
+pnpm run build:web
+pnpm run build:api
+pnpm run start:api
+```
+
+---
+
 # Turborepo starter
 
 This Turborepo starter is maintained by the Turborepo core team.

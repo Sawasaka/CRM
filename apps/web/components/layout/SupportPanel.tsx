@@ -241,7 +241,7 @@ export function SupportPanel({ open, onClose }: { open: boolean; onClose: () => 
             send(draft)
           }
         }}
-        placeholder="Front Office のサービスについて相談する"
+        placeholder="ルキスマCRM のサービスについて相談する"
         rows={1}
         className="w-full bg-transparent resize-none outline-none focus:outline-none focus-visible:outline-none text-[14px] leading-relaxed max-h-[160px]"
         style={{ color: 'var(--color-obs-text)' }}
@@ -488,7 +488,7 @@ export function SupportPanel({ open, onClose }: { open: boolean; onClose: () => 
                   color: 'var(--color-obs-text)',
                 }}
               >
-                Front Office に相談する
+                ルキスマCRM に相談する
               </h2>
               <div className="w-full max-w-[720px] mx-auto">{Composer}</div>
             </div>

@@ -1,5 +1,5 @@
 /**
- * BGM Intelligence Hub — チャット履歴モック
+ * ルキスマCRM Intelligence Hub — チャット履歴モック
  *
  * Codex 風サイドバーで時系列グルーピング表示するための過去会話データ。
  * 実装フェーズではモック。将来的には userId × workspace 単位で永続化想定。

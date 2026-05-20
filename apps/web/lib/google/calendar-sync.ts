@@ -94,12 +94,21 @@ export async function syncCalendarForUser(
 
     // 過去予定で endsAt < now なら HELD ステータス（議事録未取得）
     const now = new Date()
-    const status: MeetingStatus =
+    const computedStatus: MeetingStatus =
       ev.status === 'cancelled'
         ? 'CANCELED'
         : parsed.endsAt < now
           ? 'HELD'
           : 'SCHEDULED'
+
+    const existingMeeting = await prisma.meetingEvent.findUnique({
+      where: { userId_calendarEventId: { userId, calendarEventId: ev.id } },
+      select: { status: true },
+    })
+    const status: MeetingStatus =
+      existingMeeting?.status === MeetingStatus.COMPLETED
+        ? MeetingStatus.COMPLETED
+        : computedStatus
 
     await prisma.meetingEvent.upsert({
       where: { userId_calendarEventId: { userId, calendarEventId: ev.id } },
@@ -138,8 +147,8 @@ export async function syncCalendarForUser(
         contactIds,
         // 既存の dealId は手動上書きされている可能性があるため、未設定の場合のみ更新
         dealId: dealId ?? undefined,
-        // 過去予定で COMPLETED 以外なら HELD に
-        status: parsed.endsAt < now ? 'HELD' : 'SCHEDULED',
+        // Meet 議事録取得済みの予定は Calendar 再同期で HELD に戻さない
+        status,
       },
     })
 
@@ -186,6 +195,19 @@ function parseCalendarEvent(ev: calendar_v3.Schema$Event): ParsedEvent | null {
         meetCode = codeMatch?.[1] ?? null
         break
       }
+    }
+  }
+  if (!meetUrl && ev.hangoutLink?.includes('meet.google.com')) {
+    meetUrl = ev.hangoutLink
+    const codeMatch = ev.hangoutLink.match(/meet\.google\.com\/([a-z0-9-]+)/i)
+    meetCode = codeMatch?.[1] ?? null
+  }
+  if (!meetUrl) {
+    const haystack = [ev.location, ev.description].filter(Boolean).join('\n')
+    const m = haystack.match(/https:\/\/meet\.google\.com\/([a-z0-9-]+)/i)
+    if (m?.[0]) {
+      meetUrl = m[0]
+      meetCode = m[1] ?? null
     }
   }
 

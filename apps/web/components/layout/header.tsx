@@ -99,7 +99,7 @@ export function Header() {
         {/* ── Service brand (HOME = チャット画面 へ戻る) ── */}
         <Link
           href="/"
-          aria-label="Front Office ホーム"
+          aria-label="ルキスマCRM ホーム"
           className="flex items-center mr-1 transition-opacity duration-150 hover:opacity-85"
         >
           <ObsLogo size={28} />
@@ -114,7 +114,7 @@ export function Header() {
         <GhostButton
           icon={MessageCircle}
           label="サービスについて"
-          title="Front Office について"
+          title="ルキスマCRM について"
           active={supportOpen}
           onClick={toggleSupport}
         />

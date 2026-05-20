@@ -24,7 +24,7 @@ import {
 } from 'lucide-react'
 import { ObsButton, ObsCard, ObsHero, ObsPageShell } from '@/components/obsidian'
 
-type ServiceKey = 'gmail' | 'calendar' | 'meet' | 'chat'
+type ServiceKey = 'gmail' | 'drive' | 'calendar' | 'meet' | 'chat'
 
 interface ServiceState {
   available: boolean // OAuth スコープが取得済みか
@@ -55,6 +55,18 @@ const SERVICE_DEFS: Array<{
       />
     ),
     description: '送受信メールをコンタクトのメアドと一致させて取り込み',
+  },
+  {
+    key: 'drive',
+    label: 'Google Drive',
+    icon: () => (
+      <OfficialIcon
+        src="/icons/google-workspace.png"
+        alt="Google Drive"
+        fallback={<BrandedIcon Icon={FolderOpen} color="#FABB05" bg="rgba(250,187,5,0.14)" />}
+      />
+    ),
+    description: '連携フォルダのドキュメントをナレッジとして取り込み',
   },
   {
     key: 'calendar',
@@ -140,7 +152,7 @@ export default function IntegrationsPage() {
         <ObsHero
           eyebrow="Settings"
           title="連携設定"
-          caption="Gmail / Google カレンダー / Google Meet / Google チャット を機能ごとに個別連携できます。"
+          caption="Gmail / Google Drive / Google カレンダー / Google Meet を機能ごとに個別連携できます。"
         />
 
         {/* ── タブナビ ── */}
@@ -355,7 +367,7 @@ export default function IntegrationsPage() {
               ・会議ごとに 録画 と 文字起こし をオンにして開始してください（Meet API は録画/文字起こしが行われた会議のみ取得可能）。
             </li>
             <li>・コンタクトのメールアドレスがカレンダー参加者に含まれていれば、自動で取引・コンタクトに紐付きます。</li>
-            <li>・Google Chat はスペース/DM の最近のメッセージを定期取り込みします。</li>
+            <li>・Google Drive はナレッジ画面で選択したフォルダのみ同期します。</li>
           </ul>
         </ObsCard>
           </>
@@ -669,7 +681,7 @@ function SlackSection() {
           <p className="text-[13px] mt-1" style={{ color: 'var(--color-obs-text-muted)' }}>
             {status?.connected
               ? 'Bot を追加したチャンネル/DM のメッセージを取り込み、コンタクトに紐付けます。'
-              : 'Slack ワークスペースに BGM CRM Bot を追加すると、メッセージをコンタクトに紐付けて取り込めます。'}
+              : 'Slack ワークスペースに ルキスマCRM Bot を追加すると、メッセージをコンタクトに紐付けて取り込めます。'}
           </p>
 
           <div className="mt-4 flex flex-wrap gap-2">
@@ -984,10 +996,10 @@ function MicrosoftLogo() {
 }
 
 // ─── メンバー別 連携状況 (管理者用) ─────────────────────────────────────────────
-// 各メンバーが Gmail/Calendar/Meet/Chat/Slack を個別連携できているかを管理者が一覧で把握できるセクション。
+// 各メンバーが Gmail/Drive/Calendar/Meet/Chat/Slack を個別連携できているかを管理者が一覧で把握できるセクション。
 // バックエンド連携前のモック実装。
 
-type MemberIntegrationKey = 'gmail' | 'calendar' | 'meet' | 'chat' | 'slack'
+type MemberIntegrationKey = 'gmail' | 'drive' | 'calendar' | 'meet' | 'chat' | 'slack'
 
 interface MemberIntegrationRow {
   id: string
@@ -1003,6 +1015,7 @@ const MEMBER_ROWS: MemberIntegrationRow[] = [
     id: 'm-1', name: '田中 太郎', email: 'tanaka@zooba.io', role: '管理者',
     integrations: {
       gmail:    { connected: true, lastSyncAt: '2 分前' },
+      drive:    { connected: true, lastSyncAt: '10 分前' },
       calendar: { connected: true, lastSyncAt: '5 分前' },
       meet:     { connected: true, lastSyncAt: '1 時間前' },
       chat:     { connected: true, lastSyncAt: '30 分前' },
@@ -1014,6 +1027,7 @@ const MEMBER_ROWS: MemberIntegrationRow[] = [
     id: 'm-2', name: '鈴木 花子', email: 'suzuki@zooba.io', role: 'メンバー',
     integrations: {
       gmail:    { connected: true, lastSyncAt: '8 分前' },
+      drive:    { connected: true, lastSyncAt: '18 分前' },
       calendar: { connected: true, lastSyncAt: '15 分前' },
       meet:     { connected: false, lastSyncAt: null },
       chat:     { connected: true, lastSyncAt: '45 分前' },
@@ -1025,6 +1039,7 @@ const MEMBER_ROWS: MemberIntegrationRow[] = [
     id: 'm-3', name: '佐藤 次郎', email: 'sato@zooba.io', role: 'メンバー',
     integrations: {
       gmail:    { connected: true, lastSyncAt: '32 分前' },
+      drive:    { connected: false, lastSyncAt: null },
       calendar: { connected: false, lastSyncAt: null },
       meet:     { connected: false, lastSyncAt: null },
       chat:     { connected: false, lastSyncAt: null },
@@ -1036,6 +1051,7 @@ const MEMBER_ROWS: MemberIntegrationRow[] = [
     id: 'm-4', name: '開発 太郎', email: 'dev-taro@zooba.io', role: 'メンバー',
     integrations: {
       gmail:    { connected: false, lastSyncAt: null },
+      drive:    { connected: false, lastSyncAt: null },
       calendar: { connected: false, lastSyncAt: null },
       meet:     { connected: false, lastSyncAt: null },
       chat:     { connected: false, lastSyncAt: null },
@@ -1047,6 +1063,7 @@ const MEMBER_ROWS: MemberIntegrationRow[] = [
     id: 'm-5', name: '高田 美咲', email: 'takada@zooba.io', role: 'メンバー',
     integrations: {
       gmail:    { connected: true, lastSyncAt: '18 分前' },
+      drive:    { connected: true, lastSyncAt: '2 時間前' },
       calendar: { connected: true, lastSyncAt: '22 分前' },
       meet:     { connected: true, lastSyncAt: '昨日' },
       chat:     { connected: false, lastSyncAt: null },
@@ -1058,6 +1075,7 @@ const MEMBER_ROWS: MemberIntegrationRow[] = [
 
 const INTEGRATION_COLS: { key: MemberIntegrationKey; label: string }[] = [
   { key: 'gmail',    label: 'Gmail' },
+  { key: 'drive',    label: 'Drive' },
   { key: 'calendar', label: 'カレンダー' },
   { key: 'meet',     label: 'Meet' },
   { key: 'chat',     label: 'Chat' },

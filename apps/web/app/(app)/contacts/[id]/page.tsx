@@ -780,7 +780,7 @@ const MOCK_CONTACT_HISTORY: HistoryEntry[] = [
     emailSubject: '【ご案内】3/28 (金) 14:00 商談のリマインドと事前資料',
     emailBody: `田中様
 
-お世話になっております、Front Office の開発です。
+お世話になっております、ルキスマCRM の開発です。
 
 3/28 (金) 14:00 〜 のオンライン商談のリマインドをさせていただきます。
 当日の Google Meet URL は別途、開始 30 分前にもお送りいたします。
@@ -798,10 +798,10 @@ const MOCK_CONTACT_HISTORY: HistoryEntry[] = [
 
 どうぞよろしくお願いいたします。
 --
-開発 太郎 / Front Office
+開発 太郎 / ルキスマCRM
 taro@frontoffice.jp`,
     emailAttachments: [
-      { name: 'FrontOffice_プロダクト概要_v2.pdf', size: '2.4 MB' },
+      { name: 'ルキスマCRM_プロダクト概要_v2.pdf', size: '2.4 MB' },
       { name: '20260328_商談アジェンダ.pdf',     size: '180 KB' },
     ],
   },
@@ -831,10 +831,10 @@ taro@frontoffice.jp`,
     detail: '会社紹介資料(PDF, 18ページ)を添付、追って商談日程の調整連絡をする旨を伝達。',
     from: '開発 太郎 <taro@frontoffice.jp>',
     to: 'tanaka@techno-lead.co.jp',
-    emailSubject: 'Front Office 会社紹介資料のご送付',
+    emailSubject: 'ルキスマCRM 会社紹介資料のご送付',
     emailBody: `田中様
 
-お世話になっております、Front Office の開発と申します。
+お世話になっております、ルキスマCRM の開発と申します。
 先日はお問い合わせをいただき、誠にありがとうございました。
 
 弊社の会社紹介資料を添付いたしましたので、
@@ -845,9 +845,9 @@ taro@frontoffice.jp`,
 
 どうぞよろしくお願いいたします。
 --
-開発 太郎 / Front Office`,
+開発 太郎 / ルキスマCRM`,
     emailAttachments: [
-      { name: 'FrontOffice_会社紹介_v3.pdf', size: '3.1 MB' },
+      { name: 'ルキスマCRM_会社紹介_v3.pdf', size: '3.1 MB' },
     ],
   },
   {
@@ -2307,11 +2307,11 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
 
       </div>
 
-      {/* ── Main Layout ── */}
-      <div className="flex gap-5 items-start">
+      {/* ── Main Layout ── (取引詳細と同じ 1fr + 340px グリッド) */}
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_340px] gap-6 items-start">
 
         {/* ── Left Column ── */}
-        <div className="flex-1 min-w-0 space-y-4">
+        <div className="flex flex-col gap-6 min-w-0">
 
           {/* Contact Info Card */}
           <motion.div
@@ -2444,8 +2444,8 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
           </motion.div>
         </div>
 
-        {/* ── Right Sidebar ── */}
-        <div className="w-[300px] shrink-0 space-y-4">
+        {/* ── Right Sidebar ── (取引詳細と同じ 340px 幅) */}
+        <aside className="flex flex-col gap-6 min-w-0">
 
           {/* リサーチ */}
           <ResearchChatPanel entityType="contact" entityId={id} />
@@ -2947,7 +2947,7 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
             )}
           </motion.div>
 
-        </div>
+        </aside>
       </div>
 
       {/* ── Edit Modal ── */}

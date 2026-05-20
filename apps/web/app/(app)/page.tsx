@@ -91,7 +91,7 @@ export default function HomePage() {
                   handleSubmit()
                 }
               }}
-              placeholder="BGMに何でも尋ねる — 企業・商談・議事録を横断検索"
+              placeholder="ルキスマCRMに何でも尋ねる — 企業・商談・議事録を横断検索"
               rows={2}
               className="w-full bg-transparent resize-none outline-none px-5 pt-4 pb-2 text-[15px] leading-relaxed"
               style={{

@@ -2,19 +2,19 @@ import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 
 export const metadata: Metadata = {
-  title: 'KikuCRM｜Front Office for the Agentic Era',
+  title: 'ルキスマCRM｜営業データから、何でも答えるチャットCRM',
   description:
-    '営業もマーケも開発もサポートも、すべての情報をチャットで呼び出せる。CRM／マーケティングオートメーション／ヘルプデスク／カスタマーサポート／PDMを統合し、議事録・メール・コールから自動でデータが溜まり続ける、Agentic Era のフロントオフィス・プラットフォーム。290万社の企業データと4部門インテントを標準搭載。',
+    '営業データから、何でも答えるチャットCRM。商談・メール・議事録・求人インテント・290万社DBを横断し、あなたの会社のデータを踏まえて答えます。',
   keywords: [
-    'KikuCRM', 'Front Office', 'CRM',
+    'ルキスマCRM', 'RookieSmart', 'CRM',
     'マーケティングオートメーション', 'MA', 'カスタマーサポート',
     'ヘルプデスク', 'ナレッジ', 'インテントデータ', '議事録AI', 'RAG',
     '営業DX', 'PDM', 'AIエージェント', 'Agentic',
   ],
   openGraph: {
-    title: 'KikuCRM｜Front Office for the Agentic Era',
+    title: 'ルキスマCRM｜営業データから、何でも答えるチャットCRM',
     description:
-      'CRM・MA・ヘルプデスク・カスタマーサポート・PDMを統合し、5体のAIエージェントが稼働するフロントオフィス・プラットフォーム。',
+      '商談・メール・議事録・求人インテント・290万社DBを横断し、営業データから次の答えを返すチャットCRM。',
     type: 'website',
   },
 }

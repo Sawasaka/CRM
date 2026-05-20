@@ -14,7 +14,7 @@ export type OurBusiness = {
 }
 
 const DEFAULT_OUR_BUSINESS: OurBusiness = {
-  serviceName: 'BGM（営業ターゲティングDB+CRM）',
+  serviceName: 'ルキスマCRM',
   industry: 'B2B SaaS / 営業支援',
   strengths: [
     '日本の株式会社290万社の登記台帳をベースにした網羅性',
@@ -24,7 +24,7 @@ const DEFAULT_OUR_BUSINESS: OurBusiness = {
   targetCustomer: '日本国内のB2Bセールス組織。特にエンタープライズ営業・ABM運用を行うチーム。',
   successCases: [],
   description:
-    '営業ターゲット選定からアプローチまで、企業データとインテント情報を一元化して提供する。Front Office領域のカテゴリキングを目指す。',
+    '営業ターゲット選定からアプローチまで、企業データとインテント情報を一元化して提供する。営業データから、何でも答えるチャットCRM。',
 }
 
 function storePathFor(orgId?: string): string {

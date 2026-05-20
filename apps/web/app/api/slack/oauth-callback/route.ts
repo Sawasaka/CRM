@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
+import { getAppBaseUrl } from '@/lib/app-url'
 import { prisma } from '@bgm/db'
 import { slack } from '@/lib/slack/client'
 
@@ -28,7 +29,7 @@ export async function GET(req: Request) {
 
   if (!code || !state || state !== cookieState) {
     return NextResponse.redirect(
-      new URL('/settings/integrations?slack_error=invalid_state', req.url),
+      new URL('/settings/integrations?slack_error=invalid_state', req.url)
     )
   }
 
@@ -36,13 +37,11 @@ export async function GET(req: Request) {
   const clientSecret = process.env.SLACK_CLIENT_SECRET
   if (!clientId || !clientSecret) {
     return NextResponse.redirect(
-      new URL('/settings/integrations?slack_error=not_configured', req.url),
+      new URL('/settings/integrations?slack_error=not_configured', req.url)
     )
   }
 
-  const baseUrl =
-    process.env.AUTH_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3002'
-  const redirectUri = `${baseUrl}/api/slack/oauth-callback`
+  const redirectUri = `${getAppBaseUrl()}/api/slack/oauth-callback`
 
   try {
     const result = await slack.oauthV2Access({
@@ -54,7 +53,7 @@ export async function GET(req: Request) {
 
     if (!result.access_token || !result.team?.id) {
       return NextResponse.redirect(
-        new URL('/settings/integrations?slack_error=missing_token', req.url),
+        new URL('/settings/integrations?slack_error=missing_token', req.url)
       )
     }
 
@@ -88,13 +87,11 @@ export async function GET(req: Request) {
       },
     })
 
-    return NextResponse.redirect(
-      new URL('/settings/integrations?slack=connected', req.url),
-    )
+    return NextResponse.redirect(new URL('/settings/integrations?slack=connected', req.url))
   } catch (e) {
     console.error('[slack oauth callback]', e)
     return NextResponse.redirect(
-      new URL('/settings/integrations?slack_error=exchange_failed', req.url),
+      new URL('/settings/integrations?slack_error=exchange_failed', req.url)
     )
   }
 }

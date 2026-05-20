@@ -6,7 +6,9 @@
 
 -- UserGoogleAccount に Chat 同期時刻と機能別有効化フラグを追加
 DO $$ BEGIN ALTER TABLE "UserGoogleAccount" ADD COLUMN IF NOT EXISTS "lastChatSyncAt" TIMESTAMP(3); EXCEPTION WHEN others THEN raise notice 'col lastChatSyncAt already ok'; END $$;
+DO $$ BEGIN ALTER TABLE "UserGoogleAccount" ADD COLUMN IF NOT EXISTS "lastDriveSyncAt" TIMESTAMP(3); EXCEPTION WHEN others THEN raise notice 'col lastDriveSyncAt already ok'; END $$;
 DO $$ BEGIN ALTER TABLE "UserGoogleAccount" ADD COLUMN IF NOT EXISTS "gmailEnabled" BOOLEAN NOT NULL DEFAULT TRUE; EXCEPTION WHEN others THEN raise notice 'col gmailEnabled already ok'; END $$;
+DO $$ BEGIN ALTER TABLE "UserGoogleAccount" ADD COLUMN IF NOT EXISTS "driveEnabled" BOOLEAN NOT NULL DEFAULT TRUE; EXCEPTION WHEN others THEN raise notice 'col driveEnabled already ok'; END $$;
 DO $$ BEGIN ALTER TABLE "UserGoogleAccount" ADD COLUMN IF NOT EXISTS "calendarEnabled" BOOLEAN NOT NULL DEFAULT TRUE; EXCEPTION WHEN others THEN raise notice 'col calendarEnabled already ok'; END $$;
 DO $$ BEGIN ALTER TABLE "UserGoogleAccount" ADD COLUMN IF NOT EXISTS "meetEnabled" BOOLEAN NOT NULL DEFAULT TRUE; EXCEPTION WHEN others THEN raise notice 'col meetEnabled already ok'; END $$;
 DO $$ BEGIN ALTER TABLE "UserGoogleAccount" ADD COLUMN IF NOT EXISTS "chatEnabled" BOOLEAN NOT NULL DEFAULT FALSE; EXCEPTION WHEN others THEN raise notice 'col chatEnabled already ok'; END $$;

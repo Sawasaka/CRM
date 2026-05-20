@@ -4,7 +4,7 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 /**
- * BGM 中継URLのクリックハンドラ。
+ * ルキスマCRM 中継URLのクリックハンドラ。
  *
  * フロー:
  *   1. 配信メール内のリンクは送信時に https://track.bgm.app/c/<linkId> に置換されている
@@ -35,7 +35,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ linkId: string 
     at: new Date().toISOString(),
   })
 
-  // モックでは元URLに戻すロジックがないため、固定で BGM トップへ誘導。
+  // モックでは元URLに戻すロジックがないため、固定で ルキスマCRM トップへ誘導。
   // 本番では link.originalUrl にリダイレクト。
   return NextResponse.redirect('https://bgm.app/', 302)
 }
