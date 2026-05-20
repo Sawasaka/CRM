@@ -11,7 +11,6 @@ import { MetricsBand } from '@/components/landing/sections/MetricsBand'
 import { ROISection } from '@/components/landing/ROISection'
 import { CustomerVoice } from '@/components/landing/sections/CustomerVoice'
 import { Pricing } from '@/components/landing/sections/Pricing'
-import { FinalCTA } from '@/components/landing/sections/FinalCTA'
 import { Footer } from '@/components/landing/sections/Footer'
 
 export default function RukismaCRMLandingPage() {
@@ -20,11 +19,10 @@ export default function RukismaCRMLandingPage() {
       <Nav />
       <Hero />
       <MetricsBand />
+      <AgentFabricRich />
       <Pricing />
       <ROISection />
-      <AgentFabricRich />
       <CustomerVoice />
-      <FinalCTA />
       <Footer />
     </div>
   )
