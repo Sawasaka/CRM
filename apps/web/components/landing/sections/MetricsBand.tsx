@@ -5,7 +5,7 @@ export const MetricsBand = () => {
     { k: '1',     suf: 'つで',  l: '5領域 統合',                       c: '#abc7ff' },
     { k: '5',     suf: '体',    l: 'ドメイン特化エージェント',           c: '#d3a5ff' },
     { k: '0.1',   suf: '入力',  l: '議事録・メール・コール 自動取込',     c: '#8dffc9' },
-    { k: '290万', suf: '',      l: '収録企業数',                         c: '#ffcf4a' },
+    { k: '290万', suf: '社',    l: '企業データ × 求人インテント',         c: '#ffcf4a' },
   ]
   return (
     <Section tone="pitch" screenLabel="11 Metrics">
