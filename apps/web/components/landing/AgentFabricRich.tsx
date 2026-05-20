@@ -518,7 +518,7 @@ const AgentOrbCluster = () => {
     { agent: 'support',   x: '86%' },
   ]
   return (
-    <div className="relative mt-12 mx-auto max-w-4xl h-[220px] md:h-[260px]">
+    <div className="relative mt-0 mx-auto max-w-4xl h-[140px] md:h-[160px]">
       <svg viewBox="0 0 1000 320" className="absolute inset-0 w-full h-full" preserveAspectRatio="none">
         <defs>
           <linearGradient id="agentClusterStream" x1="0" y1="0" x2="1" y2="0">
