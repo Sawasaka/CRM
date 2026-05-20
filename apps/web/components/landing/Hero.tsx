@@ -966,7 +966,14 @@ export const Hero = () => {
 
           <div className="text-[#c7c5c9] text-sm">
             実際にあなたの組織のデータで試すには →{' '}
-            <a href="#waitlist" className="text-aurora underline-offset-4 hover:underline">先行予約に登録</a>
+            <a
+              href="https://app.spirinc.com/t/3u_FXTG5abaFIZ-D7as8v/as/5j4iMsFHgutg6an7CRg9o/confirm"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-aurora underline-offset-4 hover:underline"
+            >
+              営業相談を予約
+            </a>
           </div>
         </div>
       </div>

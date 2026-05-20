@@ -42,11 +42,13 @@ export const Nav = () => {
               リリース準備中
             </span>
             <a
-              href="#waitlist"
+              href="https://app.spirinc.com/t/3u_FXTG5abaFIZ-D7as8v/as/5j4iMsFHgutg6an7CRg9o/confirm"
+              target="_blank"
+              rel="noopener noreferrer"
               className="rounded-lg px-3.5 py-1.5 text-xs font-medium text-[#0a0a0c]"
               style={{ background: 'linear-gradient(135deg, #abc7ff, #0071e3)' }}
             >
-              先行予約に登録
+              営業相談を予約
             </a>
           </div>
         </div>

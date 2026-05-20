@@ -15,18 +15,17 @@ export const FinalCTA = () => (
           あなたのチームへ。
         </h2>
         <p className="mt-6 text-[#c7c5c9] text-[1.05rem]">
-          現在リリース準備中。先行予約にご登録いただいた企業から順次ご案内します。
+          現在リリース準備中。営業相談からお気軽にご連絡ください。
         </p>
         <div className="mt-10 flex flex-wrap justify-center gap-3">
           <a
-            href="#waitlist"
+            href="https://app.spirinc.com/t/3u_FXTG5abaFIZ-D7as8v/as/5j4iMsFHgutg6an7CRg9o/confirm"
+            target="_blank"
+            rel="noopener noreferrer"
             className="rounded-lg px-7 py-3.5 text-sm font-medium text-[#0a0a0c]"
             style={{ background: 'linear-gradient(135deg, #abc7ff, #0071e3)' }}
           >
-            先行予約に登録
-          </a>
-          <a href="#contact" className="rounded-lg px-7 py-3.5 text-sm text-aurora hover:bg-dusk transition-colors">
-            導入相談 →
+            営業相談を予約
           </a>
         </div>
       </div>
