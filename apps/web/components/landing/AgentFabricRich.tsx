@@ -581,7 +581,7 @@ export const AgentFabricRich = () => {
 
   return (
     <Section tone="pitch" screenLabel="07 Agent Fabric">
-      <div className="relative mx-auto max-w-6xl px-6 py-16 md:py-20 text-center">
+      <div className="relative mx-auto max-w-6xl px-6 pt-0 pb-12 md:pt-0 md:pb-16 text-center">
         {/* 5 オーブ + データストリームのみ表示 (heading / subtitle / picker は撤去) */}
         <AgentOrbCluster />
       </div>

@@ -18,7 +18,7 @@ export const MetricsBand = () => {
         }}
       />
 
-      <div className="relative mx-auto max-w-6xl px-6 py-20 md:py-24">
+      <div className="relative mx-auto max-w-6xl px-6 pt-20 md:pt-24 pb-8 md:pb-10">
         {/* faint nebula glow */}
         <div
           className="absolute inset-0 pointer-events-none"
@@ -61,14 +61,7 @@ export const MetricsBand = () => {
         </div>
       </div>
 
-      {/* bottom divider */}
-      <div
-        className="h-px w-full"
-        style={{
-          background:
-            'linear-gradient(90deg, transparent 0%, rgba(171,199,255,0.06) 20%, rgba(171,199,255,0.15) 50%, rgba(171,199,255,0.06) 80%, transparent 100%)',
-        }}
-      />
+      {/* bottom divider は撤回 — 直下の AgentFabric (5 オーブ) と連続表示するため */}
     </Section>
   )
 }
