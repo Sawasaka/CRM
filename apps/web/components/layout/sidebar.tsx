@@ -37,10 +37,10 @@ const NAV_ITEMS: NavItemDef[] = [
   { href: '/deals',     label: '取引',             initial: 'S', color: '#abc7ff' },
   { href: '/lists',     label: 'ISリスト',         initial: 'S', color: '#abc7ff' },
   { href: '/tasks',     label: 'タスク一覧',       initial: 'S', color: '#abc7ff' },
-  { href: '/tickets',   label: 'チケット',         initial: 'C', color: '#ff8dcf' },
   { href: '/dashboard', label: 'アクションボード', initial: 'S', color: '#abc7ff' },
-  { href: '/mail',      label: 'メール配信',       initial: 'M', color: '#ffcf4a' },
+  { href: '/tickets',   label: 'チケット',         initial: 'C', color: '#ff8dcf' },
   { href: '/priority',  label: '開発優先度',       initial: 'P', color: '#8dffc9' },
+  { href: '/mail',      label: 'メール配信',       initial: 'M', color: '#ffcf4a' },
   { href: '/knowledge', label: 'ナレッジ',         initial: 'H', color: '#c8b9ff' },
 ]
 

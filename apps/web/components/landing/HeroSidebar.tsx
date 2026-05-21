@@ -18,10 +18,10 @@ const NAV_ITEMS: { initial: string; color: string; label: string; key: HeroDemoK
   { initial: 'S', color: '#abc7ff', label: '取引',             key: 'deals'        },
   { initial: 'S', color: '#abc7ff', label: 'ISリスト',         key: 'lists'        },
   { initial: 'S', color: '#abc7ff', label: 'タスク一覧',       key: 'tasks'        },
-  { initial: 'C', color: '#ff8dcf', label: 'チケット',         key: 'tickets'      },
   { initial: 'S', color: '#abc7ff', label: 'アクションボード', key: 'action-board' },
-  { initial: 'M', color: '#ffcf4a', label: 'メール配信',       key: 'mail'         },
+  { initial: 'C', color: '#ff8dcf', label: 'チケット',         key: 'tickets'      },
   { initial: 'P', color: '#8dffc9', label: '開発優先度',       key: 'priority'     },
+  { initial: 'M', color: '#ffcf4a', label: 'メール配信',       key: 'mail'         },
   { initial: 'H', color: '#c8b9ff', label: 'ナレッジ',         key: 'knowledge'    },
 ]
 
