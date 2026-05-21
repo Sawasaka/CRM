@@ -23,19 +23,25 @@ import {
 import { MOCK_CHAT_HISTORY } from '@/lib/chat-history/mock-data'
 
 // ─── ワークスペースナビ項目 ─────────────────────────────────────────────────
-type NavItemDef = { href: string; label: string; initial: string }
+// アイコンは「その機能を担うエージェントの頭文字」を採用:
+//   S = Sales Agent     (aurora) — 営業活動全般
+//   M = Marketing Agent (amber)  — メール配信などマーケ施策
+//   C = Customer (Support/Success) Agent (coral) — チケット対応
+//   H = Helpdesk Agent  (lilac)  — ナレッジ・社内 Q&A
+//   P = PDM Agent       (mint)   — 開発優先度・要望集計
+type NavItemDef = { href: string; label: string; initial: string; color: string }
 const NAV_ITEMS: NavItemDef[] = [
-  { href: '/companies', label: '290万社DB',     initial: 'DB' },
-  { href: '/pipeline',  label: 'パイプライン',   initial: 'PL' },
-  { href: '/contacts',  label: 'コンタクト',     initial: 'C'  },
-  { href: '/deals',     label: '取引',           initial: 'D'  },
-  { href: '/lists',     label: 'ISリスト',       initial: 'IS' },
-  { href: '/tasks',     label: 'タスク一覧',     initial: 'T'  },
-  { href: '/tickets',   label: 'チケット',       initial: 'TK' },
-  { href: '/dashboard', label: 'アクションボード', initial: 'AB' },
-  { href: '/mail',      label: 'メール配信',     initial: 'M'  },
-  { href: '/priority',  label: '開発優先度',     initial: 'P'  },
-  { href: '/knowledge', label: 'ナレッジ',       initial: 'K'  },
+  { href: '/companies', label: '290万社DB',       initial: 'S', color: '#abc7ff' },
+  { href: '/pipeline',  label: 'パイプライン',     initial: 'S', color: '#abc7ff' },
+  { href: '/contacts',  label: 'コンタクト',       initial: 'S', color: '#abc7ff' },
+  { href: '/deals',     label: '取引',             initial: 'S', color: '#abc7ff' },
+  { href: '/lists',     label: 'ISリスト',         initial: 'S', color: '#abc7ff' },
+  { href: '/tasks',     label: 'タスク一覧',       initial: 'S', color: '#abc7ff' },
+  { href: '/tickets',   label: 'チケット',         initial: 'C', color: '#ff8dcf' },
+  { href: '/dashboard', label: 'アクションボード', initial: 'S', color: '#abc7ff' },
+  { href: '/mail',      label: 'メール配信',       initial: 'M', color: '#ffcf4a' },
+  { href: '/priority',  label: '開発優先度',       initial: 'P', color: '#8dffc9' },
+  { href: '/knowledge', label: 'ナレッジ',         initial: 'H', color: '#c8b9ff' },
 ]
 
 // ─── Top nav button (新しいチャット / 検索 / ナビ項目) ──────────────────────
@@ -96,11 +102,13 @@ function TopNavItem({
 function WorkspaceNavItem({
   href,
   initial,
+  color,
   label,
   active,
 }: {
   href: string
   initial: string
+  color: string
   label: string
   active: boolean
 }) {
@@ -113,22 +121,20 @@ function WorkspaceNavItem({
         className="mx-2 flex items-center gap-2.5 px-3 py-[7px] rounded-[var(--radius-obs-md)] transition-colors duration-150"
         style={{
           backgroundColor: active
-            ? 'rgba(171,199,255,0.12)'
+            ? `${color}1f`
             : hover
-              ? 'rgba(171,199,255,0.05)'
+              ? `${color}10`
               : 'transparent',
-          boxShadow: active ? 'inset 0 0 0 1px rgba(171,199,255,0.22)' : undefined,
+          boxShadow: active ? `inset 0 0 0 1px ${color}38` : undefined,
           transitionTimingFunction: 'var(--ease-liquid)',
         }}
       >
         <span
           className="inline-flex items-center justify-center w-[20px] h-[20px] rounded-[5px] text-[10px] font-semibold tabular-nums shrink-0"
           style={{
-            backgroundColor: active ? 'rgba(171,199,255,0.18)' : 'var(--color-obs-surface-high)',
-            color: active ? 'var(--color-obs-primary)' : 'var(--color-obs-text-muted)',
-            boxShadow: active
-              ? 'inset 0 0 0 1px rgba(171,199,255,0.32)'
-              : 'inset 0 0 0 1px rgba(255,255,255,0.04)',
+            backgroundColor: active ? `${color}28` : `${color}14`,
+            color,
+            boxShadow: `inset 0 0 0 1px ${color}38`,
           }}
         >
           {initial}
@@ -689,6 +695,7 @@ export function Sidebar() {
               key={it.href}
               href={it.href}
               initial={it.initial}
+              color={it.color}
               label={it.label}
               active={isNavActive(it.href)}
             />

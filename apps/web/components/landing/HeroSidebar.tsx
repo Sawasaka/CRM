@@ -8,19 +8,21 @@
 import { Plus, Search } from 'lucide-react'
 import type { HeroDemoKey } from './hero-demos'
 
-// アイコンは lucide ではなく頭文字テキストで表示する (CRM 風サイドバーの簡潔さ)
-const NAV_ITEMS: { initial: string; label: string; key: HeroDemoKey }[] = [
-  { initial: 'DB', label: '290万社DB',         key: 'companies' },
-  { initial: 'PL', label: 'パイプライン',       key: 'pipeline' },
-  { initial: 'C',  label: 'コンタクト',         key: 'contacts' },
-  { initial: 'D',  label: '取引',              key: 'deals' },
-  { initial: 'IS', label: 'ISリスト',           key: 'lists' },
-  { initial: 'T',  label: 'タスク一覧',         key: 'tasks' },
-  { initial: 'TK', label: 'チケット',           key: 'tickets' },
-  { initial: 'AB', label: 'アクションボード',   key: 'action-board' },
-  { initial: 'M',  label: 'メール配信',         key: 'mail' },
-  { initial: 'P',  label: '開発優先度',         key: 'priority' },
-  { initial: 'K',  label: 'ナレッジ',           key: 'knowledge' },
+// アイコンは「担当エージェントの頭文字」で表示:
+//   S = Sales (aurora) / M = Marketing (amber) / C = Customer (Support, coral)
+//   H = Helpdesk (lilac) / P = PDM (mint)
+const NAV_ITEMS: { initial: string; color: string; label: string; key: HeroDemoKey }[] = [
+  { initial: 'S', color: '#abc7ff', label: '290万社DB',       key: 'companies'    },
+  { initial: 'S', color: '#abc7ff', label: 'パイプライン',     key: 'pipeline'     },
+  { initial: 'S', color: '#abc7ff', label: 'コンタクト',       key: 'contacts'     },
+  { initial: 'S', color: '#abc7ff', label: '取引',             key: 'deals'        },
+  { initial: 'S', color: '#abc7ff', label: 'ISリスト',         key: 'lists'        },
+  { initial: 'S', color: '#abc7ff', label: 'タスク一覧',       key: 'tasks'        },
+  { initial: 'C', color: '#ff8dcf', label: 'チケット',         key: 'tickets'      },
+  { initial: 'S', color: '#abc7ff', label: 'アクションボード', key: 'action-board' },
+  { initial: 'M', color: '#ffcf4a', label: 'メール配信',       key: 'mail'         },
+  { initial: 'P', color: '#8dffc9', label: '開発優先度',       key: 'priority'     },
+  { initial: 'H', color: '#c8b9ff', label: 'ナレッジ',         key: 'knowledge'    },
 ]
 
 const RECENT_CHATS = [
@@ -62,7 +64,7 @@ export const HeroSidebar = ({ active, onSelect }: HeroSidebarProps) => {
       {/* Nav items */}
       <div className="flex-1 overflow-hidden flex flex-col px-2 pt-3">
         <nav className="space-y-[2px]">
-          {NAV_ITEMS.map(({ initial, label, key }) => {
+          {NAV_ITEMS.map(({ initial, color, label, key }) => {
             const isActive = active === key
             return (
               <button
@@ -72,11 +74,11 @@ export const HeroSidebar = ({ active, onSelect }: HeroSidebarProps) => {
                 className="w-full flex items-center gap-2.5 h-8 px-2.5 rounded-md text-[12px] transition-colors"
                 style={
                   isActive
-                    ? { backgroundColor: 'rgba(171,199,255,0.08)', color: '#abc7ff' }
+                    ? { backgroundColor: `${color}1f`, color }
                     : { color: '#9b99a0' }
                 }
                 onMouseEnter={(e) => {
-                  if (!isActive) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(53,52,55,0.4)'
+                  if (!isActive) (e.currentTarget as HTMLButtonElement).style.backgroundColor = `${color}10`
                 }}
                 onMouseLeave={(e) => {
                   if (!isActive) (e.currentTarget as HTMLButtonElement).style.backgroundColor = ''
@@ -85,11 +87,9 @@ export const HeroSidebar = ({ active, onSelect }: HeroSidebarProps) => {
                 <span
                   className="inline-flex items-center justify-center w-[18px] h-[18px] rounded-[4px] text-[9.5px] font-semibold tabular-nums shrink-0"
                   style={{
-                    backgroundColor: isActive ? 'rgba(171,199,255,0.18)' : 'rgba(53,52,55,0.6)',
-                    color: isActive ? '#abc7ff' : '#9b99a0',
-                    boxShadow: isActive
-                      ? 'inset 0 0 0 1px rgba(171,199,255,0.32)'
-                      : 'inset 0 0 0 1px rgba(255,255,255,0.04)',
+                    backgroundColor: isActive ? `${color}28` : `${color}14`,
+                    color,
+                    boxShadow: `inset 0 0 0 1px ${color}38`,
                   }}
                 >
                   {initial}
