@@ -511,13 +511,14 @@ const AgentScene = ({ agent, isActive }: { agent: AgentEntry; isActive: boolean 
 // AgenticEra から移植。ヘッダ直下に「5 体が連携している」イメージを概観表示する。
 const AgentOrbCluster = () => {
   // 各オーブの中央に頭文字を重ねる
+  // 並び: Sales → Support(C) → Marketing → PDM → Helpdesk
   // Support は「カスタマーサポート」の C を採用 (Sales と頭文字 S が衝突するため)
   const agents: { agent: AgentKey; x: string; initial: string }[] = [
     { agent: 'sales',     x: '14%', initial: 'S' },
-    { agent: 'marketing', x: '32%', initial: 'M' },
-    { agent: 'pdm',       x: '50%', initial: 'P' },
-    { agent: 'helpdesk',  x: '68%', initial: 'H' },
-    { agent: 'support',   x: '86%', initial: 'C' },
+    { agent: 'support',   x: '32%', initial: 'C' },
+    { agent: 'marketing', x: '50%', initial: 'M' },
+    { agent: 'pdm',       x: '68%', initial: 'P' },
+    { agent: 'helpdesk',  x: '86%', initial: 'H' },
   ]
   return (
     <div className="relative mt-0 mx-auto max-w-4xl h-[140px] md:h-[160px]">
