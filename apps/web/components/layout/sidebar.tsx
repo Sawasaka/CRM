@@ -3,23 +3,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import {
   PenSquare,
   Search,
   CreditCard,
   Plug,
   ChevronUp,
-  Building2,
-  Columns3,
   Users,
-  Briefcase,
-  List,
-  CheckSquare,
-  LayoutDashboard,
-  Send,
-  Target,
-  BookOpen,
-  LifeBuoy,
   MoreHorizontal,
   Pin,
   Pencil,
@@ -32,19 +23,19 @@ import {
 import { MOCK_CHAT_HISTORY } from '@/lib/chat-history/mock-data'
 
 // ─── ワークスペースナビ項目 ─────────────────────────────────────────────────
-type NavItemDef = { href: string; label: string; icon: React.ElementType }
+type NavItemDef = { href: string; label: string; initial: string }
 const NAV_ITEMS: NavItemDef[] = [
-  { href: '/companies', label: '290万社DB',     icon: Building2 },
-  { href: '/pipeline',  label: 'パイプライン',   icon: Columns3 },
-  { href: '/contacts',  label: 'コンタクト',     icon: Users },
-  { href: '/deals',     label: '取引',           icon: Briefcase },
-  { href: '/lists',     label: 'ISリスト',       icon: List },
-  { href: '/tasks',     label: 'タスク一覧',     icon: CheckSquare },
-  { href: '/tickets',   label: 'チケット',       icon: LifeBuoy },
-  { href: '/dashboard', label: 'アクションボード', icon: LayoutDashboard },
-  { href: '/mail',      label: 'メール配信',     icon: Send },
-  { href: '/priority',  label: '開発優先度',     icon: Target },
-  { href: '/knowledge', label: 'ナレッジ',       icon: BookOpen },
+  { href: '/companies', label: '290万社DB',     initial: 'DB' },
+  { href: '/pipeline',  label: 'パイプライン',   initial: 'PL' },
+  { href: '/contacts',  label: 'コンタクト',     initial: 'C'  },
+  { href: '/deals',     label: '取引',           initial: 'D'  },
+  { href: '/lists',     label: 'ISリスト',       initial: 'IS' },
+  { href: '/tasks',     label: 'タスク一覧',     initial: 'T'  },
+  { href: '/tickets',   label: 'チケット',       initial: 'TK' },
+  { href: '/dashboard', label: 'アクションボード', initial: 'AB' },
+  { href: '/mail',      label: 'メール配信',     initial: 'M'  },
+  { href: '/priority',  label: '開発優先度',     initial: 'P'  },
+  { href: '/knowledge', label: 'ナレッジ',       initial: 'K'  },
 ]
 
 // ─── Top nav button (新しいチャット / 検索 / ナビ項目) ──────────────────────
@@ -104,12 +95,12 @@ function TopNavItem({
 // ─── ワークスペースナビ用 Link アイテム ─────────────────────────────────────
 function WorkspaceNavItem({
   href,
-  icon: Icon,
+  initial,
   label,
   active,
 }: {
   href: string
-  icon: React.ElementType
+  initial: string
   label: string
   active: boolean
 }) {
@@ -130,19 +121,22 @@ function WorkspaceNavItem({
           transitionTimingFunction: 'var(--ease-liquid)',
         }}
       >
-        <Icon
-          size={15}
-          strokeWidth={active ? 2.2 : 1.9}
+        <span
+          className="inline-flex items-center justify-center w-[20px] h-[20px] rounded-[5px] text-[10px] font-semibold tabular-nums shrink-0"
           style={{
+            backgroundColor: active ? 'rgba(171,199,255,0.18)' : 'var(--color-obs-surface-high)',
             color: active ? 'var(--color-obs-primary)' : 'var(--color-obs-text-muted)',
-            flexShrink: 0,
-            filter: active ? 'drop-shadow(0 0 6px rgba(171,199,255,0.45))' : undefined,
+            boxShadow: active
+              ? 'inset 0 0 0 1px rgba(171,199,255,0.32)'
+              : 'inset 0 0 0 1px rgba(255,255,255,0.04)',
           }}
-        />
+        >
+          {initial}
+        </span>
         <span
           className="text-[13px] tracking-[-0.01em] leading-none"
           style={{
-            color: active ? 'var(--color-obs-text)' : 'var(--color-obs-text)',
+            color: 'var(--color-obs-text)',
             fontWeight: active ? 600 : 500,
             opacity: active ? 1 : 0.88,
           }}
@@ -388,17 +382,17 @@ type MenuSection = { title?: string; items: MenuItem[] }
 const USER_MENU_SECTIONS: MenuSection[] = [
   {
     items: [
-      { href: '/subscription',              icon: CreditCard, label: 'プラン・クレジット' },
-      { href: '/subscription?tab=members',  icon: Users,      label: 'メンバー管理' },
-      { href: '/subscription#feature-requests', icon: Wrench,     label: '機能リクエスト' },
-      { href: '/settings/integrations',     icon: Plug,       label: '連携設定' },
+      { href: '/subscription', icon: CreditCard, label: 'プラン・クレジット' },
+      { href: '/subscription?tab=members', icon: Users, label: 'メンバー管理' },
+      { href: '/subscription#feature-requests', icon: Wrench, label: '機能リクエスト' },
+      { href: '/settings/integrations', icon: Plug, label: '連携設定' },
     ],
   },
   {
     title: 'コンプライアンス',
     items: [
-      { href: '/settings/billing',         icon: CreditCard, label: '支払い履歴' },
-      { href: '/settings/audit-log',       icon: Activity,   label: '監査ログ' },
+      { href: '/settings/billing', icon: CreditCard, label: '支払い履歴' },
+      { href: '/settings/audit-log', icon: Activity, label: '監査ログ' },
     ],
   },
 ]
@@ -408,8 +402,8 @@ const USER_MENU_SECTIONS: MenuSection[] = [
 const ADMIN_MENU_SECTION: MenuSection = {
   title: '開発者専用',
   items: [
-    { href: '/admin/customer-ops',       icon: ShieldAlert, label: 'Customer Operations' },
-    { href: '/admin/feature-requests',   icon: Wrench,      label: '機能リクエスト管理' },
+    { href: '/admin/customer-ops', icon: ShieldAlert, label: 'Customer Operations' },
+    { href: '/admin/feature-requests', icon: Wrench, label: '機能リクエスト管理' },
   ],
 }
 
@@ -506,9 +500,8 @@ function UserMenu({ userName, userInitial }: { userName: string; userInitial: st
         onMouseLeave={() => setHover(false)}
         className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-[var(--radius-obs-md)] cursor-pointer transition-colors duration-150"
         style={{
-          backgroundColor: open || hover
-            ? 'var(--color-obs-surface-low)'
-            : 'var(--color-obs-surface)',
+          backgroundColor:
+            open || hover ? 'var(--color-obs-surface-low)' : 'var(--color-obs-surface)',
           transitionTimingFunction: 'var(--ease-liquid)',
         }}
       >
@@ -555,6 +548,7 @@ function UserMenu({ userName, userInitial }: { userName: string; userInitial: st
 export function Sidebar() {
   const router = useRouter()
   const pathname = usePathname()
+  const { data: session } = useSession()
   const [activeChatId, setActiveChatId] = useState<string | null>(null)
   const [pinnedIds, setPinnedIds] = useState<Set<string>>(new Set())
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set())
@@ -586,8 +580,7 @@ export function Sidebar() {
   }, [menuOpenId])
 
   const visibleChats = useMemo(() => {
-    return MOCK_CHAT_HISTORY
-      .filter((c) => !deletedIds.has(c.id))
+    return MOCK_CHAT_HISTORY.filter((c) => !deletedIds.has(c.id))
       .map((c) => ({ ...c, title: renamedTitles[c.id] ?? c.title }))
       .sort((a, b) => {
         const ap = pinnedIds.has(a.id) ? 1 : 0
@@ -600,6 +593,8 @@ export function Sidebar() {
   const isHomePathname = pathname === '/'
   const isNavActive = (href: string) =>
     href === '/' ? pathname === '/' : pathname.startsWith(href)
+  const userName = session?.user?.name || session?.user?.email || 'ユーザー'
+  const userInitial = userName.slice(0, 1).toUpperCase()
 
   const handleNewChat = () => {
     setActiveChatId(null)
@@ -681,73 +676,69 @@ export function Sidebar() {
             className="transition-opacity duration-150 hover:opacity-80"
             aria-label="ルキスマCRM ホーム"
           >
-            <span
-              className="fo-gradient-text font-[family-name:var(--font-display)] text-[16px] font-semibold tracking-[-0.015em]"
-            >
+            <span className="fo-gradient-text font-[family-name:var(--font-display)] text-[16px] font-semibold tracking-[-0.015em]">
               ルキスマCRM
             </span>
           </Link>
         </div>
 
-      {/* ── Workspace nav ── */}
-      <div className="flex flex-col gap-[2px] pt-2 pb-2">
-        {NAV_ITEMS.map((it) => (
-          <WorkspaceNavItem
-            key={it.href}
-            href={it.href}
-            icon={it.icon}
-            label={it.label}
-            active={isNavActive(it.href)}
-          />
-        ))}
-      </div>
-
-      {/* ── Divider (workspace ↔ chat) ── */}
-      <div className="mx-4 my-1 h-px" style={{ backgroundColor: 'var(--color-obs-surface-low)' }} />
-
-      {/* ── Chat zone (新しいチャット / 検索 + 履歴) ── */}
-      <nav className="bgm-chat-scroll flex-1 overflow-y-auto overflow-x-hidden pt-3 pb-2">
-        {/* チャット用アクション */}
-        <div className="flex flex-col gap-[2px] mb-2">
-          <TopNavItem
-            icon={PenSquare}
-            label="新しいチャット"
-            onClick={handleNewChat}
-            active={isHomePathname && !activeChatId}
-          />
-          <TopNavItem
-            icon={Search}
-            label="検索"
-            onClick={handleSearch}
-            active={false}
-          />
-        </div>
-
-        {/* 履歴 */}
-        <div className="flex flex-col gap-[1px]">
-          {visibleChats.map((it) => (
-            <ChatItem
-              key={it.id}
-              id={it.id}
-              title={it.title}
-              pinned={pinnedIds.has(it.id)}
-              editing={editingId === it.id}
-              menuOpen={menuOpenId === it.id}
-              active={activeChatId === it.id}
-              onClick={() => handleChatClick(it.id)}
-              onMenuToggle={() => setMenuOpenId((prev) => (prev === it.id ? null : it.id))}
-              onMenuClose={() => setMenuOpenId(null)}
-              onPinToggle={() => togglePin(it.id)}
-              onRenameStart={() => setEditingId(it.id)}
-              onRenameCommit={(newTitle) => commitRename(it.id, newTitle)}
-              onDelete={() => deleteChat(it.id)}
+        {/* ── Workspace nav ── */}
+        <div className="flex flex-col gap-[2px] pt-2 pb-2">
+          {NAV_ITEMS.map((it) => (
+            <WorkspaceNavItem
+              key={it.href}
+              href={it.href}
+              initial={it.initial}
+              label={it.label}
+              active={isNavActive(it.href)}
             />
           ))}
         </div>
-      </nav>
+
+        {/* ── Divider (workspace ↔ chat) ── */}
+        <div
+          className="mx-4 my-1 h-px"
+          style={{ backgroundColor: 'var(--color-obs-surface-low)' }}
+        />
+
+        {/* ── Chat zone (新しいチャット / 検索 + 履歴) ── */}
+        <nav className="bgm-chat-scroll flex-1 overflow-y-auto overflow-x-hidden pt-3 pb-2">
+          {/* チャット用アクション */}
+          <div className="flex flex-col gap-[2px] mb-2">
+            <TopNavItem
+              icon={PenSquare}
+              label="新しいチャット"
+              onClick={handleNewChat}
+              active={isHomePathname && !activeChatId}
+            />
+            <TopNavItem icon={Search} label="検索" onClick={handleSearch} active={false} />
+          </div>
+
+          {/* 履歴 */}
+          <div className="flex flex-col gap-[1px]">
+            {visibleChats.map((it) => (
+              <ChatItem
+                key={it.id}
+                id={it.id}
+                title={it.title}
+                pinned={pinnedIds.has(it.id)}
+                editing={editingId === it.id}
+                menuOpen={menuOpenId === it.id}
+                active={activeChatId === it.id}
+                onClick={() => handleChatClick(it.id)}
+                onMenuToggle={() => setMenuOpenId((prev) => (prev === it.id ? null : it.id))}
+                onMenuClose={() => setMenuOpenId(null)}
+                onPinToggle={() => togglePin(it.id)}
+                onRenameStart={() => setEditingId(it.id)}
+                onRenameCommit={(newTitle) => commitRename(it.id, newTitle)}
+                onDelete={() => deleteChat(it.id)}
+              />
+            ))}
+          </div>
+        </nav>
 
         {/* ── User menu (drop-up: 設定 / 連携 / プラン) ── */}
-        <UserMenu userName="開発 太郎" userInitial="開" />
+        <UserMenu userName={userName} userInitial={userInitial} />
       </aside>
     </>
   )

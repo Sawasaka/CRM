@@ -5,24 +5,22 @@
  * クリックで Hero 右側の表示が各機能モックに切り替わる（インタラクティブ）。
  */
 
-import {
-  Building2, Columns3, Users, Briefcase, List, CheckSquare,
-  Ticket, LayoutGrid, Mail, Target, BookOpen, Plus, Search,
-} from 'lucide-react'
+import { Plus, Search } from 'lucide-react'
 import type { HeroDemoKey } from './hero-demos'
 
-const NAV_ITEMS: { icon: typeof Building2; label: string; key: HeroDemoKey }[] = [
-  { icon: Building2,   label: '290万社DB',         key: 'companies' },
-  { icon: Columns3,    label: 'パイプライン',       key: 'pipeline' },
-  { icon: Users,       label: 'コンタクト',         key: 'contacts' },
-  { icon: Briefcase,   label: '取引',              key: 'deals' },
-  { icon: List,        label: 'ISリスト',           key: 'lists' },
-  { icon: CheckSquare, label: 'タスク一覧',         key: 'tasks' },
-  { icon: Ticket,      label: 'チケット',           key: 'tickets' },
-  { icon: LayoutGrid,  label: 'アクションボード',   key: 'action-board' },
-  { icon: Mail,        label: 'メール配信',         key: 'mail' },
-  { icon: Target,      label: '開発優先度',         key: 'priority' },
-  { icon: BookOpen,    label: 'ナレッジ',           key: 'knowledge' },
+// アイコンは lucide ではなく頭文字テキストで表示する (CRM 風サイドバーの簡潔さ)
+const NAV_ITEMS: { initial: string; label: string; key: HeroDemoKey }[] = [
+  { initial: 'DB', label: '290万社DB',         key: 'companies' },
+  { initial: 'PL', label: 'パイプライン',       key: 'pipeline' },
+  { initial: 'C',  label: 'コンタクト',         key: 'contacts' },
+  { initial: 'D',  label: '取引',              key: 'deals' },
+  { initial: 'IS', label: 'ISリスト',           key: 'lists' },
+  { initial: 'T',  label: 'タスク一覧',         key: 'tasks' },
+  { initial: 'TK', label: 'チケット',           key: 'tickets' },
+  { initial: 'AB', label: 'アクションボード',   key: 'action-board' },
+  { initial: 'M',  label: 'メール配信',         key: 'mail' },
+  { initial: 'P',  label: '開発優先度',         key: 'priority' },
+  { initial: 'K',  label: 'ナレッジ',           key: 'knowledge' },
 ]
 
 const RECENT_CHATS = [
@@ -55,7 +53,7 @@ export const HeroSidebar = ({ active, onSelect }: HeroSidebarProps) => {
             className="w-5 h-5 rounded-[5px] flex items-center justify-center"
             style={{ background: 'linear-gradient(135deg, #abc7ff, #0071e3)' }}
           >
-            <span className="text-[10px] font-bold text-[#0a0a0c]">K</span>
+            <span className="text-[10px] font-bold text-[#0a0a0c]">R</span>
           </div>
           <span className="text-[13px] font-medium text-[#e7e5ea]">ルキスマCRM</span>
         </button>
@@ -64,7 +62,7 @@ export const HeroSidebar = ({ active, onSelect }: HeroSidebarProps) => {
       {/* Nav items */}
       <div className="flex-1 overflow-hidden flex flex-col px-2 pt-3">
         <nav className="space-y-[2px]">
-          {NAV_ITEMS.map(({ icon: Icon, label, key }) => {
+          {NAV_ITEMS.map(({ initial, label, key }) => {
             const isActive = active === key
             return (
               <button
@@ -84,7 +82,18 @@ export const HeroSidebar = ({ active, onSelect }: HeroSidebarProps) => {
                   if (!isActive) (e.currentTarget as HTMLButtonElement).style.backgroundColor = ''
                 }}
               >
-                <Icon size={14} strokeWidth={1.6} color={isActive ? '#abc7ff' : '#7e7c83'} />
+                <span
+                  className="inline-flex items-center justify-center w-[18px] h-[18px] rounded-[4px] text-[9.5px] font-semibold tabular-nums shrink-0"
+                  style={{
+                    backgroundColor: isActive ? 'rgba(171,199,255,0.18)' : 'rgba(53,52,55,0.6)',
+                    color: isActive ? '#abc7ff' : '#9b99a0',
+                    boxShadow: isActive
+                      ? 'inset 0 0 0 1px rgba(171,199,255,0.32)'
+                      : 'inset 0 0 0 1px rgba(255,255,255,0.04)',
+                  }}
+                >
+                  {initial}
+                </span>
                 <span>{label}</span>
               </button>
             )
