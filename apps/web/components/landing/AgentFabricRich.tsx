@@ -510,12 +510,14 @@ const AgentScene = ({ agent, isActive }: { agent: AgentEntry; isActive: boolean 
 // ---------- Hero orb cluster (5 オーブ + データストリーム) ----------
 // AgenticEra から移植。ヘッダ直下に「5 体が連携している」イメージを概観表示する。
 const AgentOrbCluster = () => {
-  const agents: { agent: AgentKey; x: string }[] = [
-    { agent: 'sales',     x: '14%' },
-    { agent: 'marketing', x: '32%' },
-    { agent: 'pdm',       x: '50%' },
-    { agent: 'helpdesk',  x: '68%' },
-    { agent: 'support',   x: '86%' },
+  // 各オーブの中央に頭文字を重ねる (Sales / Marketing / PDM / Helpdesk / Support)
+  // Sales と Support が両方 'S' で重なるため Support は 'Su' に
+  const agents: { agent: AgentKey; x: string; initial: string }[] = [
+    { agent: 'sales',     x: '14%', initial: 'S'  },
+    { agent: 'marketing', x: '32%', initial: 'M'  },
+    { agent: 'pdm',       x: '50%', initial: 'P'  },
+    { agent: 'helpdesk',  x: '68%', initial: 'H'  },
+    { agent: 'support',   x: '86%', initial: 'Su' },
   ]
   return (
     <div className="relative mt-0 mx-auto max-w-4xl h-[140px] md:h-[160px]">
@@ -539,8 +541,18 @@ const AgentOrbCluster = () => {
       </svg>
       {agents.map((o, i) => (
         <div key={o.agent} className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2" style={{ left: o.x }}>
-          <div className="fo-orb-drift" style={{ animationDelay: `-${i * 1.2}s` }}>
+          <div className="fo-orb-drift relative" style={{ animationDelay: `-${i * 1.2}s` }}>
             <Orb color={AGENTS[o.agent].color} size={48} glow={1.4} />
+            {/* 頭文字をオーブ中央に重ねる */}
+            <span
+              className="absolute inset-0 flex items-center justify-center font-display font-bold text-[14px] tracking-[-0.02em] pointer-events-none"
+              style={{
+                color: '#0a0a0c',
+                textShadow: `0 0 8px ${AGENTS[o.agent].color}`,
+              }}
+            >
+              {o.initial}
+            </span>
           </div>
           <div
             className="text-[11px] mt-3 text-center uppercase tracking-[0.14em]"
