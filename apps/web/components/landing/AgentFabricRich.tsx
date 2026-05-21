@@ -510,14 +510,14 @@ const AgentScene = ({ agent, isActive }: { agent: AgentEntry; isActive: boolean 
 // ---------- Hero orb cluster (5 オーブ + データストリーム) ----------
 // AgenticEra から移植。ヘッダ直下に「5 体が連携している」イメージを概観表示する。
 const AgentOrbCluster = () => {
-  // 各オーブの中央に頭文字を重ねる (Sales / Marketing / PDM / Helpdesk / Support)
-  // Sales と Support が両方 'S' で重なるため Support は 'Su' に
+  // 各オーブの中央に頭文字を重ねる
+  // Support は「カスタマーサポート」の C を採用 (Sales と頭文字 S が衝突するため)
   const agents: { agent: AgentKey; x: string; initial: string }[] = [
-    { agent: 'sales',     x: '14%', initial: 'S'  },
-    { agent: 'marketing', x: '32%', initial: 'M'  },
-    { agent: 'pdm',       x: '50%', initial: 'P'  },
-    { agent: 'helpdesk',  x: '68%', initial: 'H'  },
-    { agent: 'support',   x: '86%', initial: 'Su' },
+    { agent: 'sales',     x: '14%', initial: 'S' },
+    { agent: 'marketing', x: '32%', initial: 'M' },
+    { agent: 'pdm',       x: '50%', initial: 'P' },
+    { agent: 'helpdesk',  x: '68%', initial: 'H' },
+    { agent: 'support',   x: '86%', initial: 'C' },
   ]
   return (
     <div className="relative mt-0 mx-auto max-w-4xl h-[140px] md:h-[160px]">
