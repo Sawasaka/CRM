@@ -914,7 +914,7 @@ export const Hero = () => {
                   tag: '標準連携',           tagColor: '#8dffc9', tagBg: 'rgba(141,255,201,0.10)',
                   items: [
                     { l: 'Google Workspace', c: '#abc7ff', sub: 'Gmail / Meet / カレンダー / Googleドライブ' },
-                    { l: 'Slack',            c: '#c8b9ff' },
+                    { l: 'Notion',           c: '#e7e5ea', sub: 'ドキュメント / ナレッジ' },
                   ],
                 },
                 {
@@ -922,6 +922,7 @@ export const Hero = () => {
                   items: [
                     { l: 'Microsoft 365',    c: '#abc7ff', sub: 'Outlook / Teams / OneDrive / SharePoint' },
                     { l: 'Zoom',             c: '#7aa4ff', sub: '議事録 / Meeting' },
+                    { l: 'Slack',            c: '#c8b9ff' },
                   ],
                 },
                 {
