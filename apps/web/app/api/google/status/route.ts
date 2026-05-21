@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
-import { prisma } from '@bgm/db'
+import { resolveGoogleIntegrationUserId } from '@/lib/google/current-user'
+import { getGoogleAccountSnapshot } from '@/lib/google/account-store'
+import { getAppBaseUrl } from '@/lib/app-url'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -10,29 +11,23 @@ export const dynamic = 'force-dynamic'
  * 機能別の有効化フラグと最終同期時刻を返す。
  */
 export async function GET() {
-  const session = await auth()
-  const userId = (session as unknown as { userId?: string })?.userId
-  if (!userId) return NextResponse.json({ connected: false }, { status: 200 })
+  const userId = await resolveGoogleIntegrationUserId()
+  const configured = isConfigured()
+  const callbackUrl = `${getAppBaseUrl()}/api/google/oauth-callback`
+  const nextAuthCallbackUrl = `${getAppBaseUrl()}/api/auth/callback/google`
 
-  const account = await prisma.userGoogleAccount.findUnique({
-    where: { userId },
-    select: {
-      email: true,
-      scope: true,
-      gmailEnabled: true,
-      driveEnabled: true,
-      calendarEnabled: true,
-      meetEnabled: true,
-      chatEnabled: true,
-      lastGmailSyncAt: true,
-      lastDriveSyncAt: true,
-      lastCalendarSyncAt: true,
-      lastMeetSyncAt: true,
-      lastChatSyncAt: true,
-    },
-  })
+  if (!userId) {
+    return NextResponse.json(
+      { connected: false, configured, callbackUrl, nextAuthCallbackUrl },
+      { status: 200 }
+    )
+  }
 
-  if (!account) return NextResponse.json({ connected: false })
+  const account = await getGoogleAccountSnapshot(userId)
+
+  if (!account) {
+    return NextResponse.json({ connected: false, configured, callbackUrl, nextAuthCallbackUrl })
+  }
 
   // 取得済みスコープから利用可能性を判定
   const scope = account.scope ?? ''
@@ -40,34 +35,41 @@ export async function GET() {
   const services = {
     gmail: {
       available: has('gmail.modify'),
-      enabled: account.gmailEnabled,
-      lastSyncAt: account.lastGmailSyncAt,
+      enabled: true,
+      lastSyncAt: null,
     },
     drive: {
       available: has('drive.readonly'),
-      enabled: account.driveEnabled,
-      lastSyncAt: account.lastDriveSyncAt,
+      enabled: true,
+      lastSyncAt: null,
     },
     calendar: {
       available: has('calendar'),
-      enabled: account.calendarEnabled,
-      lastSyncAt: account.lastCalendarSyncAt,
+      enabled: true,
+      lastSyncAt: null,
     },
     meet: {
       available: has('meetings.space'),
-      enabled: account.meetEnabled,
-      lastSyncAt: account.lastMeetSyncAt,
+      enabled: true,
+      lastSyncAt: null,
     },
     chat: {
       available: has('chat.spaces') || has('chat.messages'),
-      enabled: account.chatEnabled,
-      lastSyncAt: account.lastChatSyncAt,
+      enabled: false,
+      lastSyncAt: null,
     },
   }
 
   return NextResponse.json({
     connected: true,
+    configured,
+    callbackUrl,
+    nextAuthCallbackUrl,
     email: account.email,
     services,
   })
+}
+
+function isConfigured() {
+  return !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET)
 }

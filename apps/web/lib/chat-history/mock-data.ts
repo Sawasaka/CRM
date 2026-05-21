@@ -1,8 +1,8 @@
 /**
- * ルキスマCRM Intelligence Hub — チャット履歴モック
+ * ルキスマCRM Intelligence Hub — チャット履歴
  *
- * Codex 風サイドバーで時系列グルーピング表示するための過去会話データ。
- * 実装フェーズではモック。将来的には userId × workspace 単位で永続化想定。
+ * 実利用環境では初期表示のダミー会話を出さない。
+ * 将来的には userId × workspace 単位で永続化する。
  */
 
 export type ChatHistoryItem = {
@@ -20,89 +20,14 @@ export type ChatGroup = {
   items: ChatHistoryItem[]
 }
 
-// ─── モックデータ ────────────────────────────────────────────────────────
-// 今日の日付は 2026-04-30
-export const MOCK_CHAT_HISTORY: ChatHistoryItem[] = [
-  // 今日
-  {
-    id: 'c1',
-    title: '今週アプローチすべき HOT 企業',
-    updatedAt: '2026-04-30T09:42:00',
-    preview: 'インテントスコア80以上 + 直近30日コール未着手で抽出',
-  },
-  {
-    id: 'c2',
-    title: 'テクノリードの最新議事録から要点',
-    updatedAt: '2026-04-30T08:15:00',
-    preview: 'CTO同席最終デモの論点、最終見積回答待ち',
-  },
-  {
-    id: 'c3',
-    title: 'パイプラインで停滞中の案件',
-    updatedAt: '2026-04-30T07:01:00',
-  },
-
-  // 昨日
-  {
-    id: 'c4',
-    title: 'IT部門の採用インテント TOP10',
-    updatedAt: '2026-04-29T18:23:00',
-  },
-  {
-    id: 'c5',
-    title: 'フューチャー社の比較表案を作成',
-    updatedAt: '2026-04-29T14:08:00',
-    preview: 'Zoho CRM との機能比較',
-  },
-
-  // 過去7日間
-  {
-    id: 'c6',
-    title: '直近の議事録から共通課題を抽出',
-    updatedAt: '2026-04-27T11:30:00',
-  },
-  {
-    id: 'c7',
-    title: '物流業界の HOT 企業リスト',
-    updatedAt: '2026-04-26T16:55:00',
-  },
-  {
-    id: 'c8',
-    title: '今月のチャーン候補とリスク要因',
-    updatedAt: '2026-04-25T10:12:00',
-  },
-
-  // 過去30日間
-  {
-    id: 'c9',
-    title: 'グロース社の稟議プロセスをまとめ',
-    updatedAt: '2026-04-18T13:40:00',
-  },
-  {
-    id: 'c10',
-    title: '4月度の受注予測 vs 実績',
-    updatedAt: '2026-04-12T17:22:00',
-  },
-  {
-    id: 'c11',
-    title: 'Salesforce 比較質問への回答案',
-    updatedAt: '2026-04-08T09:30:00',
-  },
-
-  // それ以前
-  {
-    id: 'c12',
-    title: 'Q1 振り返り:勝ちパターン分析',
-    updatedAt: '2026-03-29T15:00:00',
-  },
-]
+export const MOCK_CHAT_HISTORY: ChatHistoryItem[] = []
 
 // ─── グルーピング ─────────────────────────────────────────────────────────
 function diffDays(targetIso: string, base: Date): number {
   const ms = 1000 * 60 * 60 * 24
   const t = new Date(targetIso.slice(0, 10) + 'T00:00:00').getTime()
   const b = new Date(
-    `${base.getFullYear()}-${String(base.getMonth() + 1).padStart(2, '0')}-${String(base.getDate()).padStart(2, '0')}T00:00:00`,
+    `${base.getFullYear()}-${String(base.getMonth() + 1).padStart(2, '0')}-${String(base.getDate()).padStart(2, '0')}T00:00:00`
   ).getTime()
   return Math.round((b - t) / ms)
 }

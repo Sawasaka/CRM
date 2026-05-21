@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { type FormEvent, useEffect, useState } from 'react'
 import {
   Calendar as CalendarLucide,
   Check,
@@ -21,6 +21,8 @@ import {
   Search,
   Settings as SettingsIcon,
   ClipboardList,
+  Copy,
+  KeyRound,
 } from 'lucide-react'
 import { ObsButton, ObsCard, ObsHero, ObsPageShell } from '@/components/obsidian'
 
@@ -34,8 +36,22 @@ interface ServiceState {
 
 interface GoogleStatus {
   connected: boolean
+  configured?: boolean
+  callbackUrl?: string
+  nextAuthCallbackUrl?: string
   email?: string
   services?: Record<ServiceKey, ServiceState>
+}
+
+interface NotionStatus {
+  connected: boolean
+  configured: boolean
+  workspaceName: string | null
+  workspaceId: string | null
+  enabled: boolean
+  lastSyncAt: string | null
+  tokenSource: 'env' | 'oauth'
+  callbackUrl?: string
 }
 
 const SERVICE_DEFS: Array<{
@@ -111,16 +127,34 @@ export default function IntegrationsPage() {
   const initialIncompleteCount = getIncompleteMemberCount()
   const [tab, setTab] = useState<'setup' | 'review'>(initialIncompleteCount > 0 ? 'review' : 'setup')
   const [status, setStatus] = useState<GoogleStatus | null>(null)
+  const [notionStatus, setNotionStatus] = useState<NotionStatus | null>(null)
   const [busy, setBusy] = useState<ServiceKey | 'all' | null>(null)
+  const [notionBusy, setNotionBusy] = useState(false)
+  const [showGoogleSetup, setShowGoogleSetup] = useState(false)
+  const [showNotionTokenForm, setShowNotionTokenForm] = useState(false)
+  const [notionToken, setNotionToken] = useState('')
+  const [notionSetupMessage, setNotionSetupMessage] = useState<string | null>(null)
   const [lastResult, setLastResult] = useState<unknown>(null)
 
   const refresh = async () => {
-    const r = await fetch('/api/google/status')
-    if (r.ok) setStatus(await r.json())
+    const [google, notion] = await Promise.all([
+      fetch('/api/google/status'),
+      fetch('/api/notion/status'),
+    ])
+    if (google.ok) setStatus(await google.json())
+    if (notion.ok) setNotionStatus(await notion.json())
   }
 
   useEffect(() => {
     refresh()
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('google_error') === 'not_configured') {
+      setTab('setup')
+      setShowGoogleSetup(true)
+    }
+    if (params.get('notion_error') === 'not_configured') {
+      setTab('setup')
+    }
   }, [])
 
   const sync = async (scope: ServiceKey | 'all') => {
@@ -132,6 +166,46 @@ export default function IntegrationsPage() {
       await refresh()
     } finally {
       setBusy(null)
+    }
+  }
+
+  const syncNotion = async () => {
+    setNotionBusy(true)
+    setLastResult(null)
+    try {
+      const r = await fetch('/api/notion/sync', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ query: '議事録', maxPages: 20 }),
+      })
+      setLastResult(await r.json())
+      await refresh()
+    } finally {
+      setNotionBusy(false)
+    }
+  }
+
+  const connectNotionToken = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setNotionBusy(true)
+    setNotionSetupMessage(null)
+    try {
+      const r = await fetch('/api/notion/connect-token', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ token: notionToken }),
+      })
+      const json = await r.json().catch(() => ({}))
+      if (!r.ok) {
+        setNotionSetupMessage(json.message ?? 'Notion APIトークンの保存に失敗しました。')
+        return
+      }
+      setNotionToken('')
+      setShowNotionTokenForm(false)
+      setNotionSetupMessage('Notion連携を保存しました。議事録同期を実行できます。')
+      await refresh()
+    } finally {
+      setNotionBusy(false)
     }
   }
 
@@ -244,20 +318,27 @@ export default function IntegrationsPage() {
               </p>
 
               <div className="mt-4 flex flex-wrap gap-2">
-                <a
-                  href="/api/google/install?service=all"
-                  className="inline-flex items-center gap-1.5 h-10 px-5 rounded-[var(--radius-obs-md)] text-[13.5px] font-medium transition-all duration-150"
-                  style={{
-                    background:
-                      'linear-gradient(180deg, var(--color-obs-primary-container) 0%, color-mix(in srgb, var(--color-obs-primary-container) 88%, #000 12%) 100%)',
-                    color: 'var(--color-obs-on-primary)',
-                    boxShadow:
-                      'inset 0 1px 0 rgba(255,255,255,0.10), 0 1px 2px rgba(0,0,0,0.18)',
-                  }}
-                >
-                  <Plug size={14} />
-                  すべての機能を一括連携
-                </a>
+                {status?.configured === false ? (
+                  <PrimaryLikeButton onClick={() => setShowGoogleSetup(true)}>
+                    <KeyRound size={14} />
+                    Google連携の設定を入力
+                  </PrimaryLikeButton>
+                ) : (
+                  <a
+                    href="/api/google/install?service=all"
+                    className="inline-flex items-center gap-1.5 h-10 px-5 rounded-[var(--radius-obs-md)] text-[13.5px] font-medium transition-all duration-150"
+                    style={{
+                      background:
+                        'linear-gradient(180deg, var(--color-obs-primary-container) 0%, color-mix(in srgb, var(--color-obs-primary-container) 88%, #000 12%) 100%)',
+                      color: 'var(--color-obs-on-primary)',
+                      boxShadow:
+                        'inset 0 1px 0 rgba(255,255,255,0.10), 0 1px 2px rgba(0,0,0,0.18)',
+                    }}
+                  >
+                    <Plug size={14} />
+                    すべての機能を一括連携
+                  </a>
+                )}
                 {connected && (
                   <ObsButton
                     variant="ghost"
@@ -299,6 +380,15 @@ export default function IntegrationsPage() {
           </div>
         </ObsCard>
 
+        {showGoogleSetup && (
+          <GoogleSetupPanel
+            callbackUrl={status?.callbackUrl}
+            nextAuthCallbackUrl={status?.nextAuthCallbackUrl}
+            configured={status?.configured ?? false}
+            onClose={() => setShowGoogleSetup(false)}
+          />
+        )}
+
         {/* ── 機能別カード ── */}
         <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
           {SERVICE_DEFS.map((def) => {
@@ -314,6 +404,8 @@ export default function IntegrationsPage() {
                 enabled={s?.enabled ?? false}
                 lastSyncAt={s?.lastSyncAt ?? null}
                 busy={busy === def.key}
+                googleConfigured={status?.configured !== false}
+                onConfigureGoogle={() => setShowGoogleSetup(true)}
                 onSync={() => sync(def.key)}
                 onToggle={(v) => toggle(def.key, v)}
                 onDisconnect={async () => {
@@ -330,6 +422,127 @@ export default function IntegrationsPage() {
             )
           })}
         </div>
+
+        <ObsCard depth="high" padding="lg" radius="xl" className="mt-4">
+          <div className="flex items-start gap-4">
+            <div
+              className="shrink-0 w-12 h-12 rounded-[var(--radius-obs-lg)] flex items-center justify-center"
+              style={{ backgroundColor: '#fff', color: '#111' }}
+            >
+              <Hash size={21} strokeWidth={2.6} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-lg font-semibold" style={{ color: 'var(--color-obs-text)' }}>
+                  Notion（議事録）
+                </h2>
+                <StatusPill
+                  available={!!notionStatus?.connected}
+                  enabled={!!notionStatus?.enabled}
+                />
+              </div>
+              <p className="text-[13px] mt-1" style={{ color: 'var(--color-obs-text-muted)' }}>
+                Notionで共有された議事録ページを読み取り、取引・企業・コンタクトに自動紐付けします。
+              </p>
+              {notionStatus?.connected && (
+                <p className="text-[12px] mt-2" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                  {notionStatus.workspaceName
+                    ? `${notionStatus.workspaceName} と連携中`
+                    : 'Notion と連携中'}
+                  {' / '}
+                  最終同期: {notionStatus.lastSyncAt ? new Date(notionStatus.lastSyncAt).toLocaleString('ja-JP') : '未同期'}
+                </p>
+              )}
+              {notionSetupMessage && (
+                <p
+                  className="text-[12px] mt-2"
+                  style={{
+                    color: notionSetupMessage.includes('失敗')
+                      ? 'var(--color-obs-hot)'
+                      : 'var(--color-obs-text-subtle)',
+                  }}
+                >
+                  {notionSetupMessage}
+                </p>
+              )}
+              <div className="mt-4 flex flex-wrap gap-2">
+                {!notionStatus?.connected ? (
+                  <>
+                    {notionStatus?.configured ? (
+                      <a
+                        href="/api/notion/install"
+                        className="inline-flex items-center gap-1.5 h-9 px-4 rounded-[var(--radius-obs-md)] text-[13px] font-medium transition-colors"
+                        style={{
+                          backgroundColor: 'var(--color-obs-primary-container)',
+                          color: 'var(--color-obs-on-primary)',
+                        }}
+                      >
+                        <Link2 size={13} />
+                        Notion OAuthで連携
+                      </a>
+                    ) : null}
+                    <ObsButton
+                      variant={notionStatus?.configured ? 'ghost' : 'primary'}
+                      size="sm"
+                      onClick={() => setShowNotionTokenForm((v) => !v)}
+                    >
+                      <span className="inline-flex items-center gap-1.5">
+                        <KeyRound size={13} />
+                        APIトークンで連携
+                      </span>
+                    </ObsButton>
+                  </>
+                ) : (
+                  <>
+                    <ObsButton
+                      variant="primary"
+                      size="sm"
+                      onClick={syncNotion}
+                      disabled={notionBusy}
+                    >
+                      {notionBusy ? (
+                        <span className="inline-flex items-center gap-1.5">
+                          <Loader2 size={13} className="animate-spin" /> 議事録同期中…
+                        </span>
+                      ) : (
+                        'Notion議事録を同期'
+                      )}
+                    </ObsButton>
+                    {notionStatus.tokenSource !== 'env' && (
+                      <button
+                        onClick={async () => {
+                          if (!confirm('Notion 連携を解除しますか?')) return
+                          setNotionBusy(true)
+                          try {
+                            await fetch('/api/notion/disconnect', { method: 'POST' })
+                            await refresh()
+                          } finally {
+                            setNotionBusy(false)
+                          }
+                        }}
+                        disabled={notionBusy}
+                        className="inline-flex items-center gap-1.5 h-9 px-3 rounded-[var(--radius-obs-md)] text-[12px] font-medium transition-colors disabled:opacity-50"
+                        style={{ color: 'var(--color-obs-hot)' }}
+                      >
+                        <Trash2 size={12} />
+                        解除
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
+              {showNotionTokenForm && !notionStatus?.connected && (
+                <NotionTokenForm
+                  token={notionToken}
+                  busy={notionBusy}
+                  onTokenChange={setNotionToken}
+                  onSubmit={connectNotionToken}
+                  onCancel={() => setShowNotionTokenForm(false)}
+                />
+              )}
+            </div>
+          </div>
+        </ObsCard>
 
         {lastResult !== null && (
           <ObsCard depth="low" padding="md" radius="xl" className="mt-4">
@@ -368,6 +581,7 @@ export default function IntegrationsPage() {
             </li>
             <li>・コンタクトのメールアドレスがカレンダー参加者に含まれていれば、自動で取引・コンタクトに紐付きます。</li>
             <li>・Google Drive はナレッジ画面で選択したフォルダのみ同期します。</li>
+            <li>・Notion 議事録は、連携時に共有したページ・データベースのみ取得できます。</li>
           </ul>
         </ObsCard>
           </>
@@ -390,6 +604,8 @@ function ServiceCard({
   enabled,
   lastSyncAt,
   busy,
+  googleConfigured,
+  onConfigureGoogle,
   onSync,
   onToggle,
   onDisconnect,
@@ -402,6 +618,8 @@ function ServiceCard({
   enabled: boolean
   lastSyncAt: string | null
   busy: boolean
+  googleConfigured: boolean
+  onConfigureGoogle: () => void
   onSync: () => void
   onToggle: (v: boolean) => void
   onDisconnect: () => void
@@ -437,17 +655,32 @@ function ServiceCard({
 
           {!available ? (
             <div className="mt-3">
-              <a
-                href={`/api/google/install?service=${serviceKey}`}
-                className="inline-flex items-center gap-1.5 h-8 px-3 rounded-[var(--radius-obs-md)] text-[12px] font-medium transition-colors"
-                style={{
-                  backgroundColor: 'var(--color-obs-primary-container)',
-                  color: 'var(--color-obs-on-primary)',
-                }}
-              >
-                <Link2 size={12} />
-                {label} を連携する
-              </a>
+              {googleConfigured ? (
+                <a
+                  href={`/api/google/install?service=${serviceKey}`}
+                  className="inline-flex items-center gap-1.5 h-8 px-3 rounded-[var(--radius-obs-md)] text-[12px] font-medium transition-colors"
+                  style={{
+                    backgroundColor: 'var(--color-obs-primary-container)',
+                    color: 'var(--color-obs-on-primary)',
+                  }}
+                >
+                  <Link2 size={12} />
+                  {label} を連携する
+                </a>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onConfigureGoogle}
+                  className="inline-flex items-center gap-1.5 h-8 px-3 rounded-[var(--radius-obs-md)] text-[12px] font-medium transition-colors"
+                  style={{
+                    backgroundColor: 'var(--color-obs-primary-container)',
+                    color: 'var(--color-obs-on-primary)',
+                  }}
+                >
+                  <KeyRound size={12} />
+                  Google設定を入力
+                </button>
+              )}
             </div>
           ) : (
             <div className="mt-3 flex items-center justify-between gap-3 flex-wrap">
@@ -487,6 +720,204 @@ function ServiceCard({
           )}
         </div>
       </div>
+    </div>
+  )
+}
+
+function PrimaryLikeButton({
+  children,
+  onClick,
+}: {
+  children: React.ReactNode
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="inline-flex items-center gap-1.5 h-10 px-5 rounded-[var(--radius-obs-md)] text-[13.5px] font-medium transition-all duration-150"
+      style={{
+        background:
+          'linear-gradient(180deg, var(--color-obs-primary-container) 0%, color-mix(in srgb, var(--color-obs-primary-container) 88%, #000 12%) 100%)',
+        color: 'var(--color-obs-on-primary)',
+        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.10), 0 1px 2px rgba(0,0,0,0.18)',
+      }}
+    >
+      {children}
+    </button>
+  )
+}
+
+function GoogleSetupPanel({
+  callbackUrl,
+  nextAuthCallbackUrl,
+  configured,
+  onClose,
+}: {
+  callbackUrl?: string
+  nextAuthCallbackUrl?: string
+  configured: boolean
+  onClose: () => void
+}) {
+  return (
+    <ObsCard depth="low" padding="md" radius="xl" className="mt-4">
+      <div className="flex items-start gap-3">
+        <AlertCircle size={18} style={{ color: configured ? '#4ad98a' : 'var(--color-obs-hot)' }} />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-3">
+            <h3 className="text-[14px] font-semibold" style={{ color: 'var(--color-obs-text)' }}>
+              Google Workspace 連携の初期設定
+            </h3>
+            <ObsButton variant="ghost" size="sm" onClick={onClose}>
+              閉じる
+            </ObsButton>
+          </div>
+          <p className="text-[12.5px] mt-1" style={{ color: 'var(--color-obs-text-muted)' }}>
+            Google Cloud のOAuth同意画面と認証情報に、下記URLを登録してください。
+          </p>
+          <div className="mt-3 grid grid-cols-1 lg:grid-cols-2 gap-2">
+            <CopyableValue label="ログイン用リダイレクトURL" value={nextAuthCallbackUrl ?? ''} />
+            <CopyableValue label="追加権限用リダイレクトURL" value={callbackUrl ?? ''} />
+          </div>
+          <div
+            className="mt-3 rounded-[var(--radius-obs-md)] px-3 py-2 text-[12px]"
+            style={{
+              backgroundColor: 'var(--color-obs-surface-high)',
+              color: 'var(--color-obs-text-muted)',
+            }}
+          >
+            必要な環境変数: <code>GOOGLE_CLIENT_ID</code> / <code>GOOGLE_CLIENT_SECRET</code>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {configured ? (
+              <a
+                href="/api/google/install?service=all"
+                className="inline-flex items-center gap-1.5 h-8 px-3 rounded-[var(--radius-obs-md)] text-[12px] font-medium transition-colors"
+                style={{
+                  backgroundColor: 'var(--color-obs-primary-container)',
+                  color: 'var(--color-obs-on-primary)',
+                }}
+              >
+                <Plug size={12} />
+                Google連携へ進む
+              </a>
+            ) : (
+              <span className="text-[12px]" style={{ color: 'var(--color-obs-hot)' }}>
+                設定後にサーバーを再起動すると連携ボタンが有効になります。
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    </ObsCard>
+  )
+}
+
+function NotionTokenForm({
+  token,
+  busy,
+  onTokenChange,
+  onSubmit,
+  onCancel,
+}: {
+  token: string
+  busy: boolean
+  onTokenChange: (value: string) => void
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void
+  onCancel: () => void
+}) {
+  return (
+    <form
+      onSubmit={onSubmit}
+      className="mt-4 rounded-[var(--radius-obs-lg)] p-4"
+      style={{
+        backgroundColor: 'var(--color-obs-surface-high)',
+        boxShadow: 'inset 0 0 0 1px var(--color-obs-surface-highest)',
+      }}
+    >
+      <div className="grid grid-cols-1 gap-3">
+        <Field label="Notion APIトークン">
+          <input
+            type="password"
+            value={token}
+            onChange={(e) => onTokenChange(e.target.value)}
+            placeholder="secret_... または ntn_..."
+            className="h-10 w-full rounded-[var(--radius-obs-md)] px-3 text-[13px] outline-none"
+            style={{
+              backgroundColor: 'var(--color-obs-surface)',
+              color: 'var(--color-obs-text)',
+              boxShadow: 'inset 0 0 0 1px var(--color-obs-surface-highest)',
+            }}
+          />
+        </Field>
+      </div>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <ObsButton type="submit" size="sm" variant="primary" disabled={busy || !token.trim()}>
+          {busy ? (
+            <span className="inline-flex items-center gap-1.5">
+              <Loader2 size={13} className="animate-spin" />
+              確認中
+            </span>
+          ) : (
+            '保存して連携'
+          )}
+        </ObsButton>
+        <ObsButton type="button" size="sm" variant="ghost" onClick={onCancel} disabled={busy}>
+          キャンセル
+        </ObsButton>
+      </div>
+    </form>
+  )
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="block">
+      <span className="block text-[11.5px] font-medium mb-1.5" style={{ color: 'var(--color-obs-text-subtle)' }}>
+        {label}
+      </span>
+      {children}
+    </label>
+  )
+}
+
+function CopyableValue({ label, value }: { label: string; value: string }) {
+  const [copied, setCopied] = useState(false)
+  const copy = async () => {
+    if (!value) return
+    await navigator.clipboard.writeText(value)
+    setCopied(true)
+    window.setTimeout(() => setCopied(false), 1200)
+  }
+
+  return (
+    <div
+      className="rounded-[var(--radius-obs-md)] px-3 py-2"
+      style={{
+        backgroundColor: 'var(--color-obs-surface)',
+        boxShadow: 'inset 0 0 0 1px var(--color-obs-surface-highest)',
+      }}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-[11px] font-medium" style={{ color: 'var(--color-obs-text-subtle)' }}>
+          {label}
+        </span>
+        <button
+          type="button"
+          onClick={copy}
+          className="inline-flex items-center gap-1 text-[11px]"
+          style={{ color: 'var(--color-obs-primary)' }}
+        >
+          <Copy size={11} />
+          {copied ? 'コピー済み' : 'コピー'}
+        </button>
+      </div>
+      <code
+        className="mt-1 block truncate text-[12px]"
+        style={{ color: value ? 'var(--color-obs-text-muted)' : 'var(--color-obs-hot)' }}
+      >
+        {value || '未取得'}
+      </code>
     </div>
   )
 }

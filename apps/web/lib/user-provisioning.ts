@@ -11,45 +11,48 @@ export async function ensureUser({
   googleUserId?: string
 }): Promise<string> {
   const normalizedEmail = email.trim().toLowerCase()
-  const existing = await prisma.user.findFirst({ where: { email: normalizedEmail } })
-  if (existing) {
-    if (googleUserId && existing.googleUserId !== googleUserId) {
-      await prisma.user.update({
-        where: { id: existing.id },
-        data: { googleUserId },
-      })
+  const existing = await prisma.$queryRaw<Array<{ id: string; googleUserId: string | null }>>`
+    SELECT "id", "googleUserId" FROM "User" WHERE "email" = ${normalizedEmail} LIMIT 1
+  `
+  if (existing[0]) {
+    if (googleUserId && existing[0].googleUserId !== googleUserId) {
+      await prisma.$executeRaw`
+        UPDATE "User" SET "googleUserId" = ${googleUserId} WHERE "id" = ${existing[0].id}
+      `
     }
-    return existing.id
+    return existing[0].id
   }
 
   const orgId =
     process.env.DEFAULT_ORG_ID ??
-    (await prisma.organization.findFirst({ orderBy: { createdAt: 'asc' } }))?.id
+    (
+      await prisma.$queryRaw<Array<{ id: string }>>`
+        SELECT "id" FROM "Organization" ORDER BY "createdAt" ASC LIMIT 1
+      `
+    )[0]?.id
 
   if (!orgId) {
-    const org = await prisma.organization.create({
-      data: { name: 'Default', slug: 'default' },
-    })
-    const user = await prisma.user.create({
-      data: {
-        orgId: org.id,
-        email: normalizedEmail,
-        name,
-        role: 'ADMIN',
-        googleUserId,
-      },
-    })
-    return user.id
+    const newOrgId = crypto.randomUUID()
+    await prisma.$executeRaw`
+      INSERT INTO "Organization" ("id", "name", "slug", "createdAt", "updatedAt")
+      VALUES (${newOrgId}, 'Default', 'default', NOW(), NOW())
+      ON CONFLICT ("slug") DO NOTHING
+    `
+    const org = await prisma.$queryRaw<Array<{ id: string }>>`
+      SELECT "id" FROM "Organization" WHERE "slug" = 'default' LIMIT 1
+    `
+    const userId = crypto.randomUUID()
+    await prisma.$executeRaw`
+      INSERT INTO "User" ("id", "orgId", "email", "name", "role", "googleUserId", "createdAt")
+      VALUES (${userId}, ${org[0]?.id ?? newOrgId}, ${normalizedEmail}, ${name}, 'ADMIN'::"UserRole", ${googleUserId ?? null}, NOW())
+    `
+    return userId
   }
 
-  const user = await prisma.user.create({
-    data: {
-      orgId,
-      email: normalizedEmail,
-      name,
-      role: 'REP',
-      googleUserId,
-    },
-  })
-  return user.id
+  const userId = crypto.randomUUID()
+  await prisma.$executeRaw`
+    INSERT INTO "User" ("id", "orgId", "email", "name", "role", "googleUserId", "createdAt")
+    VALUES (${userId}, ${orgId}, ${normalizedEmail}, ${name}, 'REP'::"UserRole", ${googleUserId ?? null}, NOW())
+  `
+  return userId
 }

@@ -1,7 +1,14 @@
 import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 
+const siteUrl =
+  process.env.AUTH_URL ??
+  process.env.NEXTAUTH_URL ??
+  process.env.NEXT_PUBLIC_APP_URL ??
+  'https://www.rookiesmart-jp.com'
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: 'ルキスマCRM｜営業データから、何でも答えるチャットCRM',
   description:
     '営業データから、何でも答えるチャットCRM。商談・メール・議事録・求人インテント・290万社DBを横断し、あなたの会社のデータを踏まえて答えます。',
@@ -15,7 +22,15 @@ export const metadata: Metadata = {
     title: 'ルキスマCRM｜営業データから、何でも答えるチャットCRM',
     description:
       '商談・メール・議事録・求人インテント・290万社DBを横断し、営業データから次の答えを返すチャットCRM。',
+    url: '/',
     type: 'website',
+  },
+  alternates: {
+    canonical: '/',
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 }
 

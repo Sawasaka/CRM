@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
 import { getAppBaseUrl } from '@/lib/app-url'
-import { GoogleService, SCOPES_BY_SERVICE, scopesForServices } from '@/lib/google/scopes'
+import { resolveGoogleIntegrationUserId } from '@/lib/google/current-user'
+import { GoogleService, scopesForServices } from '@/lib/google/scopes'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -15,10 +15,9 @@ const ALL_SERVICES: GoogleService[] = ['gmail', 'drive', 'calendar', 'meet', 'ch
  * incremental authorization: 既存スコープは保持されたまま、追加分だけ要求。
  */
 export async function GET(req: Request) {
-  const session = await auth()
-  const userId = (session as unknown as { userId?: string })?.userId
+  const userId = await resolveGoogleIntegrationUserId()
   if (!userId) {
-    return NextResponse.redirect(new URL('/login', req.url))
+    return NextResponse.redirect(new URL('/login?callbackUrl=/settings/integrations', req.url))
   }
 
   const url = new URL(req.url)
@@ -27,17 +26,32 @@ export async function GET(req: Request) {
   const services: GoogleService[] =
     service === 'all'
       ? ALL_SERVICES
-      : ALL_SERVICES.includes(service as GoogleService)
-        ? [service as GoogleService]
-        : []
+      : Array.from(
+          new Set(
+            service
+              .split(',')
+              .map((s) => s.trim())
+              .filter((s): s is GoogleService => ALL_SERVICES.includes(s as GoogleService))
+          )
+        )
 
   if (services.length === 0) {
     return NextResponse.json({ error: 'invalid_service' }, { status: 400 })
   }
 
   const clientId = process.env.GOOGLE_CLIENT_ID
-  if (!clientId) {
-    return NextResponse.json({ error: 'google_not_configured' }, { status: 500 })
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET
+  if (!clientId || !clientSecret) {
+    return NextResponse.redirect(
+      new URL('/settings/integrations?google_error=not_configured', req.url)
+    )
+  }
+
+  if (services.length === 1 && services[0] === 'gmail') {
+    const signInUrl = new URL('/login', req.url)
+    signInUrl.searchParams.set('callbackUrl', '/settings/integrations?google_connected=gmail')
+    signInUrl.searchParams.set('google', '1')
+    return NextResponse.redirect(signInUrl)
   }
 
   const redirectUri = `${getAppBaseUrl()}/api/google/oauth-callback`
@@ -75,7 +89,3 @@ export async function GET(req: Request) {
   })
   return res
 }
-
-// for debug / availability ヘルプ
-export const _ALL_SERVICES = ALL_SERVICES
-export const _SCOPES_BY_SERVICE = SCOPES_BY_SERVICE

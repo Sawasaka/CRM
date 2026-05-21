@@ -1,7 +1,15 @@
 'use client'
 
 import Link from 'next/link'
-import { Suspense, useMemo, useState, type FormEvent, type ReactNode } from 'react'
+import {
+  Suspense,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from 'react'
 import { signIn } from 'next-auth/react'
 import { useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
@@ -28,6 +36,7 @@ function LoginContent() {
   }, [searchParams])
   const initialMode = searchParams.get('mode') === 'register' ? 'register' : 'login'
   const authError = searchParams.get('error')
+  const autoGoogle = searchParams.get('google') === '1'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
@@ -35,6 +44,14 @@ function LoginContent() {
   const [error, setError] = useState(authError ? 'ログインに失敗しました。' : '')
   const [loading, setLoading] = useState<'credentials' | 'google' | null>(null)
   const [legalAccepted, setLegalAccepted] = useState(false)
+  const autoGoogleStarted = useRef(false)
+
+  useEffect(() => {
+    if (!autoGoogle || autoGoogleStarted.current) return
+    autoGoogleStarted.current = true
+    setLoading('google')
+    signIn('google', { callbackUrl })
+  }, [autoGoogle, callbackUrl])
 
   async function submitPasswordLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -262,7 +279,9 @@ function AuthShell({ children }: { children?: ReactNode }) {
           </div>
         </div>
         {children}
-        <p className="mt-5 text-center text-xs text-[#9CA3AF]">© 2026 RookieSmart. All rights reserved.</p>
+        <p className="mt-5 text-center text-xs text-[#9CA3AF]">
+          © 2026 RookieSmart. All rights reserved.
+        </p>
       </motion.div>
     </div>
   )

@@ -16,7 +16,7 @@ interface SyncResult {
 export async function syncChatForUser(userId: string): Promise<SyncResult> {
   const auth = await getGoogleOAuthClient(userId)
   const chat = google.chat({ version: 'v1', auth })
-  const user = await prisma.user.findUnique({ where: { id: userId } })
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { orgId: true } })
   if (!user) throw new Error(`User not found: ${userId}`)
 
   // コンタクト一覧（メアド一致用）

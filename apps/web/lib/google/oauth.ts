@@ -1,6 +1,6 @@
 import { google } from 'googleapis'
 import { OAuth2Client } from 'google-auth-library'
-import { prisma } from '@bgm/db'
+import { getGoogleAccountSnapshot, updateGoogleAccountTokens } from '@/lib/google/account-store'
 
 // アクセストークンの期限切れ判定の前余裕（秒）
 const EXPIRY_BUFFER_SEC = 60
@@ -18,7 +18,7 @@ export class GoogleAccountNotConnectedError extends Error {
  * - access_token が期限切れなら自動で更新し、DB に書き戻す
  */
 export async function getGoogleOAuthClient(userId: string): Promise<OAuth2Client> {
-  const account = await prisma.userGoogleAccount.findUnique({ where: { userId } })
+  const account = await getGoogleAccountSnapshot(userId)
   if (!account || !account.refreshToken) throw new GoogleAccountNotConnectedError(userId)
 
   const oauth2 = new google.auth.OAuth2(
@@ -36,13 +36,11 @@ export async function getGoogleOAuthClient(userId: string): Promise<OAuth2Client
   const expiresAt = account.expiresAt?.getTime() ?? 0
   if (!account.accessToken || expiresAt - now < EXPIRY_BUFFER_SEC * 1000) {
     const { credentials } = await oauth2.refreshAccessToken()
-    await prisma.userGoogleAccount.update({
-      where: { userId },
-      data: {
-        accessToken: credentials.access_token ?? account.accessToken,
-        expiresAt: credentials.expiry_date ? new Date(credentials.expiry_date) : null,
-        scope: credentials.scope ?? account.scope,
-      },
+    await updateGoogleAccountTokens({
+      userId,
+      accessToken: credentials.access_token ?? account.accessToken,
+      expiresAt: credentials.expiry_date ? new Date(credentials.expiry_date) : null,
+      scope: credentials.scope ?? account.scope,
     })
     oauth2.setCredentials(credentials)
   }

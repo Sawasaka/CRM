@@ -1,14 +1,13 @@
 // プラン × モデル × Thinking の組み合わせ制御
 // 既存 ModelSelector に合わせる：
-//   ModelKind: 'gpt-4o' | 'gpt-4o-mini'
+//   ModelKind: 'gemini-2.5-flash-lite'
 //   ThinkingDepth: 'standard' | 'extended'
 // 仕様:
-//   - スタンダード（STARTER, GROWTH）: gpt-4o-mini のみ、Thinking standard 固定
-//   - プロ（ENTERPRISE）: gpt-4o / gpt-4o-mini 選択可、Thinking standard / extended 選択可
+//   - 現行運用: 企業DB収集でも使う低コスト Gemini を固定
 //   - FREE: 利用不可
 import type { Plan } from '@bgm/db'
 
-export type ModelKind = 'gpt-4o' | 'gpt-4o-mini'
+export type ModelKind = 'gemini-2.5-flash-lite'
 export type ThinkingDepth = 'standard' | 'extended'
 
 export type ResolvedResearchModel = {
@@ -24,21 +23,22 @@ export function isResearchAllowed(plan: Plan): boolean {
 
 export function resolveResearchModel(
   plan: Plan,
-  requested: { model?: ModelKind; thinking?: ThinkingDepth },
+  requested: { model?: ModelKind; thinking?: ThinkingDepth }
 ): ResolvedResearchModel {
-  // FREE は呼ばれない前提だが、保険で mini standard
+  const model: ModelKind = requested.model ?? 'gemini-2.5-flash-lite'
+
+  // FREE は呼ばれない前提だが、保険で Gemini standard
   if (plan === 'FREE') {
-    return { model: 'gpt-4o-mini', thinking: 'standard' }
+    return { model, thinking: 'standard' }
   }
 
   const isPro = plan === 'ENTERPRISE'
-  // スタンダードは強制的に mini + standard
+  // スタンダードは強制的に standard
   if (!isPro) {
-    return { model: 'gpt-4o-mini', thinking: 'standard' }
+    return { model, thinking: 'standard' }
   }
 
-  // プロは選択を尊重（未指定は推奨デフォルト）
-  const model: ModelKind = requested.model ?? 'gpt-4o-mini'
+  // プロは Thinking 選択を尊重
   const thinking: ThinkingDepth = requested.thinking ?? 'standard'
 
   const reasoningSystemSuffix =

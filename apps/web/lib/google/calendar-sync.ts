@@ -28,7 +28,7 @@ export async function syncCalendarForUser(
 
   const auth = await getGoogleOAuthClient(userId)
   const cal = getCalendarClient(auth)
-  const user = await prisma.user.findUnique({ where: { id: userId } })
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { orgId: true } })
   if (!user) throw new Error(`User not found: ${userId}`)
 
   const timeMin = new Date(Date.now() - pastDays * 86_400_000).toISOString()

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
 import { getAppBaseUrl } from '@/lib/app-url'
 import { prisma } from '@bgm/db'
+import { resolveGoogleIntegrationUserId } from '@/lib/google/current-user'
 import type { GoogleService } from '@/lib/google/scopes'
 
 export const runtime = 'nodejs'
@@ -15,8 +15,7 @@ export const dynamic = 'force-dynamic'
  * 機能別の有効化フラグも要求された service に基づいて ON にする。
  */
 export async function GET(req: Request) {
-  const session = await auth()
-  const userId = (session as unknown as { userId?: string })?.userId
+  const userId = await resolveGoogleIntegrationUserId()
   if (!userId) return NextResponse.redirect(new URL('/login', req.url))
 
   const url = new URL(req.url)

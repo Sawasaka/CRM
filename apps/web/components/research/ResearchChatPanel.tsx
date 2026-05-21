@@ -8,9 +8,9 @@
  * - ModelSelector（プランで使えるモデルが切り替わる）
  *
  * 仕様:
- *   - スタンダード（STARTER/GROWTH）: gpt-4o-mini 固定
- *   - プロ（ENTERPRISE）: gpt-4o / mini 選択可、Thinking 標準/拡張選択可
- *   - FREE: 利用不可（API側で403）
+ *   - 企業DB収集と同じ低コスト Gemini を利用
+ *   - Thinking 標準/拡張選択可
+ *   - FREE: 公開環境ではAPI側で403
  */
 import { useEffect, useRef, useState } from 'react'
 import { ArrowUp, ChevronDown, History, Sparkles, User } from 'lucide-react'
@@ -45,48 +45,6 @@ type HistoryEntry = {
   elapsedMs: number
 }
 
-// ダミーデータ — 実装が固まるまでUI確認用
-const DUMMY_HISTORY: HistoryEntry[] = [
-  {
-    id: 'h1',
-    createdAt: '2026-05-06T08:14:00.000Z',
-    presetEmoji: '✨',
-    presetLabel: 'すべて',
-    question:
-      '商談前の提案・企業情報・サービス利用状況を一括でリサーチしてください。',
-    answer:
-      '## 1. 商談前の提案におけるリサーチ\n- **提案先**: 情報システム部 部長(実務推進)＋CTO鈴木氏(最終決裁)\n- **切り口**: 議事録AI要約 × Slackリアルタイム連携 で「会議後フォロー漏れゼロ」訴求\n- **当社の強み**: KPIダッシュボードを営業マネージャ視点で標準提供\n- **想定反論**: SaaS導入規程の社内稟議が長い → ROI試算とPoC事例を先出し\n\n## 2. 企業に関する情報収集\n- 直近6ヶ月: AI議事録要約のβ版を社内導入(2026/02 プレスリリース)\n- 経営課題: 営業マネージャの数字集約で深夜労働発生(採用要件にも記載)\n- 経営層の優先事項: 中期計画で「AI活用による生産性30%向上」を掲げる\n- キーパーソン: CTO鈴木健太氏 / 情シス部長 田中誠氏 / IS推進室長 佐藤氏\n\n## 3. サービスに関するリサーチ\n- 利用中の可能性大: Salesforce Sales Cloud, Slack, Notion\n- 競合 Salesforce 比較質問あり(過去議事録より)\n- 置き換え余地: AI議事録機能とKPIダッシュボードで明確な差別化',
-    model: 'gpt-4o',
-    thinking: 'extended',
-    elapsedMs: 18420,
-  },
-  {
-    id: 'h2',
-    createdAt: '2026-05-05T15:42:00.000Z',
-    presetEmoji: '🏢',
-    presetLabel: '企業に関する情報収集',
-    question: 'この企業の直近の事業動向と経営課題を教えてください。',
-    answer:
-      '- 2026/02: AI議事録要約のβ版を全社展開(プレスリリース)\n- 2026/03: 営業DXプロジェクトを発足、CTO鈴木氏直轄で推進\n- **推察される経営課題**\n  - 営業マネージャの工数過多(採用ポジションに「営業オペレーション」の記載)\n  - サブスク売上比率を上げたい(IR資料より)\n  - 既存SFAの定着率が低い(CTO鈴木氏のXポストより示唆)',
-    model: 'gpt-4o-mini',
-    thinking: 'standard',
-    elapsedMs: 6210,
-  },
-  {
-    id: 'h3',
-    createdAt: '2026-05-02T11:08:00.000Z',
-    presetEmoji: null,
-    presetLabel: null,
-    question:
-      'CTO鈴木氏の発信から、技術選定の意思決定軸を3つ抽出してください。',
-    answer:
-      '1. **APIファースト** — 「閉じたSaaSは選ばない」と過去LT資料で明言\n2. **オンプレ／VPC選択肢** — 金融系顧客対応のためVPC可否を優先確認\n3. **既存スタック親和性(Slack/Notion)** — 学習コスト最小化が前提',
-    model: 'gpt-4o',
-    thinking: 'standard',
-    elapsedMs: 9120,
-  },
-]
-
 function formatHistoryTime(iso: string): string {
   const d = new Date(iso)
   const now = new Date()
@@ -114,10 +72,9 @@ export function ResearchChatPanel({
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [model, setModel] = useState<ModelKind>('gpt-4o-mini')
+  const [model, setModel] = useState<ModelKind>('gemini-2.5-flash-lite')
   const [thinking, setThinking] = useState<ThinkingDepth>('standard')
-  // リサーチ履歴（永続化前提のUI確認用に、まずはダミーデータでスタック）
-  const [history, setHistory] = useState<HistoryEntry[]>(DUMMY_HISTORY)
+  const [history, setHistory] = useState<HistoryEntry[]>([])
   const [expandedHistoryId, setExpandedHistoryId] = useState<string | null>(null)
 
   const scrollRef = useRef<HTMLDivElement | null>(null)
@@ -188,14 +145,27 @@ export function ResearchChatPanel({
         const j = await res.json().catch(() => ({}))
         throw new Error(j.error || `HTTP ${res.status}`)
       }
-      const j = (await res.json()) as { content: string; model: string; thinking: string; elapsedMs: number }
+      const j = (await res.json()) as {
+        content: string
+        model: string
+        thinking: string
+        elapsedMs: number
+      }
       setMessages((prev) => [
         ...prev,
-        { role: 'assistant', content: j.content, model: j.model, thinking: j.thinking, elapsedMs: j.elapsedMs },
+        {
+          role: 'assistant',
+          content: j.content,
+          model: j.model,
+          thinking: j.thinking,
+          elapsedMs: j.elapsedMs,
+        },
       ])
       // 履歴にも追記（永続化までの暫定実装）
-      const presetEmoji = presetId ? presets.find((p) => p.id === presetId)?.emoji ?? null : null
-      const questionText = presetId ? presets.find((p) => p.id === presetId)?.prompt ?? userContent : userContent
+      const presetEmoji = presetId ? (presets.find((p) => p.id === presetId)?.emoji ?? null) : null
+      const questionText = presetId
+        ? (presets.find((p) => p.id === presetId)?.prompt ?? userContent)
+        : userContent
       setHistory((prev) => [
         {
           id: `h-${Date.now()}`,
@@ -205,7 +175,9 @@ export function ResearchChatPanel({
           question: questionText,
           answer: j.content,
           model: j.model,
-          thinking: (j.thinking === 'extended' ? 'extended' : 'standard') as 'standard' | 'extended',
+          thinking: (j.thinking === 'extended' ? 'extended' : 'standard') as
+            | 'standard'
+            | 'extended',
           elapsedMs: j.elapsedMs,
         },
         ...prev,
@@ -219,15 +191,15 @@ export function ResearchChatPanel({
 
   return (
     <ObsCard depth="high" padding="lg">
-      <ObsSectionHeader
-        title="リサーチ"
-        caption="営業前の企業調査AI"
-      />
+      <ObsSectionHeader title="リサーチ" caption="営業前の企業調査AI" />
 
       {/* プリセットボタン */}
       {messages.length === 0 && presets.length > 0 && (
         <div className="flex flex-col gap-1.5 mt-3">
-          <div className="text-[11px] font-medium tracking-[0.05em]" style={{ color: 'var(--color-obs-text-muted)' }}>
+          <div
+            className="text-[11px] font-medium tracking-[0.05em]"
+            style={{ color: 'var(--color-obs-text-muted)' }}
+          >
             プリセット
           </div>
           <div className="flex flex-wrap gap-1.5">
@@ -245,7 +217,11 @@ export function ResearchChatPanel({
                     color: 'var(--color-obs-text)',
                     border: '1px solid var(--color-obs-border)',
                   }}
-                  title={p.description ? `${p.description}（クリックでプロンプトを入力欄にセット）` : 'クリックでプロンプトを入力欄にセット'}
+                  title={
+                    p.description
+                      ? `${p.description}（クリックでプロンプトを入力欄にセット）`
+                      : 'クリックでプロンプトを入力欄にセット'
+                  }
                 >
                   <span>{p.emoji}</span>
                   {p.label}
@@ -286,7 +262,8 @@ export function ResearchChatPanel({
               <div
                 className={`text-[13px] leading-relaxed ${m.role === 'user' ? 'pl-4 whitespace-pre-wrap' : ''}`}
                 style={{
-                  color: m.role === 'user' ? 'var(--color-obs-text-muted)' : 'var(--color-obs-text)',
+                  color:
+                    m.role === 'user' ? 'var(--color-obs-text-muted)' : 'var(--color-obs-text)',
                 }}
               >
                 {m.role === 'user' ? m.content : <MarkdownLite text={m.content} />}
@@ -294,7 +271,10 @@ export function ResearchChatPanel({
             </div>
           ))}
           {isLoading && (
-            <div className="flex items-center gap-1.5 text-[12px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
+            <div
+              className="flex items-center gap-1.5 text-[12px]"
+              style={{ color: 'var(--color-obs-text-subtle)' }}
+            >
               <Sparkles size={11} className="animate-pulse" />
               リサーチ中...
             </div>
@@ -352,13 +332,18 @@ export function ResearchChatPanel({
             disabled={isLoading || !input.trim()}
             className="w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 disabled:cursor-not-allowed"
             style={{
-              background: input.trim() && !isLoading
-                ? 'linear-gradient(140deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)'
-                : 'var(--color-obs-surface-highest)',
-              color: input.trim() && !isLoading ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
-              boxShadow: input.trim() && !isLoading
-                ? 'inset 0 1px 0 rgba(255,255,255,0.18)'
-                : 'inset 0 0 0 1px var(--color-obs-border)',
+              background:
+                input.trim() && !isLoading
+                  ? 'linear-gradient(140deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)'
+                  : 'var(--color-obs-surface-highest)',
+              color:
+                input.trim() && !isLoading
+                  ? 'var(--color-obs-on-primary)'
+                  : 'var(--color-obs-text-muted)',
+              boxShadow:
+                input.trim() && !isLoading
+                  ? 'inset 0 1px 0 rgba(255,255,255,0.18)'
+                  : 'inset 0 0 0 1px var(--color-obs-border)',
               transitionTimingFunction: 'var(--ease-liquid)',
             }}
             title="送信 (Enter)"
@@ -383,9 +368,7 @@ export function ResearchChatPanel({
               className="text-[10.5px] tabular-nums"
               style={{ color: 'var(--color-obs-text-muted)' }}
             >
-              {history.length > 3
-                ? `最新3件 / 全${history.length}件`
-                : `${history.length}件`}
+              {history.length > 3 ? `最新3件 / 全${history.length}件` : `${history.length}件`}
             </span>
           </div>
           <div className="flex flex-col gap-2">
@@ -516,9 +499,7 @@ export function ResearchChatPanel({
                         </button>
                         <button
                           type="button"
-                          onClick={() =>
-                            setHistory((prev) => prev.filter((x) => x.id !== h.id))
-                          }
+                          onClick={() => setHistory((prev) => prev.filter((x) => x.id !== h.id))}
                           className="text-[10.5px] underline"
                           style={{ color: 'var(--color-obs-text-subtle)' }}
                         >
@@ -558,7 +539,11 @@ export function ResearchChatPanel({
                   color: 'var(--color-obs-text-muted)',
                   border: '1px solid var(--color-obs-border)',
                 }}
-                title={p.description ? `${p.description}（クリックでプロンプトを入力欄にセット）` : 'クリックでプロンプトを入力欄にセット'}
+                title={
+                  p.description
+                    ? `${p.description}（クリックでプロンプトを入力欄にセット）`
+                    : 'クリックでプロンプトを入力欄にセット'
+                }
               >
                 {p.emoji}
               </button>
@@ -585,34 +570,58 @@ function MarkdownLite({ text }: { text: string }) {
   for (const raw of lines) {
     const line = raw.replace(/\s+$/, '')
     if (line === '') {
-      if (curUl) { blocks.push({ type: 'ul', items: curUl }); curUl = null }
-      if (curOl) { blocks.push({ type: 'ol', items: curOl }); curOl = null }
+      if (curUl) {
+        blocks.push({ type: 'ul', items: curUl })
+        curUl = null
+      }
+      if (curOl) {
+        blocks.push({ type: 'ol', items: curOl })
+        curOl = null
+      }
       blocks.push({ type: 'blank' })
       continue
     }
     const h = line.match(/^(#{1,3})\s+(.*)/)
     if (h && h[1] && h[2] !== undefined) {
-      if (curUl) { blocks.push({ type: 'ul', items: curUl }); curUl = null }
-      if (curOl) { blocks.push({ type: 'ol', items: curOl }); curOl = null }
+      if (curUl) {
+        blocks.push({ type: 'ul', items: curUl })
+        curUl = null
+      }
+      if (curOl) {
+        blocks.push({ type: 'ol', items: curOl })
+        curOl = null
+      }
       blocks.push({ type: 'h', level: h[1].length as 1 | 2 | 3, text: h[2] })
       continue
     }
     const ul = line.match(/^\s*[-*]\s+(.*)/)
     if (ul && ul[1] !== undefined) {
-      if (curOl) { blocks.push({ type: 'ol', items: curOl }); curOl = null }
+      if (curOl) {
+        blocks.push({ type: 'ol', items: curOl })
+        curOl = null
+      }
       curUl = curUl ?? []
       curUl.push(ul[1])
       continue
     }
     const ol = line.match(/^\s*(\d+)\.\s+(.*)/)
     if (ol && ol[2] !== undefined) {
-      if (curUl) { blocks.push({ type: 'ul', items: curUl }); curUl = null }
+      if (curUl) {
+        blocks.push({ type: 'ul', items: curUl })
+        curUl = null
+      }
       curOl = curOl ?? []
       curOl.push(ol[2])
       continue
     }
-    if (curUl) { blocks.push({ type: 'ul', items: curUl }); curUl = null }
-    if (curOl) { blocks.push({ type: 'ol', items: curOl }); curOl = null }
+    if (curUl) {
+      blocks.push({ type: 'ul', items: curUl })
+      curUl = null
+    }
+    if (curOl) {
+      blocks.push({ type: 'ol', items: curOl })
+      curOl = null
+    }
     blocks.push({ type: 'p', text: line })
   }
   if (curUl) blocks.push({ type: 'ul', items: curUl })
@@ -623,9 +632,17 @@ function MarkdownLite({ text }: { text: string }) {
       {blocks.map((b, i) => {
         if (b.type === 'blank') return null
         if (b.type === 'h') {
-          const sizes = { 1: 'text-[15px] font-semibold', 2: 'text-[14px] font-semibold', 3: 'text-[13px] font-semibold' }
+          const sizes = {
+            1: 'text-[15px] font-semibold',
+            2: 'text-[14px] font-semibold',
+            3: 'text-[13px] font-semibold',
+          }
           return (
-            <div key={i} className={`${sizes[b.level]} mt-1`} style={{ color: 'var(--color-obs-text)' }}>
+            <div
+              key={i}
+              className={`${sizes[b.level]} mt-1`}
+              style={{ color: 'var(--color-obs-text)' }}
+            >
               {renderInline(b.text)}
             </div>
           )
@@ -668,16 +685,27 @@ function renderInline(text: string): React.ReactNode {
       const label = linkMd[1]
       const href = linkMd[2]
       tokens.push(
-        <a key={key++} href={href} target="_blank" rel="noopener noreferrer" className="underline" style={{ color: 'var(--color-obs-primary)' }}>
+        <a
+          key={key++}
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline"
+          style={{ color: 'var(--color-obs-primary)' }}
+        >
           {label}
-        </a>,
+        </a>
       )
       rest = rest.slice(linkMd[0].length)
       continue
     }
     const bold = rest.match(/^\*\*([^*]+)\*\*/)
     if (bold && bold[1]) {
-      tokens.push(<strong key={key++} className="font-semibold">{bold[1]}</strong>)
+      tokens.push(
+        <strong key={key++} className="font-semibold">
+          {bold[1]}
+        </strong>
+      )
       rest = rest.slice(bold[0].length)
       continue
     }
@@ -685,9 +713,16 @@ function renderInline(text: string): React.ReactNode {
     if (url && url[1]) {
       const href = url[1]
       tokens.push(
-        <a key={key++} href={href} target="_blank" rel="noopener noreferrer" className="underline break-all" style={{ color: 'var(--color-obs-primary)' }}>
+        <a
+          key={key++}
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline break-all"
+          style={{ color: 'var(--color-obs-primary)' }}
+        >
           {href}
-        </a>,
+        </a>
       )
       rest = rest.slice(url[0].length)
       continue

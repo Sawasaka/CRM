@@ -20,7 +20,7 @@ export async function syncMeetForUser(userId: string): Promise<SyncResult> {
   const auth = await getGoogleOAuthClient(userId)
   const meet = getMeetClient(auth)
   const drive = getDriveClient(auth)
-  const user = await prisma.user.findUnique({ where: { id: userId } })
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, orgId: true } })
   if (!user) throw new Error(`User not found: ${userId}`)
 
   // 直近 30 日の conferenceRecord

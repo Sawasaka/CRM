@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
-import { prisma } from '@bgm/db'
+import { resolveGoogleIntegrationUserId } from '@/lib/google/current-user'
 import { syncGmailForUser } from '@/lib/google/gmail-sync'
 import { syncDriveForUser } from '@/lib/google/drive-sync'
 import { syncCalendarForUser } from '@/lib/google/calendar-sync'
 import { syncMeetForUser } from '@/lib/google/meet-sync'
 import { syncChatForUser } from '@/lib/google/chat-sync'
 import { GoogleAccountNotConnectedError } from '@/lib/google/oauth'
+import { getGoogleAccountSnapshot } from '@/lib/google/account-store'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -16,8 +16,7 @@ export const dynamic = 'force-dynamic'
  * POST /api/google/sync?scope=gmail|drive|calendar|meet|chat|all
  */
 export async function POST(req: Request) {
-  const session = await auth()
-  const userId = (session as unknown as { userId?: string })?.userId
+  const userId = await resolveGoogleIntegrationUserId()
   if (!userId) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
 
   const url = new URL(req.url)
@@ -30,24 +29,18 @@ export async function POST(req: Request) {
     | 'all'
 
   try {
-    // 機能別の有効化フラグを取得
-    const account = await prisma.userGoogleAccount.findUnique({
-      where: { userId },
-      select: {
-        gmailEnabled: true,
-        driveEnabled: true,
-        calendarEnabled: true,
-        meetEnabled: true,
-        chatEnabled: true,
-      },
-    })
+    const account = await getGoogleAccountSnapshot(userId)
     if (!account) throw new GoogleAccountNotConnectedError(userId)
 
     const shouldRun = (s: 'gmail' | 'drive' | 'calendar' | 'meet' | 'chat') => {
       if (scope !== 'all' && scope !== s) return false
       if (scope === 'all') {
-        // all のときは enabled なものだけ実行
-        return account[`${s}Enabled` as const]
+        const scopes = account.scope ?? ''
+        if (s === 'gmail') return scopes.includes('gmail')
+        if (s === 'drive') return scopes.includes('drive')
+        if (s === 'calendar') return scopes.includes('calendar')
+        if (s === 'meet') return scopes.includes('meetings.space')
+        return false
       }
       return true // 個別呼び出しは明示なので enabled に関係なく実行
     }
@@ -66,7 +59,7 @@ export async function POST(req: Request) {
     console.error('[google/sync]', e)
     return NextResponse.json(
       { error: 'sync_failed', message: e instanceof Error ? e.message : String(e) },
-      { status: 500 },
+      { status: 500 }
     )
   }
 }

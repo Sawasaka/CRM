@@ -133,3 +133,36 @@ export async function buildWebContext(
   }
   return lines.join('\n')
 }
+
+/**
+ * フリーテキストのチャットプロンプトから外部Web検索を実行し、システムプロンプト用に整形する。
+ * プリセット指定や企業コンテキストが無い場合に使う汎用版。
+ */
+export async function buildWebContextFromPrompt(
+  userPrompt: string,
+  maxResults = 8,
+): Promise<string | null> {
+  const q = userPrompt.replace(/\s+/g, ' ').trim()
+  if (!q) return null
+
+  // チャット用に1クエリ→上位 maxResults 件
+  const results = await searchWeb(q, maxResults)
+  if (results.length === 0) return null
+
+  const seenUrls = new Set<string>()
+  const flat: WebSearchResult[] = []
+  for (const r of results) {
+    if (seenUrls.has(r.url)) continue
+    seenUrls.add(r.url)
+    flat.push(r)
+    if (flat.length >= maxResults) break
+  }
+
+  const lines: string[] = []
+  lines.push('\n## 外部Web検索結果（チャット連動）')
+  for (const r of flat) {
+    lines.push(`- [${r.title}](${r.url})`)
+    if (r.snippet) lines.push(`  ${r.snippet.replace(/\s+/g, ' ').slice(0, 300)}`)
+  }
+  return lines.join('\n')
+}

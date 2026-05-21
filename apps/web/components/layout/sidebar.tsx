@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { useRouter, usePathname } from 'next/navigation'
+import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import {
   PenSquare,
@@ -20,7 +20,8 @@ import {
   ShieldAlert,
   Wrench,
 } from 'lucide-react'
-import { MOCK_CHAT_HISTORY } from '@/lib/chat-history/mock-data'
+import { deleteChatRecord, renameChatRecord } from '@/lib/chat-history/store'
+import { useChatHistory } from '@/lib/chat-history/use-chat-history'
 
 // ─── ワークスペースナビ項目 ─────────────────────────────────────────────────
 // アイコンは「その機能を担うエージェントの頭文字」を採用:
@@ -554,11 +555,11 @@ function UserMenu({ userName, userInitial }: { userName: string; userInitial: st
 export function Sidebar() {
   const router = useRouter()
   const pathname = usePathname()
+  const searchParams = useSearchParams()
   const { data: session } = useSession()
-  const [activeChatId, setActiveChatId] = useState<string | null>(null)
+  const chats = useChatHistory()
+  const activeChatId = searchParams.get('chat')
   const [pinnedIds, setPinnedIds] = useState<Set<string>>(new Set())
-  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set())
-  const [renamedTitles, setRenamedTitles] = useState<Record<string, string>>({})
   const [editingId, setEditingId] = useState<string | null>(null)
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null)
   const [collapsed, setCollapsed] = useState(false)
@@ -586,15 +587,13 @@ export function Sidebar() {
   }, [menuOpenId])
 
   const visibleChats = useMemo(() => {
-    return MOCK_CHAT_HISTORY.filter((c) => !deletedIds.has(c.id))
-      .map((c) => ({ ...c, title: renamedTitles[c.id] ?? c.title }))
-      .sort((a, b) => {
-        const ap = pinnedIds.has(a.id) ? 1 : 0
-        const bp = pinnedIds.has(b.id) ? 1 : 0
-        if (ap !== bp) return bp - ap
-        return a.updatedAt < b.updatedAt ? 1 : -1
-      })
-  }, [deletedIds, renamedTitles, pinnedIds])
+    return [...chats].sort((a, b) => {
+      const ap = pinnedIds.has(a.id) ? 1 : 0
+      const bp = pinnedIds.has(b.id) ? 1 : 0
+      if (ap !== bp) return bp - ap
+      return a.updatedAt < b.updatedAt ? 1 : -1
+    })
+  }, [chats, pinnedIds])
 
   const isHomePathname = pathname === '/'
   const isNavActive = (href: string) =>
@@ -603,7 +602,6 @@ export function Sidebar() {
   const userInitial = userName.slice(0, 1).toUpperCase()
 
   const handleNewChat = () => {
-    setActiveChatId(null)
     router.push('/')
   }
   const handleSearch = () => {
@@ -611,7 +609,6 @@ export function Sidebar() {
     router.push('/?focus=search')
   }
   const handleChatClick = (id: string) => {
-    setActiveChatId(id)
     router.push(`/?chat=${id}`)
   }
   const togglePin = (id: string) => {
@@ -623,15 +620,11 @@ export function Sidebar() {
     })
   }
   const deleteChat = (id: string) => {
-    setDeletedIds((prev) => {
-      const next = new Set(prev)
-      next.add(id)
-      return next
-    })
-    if (activeChatId === id) setActiveChatId(null)
+    deleteChatRecord(id)
+    if (activeChatId === id) router.push('/')
   }
   const commitRename = (id: string, newTitle: string) => {
-    setRenamedTitles((prev) => ({ ...prev, [id]: newTitle }))
+    renameChatRecord(id, newTitle)
     setEditingId(null)
   }
 

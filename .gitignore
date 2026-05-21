@@ -11,6 +11,8 @@ dist
 .env
 .env.local
 .env.*.local
+.chat-policy-*.json
+.our-business-*.json
 
 # MCP secrets (Stitch API key 等)
 .mcp.json

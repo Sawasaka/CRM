@@ -9,7 +9,6 @@ import {
   Plus,
   Minus,
   Check,
-  Star,
   Crown,
   X,
   Wrench,
@@ -49,86 +48,47 @@ interface Plan {
   contractTerm?: string // 例: "3ヶ月契約・3ヶ月ごとに更新"
 }
 
-// 実行支援パートナーシップ (5社限定)
-// 戦略: HubSpot等の大手とは戦わない。属人性を極めた高単価コンサル+CRMバンドル。
-// 5社契約 + 1年経過後に一般プラン公開予定。
-// カードの並び: 左から「プラチナム → プレミアム → スタンダード」(高単価→低単価)
+// シート課金プラン (Lite / Standard / PRO)
+// HP の Pricing セクション (components/landing/sections/Pricing.tsx) と同期する。
+// 変更時は両方を必ず揃える。
 const PLANS: Plan[] = [
   {
-    id: 'platinum',
-    name: 'プラチナム',
-    tagline: '専任実行支援(1社限定) + ルキスマCRM',
-    priceMonthly: 500000,
-    priceAnnual: 500000,
-    credits: 5000,
+    id: 'lite',
+    name: 'Lite',
+    tagline: '営業 1-3名の小規模チームに最適',
+    priceMonthly: 4300,
+    priceAnnual: 3000,
+    credits: 500,
     minSeats: 1,
-    isTenantPrice: true,
-    slotsTotal: 1,
-    slotsRemaining: 1,
-    contractTerm: '3ヶ月契約・3ヶ月ごとに更新',
     additions: [
       'AIモデル: Gemini 2.5 Flash Lite / シンキングモード 標準',
       'CRM全機能 (企業・コンタクト・取引・パイプライン・チケット管理)',
-      'Google Workspace・Microsoft 365 連携',
-      '議事録自動取得 (BANT自動入力)',
-      'ナレッジ自動生成 (FAQ)',
+      'Google Workspace・Microsoft 365 連携 + 議事録自動取得 (BANT)',
+      'ナレッジ自動生成 (FAQ) + 開発優先度分析',
       'メール配信 + 1stパーティ計測・効果測定',
-      '企業DB(290万社) + 求人インテント',
-      '開発優先度分析',
+      '企業DB (290万社) + 求人インテント',
       '外部リサーチ (ウェブ検索)',
       '500クレジットで ワンクリック通話 + コール議事録自動作成',
     ],
     seatNote: '担当者へのチャット相談 (10シート以上で付帯)',
-    icon: Star,
-  },
-  {
-    id: 'premium',
-    name: 'プレミアム',
-    tagline: '営業実行支援(平日全営業日) + ルキスマCRM',
-    priceMonthly: 300000,
-    priceAnnual: 300000,
-    credits: 5000,
-    minSeats: 1,
-    isTenantPrice: true,
-    slotsTotal: 2,
-    slotsRemaining: 2,
-    contractTerm: '3ヶ月契約・3ヶ月ごとに更新',
-    additions: [
-      '【実行支援】営業同行・実行支援 (1日1商談まで・平日全営業日)',
-      '【実行支援】3ヶ月契約 ・ 3ヶ月ごとに更新',
-      '【CRM特典】ルキスマCRM PROプラン (無料バンドル)',
-      '【CRM特典】5,000クレジット / 月 (チーム合計)',
-      'GPT-4o mini / GPT-4o を選択可',
-      'エージェントモード (ブラウザ自動操作)',
-      'CRM全機能 + 議事録BANT + 企業DB(290万社)',
-      '優先レスポンス (Slackチャンネル即応)',
-    ],
-    icon: TrendingUp,
-    popular: true,
+    icon: Zap,
   },
   {
     id: 'standard',
-    name: 'スタンダード',
-    tagline: '営業実行支援(週4・月曜休み)+ ルキスマCRM',
-    priceMonthly: 200000,
-    priceAnnual: 200000,
-    credits: 5000,
+    name: 'Standard',
+    tagline: 'AI品質と通話機能で営業を本格運用',
+    priceMonthly: 8300,
+    priceAnnual: 5800,
+    credits: 1000,
     minSeats: 1,
-    isTenantPrice: true,
-    slotsTotal: 2,
-    slotsRemaining: 2,
-    contractTerm: '3ヶ月契約・3ヶ月ごとに更新',
+    baseLabel: 'Lite 全機能',
     additions: [
-      '【実行支援】営業同行・実行支援 (1日1商談まで・月曜休み)',
-      '【実行支援】3ヶ月契約 ・ 3ヶ月ごとに更新',
-      '【CRM特典】ルキスマCRM PROプラン (無料バンドル)',
-      '【CRM特典】5,000クレジット / 月 (チーム合計・フル機能)',
-      'GPT-4o mini / GPT-4o を選択可',
-      'エージェントモード (チャットからブラウザ自動操作)',
-      'CRM全機能 + 議事録BANT + 企業DB(290万社)',
-      'Google Workspace / Microsoft 365 連携',
+      'AIモデル: GPT-4o mini にアップグレード (品質・精度向上)',
+      'シンキングモード: 拡張',
     ],
-    icon: Zap,
+    seatNote: '担当者へのチャット相談 (5シート以上で付帯)',
+    icon: TrendingUp,
+    popular: true,
   },
 ]
 
@@ -1047,11 +1007,10 @@ function SubscriptionPageContent() {
                         </div>
                       ) : isAdmin ? (
                         (() => {
-                          // 実行支援モデルは「枠」ベース。料金高い順 = ランク高い。
+                          // シート課金プランの料金高い順 = ランク高い。
                           const PLAN_RANK: Record<string, number> = {
-                            standard: 1,
-                            premium: 2,
-                            platinum: 3,
+                            lite: 1,
+                            standard: 2,
                           }
                           const isDowngrade =
                             (PLAN_RANK[plan.id] ?? 0) < (PLAN_RANK[currentPlan] ?? 0)

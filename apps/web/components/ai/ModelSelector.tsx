@@ -3,27 +3,28 @@
 /**
  * ModelSelector — チャット入力欄に置く「モデル + 思考の深さ」統合セレクタ
  *
- * Claude のモデルピッカーと同じ構成：
- *   - ドロップダウン上段: LLM モデル一覧 (GPT-4o / GPT-4o mini)
+ *   - ドロップダウン上段: LLM モデル一覧
  *   - 区切り線
  *   - ドロップダウン下段: 思考の深さ (標準 / 拡張)
  *
- * 外側のピルは選択中モデル名のみ表示し、拡張思考時は ✦ で軽く示す。
- * フェーズ1ではモック (実送信時の配線は未実装)。
+ * 外側のピルは選択中モデル名のみ表示し、拡張思考時はアイコンで軽く示す。
  */
 
 import { useEffect, useRef, useState } from 'react'
 import { Cpu, ChevronDown, Check, Hourglass, Sparkles } from 'lucide-react'
 
-export type ModelKind = 'gpt-4o' | 'gpt-4o-mini'
+export type ModelKind = 'gemini-2.5-flash-lite'
 export type ThinkingDepth = 'standard' | 'extended'
 
 export const MODEL_OPTIONS: { value: ModelKind; label: string; description: string }[] = [
-  { value: 'gpt-4o-mini', label: 'GPT-4o mini', description: '素早い回答・軽量' },
-  { value: 'gpt-4o', label: 'GPT-4o', description: '高度な作業に最も高性能' },
+  { value: 'gemini-2.5-flash-lite', label: 'Gemini 2.5 Flash-Lite', description: '低コスト・軽量' },
 ]
 
-export const THINKING_DEPTH_OPTIONS: { value: ThinkingDepth; label: string; description: string }[] = [
+export const THINKING_DEPTH_OPTIONS: {
+  value: ThinkingDepth
+  label: string
+  description: string
+}[] = [
   { value: 'standard', label: '標準', description: '素早い回答' },
   { value: 'extended', label: '拡張', description: 'より深く考える' },
 ]
@@ -39,7 +40,7 @@ export function ModelSelector({
   onModelChange?: (v: ModelKind) => void
   onThinkingChange?: (v: ThinkingDepth) => void
 }) {
-  const [internalModel, setInternalModel] = useState<ModelKind>('gpt-4o-mini')
+  const [internalModel, setInternalModel] = useState<ModelKind>('gemini-2.5-flash-lite')
   const [internalThinking, setInternalThinking] = useState<ThinkingDepth>('standard')
 
   const currentModel: ModelKind = model ?? internalModel
@@ -94,11 +95,7 @@ export function ModelSelector({
         <Cpu size={12} style={{ color: 'var(--color-obs-primary)' }} />
         {currentModelOpt.label}
         {currentThinking === 'extended' && (
-          <Sparkles
-            size={11}
-            style={{ color: 'var(--color-obs-primary)' }}
-            aria-label="拡張思考"
-          />
+          <Sparkles size={11} style={{ color: 'var(--color-obs-primary)' }} aria-label="拡張思考" />
         )}
         <ChevronDown
           size={12}
@@ -165,9 +162,7 @@ export function ModelSelector({
                     {opt.description}
                   </div>
                 </div>
-                {selected && (
-                  <Check size={14} style={{ color: 'var(--color-obs-primary)' }} />
-                )}
+                {selected && <Check size={14} style={{ color: 'var(--color-obs-primary)' }} />}
               </button>
             )
           })}
@@ -222,9 +217,7 @@ export function ModelSelector({
                     {opt.description}
                   </div>
                 </div>
-                {selected && (
-                  <Check size={14} style={{ color: 'var(--color-obs-primary)' }} />
-                )}
+                {selected && <Check size={14} style={{ color: 'var(--color-obs-primary)' }} />}
               </button>
             )
           })}

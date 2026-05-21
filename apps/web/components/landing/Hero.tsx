@@ -13,10 +13,11 @@ import { HeroSidebar } from './HeroSidebar'
 import { HeroDemoView, type HeroDemoKey } from './hero-demos'
 
 const PLACEHOLDERS = [
-  '今週アプローチすべきHOT企業を教えて',
+  'ルキスマCRM について、ここで何でも聞いてください',
+  '料金プランや 5社限定パートナーシップの詳細を知りたい',
+  '導入までの流れ・どんな相談ができるか教えて',
+  '今週アプローチすべき HOT 企業を教えて',
   '先週の議事録から要望機能を集計して',
-  '未対応チケットを担当者ごとに集計して',
-  '採用インテントが伸びてる企業 TOP10',
 ]
 
 interface Suggestion {

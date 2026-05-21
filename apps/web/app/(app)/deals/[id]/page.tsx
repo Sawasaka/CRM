@@ -204,6 +204,31 @@ interface ActivityItem {
   description?: string
 }
 
+interface DbDealResponse {
+  deal: {
+    id: string
+    name: string
+    stage: string
+    amount: number | null
+    probability: number | null
+    expectedCloseAt: string | null
+    updatedAt: string
+    nextActionUs: string | null
+    timeline: string | null
+    desiredService: string | null
+    company: { id: string; name: string }
+    contact: { id: string; name: string; email: string | null; phone: string | null } | null
+    owner: { name: string }
+  }
+  activities: Array<{
+    id: string
+    type: string
+    title: string
+    content: string | null
+    occurredAt: string
+  }>
+}
+
 // 議事録（個別）
 interface MeetingRecord {
   id: string
@@ -1447,6 +1472,50 @@ function formatTimestamp(ts: string): string {
   return `${d.getMonth() + 1}/${d.getDate()} ${d.getHours()}:${d.getMinutes().toString().padStart(2, '0')}`
 }
 
+function mapDbDealStage(stage: string): DealStage {
+  const map: Record<string, DealStage> = {
+    NEW_LEAD: 'IS',
+    QUALIFIED: 'MEETING_PLANNED',
+    FIRST_MEETING: 'MEETING_PLANNED',
+    SOLUTION_FIT: 'MEETING_DONE',
+    PROPOSAL: 'PROJECT_PLANNED',
+    NEGOTIATION: 'POC',
+    VERBAL_COMMIT: 'POC',
+    CLOSED_WON: 'CLOSED_WON',
+    CLOSED_LOST: 'LOST',
+  }
+  return map[stage] ?? 'IS'
+}
+
+function mapDbActivityType(type: string): ActivityType {
+  if (type === 'EMAIL_SENT' || type === 'EMAIL_RECEIVED') return 'email'
+  if (type === 'CALL') return 'call'
+  return 'note'
+}
+
+function toDealDetailFromDb(data: DbDealResponse['deal']): DealDetail {
+  return {
+    id: data.id,
+    name: data.name,
+    company: data.company.name,
+    companyId: data.company.id,
+    contact: data.contact?.name ?? '未設定',
+    contactId: data.contact?.id ?? '',
+    contactPhone: data.contact?.phone ?? '',
+    owner: data.owner.name,
+    stage: mapDbDealStage(data.stage),
+    status: 'アクティブ',
+    amount: data.amount ?? 0,
+    probability: data.probability ?? 0,
+    expectedCloseAt: data.expectedCloseAt,
+    updatedAt: data.updatedAt,
+    progressStatus: data.desiredService ?? 'Gmailから作成した取引',
+    nextAction: data.nextActionUs ?? '次回アクション未設定',
+    nextActionDate: null,
+    memo: data.timeline ?? '',
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // Deal Task Modal
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1644,6 +1713,9 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
   const router = useRouter()
 
   const rawDeal = (MOCK_DEALS[id] ?? MOCK_DEALS['d1'])!
+  const [dbDeal, setDbDeal] = useState<DealDetail | null>(null)
+  const [dbActivities, setDbActivities] = useState<ActivityItem[]>([])
+  const displayBaseDeal = dbDeal ?? rawDeal
 
   // 進捗管理（state で管理、保存はstateのみ）
   const [progressStatus, setProgressStatus] = useState<string>(rawDeal.progressStatus)
@@ -1652,12 +1724,40 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
   const [memo, setMemo] = useState<string>(rawDeal.memo)
 
   const deal: DealDetail = {
-    ...rawDeal,
+    ...displayBaseDeal,
     progressStatus,
     nextAction,
     nextActionDate,
     memo,
   }
+
+  useEffect(() => {
+    let aborted = false
+    fetch(`/api/deals/${encodeURIComponent(id)}`, { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: DbDealResponse | null) => {
+        if (aborted || !data?.deal) return
+        const nextDeal = toDealDetailFromDb(data.deal)
+        setDbDeal(nextDeal)
+        setProgressStatus(nextDeal.progressStatus)
+        setNextAction(nextDeal.nextAction)
+        setNextActionDate(nextDeal.nextActionDate)
+        setMemo(nextDeal.memo)
+        setDbActivities(
+          (data.activities ?? []).map((a) => ({
+            id: a.id,
+            type: mapDbActivityType(a.type),
+            timestamp: a.occurredAt,
+            title: a.title,
+            description: a.content ?? undefined,
+          }))
+        )
+      })
+      .catch(() => {})
+    return () => {
+      aborted = true
+    }
+  }, [id])
 
   // タスクの state
   const [tasks, setTasks] = useState<DealTask[]>(INITIAL_DEAL_TASKS[id] ?? [])
@@ -2590,7 +2690,50 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
                 </p>
               </div>
               <div className="p-5">
-                <ContactHistoryTimeline />
+                {dbActivities.length > 0 ? (
+                  <div className="space-y-3">
+                    {dbActivities.map((entry) => (
+                      <div
+                        key={entry.id}
+                        className="rounded-[10px] px-4 py-3"
+                        style={{
+                          background: 'var(--color-obs-surface-low)',
+                          boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.12)',
+                        }}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <Mail size={13} style={{ color: 'var(--color-obs-primary)' }} />
+                              <p
+                                className="truncate text-[13px] font-semibold"
+                                style={{ color: 'var(--color-obs-text)' }}
+                              >
+                                {entry.title}
+                              </p>
+                            </div>
+                            {entry.description && (
+                              <p
+                                className="mt-2 line-clamp-3 text-[12px] leading-relaxed"
+                                style={{ color: 'var(--color-obs-text-muted)' }}
+                              >
+                                {entry.description}
+                              </p>
+                            )}
+                          </div>
+                          <span
+                            className="shrink-0 text-[11px]"
+                            style={{ color: 'var(--color-obs-text-subtle)' }}
+                          >
+                            {formatTimestamp(entry.timestamp)}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <ContactHistoryTimeline />
+                )}
               </div>
             </motion.div>
           </div>

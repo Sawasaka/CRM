@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import OpenAI from 'openai'
 import { auth } from '@/lib/auth'
 import { prisma } from '@bgm/db'
 import {
@@ -15,31 +14,27 @@ import {
   type ModelKind,
   type ThinkingDepth,
 } from '@/lib/research-models'
-import { buildWebContext } from '@/lib/research-web-search'
+import { buildWebContext, buildWebContextFromPrompt } from '@/lib/research-web-search'
+import { generateGeminiChat } from '@/lib/gemini-chat'
+import type { ChatPolicyState } from '@/lib/chat-policy-presets'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
 type Body = {
-  entityType: EntityType
-  entityId: string
+  entityType?: EntityType
+  entityId?: string
   prompt?: string
   presetId?: string
   model?: ModelKind
   thinking?: ThinkingDepth
+  policy?: Partial<ChatPolicyState>
   history?: Array<{ role: 'user' | 'assistant'; content: string }>
+  /** AssigneeFilter の「外部 ON」(Web 検索などの社外情報を併用) */
+  includeExternal?: boolean
 }
 
 export async function POST(req: NextRequest) {
-  const session = await auth()
-  let userId = (session as unknown as { userId?: string })?.userId
-  // 開発時：RESEARCH_DEV_BYPASS=1 で認証バイパス（最初の Org の最初の User を使う）
-  if (!userId && process.env.NODE_ENV !== 'production' && process.env.RESEARCH_DEV_BYPASS === '1') {
-    const u = await prisma.user.findFirst({ orderBy: { createdAt: 'asc' }, select: { id: true } })
-    userId = u?.id
-  }
-  if (!userId) return NextResponse.json({ error: 'unauthenticated' }, { status: 401 })
-
   const body = (await req.json().catch(() => ({}))) as Partial<Body>
   const {
     entityType,
@@ -48,25 +43,38 @@ export async function POST(req: NextRequest) {
     presetId,
     model: reqModel,
     thinking: reqThinking,
+    policy,
     history,
+    includeExternal,
   } = body
+  const hasEntityContext = Boolean(entityType && entityId)
 
-  if (!entityType || !entityId) {
-    return NextResponse.json({ error: 'entityType と entityId は必須です' }, { status: 400 })
-  }
   if (!prompt && !presetId) {
     return NextResponse.json({ error: 'prompt または presetId が必要です' }, { status: 400 })
   }
 
-  // org plan を取得
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { orgId: true, org: { select: { plan: true } } },
-  })
-  if (!user) return NextResponse.json({ error: 'user not found' }, { status: 404 })
+  const session = await auth()
+  let userId = (session as unknown as { userId?: string })?.userId
+  // 開発時：画面確認用に最初の User を使う。公開環境では必ず認証を要求する。
+  if (!userId && process.env.NODE_ENV !== 'production') {
+    const u = await prisma.user.findFirst({ orderBy: { createdAt: 'asc' }, select: { id: true } })
+    userId = u?.id
+  }
+  if (!userId && (process.env.NODE_ENV === 'production' || hasEntityContext)) {
+    return NextResponse.json({ error: 'unauthenticated' }, { status: 401 })
+  }
 
-  const plan = user.org.plan
-  if (!isResearchAllowed(plan)) {
+  // org plan を取得
+  const user = userId
+    ? await prisma.user.findUnique({
+        where: { id: userId },
+        select: { orgId: true, org: { select: { plan: true } } },
+      })
+    : null
+  if (userId && !user) return NextResponse.json({ error: 'user not found' }, { status: 404 })
+
+  const plan = user?.org.plan ?? 'ENTERPRISE'
+  if (process.env.NODE_ENV === 'production' && !isResearchAllowed(plan)) {
     return NextResponse.json(
       { error: 'リサーチ機能はSTARTERプラン以上で利用できます' },
       { status: 403 }
@@ -84,21 +92,29 @@ export async function POST(req: NextRequest) {
 
   // コンテキスト + 自社情報の組み立て
   const [ctx, ourBiz] = await Promise.all([
-    buildResearchContext(entityType, entityId),
-    getOurBusiness(user.orgId),
+    hasEntityContext ? buildResearchContext(entityType!, entityId!) : Promise.resolve(null),
+    getOurBusiness(user?.orgId),
   ])
 
-  // 外部Web検索（プリセット指定時のみ・対象企業名がある場合のみ）
+  // 外部Web検索:
+  //  (a) プリセット指定 + 対象企業名がある場合 → プリセット連動の複数クエリ
+  //  (b) includeExternal=true (チャットの「外部 ON」) のフリーテキスト → ユーザー prompt をそのまま検索
   let webContextText: string | null = null
-  if (presetId && ctx.abm?.company.name) {
+  if (presetId && ctx?.abm?.company.name) {
     webContextText = await buildWebContext(presetId, ctx.abm.company.name).catch(() => null)
+  } else if (includeExternal && userPrompt) {
+    webContextText = await buildWebContextFromPrompt(userPrompt).catch(() => null)
   }
 
   const systemPrompt =
-    `あなたはB2B営業のシニアリサーチャーです。以下の社内データ・外部Web検索結果・当社情報を踏まえ、営業実務で使える具体的・構造化された回答を生成してください。\n` +
-    `推測には必ず「根拠 / 推測 / 仮説」のラベルを付けてください。出典が分かる場合はURLや発信元を付記してください。\n\n` +
+    `あなたはルキスマCRMのB2B営業リサーチAIです。社内データ・外部Web検索結果・当社情報を踏まえ、営業実務で使える具体的・構造化された回答を生成してください。\n` +
+    `推測には必ず「根拠 / 推測 / 仮説」のラベルを付けてください。出典が分かる場合はURLや発信元を付記してください。\n` +
+    `データが不足している場合は、断定せず、次に確認すべき情報を短く提示してください。\n\n` +
     `${formatOurBusinessPrompt(ourBiz)}\n\n` +
-    `${formatContextForPrompt(ctx)}` +
+    formatChatPolicyPrompt(policy) +
+    (ctx
+      ? formatContextForPrompt(ctx)
+      : '# 対象コンテキスト\n- 個別企業・取引・コンタクトは未指定です。ユーザーの質問を起点に回答してください。\n') +
     (webContextText ?? '') +
     (resolved.reasoningSystemSuffix ?? '')
 
@@ -114,29 +130,41 @@ export async function POST(req: NextRequest) {
 
   const t0 = Date.now()
   try {
-    const apiKey = process.env.OPENAI_API_KEY
-    if (!apiKey) {
-      return NextResponse.json({ error: 'OPENAI_API_KEY が未設定です' }, { status: 500 })
-    }
-    const openai = new OpenAI({ apiKey })
-    const completion = await openai.chat.completions.create({
+    const completion = await generateGeminiChat({
       model: resolved.model,
       messages,
       temperature: resolved.thinking === 'extended' ? 0.3 : 0.4,
     })
-    const content = completion.choices[0]?.message?.content ?? ''
     return NextResponse.json({
-      content,
-      model: resolved.model,
+      content: completion.content,
+      model: completion.model,
       thinking: resolved.thinking,
       elapsedMs: Date.now() - t0,
-      usage: completion.usage,
+      usage: completion.usageMetadata,
       contextSize: systemPrompt.length,
     })
   } catch (e) {
     return NextResponse.json(
-      { error: `OpenAI 呼び出しに失敗: ${(e as Error).message}` },
+      { error: `Gemini 呼び出しに失敗: ${(e as Error).message}` },
       { status: 502 }
     )
   }
+}
+
+function formatChatPolicyPrompt(policy: Partial<ChatPolicyState> | undefined): string {
+  const premises = policy?.premises?.trim()
+  const policies = policy?.policies?.trim()
+  if (!premises && !policies) return ''
+
+  const lines = ['# ユーザー指定の前提・ポリシー']
+  if (premises) {
+    lines.push('## 前提')
+    lines.push(premises)
+  }
+  if (policies) {
+    lines.push('## ポリシー')
+    lines.push(policies)
+  }
+  lines.push('')
+  return lines.join('\n')
 }

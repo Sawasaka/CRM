@@ -4,6 +4,7 @@ import Google from 'next-auth/providers/google'
 import { prisma } from '@bgm/db'
 import { verifyPassword } from '@/lib/password'
 import { ensureUser } from '@/lib/user-provisioning'
+import { getGoogleAccountSnapshot, upsertGoogleAccountSnapshot } from '@/lib/google/account-store'
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
@@ -13,7 +14,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        const email = String(credentials.email ?? '').trim().toLowerCase()
+        const email = String(credentials.email ?? '')
+          .trim()
+          .toLowerCase()
         const password = String(credentials.password ?? '')
         if (!email || !password) return null
 
@@ -31,8 +34,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
       authorization: {
         params: {
-          // ID 認証だけを担う。機能スコープは /api/google/install で incremental に取得。
-          scope: ['openid', 'email', 'profile'].join(' '),
+          // Google Cloud 側に登録済みの NextAuth callback で、まず Gmail 連携を実用化する。
+          // Drive / Calendar / Meet は /api/google/install の incremental authorization で追加取得する。
+          scope: [
+            'openid',
+            'email',
+            'profile',
+            'https://www.googleapis.com/auth/gmail.modify',
+          ].join(' '),
           access_type: 'offline',
           prompt: 'consent',
         },
@@ -61,26 +70,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.userId = userId
 
         if (account.refresh_token) {
-          const existing = await prisma.userGoogleAccount.findUnique({ where: { userId } })
-          await prisma.userGoogleAccount.upsert({
-            where: { userId },
-            create: {
-              userId,
-              googleSub: account.providerAccountId,
-              email: profile.email as string,
-              accessToken: account.access_token ?? null,
-              refreshToken: account.refresh_token,
-              expiresAt: account.expires_at ? new Date(account.expires_at * 1000) : null,
-              scope: (account.scope as string) ?? null,
-            },
-            update: {
-              googleSub: account.providerAccountId,
-              email: profile.email as string,
-              accessToken: account.access_token ?? null,
-              refreshToken: account.refresh_token ?? existing?.refreshToken ?? null,
-              expiresAt: account.expires_at ? new Date(account.expires_at * 1000) : null,
-              scope: mergeScopes(existing?.scope ?? null, (account.scope as string) ?? ''),
-            },
+          const existing = await getGoogleAccountSnapshot(userId)
+          await upsertGoogleAccountSnapshot({
+            userId,
+            googleSub: account.providerAccountId,
+            email: profile.email as string,
+            accessToken: account.access_token ?? null,
+            refreshToken: account.refresh_token ?? existing?.refreshToken ?? null,
+            expiresAt: account.expires_at ? new Date(account.expires_at * 1000) : null,
+            scope: mergeScopes(existing?.scope ?? null, (account.scope as string) ?? ''),
           })
         }
       }
