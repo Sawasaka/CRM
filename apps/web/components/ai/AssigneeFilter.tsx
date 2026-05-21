@@ -34,12 +34,7 @@ export type FeatureScopeId =
   | 'companies'
   | 'pipeline'
 
-export type PersonScopeId =
-  | 'dev-taro'
-  | 'sales-hanako'
-  | 'mkt-jiro'
-  | 'is-saburo'
-  | 'cs-shiro'
+export type PersonScopeId = string
 
 /**
  * 検索スコープ（多選択）。
@@ -66,33 +61,34 @@ interface PersonMeta {
 }
 
 const FEATURES: FeatureMeta[] = [
-  { id: 'team_faq',     name: 'チームFAQ',       icon: BookOpen,      tint: 'var(--color-obs-middle)' },
-  { id: 'first_party',  name: 'ファーストパーティ', icon: Activity,      tint: 'var(--color-obs-low)' },
-  { id: 'dev_priority', name: '開発優先度',       icon: Flame,         tint: 'var(--color-obs-hot)' },
-  { id: 'action_board', name: 'アクションボード',  icon: ClipboardList, tint: 'var(--color-obs-primary)' },
-  { id: 'tickets',      name: 'チケット',         icon: Inbox,         tint: 'var(--color-obs-low)' },
-  { id: 'tasks',        name: 'タスク一覧',       icon: CheckSquare,   tint: 'var(--color-obs-primary)' },
-  { id: 'deals',        name: '取引',            icon: Briefcase,     tint: 'var(--color-obs-middle)' },
-  { id: 'contacts',     name: 'コンタクト',       icon: UsersIcon,     tint: 'var(--color-obs-primary)' },
-  { id: 'companies',    name: '企業',            icon: Building2,     tint: 'var(--color-obs-low)' },
-  { id: 'pipeline',     name: 'パイプライン',     icon: Columns3,      tint: 'var(--color-obs-primary)' },
+  { id: 'team_faq', name: 'チームFAQ', icon: BookOpen, tint: 'var(--color-obs-middle)' },
+  { id: 'first_party', name: 'ファーストパーティ', icon: Activity, tint: 'var(--color-obs-low)' },
+  { id: 'dev_priority', name: '開発優先度', icon: Flame, tint: 'var(--color-obs-hot)' },
+  {
+    id: 'action_board',
+    name: 'アクションボード',
+    icon: ClipboardList,
+    tint: 'var(--color-obs-primary)',
+  },
+  { id: 'tickets', name: 'チケット', icon: Inbox, tint: 'var(--color-obs-low)' },
+  { id: 'tasks', name: 'タスク一覧', icon: CheckSquare, tint: 'var(--color-obs-primary)' },
+  { id: 'deals', name: '取引', icon: Briefcase, tint: 'var(--color-obs-middle)' },
+  { id: 'contacts', name: 'コンタクト', icon: UsersIcon, tint: 'var(--color-obs-primary)' },
+  { id: 'companies', name: '企業', icon: Building2, tint: 'var(--color-obs-low)' },
+  { id: 'pipeline', name: 'パイプライン', icon: Columns3, tint: 'var(--color-obs-primary)' },
 ]
 
-const PERSONS: PersonMeta[] = [
-  { id: 'dev-taro',     name: '開発 太郎' },
-  { id: 'sales-hanako', name: '営業 花子' },
-  { id: 'mkt-jiro',     name: 'マーケ 次郎' },
-  { id: 'is-saburo',    name: 'IS 三郎' },
-  { id: 'cs-shiro',     name: 'CS 四郎' },
-]
+const PERSONS: PersonMeta[] = []
 
 const ALL_FEATURE_IDS = FEATURES.map((f) => f.id)
 const ALL_PERSON_IDS = PERSONS.map((p) => p.id)
 
 export const DEFAULT_SCOPE: AssigneeScopeValue = {
   features: new Set<FeatureScopeId>(ALL_FEATURE_IDS),
-  persons:  new Set<PersonScopeId>(ALL_PERSON_IDS),
-  includeExternal: false,
+  persons: new Set<PersonScopeId>(ALL_PERSON_IDS),
+  // デフォルトで外部情報 (Web 検索など) を ON にし、社内データ + 外部リサーチを
+  // 横断した回答を返す体験を初期状態とする
+  includeExternal: true,
 }
 
 interface AssigneeFilterProps {
@@ -107,7 +103,7 @@ interface AssigneeFilterProps {
 export function AssigneeFilter({ value, onChange }: AssigneeFilterProps = {}) {
   const [internal, setInternal] = useState<AssigneeScopeValue>(() => ({
     features: new Set(DEFAULT_SCOPE.features),
-    persons:  new Set(DEFAULT_SCOPE.persons),
+    persons: new Set(DEFAULT_SCOPE.persons),
     includeExternal: DEFAULT_SCOPE.includeExternal,
   }))
   const current = value ?? internal
@@ -141,8 +137,12 @@ export function AssigneeFilter({ value, onChange }: AssigneeFilterProps = {}) {
 // ─── 機能ドロップダウン ────────────────────────────────────────────────────
 
 function FeatureMultiSelect({
-  selected, onChange,
-}: { selected: Set<FeatureScopeId>; onChange: (next: Set<FeatureScopeId>) => void }) {
+  selected,
+  onChange,
+}: {
+  selected: Set<FeatureScopeId>
+  onChange: (next: Set<FeatureScopeId>) => void
+}) {
   const [open, setOpen] = useState(false)
   const wrapRef = useRef<HTMLDivElement | null>(null)
   useOutsideClick(wrapRef, () => setOpen(false), open)
@@ -166,7 +166,12 @@ function FeatureMultiSelect({
       <ChipButton
         active={!isAll}
         onClick={() => setOpen((v) => !v)}
-        icon={<Layers size={12} style={{ color: isAll ? 'var(--color-obs-primary)' : 'var(--color-obs-middle)' }} />}
+        icon={
+          <Layers
+            size={12}
+            style={{ color: isAll ? 'var(--color-obs-primary)' : 'var(--color-obs-middle)' }}
+          />
+        }
         title="参照する機能を選択"
       >
         {label}
@@ -203,18 +208,25 @@ function FeatureMultiSelect({
 // ─── 人ドロップダウン ─────────────────────────────────────────────────────
 
 function PersonMultiSelect({
-  selected, onChange,
-}: { selected: Set<PersonScopeId>; onChange: (next: Set<PersonScopeId>) => void }) {
+  selected,
+  onChange,
+}: {
+  selected: Set<PersonScopeId>
+  onChange: (next: Set<PersonScopeId>) => void
+}) {
   const [open, setOpen] = useState(false)
   const wrapRef = useRef<HTMLDivElement | null>(null)
   useOutsideClick(wrapRef, () => setOpen(false), open)
 
   const isAll = selected.size === ALL_PERSON_IDS.length
-  const label = isAll
-    ? '人 全て'
-    : selected.size === 0
-      ? '人 なし'
-      : `人 ${selected.size}/${ALL_PERSON_IDS.length}`
+  const label =
+    ALL_PERSON_IDS.length === 0
+      ? '人 未設定'
+      : isAll
+        ? '人 全て'
+        : selected.size === 0
+          ? '人 なし'
+          : `人 ${selected.size}/${ALL_PERSON_IDS.length}`
 
   const toggle = (id: PersonScopeId) => {
     const next = new Set(selected)
@@ -228,7 +240,12 @@ function PersonMultiSelect({
       <ChipButton
         active={!isAll}
         onClick={() => setOpen((v) => !v)}
-        icon={<UserRound size={12} style={{ color: isAll ? 'var(--color-obs-primary)' : 'var(--color-obs-middle)' }} />}
+        icon={
+          <UserRound
+            size={12}
+            style={{ color: isAll ? 'var(--color-obs-primary)' : 'var(--color-obs-middle)' }}
+          />
+        }
         title="参照する担当者を選択"
       >
         {label}
@@ -249,7 +266,13 @@ function PersonMultiSelect({
               key={p.id}
               checked={selected.has(p.id)}
               onClick={() => toggle(p.id)}
-              icon={<UserRound size={12} style={{ color: 'var(--color-obs-text-subtle)' }} className="shrink-0" />}
+              icon={
+                <UserRound
+                  size={12}
+                  style={{ color: 'var(--color-obs-text-subtle)' }}
+                  className="shrink-0"
+                />
+              }
               name={p.name}
             />
           ))}
@@ -261,9 +284,7 @@ function PersonMultiSelect({
 
 // ─── 外部情報トグル ───────────────────────────────────────────────────────
 
-function ExternalToggle({
-  on, onChange,
-}: { on: boolean; onChange: (next: boolean) => void }) {
+function ExternalToggle({ on, onChange }: { on: boolean; onChange: (next: boolean) => void }) {
   return (
     <button
       type="button"
@@ -285,7 +306,11 @@ function ExternalToggle({
 // ─── 共通 UI パーツ ───────────────────────────────────────────────────────
 
 function ChipButton({
-  active, onClick, icon, title, children,
+  active,
+  onClick,
+  icon,
+  title,
+  children,
 }: {
   active: boolean
   onClick: () => void
@@ -311,17 +336,14 @@ function ChipButton({
   )
 }
 
-function DropdownPanel({
-  width, children,
-}: { width: number; children: React.ReactNode }) {
+function DropdownPanel({ width, children }: { width: number; children: React.ReactNode }) {
   return (
     <div
       className="absolute bottom-full left-0 mb-2 rounded-[var(--radius-obs-md)] py-1 z-50 max-h-[420px] overflow-auto"
       style={{
         width,
         backgroundColor: 'var(--color-obs-surface-highest)',
-        boxShadow:
-          '0 10px 30px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(109,106,111,0.14)',
+        boxShadow: '0 10px 30px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(109,106,111,0.14)',
       }}
     >
       {children}
@@ -330,9 +352,17 @@ function DropdownPanel({
 }
 
 function SectionHeader({
-  label, allOn, onToggleAll, count, total,
+  label,
+  allOn,
+  onToggleAll,
+  count,
+  total,
 }: {
-  label: string; allOn: boolean; onToggleAll: () => void; count: number; total: number
+  label: string
+  allOn: boolean
+  onToggleAll: () => void
+  count: number
+  total: number
 }) {
   return (
     <div
@@ -354,7 +384,9 @@ function SectionHeader({
           backgroundColor: allOn ? 'rgba(171,199,255,0.12)' : 'transparent',
         }}
         onMouseOver={(e) => {
-          if (!allOn) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--color-obs-surface-low)'
+          if (!allOn)
+            (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+              'var(--color-obs-surface-low)'
         }}
         onMouseOut={(e) => {
           if (!allOn) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
@@ -367,9 +399,15 @@ function SectionHeader({
 }
 
 function ScopeRow({
-  checked, onClick, icon, name,
+  checked,
+  onClick,
+  icon,
+  name,
 }: {
-  checked: boolean; onClick: () => void; icon: React.ReactNode; name: string
+  checked: boolean
+  onClick: () => void
+  icon: React.ReactNode
+  name: string
 }) {
   return (
     <button
@@ -382,7 +420,8 @@ function ScopeRow({
         backgroundColor: 'transparent',
       }}
       onMouseOver={(e) => {
-        ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--color-obs-surface-low)'
+        ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
+          'var(--color-obs-surface-low)'
       }}
       onMouseOut={(e) => {
         ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
@@ -397,7 +436,9 @@ function ScopeRow({
             : 'inset 0 0 0 1px rgba(109,106,111,0.32)',
         }}
       >
-        {checked && <Check size={11} strokeWidth={3} style={{ color: 'var(--color-obs-on-primary)' }} />}
+        {checked && (
+          <Check size={11} strokeWidth={3} style={{ color: 'var(--color-obs-on-primary)' }} />
+        )}
       </span>
       {icon}
       <span className="text-[13px] tracking-[-0.01em] flex-1">{name}</span>
@@ -410,7 +451,7 @@ function ScopeRow({
 function useOutsideClick(
   ref: React.RefObject<HTMLElement | null>,
   handler: () => void,
-  enabled: boolean,
+  enabled: boolean
 ) {
   useEffect(() => {
     if (!enabled) return
