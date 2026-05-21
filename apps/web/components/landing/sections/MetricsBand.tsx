@@ -2,7 +2,7 @@ import { Eyebrow, Section } from '../atoms'
 
 export const MetricsBand = () => {
   const stats = [
-    { k: '1',     suf: 'つで',  l: '5領域 統合',                       c: '#abc7ff' },
+    { k: '0',     suf: '設計',  l: '入力・分析項目 プリセット済み',       c: '#abc7ff' },
     { k: '5',     suf: '体',    l: 'ドメイン特化エージェント',           c: '#d3a5ff' },
     { k: '0.1',   suf: '入力',  l: '議事録・メール・コール 自動取込',     c: '#8dffc9' },
     { k: '290万', suf: '社',    l: '企業データ × 求人インテント',         c: '#ffcf4a' },
