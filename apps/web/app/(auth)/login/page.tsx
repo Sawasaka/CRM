@@ -126,11 +126,11 @@ function LoginContent() {
 
   return (
     <AuthShell>
-      <div className="bg-white rounded-[14px] border border-[#E5E7EB] shadow-[0_4px_24px_rgba(0,0,0,0.06)] p-8">
-        <h1 className="text-[22px] font-semibold text-[#111827] mb-1">
+      <div className="rounded-2xl border border-white/10 bg-[#242426]/88 p-7 shadow-[0_22px_80px_rgba(0,0,0,0.34)] backdrop-blur-xl">
+        <h1 className="text-[22px] font-semibold tracking-[-0.02em] text-[#e7e5ea] mb-1">
           {mode === 'login' ? 'ログイン' : '初回登録'}
         </h1>
-        <p className="text-sm text-[#6B7280] mb-6">
+        <p className="text-sm leading-6 text-[#9b99a0] mb-6">
           Google、またはメールアドレスとパスワードで利用できます
         </p>
 
@@ -140,6 +140,11 @@ function LoginContent() {
               <Button
                 className="w-full h-10 gap-3"
                 variant="secondary"
+                style={{
+                  backgroundColor: '#fcfbff',
+                  color: '#0a0a0c',
+                  borderColor: 'rgba(255,255,255,0.12)',
+                }}
                 loading={loading === 'google'}
                 disabled={mode === 'register' && !legalAccepted}
                 onClick={() => {
@@ -153,9 +158,9 @@ function LoginContent() {
             </div>
 
             <div className="my-6 flex items-center gap-3">
-              <div className="h-px flex-1 bg-[#E5E7EB]" />
-              <span className="text-xs text-[#9CA3AF]">または</span>
-              <div className="h-px flex-1 bg-[#E5E7EB]" />
+              <div className="h-px flex-1 bg-white/10" />
+              <span className="text-xs text-[#7e7c83]">または</span>
+              <div className="h-px flex-1 bg-white/10" />
             </div>
           </>
         ) : (
@@ -165,10 +170,10 @@ function LoginContent() {
         <form className="space-y-4" onSubmit={submitPasswordLogin}>
           {mode === 'register' ? (
             <div className="space-y-2">
-              <Label htmlFor="name">名前</Label>
+              <Label htmlFor="name" className="text-[#c7c5c9]">名前</Label>
               <div className="relative">
                 <UserRound
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-[#7e7c83]"
                   size={15}
                 />
                 <Input
@@ -177,7 +182,7 @@ function LoginContent() {
                   autoComplete="name"
                   value={name}
                   onChange={(event) => setName(event.target.value)}
-                  className="pl-9"
+                  className="pl-9 border-white/10 bg-[#131315] text-[#e7e5ea] placeholder:text-[#5d5a5f] hover:border-white/20 focus-visible:border-[#abc7ff] focus-visible:ring-[#abc7ff]/20"
                   placeholder="山田 太郎"
                 />
               </div>
@@ -185,25 +190,25 @@ function LoginContent() {
           ) : null}
 
           {mode === 'register' ? (
-            <label className="flex items-start gap-2.5 rounded-[10px] border border-[#E5E7EB] bg-[#F9FAFB] p-3 text-xs leading-5 text-[#4B5563]">
+            <label className="flex items-start gap-2.5 rounded-xl border border-white/10 bg-[#1b1b1d] p-3 text-xs leading-5 text-[#9b99a0]">
               <input
                 type="checkbox"
                 checked={legalAccepted}
                 onChange={(event) => setLegalAccepted(event.target.checked)}
-                className="mt-0.5 h-4 w-4 shrink-0 accent-[#4F46E5]"
+                className="mt-0.5 h-4 w-4 shrink-0 accent-[#0071e3]"
               />
               <span>
-                <Link href="/legal/terms" className="font-medium text-[#4F46E5] hover:underline">
+                <Link href="/legal/terms" className="font-medium text-[#abc7ff] hover:underline">
                   利用規約
                 </Link>
                 、
-                <Link href="/legal/privacy" className="font-medium text-[#4F46E5] hover:underline">
+                <Link href="/legal/privacy" className="font-medium text-[#abc7ff] hover:underline">
                   プライバシーポリシー
                 </Link>
                 、
                 <Link
                   href="/legal/ai-policy"
-                  className="font-medium text-[#4F46E5] hover:underline"
+                  className="font-medium text-[#abc7ff] hover:underline"
                 >
                   AI利用ポリシー
                 </Link>
@@ -213,16 +218,16 @@ function LoginContent() {
           ) : null}
 
           <div className="space-y-2">
-            <Label htmlFor="email">メールアドレス</Label>
+            <Label htmlFor="email" className="text-[#c7c5c9]">メールアドレス</Label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" size={15} />
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-[#7e7c83]" size={15} />
               <Input
                 id="email"
                 type="email"
                 autoComplete="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                className="pl-9"
+                className="pl-9 border-white/10 bg-[#131315] text-[#e7e5ea] placeholder:text-[#5d5a5f] hover:border-white/20 focus-visible:border-[#abc7ff] focus-visible:ring-[#abc7ff]/20"
                 required
               />
             </div>
@@ -230,17 +235,17 @@ function LoginContent() {
 
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-3">
-              <Label htmlFor="password">パスワード</Label>
+              <Label htmlFor="password" className="text-[#c7c5c9]">パスワード</Label>
               <Link
                 href="/forgot-password"
-                className="text-xs font-medium text-[#4F46E5] hover:underline"
+                className="text-xs font-medium text-[#abc7ff] hover:underline"
               >
                 パスワードを忘れた
               </Link>
             </div>
             <div className="relative">
               <KeyRound
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-[#7e7c83]"
                 size={15}
               />
               <Input
@@ -249,17 +254,22 @@ function LoginContent() {
                 autoComplete="current-password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                className="pl-9"
+                className="pl-9 border-white/10 bg-[#131315] text-[#e7e5ea] placeholder:text-[#5d5a5f] hover:border-white/20 focus-visible:border-[#abc7ff] focus-visible:ring-[#abc7ff]/20"
                 required
               />
             </div>
           </div>
 
-          {error ? <p className="text-sm text-[#DC2626]">{error}</p> : null}
+          {error ? <p className="text-sm text-[#ff8dcf]">{error}</p> : null}
 
           <Button
             className="w-full h-10"
             type="submit"
+            style={{
+              background: 'linear-gradient(135deg, #abc7ff, #0071e3)',
+              color: '#0a0a0c',
+              boxShadow: '0 0 24px rgba(171,199,255,0.28)',
+            }}
             loading={loading === 'credentials'}
             disabled={mode === 'register' && !legalAccepted}
           >
@@ -269,7 +279,7 @@ function LoginContent() {
 
         <button
           type="button"
-          className="mt-5 block w-full text-center text-sm font-medium text-[#4F46E5] hover:underline"
+          className="mt-5 block w-full text-center text-sm font-medium text-[#abc7ff] hover:underline"
           onClick={() => {
             setError('')
             setLegalAccepted(false)
@@ -295,26 +305,37 @@ function authErrorMessage(error: string): string {
 
 function AuthShell({ children }: { children?: ReactNode }) {
   return (
-    <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center p-4">
+    <div className="relative min-h-screen overflow-hidden bg-[#0a0a0c] text-[#e7e5ea] flex items-center justify-center p-4">
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(171,199,255,0.08),transparent_36%,rgba(0,113,227,0.05))]" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/10" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-[linear-gradient(0deg,rgba(0,0,0,0.34),transparent)]" />
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: 'easeOut' }}
-        className="w-full max-w-[400px]"
+        className="relative z-10 w-full max-w-[410px]"
       >
-        <div className="flex items-center gap-2.5 mb-8">
-          <div className="w-9 h-9 bg-[#4F46E5] rounded-[10px] flex items-center justify-center shadow-[0_2px_8px_rgba(79,70,229,0.3)]">
-            <Zap size={18} className="text-white" strokeWidth={2.5} />
+        <div className="mb-7 flex items-center justify-between rounded-2xl border border-white/10 bg-[#353437]/40 px-4 py-3 backdrop-blur-xl">
+          <div className="flex items-center gap-2.5">
+            <div
+              className="flex h-9 w-9 items-center justify-center rounded-[10px] text-[#0a0a0c] shadow-[0_0_22px_rgba(171,199,255,0.32)]"
+              style={{ background: 'linear-gradient(135deg, #abc7ff, #0071e3)' }}
+            >
+              <Zap size={18} strokeWidth={2.5} />
+            </div>
+            <div className="flex flex-col">
+              <span className="fo-gradient-text text-xl font-semibold leading-tight">ルキスマCRM</span>
+              <span className="text-[10px] tracking-[0.12em] text-[#7e7c83]">
+                FIRST-PARTY CRM
+              </span>
+            </div>
           </div>
-          <div className="flex flex-col">
-            <span className="text-xl font-semibold text-[#111827] leading-tight">ルキスマCRM</span>
-            <span className="text-[10px] text-[#9CA3AF] tracking-[0.02em]">
-              for First-Party CRM
-            </span>
-          </div>
+          <span className="hidden rounded-full bg-[#242426] px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] text-[#9b99a0] sm:inline-flex">
+            Secure
+          </span>
         </div>
         {children}
-        <p className="mt-5 text-center text-xs text-[#9CA3AF]">
+        <p className="mt-5 text-center text-xs text-[#5d5a5f]">
           © 2026 RookieSmart. All rights reserved.
         </p>
       </motion.div>
