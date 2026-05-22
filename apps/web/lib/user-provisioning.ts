@@ -1,4 +1,5 @@
 import { prisma } from '@bgm/db'
+import { ensureAuthUserColumns } from '@/lib/auth-schema'
 
 // User がなければ作成。orgId は環境変数 DEFAULT_ORG_ID か、最初の Organization を使う。
 export async function ensureUser({
@@ -10,6 +11,7 @@ export async function ensureUser({
   name: string
   googleUserId?: string
 }): Promise<string> {
+  await ensureAuthUserColumns()
   const normalizedEmail = email.trim().toLowerCase()
   const existing = await prisma.$queryRaw<Array<{ id: string; googleUserId: string | null }>>`
     SELECT "id", "googleUserId" FROM "User" WHERE "email" = ${normalizedEmail} LIMIT 1

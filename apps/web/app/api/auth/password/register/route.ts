@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@bgm/db'
 import { ensureUser } from '@/lib/user-provisioning'
+import { ensureAuthUserColumns } from '@/lib/auth-schema'
 import { hashPassword, isStrongEnoughPassword } from '@/lib/password'
 
 export async function POST(req: Request) {
@@ -21,23 +22,32 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'weak_password' }, { status: 400 })
   }
 
-  const existing = await prisma.user.findFirst({ where: { email } })
+  await ensureAuthUserColumns()
+  const rows = await prisma.$queryRaw<
+    Array<{ id: string; name: string | null; passwordHash: string | null }>
+  >`
+    SELECT "id", "name", "passwordHash"
+    FROM "User"
+    WHERE "email" = ${email}
+    LIMIT 1
+  `
+  const existing = rows[0]
   if (existing?.passwordHash) {
     return NextResponse.json({ error: 'password_already_set' }, { status: 409 })
   }
 
   const userId = existing?.id ?? (await ensureUser({ email, name: name || email }))
-  await prisma.user.update({
-    where: { id: userId },
-    data: {
-      name: name || existing?.name || email,
-      passwordHash: await hashPassword(password),
-      passwordUpdatedAt: new Date(),
-      passwordResetTokenHash: null,
-      passwordResetExpiresAt: null,
-      passwordResetRequestedAt: null,
-    },
-  })
+  await prisma.$executeRaw`
+    UPDATE "User"
+    SET
+      "name" = ${name || existing?.name || email},
+      "passwordHash" = ${await hashPassword(password)},
+      "passwordUpdatedAt" = NOW(),
+      "passwordResetTokenHash" = NULL,
+      "passwordResetExpiresAt" = NULL,
+      "passwordResetRequestedAt" = NULL
+    WHERE "id" = ${userId}
+  `
 
   return NextResponse.json({ ok: true })
 }

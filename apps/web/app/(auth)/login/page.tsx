@@ -41,17 +41,36 @@ function LoginContent() {
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
   const [mode, setMode] = useState<'login' | 'register'>(initialMode)
-  const [error, setError] = useState(authError ? 'ログインに失敗しました。' : '')
+  const [error, setError] = useState(authError ? authErrorMessage(authError) : '')
   const [loading, setLoading] = useState<'credentials' | 'google' | null>(null)
   const [legalAccepted, setLegalAccepted] = useState(false)
+  const [googleAvailable, setGoogleAvailable] = useState(false)
+  const [providersLoaded, setProvidersLoaded] = useState(false)
   const autoGoogleStarted = useRef(false)
 
   useEffect(() => {
-    if (!autoGoogle || autoGoogleStarted.current) return
+    fetch('/api/auth/providers')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((providers) => {
+        setGoogleAvailable(!!providers?.google)
+        setProvidersLoaded(true)
+      })
+      .catch(() => {
+        setGoogleAvailable(false)
+        setProvidersLoaded(true)
+      })
+  }, [])
+
+  useEffect(() => {
+    if (!autoGoogle || autoGoogleStarted.current || !providersLoaded) return
     autoGoogleStarted.current = true
+    if (!googleAvailable) {
+      setError('Googleログイン設定が未完了です。メールアドレスでログインしてください。')
+      return
+    }
     setLoading('google')
     signIn('google', { callbackUrl })
-  }, [autoGoogle, callbackUrl])
+  }, [autoGoogle, callbackUrl, googleAvailable, providersLoaded])
 
   async function submitPasswordLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -115,27 +134,33 @@ function LoginContent() {
           Google、またはメールアドレスとパスワードで利用できます
         </p>
 
-        <div className="grid gap-3">
-          <Button
-            className="w-full h-10 gap-3"
-            variant="secondary"
-            loading={loading === 'google'}
-            disabled={mode === 'register' && !legalAccepted}
-            onClick={() => {
-              setLoading('google')
-              signIn('google', { callbackUrl })
-            }}
-          >
-            <GoogleIcon />
-            Googleでログイン
-          </Button>
-        </div>
+        {googleAvailable ? (
+          <>
+            <div className="grid gap-3">
+              <Button
+                className="w-full h-10 gap-3"
+                variant="secondary"
+                loading={loading === 'google'}
+                disabled={mode === 'register' && !legalAccepted}
+                onClick={() => {
+                  setLoading('google')
+                  signIn('google', { callbackUrl })
+                }}
+              >
+                <GoogleIcon />
+                Googleでログイン
+              </Button>
+            </div>
 
-        <div className="my-6 flex items-center gap-3">
-          <div className="h-px flex-1 bg-[#E5E7EB]" />
-          <span className="text-xs text-[#9CA3AF]">または</span>
-          <div className="h-px flex-1 bg-[#E5E7EB]" />
-        </div>
+            <div className="my-6 flex items-center gap-3">
+              <div className="h-px flex-1 bg-[#E5E7EB]" />
+              <span className="text-xs text-[#9CA3AF]">または</span>
+              <div className="h-px flex-1 bg-[#E5E7EB]" />
+            </div>
+          </>
+        ) : (
+          <div className="mb-6" />
+        )}
 
         <form className="space-y-4" onSubmit={submitPasswordLogin}>
           {mode === 'register' ? (
@@ -256,6 +281,16 @@ function LoginContent() {
       </div>
     </AuthShell>
   )
+}
+
+function authErrorMessage(error: string): string {
+  if (error === 'Configuration') {
+    return 'ログイン設定が未完了です。メールアドレスでのログインを試してください。'
+  }
+  if (error === 'OAuthCallback' || error === 'OAuthSignin') {
+    return 'Googleログインに失敗しました。メールアドレスでのログインを試してください。'
+  }
+  return 'ログインに失敗しました。'
 }
 
 function AuthShell({ children }: { children?: ReactNode }) {

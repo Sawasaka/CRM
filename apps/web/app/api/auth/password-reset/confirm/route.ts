@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@bgm/db'
+import { ensureAuthUserColumns } from '@/lib/auth-schema'
 import { hashPassword, hashResetToken, isStrongEnoughPassword } from '@/lib/password'
 
 export async function POST(req: Request) {
@@ -19,27 +20,30 @@ export async function POST(req: Request) {
   }
 
   const tokenHash = hashResetToken(token)
-  const user = await prisma.user.findFirst({
-    where: {
-      passwordResetTokenHash: tokenHash,
-      passwordResetExpiresAt: { gt: new Date() },
-    },
-  })
+  await ensureAuthUserColumns()
+  const rows = await prisma.$queryRaw<Array<{ id: string }>>`
+    SELECT "id"
+    FROM "User"
+    WHERE "passwordResetTokenHash" = ${tokenHash}
+      AND "passwordResetExpiresAt" > NOW()
+    LIMIT 1
+  `
+  const user = rows[0]
 
   if (!user) {
     return NextResponse.json({ error: 'invalid_or_expired_token' }, { status: 400 })
   }
 
-  await prisma.user.update({
-    where: { id: user.id },
-    data: {
-      passwordHash: await hashPassword(password),
-      passwordUpdatedAt: new Date(),
-      passwordResetTokenHash: null,
-      passwordResetExpiresAt: null,
-      passwordResetRequestedAt: null,
-    },
-  })
+  await prisma.$executeRaw`
+    UPDATE "User"
+    SET
+      "passwordHash" = ${await hashPassword(password)},
+      "passwordUpdatedAt" = NOW(),
+      "passwordResetTokenHash" = NULL,
+      "passwordResetExpiresAt" = NULL,
+      "passwordResetRequestedAt" = NULL
+    WHERE "id" = ${user.id}
+  `
 
   return NextResponse.json({ ok: true })
 }

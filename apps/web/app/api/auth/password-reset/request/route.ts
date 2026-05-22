@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@bgm/db'
+import { ensureAuthUserColumns } from '@/lib/auth-schema'
 import { createPasswordResetToken } from '@/lib/password'
 
 export async function POST(req: Request) {
@@ -10,19 +11,23 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'email_required' }, { status: 400 })
   }
 
-  const user = await prisma.user.findFirst({ where: { email } })
+  await ensureAuthUserColumns()
+  const rows = await prisma.$queryRaw<Array<{ id: string }>>`
+    SELECT "id" FROM "User" WHERE "email" = ${email} LIMIT 1
+  `
+  const user = rows[0]
   let resetUrl: string | undefined
 
   if (user) {
     const reset = createPasswordResetToken()
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        passwordResetTokenHash: reset.tokenHash,
-        passwordResetExpiresAt: reset.expiresAt,
-        passwordResetRequestedAt: new Date(),
-      },
-    })
+    await prisma.$executeRaw`
+      UPDATE "User"
+      SET
+        "passwordResetTokenHash" = ${reset.tokenHash},
+        "passwordResetExpiresAt" = ${reset.expiresAt},
+        "passwordResetRequestedAt" = NOW()
+      WHERE "id" = ${user.id}
+    `
 
     const baseUrl =
       process.env.NEXT_PUBLIC_APP_URL ??
