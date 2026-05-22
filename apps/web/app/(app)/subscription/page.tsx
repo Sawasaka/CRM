@@ -302,6 +302,9 @@ function SubscriptionPageContent() {
   const [purchasedRemaining] = useState(1500) // 購入残(永久有効)
   // 個人クレジットは「今月の自分の消費量」可視化のみ。実際の消費はテナントプールから引かれる
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('annual')
+  const checkoutState = searchParams?.get('checkout')
+  const [checkoutBusyPlan, setCheckoutBusyPlan] = useState<string | null>(null)
+  const [checkoutError, setCheckoutError] = useState<string | null>(null)
   const [showBuyCredits, setShowBuyCredits] = useState(false)
   const [showNewRequest, setShowNewRequest] = useState(false)
   const [showInviteMember, setShowInviteMember] = useState(false)
@@ -364,6 +367,30 @@ function SubscriptionPageContent() {
       cancelled = true
     }
   }, [])
+
+  const startStripeCheckout = async (plan: Plan) => {
+    setCheckoutError(null)
+    setCheckoutBusyPlan(plan.id)
+    try {
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          planId: plan.id,
+          billingCycle,
+          seats: Math.max(seats, plan.minSeats),
+        }),
+      })
+      const data = (await res.json().catch(() => ({}))) as { url?: string; error?: string }
+      if (!res.ok || !data.url) {
+        setCheckoutError(data.error ?? 'Stripe Checkoutを開始できませんでした。')
+        return
+      }
+      window.location.href = data.url
+    } finally {
+      setCheckoutBusyPlan(null)
+    }
+  }
 
   // AI見積もりを実行 (現状はモック・本番ではAPI呼出 → LLM)
   const runAiEstimation = async () => {
@@ -793,6 +820,61 @@ function SubscriptionPageContent() {
         {/* ── Plans (特権管理者のみ・お金回り) ── */}
         {tab === 'subscription' && isSuperAdmin && (
           <div className="mt-8">
+            {checkoutState === 'required' && (
+              <ObsCard depth="high" padding="md" radius="xl" className="mb-5">
+                <div className="flex items-start gap-3">
+                  <CreditCard size={18} style={{ color: 'var(--color-obs-primary)' }} />
+                  <div>
+                    <div className="text-[14px] font-semibold" style={{ color: 'var(--color-obs-text)' }}>
+                      利用開始にはプラン決済が必要です
+                    </div>
+                    <p className="mt-1 text-[12.5px]" style={{ color: 'var(--color-obs-text-muted)' }}>
+                      プランを選ぶとStripeの安全な決済画面に移動します。決済完了後、この画面へ戻ります。
+                    </p>
+                  </div>
+                </div>
+              </ObsCard>
+            )}
+            {checkoutState === 'success' && (
+              <ObsCard depth="high" padding="md" radius="xl" className="mb-5">
+                <div className="flex items-start gap-3">
+                  <Check size={18} style={{ color: '#4ad98a' }} />
+                  <div>
+                    <div className="text-[14px] font-semibold" style={{ color: 'var(--color-obs-text)' }}>
+                      決済が完了しました
+                    </div>
+                    <p className="mt-1 text-[12.5px]" style={{ color: 'var(--color-obs-text-muted)' }}>
+                      Stripe Webhookの反映後、プラン状態が更新されます。
+                    </p>
+                  </div>
+                </div>
+              </ObsCard>
+            )}
+            {checkoutState === 'cancelled' && (
+              <ObsCard depth="high" padding="md" radius="xl" className="mb-5">
+                <div className="flex items-start gap-3">
+                  <X size={18} style={{ color: 'var(--color-obs-middle)' }} />
+                  <div>
+                    <div className="text-[14px] font-semibold" style={{ color: 'var(--color-obs-text)' }}>
+                      決済をキャンセルしました
+                    </div>
+                    <p className="mt-1 text-[12.5px]" style={{ color: 'var(--color-obs-text-muted)' }}>
+                      必要なタイミングで再度プランを選択できます。
+                    </p>
+                  </div>
+                </div>
+              </ObsCard>
+            )}
+            {checkoutError && (
+              <ObsCard depth="high" padding="md" radius="xl" className="mb-5">
+                <div className="flex items-start gap-3">
+                  <X size={18} style={{ color: 'var(--color-obs-hot)' }} />
+                  <p className="text-[12.5px]" style={{ color: 'var(--color-obs-text-muted)' }}>
+                    {checkoutError}
+                  </p>
+                </div>
+              </ObsCard>
+            )}
             <div className="flex items-end justify-between mb-5">
               <div>
                 <ObsSectionHeader
@@ -1024,19 +1106,14 @@ function SubscriptionPageContent() {
                                 onClick={() => {
                                   if (isSoldOut) return
                                   setConfirmDialog({
-                                    title: `${plan.name} プランの面談を予約`,
-                                    message: `${plan.name} プラン (¥${plan.priceMonthly.toLocaleString()}/月・${plan.contractTerm ?? '3ヶ月契約'}) の導入相談を承ります。\n\n面談では、現在の営業課題のヒアリング、実行支援の進め方、ルキスマCRMの初期セットアップまでをすり合わせます。\n\n本フォーム送信後、担当より24時間以内に日程候補をご連絡します。`,
-                                    confirmLabel: '面談を予約する',
+                                    title: `${plan.name} プランで決済へ進む`,
+                                    message: `${plan.name} プランを ${billingCycle === 'annual' ? '年額' : '月額'}・${Math.max(seats, plan.minSeats)}シートで開始します。\n\n次にStripeの安全な決済画面へ移動します。決済完了後、ルキスマCRMに戻ります。`,
+                                    confirmLabel: 'Stripe決済へ進む',
                                     variant: 'primary',
-                                    onConfirm: () => {
-                                      // TODO: 面談予約 API 実装後に接続
-                                      alert(
-                                        `${plan.name} プランの面談予約を受け付けました。担当より日程をご連絡します。`,
-                                      )
-                                    },
+                                    onConfirm: () => startStripeCheckout(plan),
                                   })
                                 }}
-                                disabled={isSoldOut}
+                                disabled={isSoldOut || checkoutBusyPlan === plan.id}
                                 className="w-full h-10 rounded-[var(--radius-obs-md)] text-[13px] font-medium transition-colors"
                                 style={
                                   isSoldOut
@@ -1060,11 +1137,13 @@ function SubscriptionPageContent() {
                                         }
                                 }
                               >
-                                {isSoldOut
+                                {checkoutBusyPlan === plan.id
+                                  ? 'Stripeへ移動中...'
+                                  : isSoldOut
                                   ? '満枠 (キャンセル待ち)'
                                   : isDowngrade
                                     ? 'このプランへ変更を相談'
-                                    : '面談を予約する'}
+                                    : 'Stripe決済へ進む'}
                               </button>
                             </div>
                           )

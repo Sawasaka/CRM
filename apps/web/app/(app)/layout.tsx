@@ -3,6 +3,7 @@ import { Sidebar } from '@/components/layout/sidebar'
 import { Header } from '@/components/layout/header'
 import { ActiveCallWidget } from '@/components/calls/ActiveCallWidget'
 import { CallResultModal } from '@/components/calls/CallResultModal'
+import { BillingGate } from '@/components/billing/BillingGate'
 
 const DEV_USER = {
   name: '開発 太郎',
@@ -18,7 +19,7 @@ async function getSessionUser() {
   const { redirect } = await import('next/navigation')
   const session = await auth()
   if (!session?.user) {
-    redirect('/login?callbackUrl=/dashboard')
+    redirect('/login?callbackUrl=/subscription?checkout=required')
   }
   return (session as NonNullable<typeof session>).user
 }
@@ -46,6 +47,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       </main>
       <ActiveCallWidget />
       <CallResultModal />
+      <BillingGate />
     </div>
   )
 }
