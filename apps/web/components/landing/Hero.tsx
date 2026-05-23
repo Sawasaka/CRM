@@ -20,6 +20,23 @@ const PLACEHOLDERS = [
   '先週の議事録から要望機能を集計して',
 ]
 
+const LP_DEMO_DAILY_CREDIT_LIMIT = 10
+const LP_DEMO_USAGE_STORAGE_KEY = 'rukisuma-crm-lp-demo-usage'
+
+type DemoUsage = {
+  dateKey: string
+  credits: number
+}
+
+function getJstDateKey(date = new Date()) {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Tokyo',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date)
+}
+
 interface Suggestion {
   id: keyof typeof RESPONSES
   label: string
@@ -471,9 +488,15 @@ export const Hero = () => {
   const [personScope, setPersonScope] = useState<PersonScope>('all')
   const [externalScope, setExternalScope] = useState<ExternalScope>('web')
   const [openMenu, setOpenMenu] = useState<'model' | 'feature' | 'person' | 'external' | null>(null)
+  const [demoUsage, setDemoUsage] = useState<DemoUsage>(() => ({
+    dateKey: getJstDateKey(),
+    credits: 0,
+  }))
   const threadRef = useRef<HTMLDivElement | null>(null)
   const inputRef = useRef<HTMLInputElement | null>(null)
   const menuRootRef = useRef<HTMLDivElement | null>(null)
+  const demoCreditsUsed = demoUsage.dateKey === getJstDateKey() ? demoUsage.credits : 0
+  const demoLimitReached = demoCreditsUsed >= LP_DEMO_DAILY_CREDIT_LIMIT
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -499,12 +522,39 @@ export const Hero = () => {
     return () => clearInterval(t)
   }, [])
 
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(LP_DEMO_USAGE_STORAGE_KEY)
+      if (!raw) return
+      const parsed = JSON.parse(raw) as Partial<DemoUsage>
+      if (parsed.dateKey === getJstDateKey() && typeof parsed.credits === 'number') {
+        setDemoUsage({ dateKey: parsed.dateKey, credits: parsed.credits })
+      }
+    } catch {
+      // Local-only guard. If storage is unavailable, the static demo still does not call paid APIs.
+    }
+  }, [])
+
   // Autoscroll
   useEffect(() => {
     if (threadRef.current) {
       threadRef.current.scrollTo({ top: threadRef.current.scrollHeight, behavior: 'smooth' })
     }
   })
+
+  const consumeDemoCredit = useCallback(() => {
+    const dateKey = getJstDateKey()
+    setDemoUsage((prev) => {
+      const currentCredits = prev.dateKey === dateKey ? prev.credits : 0
+      const next = { dateKey, credits: Math.min(currentCredits + 1, LP_DEMO_DAILY_CREDIT_LIMIT) }
+      try {
+        window.localStorage.setItem(LP_DEMO_USAGE_STORAGE_KEY, JSON.stringify(next))
+      } catch {
+        // Ignore storage failures; this HP demo is currently static and cost-free.
+      }
+      return next
+    })
+  }, [])
 
   const streamResponse = useCallback((agent: AgentKey, baseText: string, rich: RichKind) => {
     const id = 'a' + Date.now()
@@ -543,18 +593,20 @@ export const Hero = () => {
 
   const sendChip = useCallback(
     (sug: Suggestion) => {
-      if (streamingId) return
+      if (streamingId || demoLimitReached) return
+      consumeDemoCredit()
       const userMsg: ChatMsg = { id: 'u' + Date.now(), role: 'user', text: sug.label }
       setMessages((ms) => [...ms, userMsg])
       const r = RESPONSES[sug.id]
       setTimeout(() => streamResponse(r.agent, r.text, r.rich), 350)
     },
-    [streamingId, streamResponse]
+    [consumeDemoCredit, demoLimitReached, streamingId, streamResponse]
   )
 
   const sendInput = useCallback(() => {
     const v = input.trim()
-    if (!v || streamingId) return
+    if (!v || streamingId || demoLimitReached) return
+    consumeDemoCredit()
     setInput('')
     setMessages((ms) => [...ms, { id: 'u' + Date.now(), role: 'user', text: v }])
     const match = SUGGESTIONS.find((s) => v.includes(s.label.slice(0, 8)) || v === s.label)
@@ -568,7 +620,7 @@ export const Hero = () => {
         streamResponse('sales', `Sales Agent: ${fallback}`, null)
       }
     }, 350)
-  }, [input, streamingId, streamResponse])
+  }, [consumeDemoCredit, demoLimitReached, input, streamingId, streamResponse])
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -726,6 +778,7 @@ export const Hero = () => {
                         onKeyDown={onKeyDown}
                         className="w-full bg-transparent outline-none text-[1rem] md:text-[1.05rem] text-[#e7e5ea]"
                         style={{ caretColor: '#abc7ff' }}
+                        readOnly={demoLimitReached}
                         aria-label="ask ルキスマCRM"
                       />
                       {!input && (
@@ -734,7 +787,7 @@ export const Hero = () => {
                           <span
                             className={`ml-2 text-[#7e7c83] text-[1rem] md:text-[1.05rem] transition-all duration-[600ms] ${phShow ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-1'}`}
                           >
-                            {PLACEHOLDERS[phIdx]}
+                            {demoLimitReached ? '本日のデモ質問上限に達しました' : PLACEHOLDERS[phIdx]}
                           </span>
                         </div>
                       )}
@@ -752,6 +805,26 @@ export const Hero = () => {
                       >
                         <Paperclip size={14} />
                       </button>
+
+                      <span
+                        className={`h-8 px-2.5 rounded-full inline-flex items-center gap-1.5 text-[11.5px] ${
+                          demoLimitReached ? 'text-[#ffcf4a]' : 'text-[#c7c5c9]'
+                        }`}
+                        style={{
+                          background: demoLimitReached
+                            ? 'rgba(255,207,74,0.12)'
+                            : 'rgba(171,199,255,0.08)',
+                          boxShadow: `inset 0 0 0 1px ${
+                            demoLimitReached ? 'rgba(255,207,74,0.24)' : 'rgba(171,199,255,0.16)'
+                          }`,
+                        }}
+                        title="公開HPデモの上限です。1質問=1cr、1日10cr（約100円）まで。"
+                      >
+                        デモ
+                        <span className="font-mono tabular-nums">
+                          {demoCreditsUsed}/{LP_DEMO_DAILY_CREDIT_LIMIT}cr
+                        </span>
+                      </span>
 
                       {/* Model dropdown */}
                       <div className="relative">
@@ -921,7 +994,7 @@ export const Hero = () => {
                       </button>
                       <button
                         onClick={sendInput}
-                        disabled={!input.trim() || !!streamingId}
+                        disabled={!input.trim() || !!streamingId || demoLimitReached}
                         className="rounded-lg px-3.5 h-9 inline-flex items-center gap-1.5 text-[12.5px] font-medium disabled:opacity-40"
                         style={{ background: 'linear-gradient(135deg, #abc7ff, #0071e3)', color: '#0a0a0c' }}
                       >
@@ -940,7 +1013,7 @@ export const Hero = () => {
                     <button
                       key={s.id}
                       onClick={() => sendChip(s)}
-                      disabled={!!streamingId}
+                      disabled={!!streamingId || demoLimitReached}
                       className="group inline-flex items-center gap-2 rounded-full pl-2 pr-3 py-1.5 text-xs bg-dusk hover:bg-shimmer transition-colors disabled:opacity-40 fo-chip-shimmer"
                     >
                       <Orb color={a.color} size={10} />

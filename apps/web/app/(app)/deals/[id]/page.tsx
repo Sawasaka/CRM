@@ -52,7 +52,7 @@ import {
   MOCK_PRIORITY_ITEMS,
   type PriorityCategory,
   type PriorityItem,
-} from '@/app/(app)/priority/page'
+} from '@/lib/mock-data/priority'
 import { CreateTicketModal } from '@/app/(app)/tickets/_components/CreateTicketModal'
 import { StatusBadge as TicketStatusBadge } from '@/app/(app)/tickets/_components/StatusBadge'
 import type { TicketListItem } from '@/app/(app)/tickets/_types'

@@ -413,7 +413,6 @@ export const Pricing = () => {
                     <span className="text-[#e7e5ea] font-semibold">100名まで無料</span>
                     でチーム全員に。CRM 全機能 + クレジット込み。
                     <br />
-                    1ユーザーあたり <span className="text-[#e7e5ea] font-medium">1日10cr（約100円相当）</span> まで利用可能。
                     100名超は <span className="text-[#e7e5ea] font-medium">1ライセンス ¥1,000/月</span>{' '}
                     (1,000cr 込み)。追加クレジット 1,000cr ¥1,000。
                   </p>

@@ -185,7 +185,7 @@ export default function TicketDetailPage({
             チケットが見つかりませんでした
           </p>
           <Link href="/tickets" className="text-[12px] mt-3 inline-block" style={{ color: 'var(--color-obs-primary)' }}>
-            チケット一覧に戻る
+            問い合わせチケットに戻る
           </Link>
         </div>
       </ObsPageShell>
@@ -202,7 +202,7 @@ export default function TicketDetailPage({
         style={{ color: 'var(--color-obs-text-muted)' }}
       >
         <ArrowLeft size={12} />
-        チケット一覧
+        問い合わせチケット
       </Link>
 
       {/* ヘッダ */}
