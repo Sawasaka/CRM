@@ -13,7 +13,7 @@ import {
 import { signIn } from 'next-auth/react'
 import { useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { KeyRound, Mail, UserRound, Zap } from 'lucide-react'
+import { KeyRound, Mail, UserRound } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -65,7 +65,7 @@ function LoginContent() {
     if (!autoGoogle || autoGoogleStarted.current || !providersLoaded) return
     autoGoogleStarted.current = true
     if (!googleAvailable) {
-      setError('Googleログイン設定が未完了です。メールアドレスでログインしてください。')
+      setError('')
       return
     }
     setLoading('google')
@@ -131,7 +131,9 @@ function LoginContent() {
           {mode === 'login' ? 'ログイン' : '初回登録'}
         </h1>
         <p className="text-sm leading-6 text-[#9b99a0] mb-6">
-          Google、またはメールアドレスとパスワードで利用できます
+          {googleAvailable
+            ? 'Google、またはメールアドレスとパスワードで利用できます'
+            : 'メールアドレスとパスワードでログインできます'}
         </p>
 
         {googleAvailable ? (
@@ -295,7 +297,7 @@ function LoginContent() {
 
 function authErrorMessage(error: string): string {
   if (error === 'Configuration') {
-    return 'ログイン設定が未完了です。メールアドレスでのログインを試してください。'
+    return ''
   }
   if (error === 'OAuthCallback' || error === 'OAuthSignin') {
     return 'Googleログインに失敗しました。メールアドレスでのログインを試してください。'
@@ -315,25 +317,6 @@ function AuthShell({ children }: { children?: ReactNode }) {
         transition={{ duration: 0.4, ease: 'easeOut' }}
         className="relative z-10 w-full max-w-[410px]"
       >
-        <div className="mb-7 flex items-center justify-between rounded-2xl border border-white/10 bg-[#353437]/40 px-4 py-3 backdrop-blur-xl">
-          <div className="flex items-center gap-2.5">
-            <div
-              className="flex h-9 w-9 items-center justify-center rounded-[10px] text-[#0a0a0c] shadow-[0_0_22px_rgba(171,199,255,0.32)]"
-              style={{ background: 'linear-gradient(135deg, #abc7ff, #0071e3)' }}
-            >
-              <Zap size={18} strokeWidth={2.5} />
-            </div>
-            <div className="flex flex-col">
-              <span className="fo-gradient-text text-xl font-semibold leading-tight">ルキスマCRM</span>
-              <span className="text-[10px] tracking-[0.12em] text-[#7e7c83]">
-                FIRST-PARTY CRM
-              </span>
-            </div>
-          </div>
-          <span className="hidden rounded-full bg-[#242426] px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] text-[#9b99a0] sm:inline-flex">
-            Secure
-          </span>
-        </div>
         {children}
         <p className="mt-5 text-center text-xs text-[#5d5a5f]">
           © 2026 RookieSmart. All rights reserved.
