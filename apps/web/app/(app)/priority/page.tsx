@@ -35,7 +35,6 @@ import {
 import {
   MOCK_PRIORITY_ITEMS,
   type PriorityCategory,
-  type PriorityEvidence,
   type PriorityItem,
 } from '@/lib/mock-data/priority'
 
