@@ -10,7 +10,7 @@ export default function KnowledgePage() {
         <ObsHero
           eyebrow="Knowledge"
           title="ナレッジ"
-          caption="Slack / Google Chat / Drive から、チームFAQを自動で抽出・蓄積。"
+          caption="商談議事録（Google Meet / Zoom）から、営業ナレッジを自動でQ&A化。"
         />
 
         <SourcesView />

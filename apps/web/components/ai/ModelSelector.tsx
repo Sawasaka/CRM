@@ -13,12 +13,16 @@
 import { useEffect, useRef, useState } from 'react'
 import { Cpu, ChevronDown, Check, Hourglass, Sparkles } from 'lucide-react'
 
-export type ModelKind = 'gemini-2.5-flash-lite'
+export type ModelKind = 'gpt-4o' | 'gpt-4o-mini' | 'gemini-2.5-flash-lite'
 export type ThinkingDepth = 'standard' | 'extended'
 
 export const MODEL_OPTIONS: { value: ModelKind; label: string; description: string }[] = [
-  { value: 'gemini-2.5-flash-lite', label: 'Gemini 2.5 Flash-Lite', description: '低コスト・軽量' },
+  { value: 'gpt-4o',                 label: 'GPT-4o',                description: '高精度・推奨' },
+  { value: 'gpt-4o-mini',            label: 'GPT-4o mini',           description: 'バランス型・標準利用' },
+  { value: 'gemini-2.5-flash-lite',  label: 'Gemini 2.5 Flash Lite', description: '低コスト・軽量' },
 ]
+
+export const DEFAULT_MODEL: ModelKind = 'gpt-4o'
 
 export const THINKING_DEPTH_OPTIONS: {
   value: ThinkingDepth
@@ -40,7 +44,7 @@ export function ModelSelector({
   onModelChange?: (v: ModelKind) => void
   onThinkingChange?: (v: ThinkingDepth) => void
 }) {
-  const [internalModel, setInternalModel] = useState<ModelKind>('gemini-2.5-flash-lite')
+  const [internalModel, setInternalModel] = useState<ModelKind>(DEFAULT_MODEL)
   const [internalThinking, setInternalThinking] = useState<ThinkingDepth>('standard')
 
   const currentModel: ModelKind = model ?? internalModel

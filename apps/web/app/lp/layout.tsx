@@ -1,29 +1,32 @@
 import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
-
-const siteUrl =
-  process.env.AUTH_URL ??
-  process.env.NEXTAUTH_URL ??
-  process.env.NEXT_PUBLIC_APP_URL ??
-  'https://www.rookiesmart-jp.com'
+import {
+  googleSiteVerification,
+  publicSiteDescription,
+  publicSiteKeywords,
+  publicSiteTitle,
+  publicSiteUrl,
+  serviceName,
+  shortServiceName,
+} from '@/lib/public-site'
 
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
-  title: 'ルキスマCRM｜営業データから、何でも答えるチャットCRM',
-  description:
-    '営業データから、何でも答えるチャットCRM。商談・メール・議事録・求人インテント・290万社DBを横断し、あなたの会社のデータを踏まえて答えます。',
-  keywords: [
-    'ルキスマCRM', 'RookieSmart', 'CRM',
-    'マーケティングオートメーション', 'MA', 'カスタマーサポート',
-    'ヘルプデスク', 'ナレッジ', 'インテントデータ', '議事録AI', 'RAG',
-    '営業DX', 'PDM', 'AIエージェント', 'Agentic',
-  ],
+  metadataBase: new URL(publicSiteUrl),
+  title: publicSiteTitle,
+  description: publicSiteDescription,
+  keywords: publicSiteKeywords,
   openGraph: {
-    title: 'ルキスマCRM｜営業データから、何でも答えるチャットCRM',
-    description:
-      '商談・メール・議事録・求人インテント・290万社DBを横断し、営業データから次の答えを返すチャットCRM。',
+    title: publicSiteTitle,
+    description: publicSiteDescription,
     url: '/',
+    siteName: `${serviceName}（${shortServiceName}）`,
     type: 'website',
+    locale: 'ja_JP',
+  },
+  twitter: {
+    card: 'summary',
+    title: publicSiteTitle,
+    description: publicSiteDescription,
   },
   alternates: {
     canonical: '/',
@@ -32,6 +35,11 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  verification: googleSiteVerification
+    ? {
+        google: googleSiteVerification,
+      }
+    : undefined,
 }
 
 export default function MarketingLayout({ children }: { children: ReactNode }) {

@@ -35,14 +35,14 @@ const PILLARS: Pillar[] = [
     body: '商談・サポート議事録から、PDM Agent が「課題」「要望機能」「ニーズ」を自動抽出。企業数 × 重要度でスコアリング。プロダクトマネージャーの「声を集める仕事」をゼロに。',
   },
   {
-    Icon: Book, tone: '#c8b9ff', eyebrow: 'HELPDESK',
+    Icon: Book, tone: '#c8b9ff', eyebrow: 'KNOWLEDGE',
     title: 'トップセールスのナレッジを、全員が使う。',
-    body: 'チャットで質問→Helpdesk Agent が回答。1度回答した内容は自動でナレッジ化、2度目以降は即答。事前のFAQ設計は一切不要。組織知が時間とともに濃くなる。',
+    body: 'チャットで質問→Knowledge Agent が回答。1度回答した内容は自動でナレッジ化、2度目以降は即答。事前のFAQ設計は一切不要。組織知が時間とともに濃くなる。',
   },
   {
-    Icon: Headphones, tone: '#ff8dcf', eyebrow: 'SUPPORT',
+    Icon: Headphones, tone: '#ff8dcf', eyebrow: 'CUSTOMER',
     title: 'チケットも、エージェントと人で回す。',
-    body: '顧客からの問い合わせをチケット化。Support Agent が過去類似ケース＋ナレッジから1次回答を提案。必要なら有人にエスカレーション。Zendeskでやってきたことが、ここに統合されます。',
+    body: '顧客からの問い合わせをチケット化。Customer Agent が過去類似ケース＋ナレッジから1次回答を提案。必要なら有人にエスカレーション。Zendeskでやってきたことが、ここに統合されます。',
   },
 ]
 

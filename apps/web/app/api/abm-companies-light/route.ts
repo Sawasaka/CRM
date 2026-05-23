@@ -5,6 +5,31 @@ export const dynamic = 'force-dynamic'
 
 // 290万社の登記台帳から軽量検索（社名・住所・法人番号のみ）
 // インデックスが効く前提：name (部分一致だが先頭一致なら高速)、prefecture、corporate_number
+
+// 表記揺れバリエーションを生成（半角/全角/カナ/ひらがな）
+function toFullWidth(s: string): string {
+  return s.replace(/[!-~]/g, c => String.fromCharCode(c.charCodeAt(0) + 0xFEE0))
+}
+function toHalfWidth(s: string): string {
+  return s.replace(/[！-～]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
+}
+function kataToHira(s: string): string {
+  return s.replace(/[ァ-ヶ]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60))
+}
+function hiraToKata(s: string): string {
+  return s.replace(/[ぁ-ゖ]/g, c => String.fromCharCode(c.charCodeAt(0) + 0x60))
+}
+function expandSearchVariants(s: string): string[] {
+  const set = new Set<string>()
+  const candidates = [s, toFullWidth(s), toHalfWidth(s)]
+  for (const c of candidates) {
+    set.add(c)
+    set.add(kataToHira(c))
+    set.add(hiraToKata(c))
+  }
+  return Array.from(set).filter(Boolean).slice(0, 8) // 最大8バリエーションで安全に
+}
+
 let _client: ReturnType<typeof createClient> | null = null
 function sb() {
   if (_client) return _client
@@ -37,11 +62,16 @@ export async function GET(req: NextRequest) {
     .limit(take)
 
   if (search) {
-    // 社名前方一致 or 法人番号
+    // 法人番号13桁ぴったり → 完全一致
     if (/^\d{13}$/.test(search)) {
       q = q.eq('corporate_number', search)
     } else {
-      q = q.ilike('name', `%${search}%`)
+      // 表記揺れ展開: 半角/全角/カナ/ひらがな すべてのバリアントで OR 検索
+      const variants = expandSearchVariants(search)
+      const orClause = variants
+        .map(v => `name.ilike.%${v.replace(/,/g, '\\,').replace(/\(/g, '\\(').replace(/\)/g, '\\)')}%`)
+        .join(',')
+      q = q.or(orClause)
     }
   }
   if (prefecture) q = q.eq('prefecture', prefecture)

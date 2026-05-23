@@ -13,17 +13,20 @@ export type AgentKey = 'sales' | 'marketing' | 'support' | 'helpdesk' | 'pdm'
 
 export interface AgentMeta {
   name: string
+  /** 1文字イニシャル。サイドバーと同じ規則 (S=Sales, M=Marketing, C=Customer/Support, H=Helpdesk, P=PDM)。 */
+  initial: string
   color: string
   token: string
   desc: string
 }
 
+// サイドバー (components/layout/sidebar.tsx) のバッジと同じ色・イニシャル規則。
 export const AGENTS: Record<AgentKey, AgentMeta> = {
-  sales:     { name: 'Sales Agent',     color: '#abc7ff', token: 'aurora', desc: '商談前ブリーフィング・議事録抽出・Next Action提案' },
-  marketing: { name: 'Marketing Agent', color: '#ffcf4a', token: 'amber',  desc: 'インテント検知・ナーチャリング起動・キャンペーン実行' },
-  support:   { name: 'Support Agent',   color: '#ff8dcf', token: 'coral',  desc: 'チケット1次回答・有人エスカレーション・SLA管理' },
-  helpdesk:  { name: 'Helpdesk Agent',  color: '#c8b9ff', token: 'lilac',  desc: '社内Q&A即答・ナレッジ自動蓄積・継続チューニング' },
-  pdm:       { name: 'PDM Agent',       color: '#8dffc9', token: 'mint',   desc: '議事録から課題抽出・優先度スコア・ロードマップ提案' },
+  sales:     { name: 'Sales Agent',     initial: 'S', color: '#abc7ff', token: 'aurora', desc: '商談前ブリーフィング・議事録抽出・Next Action提案' },
+  marketing: { name: 'Marketing Agent', initial: 'M', color: '#ffcf4a', token: 'amber',  desc: 'インテント検知・ナーチャリング起動・キャンペーン実行' },
+  support:   { name: 'Customer Agent',  initial: 'C', color: '#ff8dcf', token: 'coral',  desc: 'チケット1次回答・有人エスカレーション・SLA管理' },
+  helpdesk:  { name: 'Knowledge Agent',  initial: 'K', color: '#c8b9ff', token: 'lilac',  desc: '社内Q&A即答・ナレッジ自動蓄積・継続チューニング' },
+  pdm:       { name: 'PDM Agent',       initial: 'P', color: '#8dffc9', token: 'mint',   desc: '議事録から課題抽出・優先度スコア・ロードマップ提案' },
 }
 
 // ---------- Eyebrow chip ----------

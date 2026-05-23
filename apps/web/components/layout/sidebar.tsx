@@ -39,10 +39,10 @@ const NAV_ITEMS: NavItemDef[] = [
   { href: '/lists',     label: 'ISリスト',         initial: 'S', color: '#abc7ff' },
   { href: '/tasks',     label: 'タスク一覧',       initial: 'S', color: '#abc7ff' },
   { href: '/dashboard', label: 'アクションボード', initial: 'S', color: '#abc7ff' },
-  { href: '/tickets',   label: 'チケット',         initial: 'C', color: '#ff8dcf' },
+  { href: '/tickets',   label: '問い合わせチケット', initial: 'C', color: '#ff8dcf' },
   { href: '/priority',  label: '開発優先度',       initial: 'P', color: '#8dffc9' },
   { href: '/mail',      label: 'メール配信',       initial: 'M', color: '#ffcf4a' },
-  { href: '/knowledge', label: 'ナレッジ',         initial: 'H', color: '#c8b9ff' },
+  { href: '/knowledge', label: 'ナレッジ',         initial: 'K', color: '#c8b9ff' },
 ]
 
 // ─── Top nav button (新しいチャット / 検索 / ナビ項目) ──────────────────────

@@ -1,18 +1,12 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { useSession } from 'next-auth/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Database,
-  Plus,
-  RefreshCw,
   Loader2,
   ExternalLink,
   Trash2,
-  Power,
-  Slack,
-  MessagesSquare,
   BookOpen,
   ChevronDown,
   HelpCircle,
@@ -20,7 +14,6 @@ import {
   StickyNote,
   XCircle,
   CheckCircle2,
-  FolderSearch,
   Filter,
   Pencil,
   Building2,
@@ -28,16 +21,28 @@ import {
   Tag as TagIcon,
   Eye,
   Download,
+  Video,
+  Slack,
+  MessagesSquare,
 } from 'lucide-react'
 import { ObsButton, ObsCard } from '@/components/obsidian'
 import { trpc } from '@/lib/trpc/client'
 import { DUMMY_FAQS, type DummyFaq } from './_dummy-faqs'
-import { DrivePickerModal } from './DrivePickerModal'
-import { RulebookPanel } from './RulebookSection'
 
-type FaqSourceType = 'MANUAL' | 'SLACK' | 'GOOGLE_CHAT' | 'DRIVE' | 'PERSONAL_NOTE'
+// `Slack` / `MessagesSquare` / `Database` は SOURCE_ICON で参照する（過去FAQの sourceType
+// が SLACK / GOOGLE_CHAT / DRIVE のまま残っていてもアイコンが落ちないよう保持）。
+// 本機能は議事録抽出のみだが、過去データに対する後方互換のため。
+
+type FaqSourceType =
+  | 'MEETING'
+  | 'MANUAL'
+  | 'SLACK'
+  | 'GOOGLE_CHAT'
+  | 'DRIVE'
+  | 'PERSONAL_NOTE'
 
 const SOURCE_LABEL: Record<FaqSourceType, string> = {
+  MEETING: '議事録',
   MANUAL: '手動',
   SLACK: 'Slack',
   GOOGLE_CHAT: 'Google Chat',
@@ -46,6 +51,7 @@ const SOURCE_LABEL: Record<FaqSourceType, string> = {
 }
 
 const SOURCE_ICON: Record<FaqSourceType, React.ElementType> = {
+  MEETING: Video,
   MANUAL: Hand,
   SLACK: Slack,
   GOOGLE_CHAT: MessagesSquare,
@@ -53,368 +59,15 @@ const SOURCE_ICON: Record<FaqSourceType, React.ElementType> = {
   PERSONAL_NOTE: StickyNote,
 }
 
-type KnowledgeTab = 'faq' | 'connections'
-
 // ダミーFAQの編集 / 削除を localStorage に永続化するためのキー
 const LOCAL_EDIT_KEY = 'bgm:knowledge:faq-local-edits:v1'
 const LOCAL_DELETE_KEY = 'bgm:knowledge:faq-local-deletes:v1'
 
 export function SourcesView() {
-  const [tab, setTab] = useState<KnowledgeTab>('faq')
-
   return (
     <div className="flex flex-col gap-5">
-      {/* タブ切替 */}
-      <div
-        className="inline-flex items-center p-1 rounded-[var(--radius-obs-md)] gap-1 w-fit"
-        style={{ backgroundColor: 'var(--color-obs-surface-high)' }}
-      >
-        <TabButton active={tab === 'faq'} onClick={() => setTab('faq')} icon={BookOpen}>
-          チームFAQ
-        </TabButton>
-        <TabButton
-          active={tab === 'connections'}
-          onClick={() => setTab('connections')}
-          icon={Database}
-        >
-          連携先・AIルール
-        </TabButton>
-      </div>
-
-      {tab === 'faq' && <FaqSection />}
-      {tab === 'connections' && <ConnectionsTab />}
+      <FaqSection />
     </div>
-  )
-}
-
-function ConnectionsTab() {
-  return (
-    <div className="flex flex-col gap-6">
-      {/* 連携先カード3つ */}
-      <div>
-        <div className="flex items-center gap-2 mb-3">
-          <h3
-            className="text-[14px] font-semibold tracking-[-0.01em] inline-flex items-center gap-2"
-            style={{ color: 'var(--color-obs-text)' }}
-          >
-            <Database size={14} style={{ color: 'var(--color-obs-primary)' }} />
-            連携先
-          </h3>
-          <span
-            className="text-[11px]"
-            style={{ color: 'var(--color-obs-text-subtle)' }}
-          >
-            ナレッジの取り込み元を管理
-          </span>
-        </div>
-        <ConnectionsRow />
-      </div>
-
-      {/* AIルール設定（前提とポリシー） */}
-      <RulebookPanel />
-    </div>
-  )
-}
-
-function TabButton({
-  active,
-  onClick,
-  icon: Icon,
-  children,
-}: {
-  active: boolean
-  onClick: () => void
-  icon: React.ElementType
-  children: React.ReactNode
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className="inline-flex items-center gap-1.5 h-9 px-4 rounded-[calc(var(--radius-obs-md)-2px)] text-[13px] font-medium transition-colors"
-      style={{
-        backgroundColor: active ? 'var(--color-obs-primary-container)' : 'transparent',
-        color: active ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
-      }}
-    >
-      <Icon size={14} />
-      {children}
-    </button>
-  )
-}
-
-// ────────────────────────────────────────────────────────────────────
-// 連携サマリ行（Drive / Slack / Google Chat を1行に、コンパクト表示）
-// ────────────────────────────────────────────────────────────────────
-
-function ConnectionsRow() {
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
-      <DriveSection />
-      <ChatSection variant="slack" />
-      <ChatSection variant="gchat" />
-    </div>
-  )
-}
-
-// ────────────────────────────────────────────────────────────────────
-// Drive 連携
-// ────────────────────────────────────────────────────────────────────
-
-function DriveSection() {
-  const { data: session } = useSession()
-  const userId = (session as unknown as { userId?: string } | null)?.userId
-  const [pickerOpen, setPickerOpen] = useState(false)
-  const [showFolders, setShowFolders] = useState(false)
-
-  const listQuery = trpc.driveFolders.list.useQuery(undefined, { enabled: !!userId })
-  const toggleMutation = trpc.driveFolders.setEnabled.useMutation({
-    onSuccess: () => listQuery.refetch(),
-  })
-  const removeMutation = trpc.driveFolders.remove.useMutation({
-    onSuccess: () => listQuery.refetch(),
-  })
-  const syncMutation = trpc.driveFolders.triggerSync.useMutation({
-    onSuccess: () => listQuery.refetch(),
-  })
-
-  const folders = listQuery.data ?? []
-
-  return (
-    <ObsCard depth="high" padding="sm" radius="xl">
-      <div className="flex items-center gap-3">
-        <div
-          className="w-8 h-8 rounded-[var(--radius-obs-md)] flex items-center justify-center shrink-0"
-          style={{ backgroundColor: 'rgba(171,199,255,0.10)' }}
-        >
-          <Database size={14} style={{ color: 'var(--color-obs-primary)' }} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <span
-              className="text-[13px] font-semibold tracking-[-0.01em]"
-              style={{ color: 'var(--color-obs-text)' }}
-            >
-              Google Drive
-            </span>
-            <span
-              className="text-[10px] px-1.5 py-0.5 rounded-full whitespace-nowrap"
-              style={{
-                backgroundColor:
-                  folders.length > 0
-                    ? 'rgba(126,198,255,0.14)'
-                    : 'var(--color-obs-surface-highest)',
-                color:
-                  folders.length > 0
-                    ? 'var(--color-obs-low)'
-                    : 'var(--color-obs-text-muted)',
-              }}
-            >
-              {folders.length > 0 ? `${folders.length}フォルダ` : '未連携'}
-            </span>
-          </div>
-        </div>
-        <ObsButton variant="primary" size="sm" onClick={() => setPickerOpen(true)}>
-          <span className="inline-flex items-center gap-1.5">
-            <FolderSearch size={12} />
-            フォルダを選択
-          </span>
-        </ObsButton>
-      </div>
-
-      {/* フォルダ一覧の折りたたみ展開 */}
-      {folders.length > 0 && (
-        <button
-          onClick={() => setShowFolders((v) => !v)}
-          className="mt-2 inline-flex items-center gap-1 text-[10.5px] transition-colors"
-          style={{ color: 'var(--color-obs-text-subtle)' }}
-        >
-          <ChevronDown
-            size={11}
-            style={{
-              transform: showFolders ? 'rotate(180deg)' : 'rotate(0deg)',
-              transition: 'transform 0.15s',
-            }}
-          />
-          {showFolders ? '連携先を隠す' : '連携先を見る'}
-        </button>
-      )}
-
-      <DrivePickerModal
-        open={pickerOpen}
-        onClose={() => setPickerOpen(false)}
-        onPicked={() => listQuery.refetch()}
-      />
-
-      <AnimatePresence initial={false}>
-        {showFolders && folders.length > 0 && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.15 }}
-            className="overflow-hidden"
-          >
-            <div className="flex flex-col gap-1.5 mt-2">
-              {folders.map((f) => (
-                <div
-                  key={f.id}
-                  className="rounded-[var(--radius-obs-sm)] px-2.5 py-1.5 flex items-center gap-2"
-                  style={{ backgroundColor: 'var(--color-obs-surface-low)' }}
-                >
-                  <Database
-                    size={11}
-                    style={{
-                      color: f.enabled
-                        ? 'var(--color-obs-primary)'
-                        : 'var(--color-obs-text-subtle)',
-                      flexShrink: 0,
-                    }}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p
-                      className="text-[12px] font-medium truncate"
-                      style={{ color: 'var(--color-obs-text)' }}
-                    >
-                      {f.folderName}
-                    </p>
-                    {f.lastSyncAt && (
-                      <p
-                        className="text-[10px] tabular-nums"
-                        style={{ color: 'var(--color-obs-text-subtle)' }}
-                      >
-                        最終同期 {formatRelative(f.lastSyncAt)}
-                      </p>
-                    )}
-                  </div>
-                  {f.folderUrl && (
-                    <a
-                      href={f.folderUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center w-6 h-6 rounded-full transition-colors hover:bg-[var(--color-obs-surface-high)]"
-                      style={{ color: 'var(--color-obs-text-muted)' }}
-                    >
-                      <ExternalLink size={11} />
-                    </a>
-                  )}
-                  <button
-                    onClick={() => syncMutation.mutate({ id: f.id })}
-                    disabled={!f.enabled || syncMutation.isPending}
-                    title="今すぐ同期"
-                    className="inline-flex items-center justify-center w-6 h-6 rounded-full transition-colors hover:bg-[var(--color-obs-surface-high)] disabled:opacity-40"
-                    style={{ color: 'var(--color-obs-text-muted)' }}
-                  >
-                    <RefreshCw
-                      size={11}
-                      className={syncMutation.isPending ? 'animate-spin' : ''}
-                    />
-                  </button>
-                  <button
-                    onClick={() =>
-                      toggleMutation.mutate({ id: f.id, enabled: !f.enabled })
-                    }
-                    title={f.enabled ? '同期を停止' : '同期を再開'}
-                    className="inline-flex items-center justify-center w-6 h-6 rounded-full transition-colors hover:bg-[var(--color-obs-surface-high)]"
-                    style={{
-                      color: f.enabled
-                        ? 'var(--color-obs-low)'
-                        : 'var(--color-obs-text-subtle)',
-                    }}
-                  >
-                    <Power size={11} />
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (confirm(`「${f.folderName}」の連携を解除しますか？`)) {
-                        removeMutation.mutate({ id: f.id })
-                      }
-                    }}
-                    title="削除"
-                    className="inline-flex items-center justify-center w-6 h-6 rounded-full transition-colors hover:bg-[var(--color-obs-surface-high)]"
-                    style={{ color: 'var(--color-obs-text-muted)' }}
-                  >
-                    <Trash2 size={11} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </ObsCard>
-  )
-}
-
-// ────────────────────────────────────────────────────────────────────
-// チャットツール（自動抽出）
-// ────────────────────────────────────────────────────────────────────
-
-function ChatSection({ variant }: { variant: 'slack' | 'gchat' }) {
-  const meta =
-    variant === 'slack'
-      ? {
-          name: 'Slack',
-          icon: Slack,
-          description:
-            'チャンネル内の質問・回答スレッドから、AIが自動でナレッジを抽出してチームFAQを作成します。',
-          status: '未接続',
-          actionLabel: 'Slackに接続',
-          actionHref: '/api/slack/install',
-        }
-      : {
-          name: 'Google Chat',
-          icon: MessagesSquare,
-          description:
-            'スペース内のやり取りから、AIが自動でナレッジを抽出してチームFAQを作成します。',
-          status: '未接続',
-          actionLabel: 'Google Chatに接続',
-          actionHref: '/api/google/install?service=chat',
-        }
-  const Icon = meta.icon
-
-  return (
-    <ObsCard depth="high" padding="sm" radius="xl">
-      <div className="flex items-center gap-3" title={meta.description}>
-        <div
-          className="w-8 h-8 rounded-[var(--radius-obs-md)] flex items-center justify-center shrink-0"
-          style={{ backgroundColor: 'rgba(171,199,255,0.10)' }}
-        >
-          <Icon size={14} style={{ color: 'var(--color-obs-primary)' }} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <span
-              className="text-[13px] font-semibold tracking-[-0.01em]"
-              style={{ color: 'var(--color-obs-text)' }}
-            >
-              {meta.name}
-            </span>
-            <span
-              className="text-[10px] px-1.5 py-0.5 rounded-full whitespace-nowrap"
-              style={{
-                backgroundColor: 'var(--color-obs-surface-highest)',
-                color: 'var(--color-obs-text-muted)',
-              }}
-            >
-              {meta.status}
-            </span>
-          </div>
-        </div>
-        <a
-          href={meta.actionHref}
-          className="inline-flex items-center gap-1.5 h-8 px-3 rounded-[var(--radius-obs-md)] text-xs font-medium transition-all whitespace-nowrap shrink-0"
-          style={{
-            background:
-              'linear-gradient(140deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
-            color: 'var(--color-obs-on-primary)',
-            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.18)',
-          }}
-        >
-          <Plus size={12} />
-          {variant === 'slack' ? 'Slackに接続' : 'Chatに接続'}
-        </a>
-      </div>
-    </ObsCard>
   )
 }
 
@@ -470,10 +123,7 @@ function FaqSection() {
       // 容量オーバー等は黙殺
     }
   }, [localEdits])
-  const [activeDept, setActiveDept] = useState<string>('ALL')
-  const [activeCategory, setActiveCategory] = useState<string>('ALL')
   const [activeTag, setActiveTag] = useState<string>('ALL')
-  const [activeSource, setActiveSource] = useState<string>('ALL')
 
   // 再フェッチを抑制して体感速度を上げる。
   // 初期値を空配列で持たせて isLoading 状態をスキップ → ダミーが即時表示される。
@@ -543,62 +193,28 @@ function FaqSection() {
     [baseItems, localEdits, localDeletes],
   )
 
-  // フィルタ用の選択肢を集計（実データから動的に）
-  const departments = useMemo(() => {
-    const set = new Set<string>()
-    for (const it of allItems) {
-      const dept = it.department as string | null | undefined
-      if (dept) set.add(dept)
-    }
-    return Array.from(set).sort()
-  }, [allItems])
-
-  const categories = useMemo(() => {
-    const set = new Set<string>()
-    for (const it of allItems) {
-      // 部門が選択されていれば、その部門内のカテゴリのみ
-      if (activeDept !== 'ALL' && it.department !== activeDept) continue
-      if (it.category) set.add(it.category)
-    }
-    return Array.from(set).sort()
-  }, [allItems, activeDept])
-
+  // フィルタ用の選択肢を集計（タグのみ）
   const tags = useMemo(() => {
     const set = new Set<string>()
     for (const it of allItems) {
-      if (activeDept !== 'ALL' && it.department !== activeDept) continue
-      if (activeCategory !== 'ALL' && it.category !== activeCategory) continue
       const ts = (it as DummyFaq).tags ?? []
       for (const t of ts) set.add(t)
     }
     return Array.from(set).sort()
-  }, [allItems, activeDept, activeCategory])
-
-  const sources = useMemo(() => {
-    const set = new Set<string>()
-    for (const it of allItems) set.add(it.sourceType)
-    return Array.from(set).sort()
   }, [allItems])
 
-  // フィルタ適用
+  // フィルタ適用（タグのみ）
   const items = useMemo(() => {
     return allItems.filter((it) => {
-      if (activeDept !== 'ALL' && it.department !== activeDept) return false
-      if (activeCategory !== 'ALL' && it.category !== activeCategory) return false
       if (activeTag !== 'ALL') {
         const ts = (it as DummyFaq).tags ?? []
         if (!ts.includes(activeTag)) return false
       }
-      if (activeSource !== 'ALL' && it.sourceType !== activeSource) return false
       return true
     })
-  }, [allItems, activeDept, activeCategory, activeTag, activeSource])
+  }, [allItems, activeTag])
 
-  const hasFilter =
-    activeDept !== 'ALL' ||
-    activeCategory !== 'ALL' ||
-    activeTag !== 'ALL' ||
-    activeSource !== 'ALL'
+  const hasFilter = activeTag !== 'ALL'
 
 
   return (
@@ -633,35 +249,8 @@ function FaqSection() {
         </ObsButton>
       </div>
 
-      {/* フィルタ: 部門 / カテゴリ / ソース のプルダウン */}
+      {/* フィルタ: タグのみ */}
       <div className="flex items-center gap-2 flex-wrap mb-3">
-        <SelectFilter
-          icon={Filter}
-          label="部門"
-          value={activeDept}
-          onChange={(v) => {
-            setActiveDept(v)
-            // 部門切替時にカテゴリの選択もリセット（部門に紐付くため）
-            setActiveCategory('ALL')
-          }}
-          options={[
-            { value: 'ALL', label: '全部門' },
-            ...departments.map((d) => ({ value: d, label: d })),
-          ]}
-        />
-        <SelectFilter
-          icon={Filter}
-          label="カテゴリ"
-          value={activeCategory}
-          onChange={(v) => {
-            setActiveCategory(v)
-            setActiveTag('ALL')
-          }}
-          options={[
-            { value: 'ALL', label: '全カテゴリ' },
-            ...categories.map((c) => ({ value: c, label: c })),
-          ]}
-        />
         <SelectFilter
           icon={Filter}
           label="タグ"
@@ -672,27 +261,9 @@ function FaqSection() {
             ...tags.map((t) => ({ value: t, label: t })),
           ]}
         />
-        <SelectFilter
-          icon={Filter}
-          label="ソース"
-          value={activeSource}
-          onChange={setActiveSource}
-          options={[
-            { value: 'ALL', label: '全ソース' },
-            ...sources.map((s) => ({
-              value: s,
-              label: SOURCE_LABEL[s as FaqSourceType] ?? s,
-            })),
-          ]}
-        />
         {hasFilter && (
           <button
-            onClick={() => {
-              setActiveDept('ALL')
-              setActiveCategory('ALL')
-              setActiveTag('ALL')
-              setActiveSource('ALL')
-            }}
+            onClick={() => setActiveTag('ALL')}
             className="inline-flex items-center gap-1 h-7 px-2.5 rounded-full text-[11px] font-medium transition-colors hover:bg-[var(--color-obs-surface-high)]"
             style={{ color: 'var(--color-obs-text-muted)' }}
           >
@@ -727,7 +298,7 @@ function FaqSection() {
               >
                 {hasFilter
                   ? 'フィルタを変更するか、クリアしてください。'
-                  : 'Slack / Google Chat / Drive を連携すると、自動的にここに蓄積されていきます。'}
+                  : '商談の議事録（Google Meet / Zoom）が同期されると、自動的にここへ蓄積されていきます。'}
               </p>
             </div>
           ) : (
@@ -766,10 +337,8 @@ function FaqSection() {
                       >
                         {f.title}
                       </p>
-                      {/* 部門 → カテゴリ → タグ の3つのみ（順序固定） */}
+                      {/* タグのみ表示（先頭1個） */}
                       <div className="flex items-center gap-1 flex-shrink-0">
-                        {f.department && <Tag tone="dept">{f.department}</Tag>}
-                        {f.category && <Tag tone="cat">{f.category}</Tag>}
                         {(f.tags ?? [])[0] && (
                           <Tag tone="sub">{(f.tags ?? [])[0]}</Tag>
                         )}
@@ -1195,7 +764,7 @@ function Tag({
       color: 'var(--color-obs-middle)',
       shadow: 'inset 0 0 0 1px rgba(255,184,107,0.28)',
       Icon: TagIcon,
-      label: 'タグ',
+      label: '',
     },
     neutral: {
       bg: 'var(--color-obs-surface-highest)',
@@ -1351,15 +920,4 @@ function downloadFaqCsv(
   a.click()
   document.body.removeChild(a)
   URL.revokeObjectURL(url)
-}
-
-function formatRelative(d: Date | string): string {
-  const date = typeof d === 'string' ? new Date(d) : d
-  const diff = Date.now() - date.getTime()
-  const day = 24 * 60 * 60 * 1000
-  if (diff < 60 * 1000) return 'たった今'
-  if (diff < 60 * 60 * 1000) return `${Math.floor(diff / (60 * 1000))}分前`
-  if (diff < day) return `${Math.floor(diff / (60 * 60 * 1000))}時間前`
-  if (diff < 7 * day) return `${Math.floor(diff / day)}日前`
-  return date.toISOString().slice(0, 10)
 }

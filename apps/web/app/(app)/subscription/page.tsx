@@ -34,6 +34,7 @@ interface Plan {
   priceMonthly: number
   priceAnnual: number
   credits: number
+  dailyCreditLimit: number
   minSeats: number
   maxSeats?: number // 上限シート数(Freeプラン用)
   baseLabel?: string // 下位プラン全機能ラベル (例: "Standard全機能")
@@ -59,9 +60,11 @@ const PLANS: Plan[] = [
     priceMonthly: 4300,
     priceAnnual: 3000,
     credits: 500,
+    dailyCreditLimit: 10,
     minSeats: 1,
     additions: [
-      'AIモデル: Gemini 2.5 Flash Lite / シンキングモード 標準',
+      'AIモデル: Gemini 2.5 Flash Lite / GPT-4o mini / GPT-4o 選択可',
+      '1ユーザーあたり 1日10クレジット（約100円相当）まで',
       'CRM全機能 (企業・コンタクト・取引・パイプライン・チケット管理)',
       'Google Workspace・Microsoft 365 連携 + 議事録自動取得 (BANT)',
       'ナレッジ自動生成 (FAQ) + 開発優先度分析',
@@ -80,10 +83,12 @@ const PLANS: Plan[] = [
     priceMonthly: 8300,
     priceAnnual: 5800,
     credits: 1000,
+    dailyCreditLimit: 10,
     minSeats: 1,
     baseLabel: 'Lite 全機能',
     additions: [
-      'AIモデル: GPT-4o mini にアップグレード (品質・精度向上)',
+      'AIモデル: Gemini 2.5 Flash Lite / GPT-4o mini / GPT-4o 選択可',
+      '1ユーザーあたり 1日10クレジット（約100円相当）まで',
       'シンキングモード: 拡張',
     ],
     seatNote: '担当者へのチャット相談 (5シート以上で付帯)',
@@ -962,6 +967,12 @@ function SubscriptionPageContent() {
                       >
                         月間 {plan.credits.toLocaleString()} クレジット
                         {plan.isTenantPrice ? ' (チーム合計)' : '込 / seat'}
+                      </p>
+                      <p
+                        className="text-[11px] mb-1"
+                        style={{ color: 'var(--color-obs-text-subtle)' }}
+                      >
+                        1日上限 {plan.dailyCreditLimit.toLocaleString()} cr / ユーザー（約100円相当）
                       </p>
                       {plan.contractTerm && (
                         <p

@@ -3,9 +3,9 @@ export const Footer = () => (
     <div className="mx-auto max-w-6xl px-6 py-16">
       <div className="grid md:grid-cols-12 gap-10">
         <div className="md:col-span-4">
-          <div className="font-display font-bold text-[1.4rem] fo-gradient-text">ルキスマCRM</div>
+          <div className="font-display font-bold text-[1.4rem] fo-gradient-text">ルーキースマートCRM</div>
           <div className="text-xs text-[#7e7c83] mt-3 leading-relaxed">
-            営業データから、何でも答えるチャットCRM。
+            株式会社ルーキースマートジャパンが提供する、営業データから何でも答えるチャットCRM。
           </div>
         </div>
         <div className="md:col-span-8 grid grid-cols-2 sm:grid-cols-4 gap-6 text-sm">
@@ -36,7 +36,7 @@ export const Footer = () => (
         className="mt-14 pt-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs text-[#7e7c83]"
         style={{ borderTop: '1px solid rgba(65,71,83,0.18)' }}
       >
-        <div>© 2026 RookieSmart Inc. — ルキスマCRM is provided by RookieSmart Inc.</div>
+        <div>© 2026 株式会社ルーキースマートジャパン — ルーキースマートCRM / ルキスマCRM</div>
         <div className="flex flex-wrap gap-x-5 gap-y-2">
           <a href="/legal/terms" className="hover:text-aurora">
             Terms

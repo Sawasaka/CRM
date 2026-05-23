@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowUp, Loader2, Paperclip, Mic } from 'lucide-react'
 import { ObsPageShell } from '@/components/obsidian'
@@ -93,6 +93,14 @@ type GmailActivityResponse = {
 }
 
 export default function HomePage() {
+  return (
+    <Suspense fallback={null}>
+      <HomePageContent />
+    </Suspense>
+  )
+}
+
+function HomePageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const chatIdParam = searchParams.get('chat')

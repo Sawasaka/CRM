@@ -12,10 +12,15 @@ import { ROISection } from '@/components/landing/ROISection'
 import { CustomerVoice } from '@/components/landing/sections/CustomerVoice'
 import { Pricing } from '@/components/landing/sections/Pricing'
 import { Footer } from '@/components/landing/sections/Footer'
+import { publicSiteStructuredData } from '@/lib/public-site'
 
 export default function RukismaCRMLandingPage() {
   return (
     <div className="relative">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(publicSiteStructuredData) }}
+      />
       <Nav />
       <Hero />
       <MetricsBand />

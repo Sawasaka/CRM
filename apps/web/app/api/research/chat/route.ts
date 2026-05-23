@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import OpenAI from 'openai'
 import { auth } from '@/lib/auth'
 import { prisma } from '@bgm/db'
 import {
@@ -20,6 +21,15 @@ import type { ChatPolicyState } from '@/lib/chat-policy-presets'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
+
+let openai: OpenAI | null = null
+
+function getOpenAI() {
+  const apiKey = process.env.OPENAI_API_KEY
+  if (!apiKey) throw new Error('OPENAI_API_KEY が未設定です')
+  openai ??= new OpenAI({ apiKey })
+  return openai
+}
 
 type Body = {
   entityType?: EntityType
@@ -130,22 +140,44 @@ export async function POST(req: NextRequest) {
 
   const t0 = Date.now()
   try {
-    const completion = await generateGeminiChat({
+    const temperature = resolved.thinking === 'extended' ? 0.3 : 0.4
+    if (resolved.model === 'gemini-2.5-flash-lite') {
+      const completion = await generateGeminiChat({
+        model: resolved.model,
+        messages,
+        temperature,
+      })
+      const elapsedMs = Date.now() - t0
+      return NextResponse.json({
+        content: completion.content,
+        model: completion.model,
+        thinking: resolved.thinking,
+        elapsedMs,
+        usage: completion.usageMetadata,
+        contextSize: systemPrompt.length,
+      })
+    }
+
+    const completion = await getOpenAI().chat.completions.create({
       model: resolved.model,
       messages,
-      temperature: resolved.thinking === 'extended' ? 0.3 : 0.4,
+      temperature,
     })
+    const content = completion.choices[0]?.message?.content?.trim()
+    if (!content) throw new Error('OpenAI API から空の回答が返りました')
+    const elapsedMs = Date.now() - t0
+
     return NextResponse.json({
-      content: completion.content,
+      content,
       model: completion.model,
       thinking: resolved.thinking,
-      elapsedMs: Date.now() - t0,
-      usage: completion.usageMetadata,
+      elapsedMs,
+      usage: completion.usage,
       contextSize: systemPrompt.length,
     })
   } catch (e) {
     return NextResponse.json(
-      { error: `Gemini 呼び出しに失敗: ${(e as Error).message}` },
+      { error: `AIモデル呼び出しに失敗: ${(e as Error).message}` },
       { status: 502 }
     )
   }

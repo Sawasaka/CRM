@@ -110,15 +110,6 @@ export function Header() {
 
         <div className="flex-1" />
 
-        {/* ── Support ── */}
-        <GhostButton
-          icon={MessageCircle}
-          label="サービスについて"
-          title="ルキスマCRM について"
-          active={supportOpen}
-          onClick={toggleSupport}
-        />
-
         {/* Primary action button */}
         {action && (
           <motion.button

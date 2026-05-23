@@ -17,10 +17,13 @@ interface PartnershipTier {
   price: number
   slotsTotal: number
   slotsRemaining: number
-  cadenceItems: string[] // 3項目 (商談数 / 営業日 / 契約期間)
+  scope: string[] // 営業範囲
+  crm: string[] // CRM 提供内容
+  cadenceItems: string[] // 稼働条件 (商談数 / 営業日 / 契約期間)
   icon: typeof Crown
   featured?: boolean
-  feats: string[]
+  accentHex: string // アクセントカラー (HEX)
+  accentRgb: string // アクセントカラー (RGB)
 }
 
 const partnershipTiers: PartnershipTier[] = [
@@ -30,68 +33,81 @@ const partnershipTiers: PartnershipTier[] = [
     price: 500000,
     slotsTotal: 1,
     slotsRemaining: 1,
+    icon: Crown,
+    accentHex: '#E5E7EB',
+    accentRgb: '229, 231, 235',
+    scope: [
+      '事業設計',
+      'IS 設計',
+      'FS / CS の営業実装',
+    ],
+    crm: [
+      'CRM 構築',
+      'CRM 全機能',
+      '月30,000クレジット 込み',
+    ],
     cadenceItems: [
       '1日2商談まで',
       '平日 日中稼働',
       '3ヶ月契約・3ヶ月ごとに更新',
     ],
-    icon: Crown,
-    feats: [
-      '事業設計全域',
-      'マネジメント',
-      'IS / FS / CS の営業実装',
-      'CRM 構築による営業基盤の構築',
-      'CRM 全機能',
-      '月10,000クレジット 込み',
-    ],
   },
   {
-    id: 'playing-manager',
-    name: 'プレイングマネージャー',
+    id: 'sales-director',
+    name: '営業責任者',
     price: 300000,
     slotsTotal: 1,
     slotsRemaining: 1,
+    icon: Star,
+    featured: true,
+    accentHex: '#FFC107',
+    accentRgb: '255, 193, 7',
+    scope: [
+      'IS 設計',
+      'FS / CS の営業実装',
+      '分析レポーティング',
+    ],
+    crm: [
+      'CRM 構築',
+      'CRM 全機能',
+      '月20,000クレジット 込み',
+    ],
     cadenceItems: [
       '1日1商談まで',
       '平日 日中稼働',
       '3ヶ月契約・3ヶ月ごとに更新',
-    ],
-    icon: Star,
-    featured: true,
-    feats: [
-      'マネジメント',
-      'IS / FS / CS の営業実装',
-      '戦略支援',
-      'CRM 構築による営業基盤の構築',
-      'CRM 全機能',
-      '月10,000クレジット 込み',
     ],
   },
   {
-    id: 'player',
-    name: 'プレーヤー',
+    id: 'is-design',
+    name: 'IS 設計',
     price: 200000,
     slotsTotal: 3,
     slotsRemaining: 3,
-    cadenceItems: [
-      '1日1商談まで',
-      '平日 日中稼働',
-      '3ヶ月契約・3ヶ月ごとに更新',
-    ],
     icon: Zap,
-    feats: [
-      'IS / FS / CS の営業実装',
-      '戦略支援',
-      'CRM 構築による営業基盤の構築',
+    accentHex: '#34D399',
+    accentRgb: '52, 211, 153',
+    scope: [
+      'IS チーム組成',
+      'IS 設計',
+      'IS マネジメント',
+    ],
+    crm: [
+      'CRM 構築',
       'CRM 全機能',
       '月10,000クレジット 込み',
+    ],
+    cadenceItems: [
+      '週1回の社内MTG',
+      '平日 日中稼働',
+      '3ヶ月契約・3ヶ月ごとに更新',
     ],
   },
 ]
 
 const selfServeFeats = [
   'CRM 全機能 (企業・コンタクト・取引・パイプライン・チケット)',
-  'AIモデル: GPT-4o mini / GPT-4o 選択可',
+  'AIモデル: Gemini 2.5 Flash Lite / GPT-4o mini / GPT-4o 選択可',
   'エージェントモード (ブラウザ自動操作)',
   '議事録自動取得 + BANT 自動入力',
   'ナレッジ自動生成 (FAQ) + 開発優先度分析',
@@ -126,77 +142,74 @@ export const Pricing = () => {
         {/* ── Header ─────────────────────────────────────── */}
         <div className="max-w-3xl mx-auto text-center">
           <div className="inline-flex">
-            <Eyebrow color="#FFC107">PARTNERSHIP · 5社限定</Eyebrow>
+            <Eyebrow color="#FFC107">SALES × CRM</Eyebrow>
           </div>
           <h2 className="font-display font-bold tracking-[-0.025em] text-[2.2rem] md:text-[3rem] leading-[1.06] mt-5">
             <span className="fo-gradient-text">CRMは、無償。</span>
             <br />
-            <span className="fo-gradient-text-soft">営業実行は、5社限定で。</span>
+            <span className="fo-gradient-text-soft">営業実行とCRM構築。</span>
           </h2>
-
-          <p className="mt-7 text-[15px] md:text-[16px] text-[#c7c5c9] leading-[1.75] max-w-xl mx-auto">
-            <span className="fo-gradient-text-soft font-semibold">営業実行 × CRM</span>{' '}
-            で、
-            <span className="text-[#e7e5ea] font-semibold">事業成長と売上基盤を 同時につくる。</span>
-          </p>
         </div>
 
         {/* ── ① Partnership tiers (HERO) ──────────────────── */}
         <div className="grid md:grid-cols-3 gap-5 mt-14 items-stretch">
           {partnershipTiers.map((t) => {
             const Icon = t.icon
-            const accent = t.featured ? '#FFC107' : '#abc7ff'
+            const accent = t.accentHex
+            const rgb = t.accentRgb
             const isSoldOut = t.slotsRemaining <= 0
             return (
               <div
                 key={t.id}
-                className="rounded-3xl p-[1px] h-full flex"
+                className="rounded-3xl p-[1.5px] h-full flex transition-transform duration-300"
                 style={{
                   background: t.featured
-                    ? 'linear-gradient(135deg, rgba(255,193,7,0.60), rgba(255,193,7,0.18) 50%, transparent 100%)'
-                    : 'linear-gradient(135deg, rgba(171,199,255,0.22), rgba(171,199,255,0.04) 60%, transparent 100%)',
+                    ? `linear-gradient(135deg, rgba(${rgb},0.80), rgba(${rgb},0.30) 45%, rgba(${rgb},0.06) 75%, transparent 100%)`
+                    : `linear-gradient(135deg, rgba(${rgb},0.35), rgba(${rgb},0.06) 60%, transparent 100%)`,
+                  boxShadow: t.featured
+                    ? `0 24px 60px -20px rgba(${rgb},0.32), 0 0 0 1px rgba(${rgb},0.10)`
+                    : `0 10px 30px -15px rgba(0,0,0,0.5), 0 0 0 1px rgba(${rgb},0.04)`,
                 }}
               >
-                <div className="rounded-3xl p-6 fo-glass-rim flex flex-col w-full bg-dusk relative overflow-hidden">
-                  {t.featured && (
-                    <div
-                      className="absolute -top-20 -right-20 w-56 h-56 rounded-full pointer-events-none"
-                      style={{
-                        background:
-                          'radial-gradient(circle, rgba(255,193,7,0.18), transparent 60%)',
-                        filter: 'blur(40px)',
-                      }}
-                    />
-                  )}
+                <div className="rounded-[22px] p-7 fo-glass-rim flex flex-col w-full bg-dusk relative overflow-hidden">
+                  {/* ambient glow */}
+                  <div
+                    className="absolute -top-24 -right-20 w-60 h-60 rounded-full pointer-events-none"
+                    style={{
+                      background: t.featured
+                        ? `radial-gradient(circle, rgba(${rgb},0.24), transparent 60%)`
+                        : `radial-gradient(circle, rgba(${rgb},0.12), transparent 60%)`,
+                      filter: 'blur(50px)',
+                    }}
+                  />
+                  <div
+                    className="absolute -bottom-24 -left-20 w-52 h-52 rounded-full pointer-events-none"
+                    style={{
+                      background: `radial-gradient(circle, rgba(${rgb},0.08), transparent 60%)`,
+                      filter: 'blur(50px)',
+                    }}
+                  />
 
                   {/* Top row: icon + slots badge */}
-                  <div className="flex items-center justify-between relative">
+                  <div className="flex items-start justify-between relative">
                     <div
-                      className="w-9 h-9 rounded-xl flex items-center justify-center"
+                      className="w-11 h-11 rounded-[14px] flex items-center justify-center"
                       style={{
-                        background: t.featured
-                          ? 'linear-gradient(135deg, rgba(255,193,7,0.25), rgba(255,193,7,0.06))'
-                          : 'linear-gradient(135deg, rgba(171,199,255,0.22), rgba(171,199,255,0.05))',
-                        boxShadow: `inset 0 0 0 1px ${t.featured ? 'rgba(255,193,7,0.35)' : 'rgba(171,199,255,0.30)'}`,
+                        background: `linear-gradient(135deg, rgba(${rgb},0.32), rgba(${rgb},0.06))`,
+                        boxShadow: `inset 0 0 0 1px rgba(${rgb},0.40), 0 6px 16px -6px rgba(${rgb},0.26)`,
                       }}
                     >
-                      <Icon size={16} style={{ color: accent }} />
+                      <Icon size={19} strokeWidth={2.2} style={{ color: accent }} />
                     </div>
                     <span
-                      className="text-[10px] font-semibold uppercase tracking-[0.10em] px-2 py-1 rounded-full tabular-nums"
+                      className="text-[10px] font-semibold uppercase tracking-[0.10em] px-2.5 py-1 rounded-full tabular-nums"
                       style={{
                         background: isSoldOut
                           ? 'rgba(255,90,90,0.12)'
-                          : t.featured
-                            ? 'rgba(255,193,7,0.14)'
-                            : 'rgba(171,199,255,0.12)',
+                          : `rgba(${rgb},0.16)`,
                         color: isSoldOut ? '#FF5A5A' : accent,
                         boxShadow: `inset 0 0 0 1px ${
-                          isSoldOut
-                            ? 'rgba(255,90,90,0.25)'
-                            : t.featured
-                              ? 'rgba(255,193,7,0.30)'
-                              : 'rgba(171,199,255,0.22)'
+                          isSoldOut ? 'rgba(255,90,90,0.25)' : `rgba(${rgb},0.34)`
                         }`,
                       }}
                     >
@@ -205,65 +218,73 @@ export const Pricing = () => {
                   </div>
 
                   {/* Name */}
-                  <div className="mt-4 relative">
+                  <div className="mt-5 relative">
                     <h4
-                      className="font-display font-bold tracking-[-0.015em] text-[1.35rem]"
-                      style={{ color: '#e7e5ea' }}
+                      className="font-display font-bold tracking-[-0.02em] text-[1.55rem] leading-[1.1]"
+                      style={{ color: '#f0eef2' }}
                     >
                       {t.name}
                     </h4>
                   </div>
 
-                  {/* Price */}
+                  {/* Hair-line divider */}
+                  <div
+                    className="mt-4 h-px"
+                    style={{
+                      background: `linear-gradient(90deg, rgba(${rgb},0.30) 0%, rgba(${rgb},0.08) 50%, transparent 100%)`,
+                    }}
+                  />
+
+                  {/* 3グループ (営業範囲 / CRM 提供内容 / 稼働条件) */}
+                  <div className="mt-5 flex-1 relative space-y-5">
+                    {[
+                      { label: '営業範囲', items: t.scope },
+                      { label: 'CRM 提供内容', items: t.crm },
+                      { label: '稼働条件', items: t.cadenceItems },
+                    ].map((group) => (
+                      <div key={group.label}>
+                        <div
+                          className="font-semibold uppercase tracking-[0.16em] text-[10px] mb-2"
+                          style={{ color: accent, opacity: 0.85 }}
+                        >
+                          {group.label}
+                        </div>
+                        <div className="space-y-2">
+                          {group.items.map((item) => (
+                            <div key={item} className="flex items-start gap-2.5">
+                              <div
+                                className="shrink-0 mt-0.5 w-[17px] h-[17px] rounded-full flex items-center justify-center"
+                                style={{
+                                  background: `rgba(${rgb},0.14)`,
+                                  boxShadow: `inset 0 0 0 1px rgba(${rgb},0.30)`,
+                                }}
+                              >
+                                <Check size={10} strokeWidth={3} style={{ color: accent }} />
+                              </div>
+                              <span className="text-[12.5px] leading-[1.55] text-[#d7d5d9]">
+                                {item}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Price (CTA直前) */}
                   <div className="mt-5 flex items-baseline gap-1.5 relative">
                     <span
-                      className={`font-display font-bold tracking-[-0.03em] text-[2.2rem] ${
-                        t.featured ? 'fo-gradient-text' : 'text-[#e7e5ea]'
-                      }`}
+                      className="font-display font-bold tracking-[-0.03em] text-[2.3rem] leading-none"
+                      style={{
+                        background: `linear-gradient(135deg, ${accent}, #f0eef2)`,
+                        WebkitBackgroundClip: 'text',
+                        backgroundClip: 'text',
+                        color: 'transparent',
+                      }}
                     >
                       {formatPrice(t.price)}
                     </span>
                     <span className="text-[12.5px] text-[#9b99a0]">/ 月</span>
-                  </div>
-
-                  {/* Features (機能リスト・flex-1 で伸びてCadenceを下端へ押し下げ) */}
-                  <div className="mt-5 space-y-2 flex-1 relative">
-                    {t.feats.map((f) => (
-                      <div key={f} className="flex items-start gap-2">
-                        <Check
-                          size={13}
-                          strokeWidth={2.5}
-                          style={{ color: accent }}
-                          className="shrink-0 mt-0.5"
-                        />
-                        <span className="text-[12.5px] leading-[1.55] text-[#c7c5c9]">
-                          {f}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Cadence (CTA直前・3項目チェックリスト) */}
-                  <div
-                    className="mt-5 rounded-lg px-3 py-2.5 relative space-y-1.5"
-                    style={{
-                      background: 'rgba(171,199,255,0.05)',
-                      boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.10)',
-                    }}
-                  >
-                    {t.cadenceItems.map((item) => (
-                      <div key={item} className="flex items-center gap-2">
-                        <Check
-                          size={11}
-                          strokeWidth={3}
-                          style={{ color: accent }}
-                          className="shrink-0"
-                        />
-                        <span className="text-[11.5px] leading-[1.4] text-[#c7c5c9]">
-                          {item}
-                        </span>
-                      </div>
-                    ))}
                   </div>
 
                   {/* CTA */}
@@ -271,15 +292,19 @@ export const Pricing = () => {
                     href={SPIR_BOOKING_URL}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`mt-6 block text-center w-full rounded-lg py-2.5 text-sm font-medium relative transition-colors ${
-                      t.featured
-                        ? 'text-[#0a0a0c]'
-                        : 'text-aurora bg-shimmer/30 hover:bg-shimmer/60'
-                    }`}
+                    className="mt-6 block text-center w-full rounded-xl py-3 text-[13px] font-semibold relative transition-all duration-300 hover:-translate-y-0.5"
                     style={
                       t.featured
-                        ? { background: 'linear-gradient(135deg, #FFD54F, #FFA000)' }
-                        : undefined
+                        ? {
+                            background: `linear-gradient(135deg, ${accent}, rgba(${rgb},0.78))`,
+                            color: '#0a0a0c',
+                            boxShadow: `0 10px 28px -10px rgba(${rgb},0.50)`,
+                          }
+                        : {
+                            background: `rgba(${rgb},0.10)`,
+                            color: accent,
+                            boxShadow: `inset 0 0 0 1px rgba(${rgb},0.28)`,
+                          }
                     }
                   >
                     {isSoldOut ? 'キャンセル待ちに登録' : '面談を予約する'}
@@ -300,7 +325,7 @@ export const Pricing = () => {
             }}
           />
           <span className="text-[11.5px] uppercase tracking-[0.22em] text-[#9b99a0] whitespace-nowrap">
-            自社で運用したい方は CRM のみセルフサーブで
+            CRM 単独移行のプランはこちら
           </span>
           <div
             className="flex-1 h-px"
@@ -365,25 +390,30 @@ export const Pricing = () => {
                   </div>
 
                   <div
-                    className="mt-3 inline-flex items-center gap-2 rounded-full px-3.5 py-1.5"
-                    style={{
-                      background: 'rgba(171,199,255,0.10)',
-                      boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.22)',
-                    }}
+                    className="mt-3 flex flex-wrap gap-2"
                   >
-                    <span className="text-[10.5px] uppercase tracking-[0.14em] text-[#9b99a0]">
-                      月間
+                    <span
+                      className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5"
+                      style={{
+                        background: 'rgba(171,199,255,0.10)',
+                        boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.22)',
+                      }}
+                    >
+                      <span className="text-[10.5px] uppercase tracking-[0.14em] text-[#9b99a0]">
+                        月間
+                      </span>
+                      <span className="font-display text-[17px] font-bold tabular-nums fo-gradient-text-soft">
+                        10,000
+                      </span>
+                      <span className="text-[11.5px] text-[#c7c5c9]">クレジット (チーム合計)</span>
                     </span>
-                    <span className="font-display text-[17px] font-bold tabular-nums fo-gradient-text-soft">
-                      10,000
-                    </span>
-                    <span className="text-[11.5px] text-[#c7c5c9]">クレジット (チーム合計)</span>
                   </div>
 
                   <p className="mt-4 text-[12.5px] text-[#9b99a0] leading-[1.7]">
                     <span className="text-[#e7e5ea] font-semibold">100名まで無料</span>
                     でチーム全員に。CRM 全機能 + クレジット込み。
                     <br />
+                    1ユーザーあたり <span className="text-[#e7e5ea] font-medium">1日10cr（約100円相当）</span> まで利用可能。
                     100名超は <span className="text-[#e7e5ea] font-medium">1ライセンス ¥1,000/月</span>{' '}
                     (1,000cr 込み)。追加クレジット 1,000cr ¥1,000。
                   </p>
@@ -436,16 +466,16 @@ export const Pricing = () => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div
-                    className="font-semibold uppercase tracking-[0.12em] text-[0.62rem]"
+                    className="font-semibold tracking-[0.04em] text-[0.78rem]"
                     style={{ color: '#FFC107' }}
                   >
-                    MIGRATION · 既存ツールからの移行
+                    既存ツールからの移行
                   </div>
                   <p className="mt-0.5 text-[12px] text-[#c7c5c9] leading-[1.55]">
                     <span className="text-[#e7e5ea] font-medium">
-                      Excel / スプレッドシート / HubSpot / Salesforce
+                      Excel / Spreadsheet / HubSpot / Salesforce
                     </span>{' '}
-                    からの CSV 移行に対応。
+                    からのデータ移行に対応。
                     <span className="text-[#9b99a0]">
                       データ構造整理 + 初期セットアップを承ります。
                     </span>

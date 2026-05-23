@@ -11,7 +11,7 @@
  * - 各クラスターを展開すると、エビデンス (企業名 / 商談日 / 引用 / 議事録Docsリンク) が見られる
  */
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import {
   ChevronDown,
@@ -22,7 +22,8 @@ import {
   Building2,
   CalendarDays,
   Check,
-  RotateCcw,
+  CircleSlash,
+  Clock,
   LifeBuoy,
   Ticket,
 } from 'lucide-react'
@@ -481,15 +482,53 @@ function formatMeetingDate(iso: string): string {
   return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`
 }
 
-const ALL_CATEGORIES: PriorityCategory[] = ['要望機能', 'ニーズ', '課題', '問題']
+// 表示するカテゴリ (議事録から自動抽出する「ニーズ」と「課題」のみ)
+const ALL_CATEGORIES: PriorityCategory[] = ['ニーズ', '課題']
+
+// ─── Item Status ───────────────────────────────────────────────────────────────
+type ItemStatus = 'pending' | 'rejected' | 'done'
+
+const ITEM_STATUS_META: Record<ItemStatus, {
+  label: string
+  Icon: React.ElementType
+  color: string
+  bg: string
+  ring: string
+}> = {
+  pending: {
+    label: '検討中',
+    Icon: Clock,
+    color: 'var(--color-obs-text-muted)',
+    bg: 'rgba(143,140,144,0.14)',
+    ring: 'rgba(143,140,144,0.28)',
+  },
+  rejected: {
+    label: '実施しない',
+    Icon: CircleSlash,
+    color: 'var(--color-obs-text-subtle)',
+    bg: 'rgba(109,106,111,0.18)',
+    ring: 'rgba(109,106,111,0.32)',
+  },
+  done: {
+    label: '完了',
+    Icon: Check,
+    color: '#6ee7a1',
+    bg: 'rgba(110,231,161,0.12)',
+    ring: 'rgba(110,231,161,0.32)',
+  },
+}
+
+const ALL_STATUSES: ItemStatus[] = ['pending', 'rejected', 'done']
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function DevelopmentPriorityPage() {
-  // 項目ごとの完了状態 (id -> true で「対応済み」)
-  const [completed, setCompleted] = useState<Record<string, boolean>>({})
-  const toggleCompleted = (id: string) =>
-    setCompleted((prev) => ({ ...prev, [id]: !prev[id] }))
+  // 項目ごとのステータス (id -> 'pending' | 'rejected' | 'done')
+  // 未設定の項目は 'pending' (検討中) として扱う
+  const [statuses, setStatuses] = useState<Record<string, ItemStatus>>({})
+  const getStatus = (id: string): ItemStatus => statuses[id] ?? 'pending'
+  const setStatus = (id: string, next: ItemStatus) =>
+    setStatuses((prev) => ({ ...prev, [id]: next }))
 
   // 詳細を展開している項目 ID のセット (グラフのバークリック / 行の▼両方から制御)
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
@@ -561,13 +600,6 @@ export default function DevelopmentPriorityPage() {
             const meta = CATEGORY_META[cat]
             const Icon = meta.Icon
             const allItems = itemsByCategory[cat]
-            const activeItems = allItems.filter((it) => !completed[it.id])
-            const doneItems = allItems.filter((it) => completed[it.id])
-            // バー長の正規化用: カテゴリ全体での最大言及社数
-            const maxCount = Math.max(
-              1,
-              ...allItems.map((it) => uniqueCompanyCount(it)),
-            )
             return (
               <section key={cat}>
                 {/* セクション見出し */}
@@ -595,22 +627,8 @@ export default function DevelopmentPriorityPage() {
                       boxShadow: `inset 0 0 0 1px ${meta.ring}`,
                     }}
                   >
-                    {activeItems.length}
+                    {allItems.length}
                   </span>
-                  {doneItems.length > 0 && (
-                    <span
-                      className="inline-flex items-center gap-1 h-5 px-1.5 rounded-full text-[10.5px] font-semibold tabular-nums"
-                      style={{
-                        backgroundColor: 'rgba(110,231,161,0.12)',
-                        color: '#6ee7a1',
-                        boxShadow: 'inset 0 0 0 1px rgba(110,231,161,0.28)',
-                      }}
-                      title="完了済み"
-                    >
-                      <Check size={9} strokeWidth={3} />
-                      {doneItems.length}
-                    </span>
-                  )}
                   <p
                     className="ml-2 text-[11.5px]"
                     style={{ color: 'var(--color-obs-text-subtle)' }}
@@ -619,27 +637,13 @@ export default function DevelopmentPriorityPage() {
                   </p>
                 </div>
 
-                {/* 縦棒グラフ — 言及社数の比較。バークリックで該当行を展開＋スクロール */}
-                {activeItems.length > 0 && (
-                  <div className="mb-4">
-                    <CategoryBarChart
-                      items={activeItems}
-                      maxCount={maxCount}
-                      iconColor={meta.iconColor}
-                      barColor={meta.barColor}
-                      ring={meta.ring}
-                      onBarClick={handleBarClick}
-                    />
-                  </div>
-                )}
-
-                {/* 対応中リスト */}
+                {/* リスト (全ステータス同じテーブル内に表示) */}
                 <ObsCard depth="high" padding="none" radius="xl">
                   {/* テーブルヘッダー */}
                   <div
                     className="grid items-center px-5 py-3 text-[10.5px] font-medium tracking-[0.12em] uppercase gap-3"
                     style={{
-                      gridTemplateColumns: '36px 1fr 90px 80px 32px',
+                      gridTemplateColumns: '36px 1fr 90px 120px 32px',
                       color: 'var(--color-obs-text-subtle)',
                       backgroundColor: 'var(--color-obs-surface-low)',
                     }}
@@ -647,39 +651,31 @@ export default function DevelopmentPriorityPage() {
                     <span>#</span>
                     <span>{meta.label}</span>
                     <span className="text-right">言及社数</span>
-                    <span className="text-right">アクション</span>
+                    <span className="text-right">ステータス</span>
                     <span></span>
                   </div>
 
-                  {activeItems.length === 0 ? (
+                  {allItems.length === 0 ? (
                     <div
                       className="px-5 py-12 text-center text-[13px]"
                       style={{ color: 'var(--color-obs-text-subtle)' }}
                     >
-                      対応中の{meta.label}はありません
+                      {meta.label}はまだ抽出されていません
                     </div>
                   ) : (
-                    activeItems.map((item, i) => (
+                    allItems.map((item, i) => (
                       <PriorityRow
                         key={item.id}
                         item={item}
                         rank={i + 1}
-                        completed={false}
-                        onToggleComplete={() => toggleCompleted(item.id)}
+                        status={getStatus(item.id)}
+                        onChangeStatus={(next) => setStatus(item.id, next)}
                         isOpen={expandedIds.has(item.id)}
                         onToggleOpen={() => toggleExpanded(item.id)}
                       />
                     ))
                   )}
                 </ObsCard>
-
-                {/* 完了済みリスト (折りたたみセクション) */}
-                {doneItems.length > 0 && (
-                  <CompletedSection
-                    items={doneItems}
-                    onRestore={(id) => toggleCompleted(id)}
-                  />
-                )}
               </section>
             )
           })}
@@ -964,16 +960,16 @@ function ChartBar({
 function PriorityRow({
   item,
   rank,
-  completed,
-  onToggleComplete,
+  status,
+  onChangeStatus,
   isOpen,
   onToggleOpen,
 }: {
   item: PriorityItem
   rank: number
-  completed: boolean
-  onToggleComplete: () => void
-  // 詳細展開を外部 state でも制御できる (グラフのバークリック連動用)
+  status: ItemStatus
+  onChangeStatus: (next: ItemStatus) => void
+  // 詳細展開を外部 state でも制御できる
   isOpen?: boolean
   onToggleOpen?: () => void
 }) {
@@ -985,6 +981,9 @@ function PriorityRow({
   }
   const meta = CATEGORY_META[item.category]
   const count = uniqueCompanyCount(item)
+  // 完了/実施しない の項目は薄く表示して「終わっている」感を出す
+  const isDimmed = status === 'done' || status === 'rejected'
+  const isStrike = status === 'done' || status === 'rejected'
 
   return (
     <div
@@ -1008,9 +1007,9 @@ function PriorityRow({
         aria-label={`${item.title} の詳細を${open ? '閉じる' : '開く'}`}
         className="grid items-center px-5 py-4 transition-colors duration-150 gap-3 cursor-pointer"
         style={{
-          gridTemplateColumns: '36px 1fr 90px 80px 32px',
+          gridTemplateColumns: '36px 1fr 90px 120px 32px',
           backgroundColor: 'transparent',
-          opacity: completed ? 0.55 : 1,
+          opacity: isDimmed ? 0.6 : 1,
         }}
         onMouseOver={(e) => {
           ;(e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(65,71,83,0.08)'
@@ -1033,7 +1032,7 @@ function PriorityRow({
             className="text-[14px] font-semibold tracking-[-0.005em] truncate"
             style={{
               color: 'var(--color-obs-text)',
-              textDecoration: completed ? 'line-through' : 'none',
+              textDecoration: isStrike ? 'line-through' : 'none',
             }}
           >
             {item.title}
@@ -1064,42 +1063,9 @@ function PriorityRow({
           </span>
         </div>
 
-        {/* 完了ボタン */}
+        {/* ステータスプルダウン */}
         <div className="flex justify-end">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation()
-              onToggleComplete()
-            }}
-            className="inline-flex items-center gap-1 h-7 px-2.5 rounded-full text-[11px] font-semibold transition-all whitespace-nowrap"
-            style={
-              completed
-                ? {
-                    backgroundColor: 'var(--color-obs-surface-low)',
-                    color: 'var(--color-obs-text-muted)',
-                    boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.22)',
-                  }
-                : {
-                    backgroundColor: 'rgba(110,231,161,0.10)',
-                    color: '#6ee7a1',
-                    boxShadow: 'inset 0 0 0 1px rgba(110,231,161,0.32)',
-                  }
-            }
-            title={completed ? '対応中に戻す' : '完了にする (機能開発済み)'}
-          >
-            {completed ? (
-              <>
-                <RotateCcw size={10} strokeWidth={2.4} />
-                戻す
-              </>
-            ) : (
-              <>
-                <Check size={11} strokeWidth={2.6} />
-                完了
-              </>
-            )}
-          </button>
+          <StatusDropdown status={status} onChange={onChangeStatus} />
         </div>
 
         {/* 詳細展開トグル — 親 (行) のクリックでも開けるが、ボタン自体のキーボード操作も維持 */}
@@ -1205,68 +1171,109 @@ function PriorityRow({
   )
 }
 
-// ─── 完了済みセクション ──────────────────────────────────────────────────────
+// ─── ステータスプルダウン ─────────────────────────────────────────────────────
+// 行内のステータス選択 UI (検討中 / 実施しない / 完了)
 
-function CompletedSection({
-  items,
-  onRestore,
+function StatusDropdown({
+  status,
+  onChange,
 }: {
-  items: PriorityItem[]
-  onRestore: (id: string) => void
+  status: ItemStatus
+  onChange: (next: ItemStatus) => void
 }) {
   const [open, setOpen] = useState(false)
+  const wrapRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const onClickOutside = (e: MouseEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false)
+    }
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('mousedown', onClickOutside)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', onClickOutside)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [open])
+
+  const currentMeta = ITEM_STATUS_META[status]
+  const CurrentIcon = currentMeta.Icon
+
   return (
-    <div className="mt-3">
+    <div ref={wrapRef} className="relative">
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        className="inline-flex items-center gap-1.5 h-7 px-3 rounded-full text-[11.5px] font-medium transition-colors"
-        style={{
-          backgroundColor: 'rgba(110,231,161,0.10)',
-          color: '#6ee7a1',
-          boxShadow: 'inset 0 0 0 1px rgba(110,231,161,0.28)',
+        onClick={(e) => {
+          e.stopPropagation()
+          setOpen((v) => !v)
         }}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className="inline-flex items-center gap-1 h-7 pl-2 pr-1.5 rounded-full text-[11px] font-semibold transition-all whitespace-nowrap"
+        style={{
+          backgroundColor: currentMeta.bg,
+          color: currentMeta.color,
+          boxShadow: `inset 0 0 0 1px ${currentMeta.ring}`,
+        }}
+        title="ステータスを変更"
       >
-        <Check size={11} strokeWidth={2.6} />
-        完了済み {items.length} 件
+        <CurrentIcon size={11} strokeWidth={2.4} />
+        {currentMeta.label}
         <ChevronDown
-          size={12}
+          size={11}
           strokeWidth={2.2}
           style={{
             transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
             transition: 'transform 150ms var(--ease-liquid)',
+            opacity: 0.7,
           }}
         />
       </button>
 
       {open && (
-        <div className="mt-3">
-          <ObsCard depth="high" padding="none" radius="xl">
-            <div
-              className="grid items-center px-5 py-3 text-[10.5px] font-medium tracking-[0.12em] uppercase gap-3"
-              style={{
-                gridTemplateColumns: '36px 1fr 90px 80px 32px',
-                color: 'var(--color-obs-text-subtle)',
-                backgroundColor: 'var(--color-obs-surface-low)',
-              }}
-            >
-              <span>#</span>
-              <span>完了済み項目</span>
-              <span className="text-right">言及社数</span>
-              <span className="text-right">アクション</span>
-              <span></span>
-            </div>
-            {items.map((item, i) => (
-              <PriorityRow
-                key={item.id}
-                item={item}
-                rank={i + 1}
-                completed
-                onToggleComplete={() => onRestore(item.id)}
-              />
-            ))}
-          </ObsCard>
+        <div
+          role="listbox"
+          className="absolute right-0 top-full mt-1.5 min-w-[148px] py-1 rounded-[var(--radius-obs-md)] z-50"
+          style={{
+            backgroundColor: 'var(--color-obs-surface-highest)',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(109,106,111,0.18)',
+          }}
+        >
+          {ALL_STATUSES.map((s) => {
+            const m = ITEM_STATUS_META[s]
+            const Icon = m.Icon
+            const selected = s === status
+            return (
+              <button
+                key={s}
+                type="button"
+                role="option"
+                aria-selected={selected}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onChange(s)
+                  setOpen(false)
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-left transition-colors duration-100"
+                style={{ color: 'var(--color-obs-text)' }}
+                onMouseOver={(e) => {
+                  ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                    'var(--color-obs-surface-high)'
+                }}
+                onMouseOut={(e) => {
+                  ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
+                }}
+              >
+                <Icon size={12} strokeWidth={2.2} style={{ color: m.color }} />
+                <span className="text-[12.5px] font-medium flex-1">{m.label}</span>
+                {selected && <Check size={12} strokeWidth={2.6} style={{ color: m.color }} />}
+              </button>
+            )
+          })}
         </div>
       )}
     </div>

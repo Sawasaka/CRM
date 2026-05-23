@@ -408,8 +408,8 @@ export default function CompaniesPage() {
   const [total, setTotal] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const [query, setQuery] = useState('')
-  // 表示モード: 'enriched' = エンリッチ済 6,967社 (デフォルト) / 'all' = 290万社全件
-  const [scopeMode, setScopeMode] = useState<'enriched' | 'all'>('enriched')
+  // 表示モード: 'enriched' = エンリッチ済 6,967社 / 'all' = 290万社全件（デフォルト）
+  const [scopeMode, setScopeMode] = useState<'enriched' | 'all'>('all')
   const [sort, setSort] = useState<{ key: SortKey; dir: SortDir }>({ key: 'intent', dir: 'desc' })
   const toggleSort = (key: SortKey) =>
     setSort((s) => (s.key === key ? { key, dir: s.dir === 'asc' ? 'desc' : 'asc' } : { key, dir: 'desc' }))
@@ -417,8 +417,8 @@ export default function CompaniesPage() {
   const [addOpen, setAddOpen] = useState(false)
   // 企業選択 (将来の一括操作用に残置)
   const [selected, setSelected] = useState<Set<string>>(new Set())
-  // 複数選択可能なインテントフィルタ。デフォルトは HOT のみ。空配列 = 全件表示。
-  const [intentFilter, setIntentFilter] = useState<IntentLevel[]>(['hot'])
+  // 複数選択可能なインテントフィルタ。デフォルト未選択（空配列 = 全件表示）。
+  const [intentFilter, setIntentFilter] = useState<IntentLevel[]>([])
   const toggleIntent = (lvl: IntentLevel) =>
     setIntentFilter((prev) => (prev.includes(lvl) ? prev.filter((x) => x !== lvl) : [...prev, lvl]))
   // 以下のフィルタは「選択された値のリスト」。空配列=指定なし（全件）。
@@ -442,9 +442,11 @@ export default function CompaniesPage() {
     setIsLoading(true)
     ;(async () => {
       try {
-        // エンリッチ済モード: onlyEnriched=true (デフォルト) / 全件モード: onlyEnriched=false
+        // 'enriched' = エンリッチ済のみ / 'all' or null（未選択） = 290万社全件
         const onlyEnriched = scopeMode === 'enriched'
-        const res = await fetch(`/api/abm-companies?take=5000&onlyEnriched=${onlyEnriched}`)
+        const trimmed = query.trim()
+        const searchParam = trimmed ? `&search=${encodeURIComponent(trimmed)}` : ''
+        const res = await fetch(`/api/abm-companies?take=5000&onlyEnriched=${onlyEnriched}${searchParam}`)
         if (!res.ok) {
           if (!cancelled) setIsLoading(false)
           return
@@ -478,7 +480,7 @@ export default function CompaniesPage() {
     return () => {
       cancelled = true
     }
-  }, [scopeMode])
+  }, [scopeMode, query])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -738,7 +740,7 @@ export default function CompaniesPage() {
               <>
                 登記台帳 290万社全件 ／ 対象条件: 国税庁法人番号DB + 経産省 gBizINFO
                 <br />
-                取得項目: 社名 ・ 所在地 ・ 法人番号 ・ 設立日 ・ 資本金。リッチデータが必要な企業はカード右の「エンリッチ予約」で取り込み
+                取得項目: 社名 ・ 所在地 ・ 法人番号 ・ 設立日 ・ 資本金
               </>
             )
           }
@@ -835,16 +837,16 @@ export default function CompaniesPage() {
         <div className="flex items-center gap-2 mb-4 flex-wrap">
           <div className="relative flex-1 min-w-[260px] max-w-md">
             <Search
-              size={16}
+              size={14}
               className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
-              style={{ color: 'var(--color-obs-text-subtle)' }}
+              style={{ color: 'var(--color-obs-text-muted)' }}
             />
             <ObsInput
               ref={searchRef}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="企業名・ドメイン・業種・地域・タグで検索..."
-              className="pl-10 pr-16"
+              className="!pl-8 !pr-14"
             />
             <span
               className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-mono px-1.5 py-0.5 rounded hidden sm:inline-block pointer-events-none fo-glass-rim"
@@ -1215,46 +1217,47 @@ function IntentFilterChip({
 }) {
   const toneColor =
     tone === 'hot' ? 'var(--color-obs-hot)' : tone === 'middle' ? 'var(--color-obs-middle)' : 'var(--color-obs-low)'
-  const toneBg =
-    tone === 'hot'
-      ? 'rgba(255,107,107,0.14)'
-      : tone === 'middle'
-        ? 'rgba(255,184,107,0.14)'
-        : 'rgba(126,198,255,0.14)'
   const toneBgActive =
     tone === 'hot'
       ? 'rgba(255,107,107,0.22)'
       : tone === 'middle'
         ? 'rgba(255,184,107,0.22)'
         : 'rgba(126,198,255,0.22)'
+  // 未選択時はグレーアウト（HOT/MID/LOWの色は active 時のみ点灯）
+  const idleBg = 'rgba(143,140,144,0.08)'
+  const idleBgHover = 'rgba(143,140,144,0.16)'
+  const idleColor = 'var(--color-obs-text-muted)'
 
   return (
     <button
       type="button"
       onClick={onClick}
       onMouseEnter={(e) => {
-        if (!active) (e.currentTarget as HTMLButtonElement).style.backgroundColor = toneBgActive
+        if (!active) (e.currentTarget as HTMLButtonElement).style.backgroundColor = idleBgHover
       }}
       onMouseLeave={(e) => {
-        if (!active) (e.currentTarget as HTMLButtonElement).style.backgroundColor = toneBg
+        if (!active) (e.currentTarget as HTMLButtonElement).style.backgroundColor = idleBg
       }}
       className="inline-flex items-center gap-1.5 px-2.5 h-7 rounded-full text-[11px] font-medium tracking-[-0.005em] transition-all duration-150 cursor-pointer"
       style={{
-        backgroundColor: active ? toneBgActive : toneBg,
-        color: toneColor,
+        backgroundColor: active ? toneBgActive : idleBg,
+        color: active ? toneColor : idleColor,
         boxShadow: active
           ? `inset 0 0 0 1.5px ${toneColor}, 0 0 0 2px ${toneColor}26`
-          : `inset 0 0 0 1px ${toneColor}30`,
+          : 'inset 0 0 0 1px rgba(143,140,144,0.22)',
       }}
       title={active ? `${label} フィルタを解除` : `${label} で絞り込む`}
       aria-pressed={active}
     >
-      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: toneColor }} />
+      <span
+        className="w-1.5 h-1.5 rounded-full"
+        style={{ backgroundColor: active ? toneColor : 'rgba(143,140,144,0.5)' }}
+      />
       <span className="font-semibold">{label}</span>
       <span
         className="tabular-nums px-1 rounded-full text-[10px]"
         style={{
-          color: toneColor,
+          color: active ? toneColor : idleColor,
           backgroundColor: active ? `${toneColor}26` : 'transparent',
         }}
       >
@@ -1515,29 +1518,11 @@ function CompanyRowItem({
         </div>
       </div>
 
-      {/* インテント (求人) — プルダウン (未エンリッチは予約ボタン) */}
+      {/* インテント (求人) — エンリッチ済のみ表示 */}
       {isEnriched ? (
         <IntentCell intent={intent} />
       ) : (
-        <button
-          type="button"
-          onClick={handleReserve}
-          disabled={reserving || reserved}
-          className="inline-flex items-center gap-1 h-7 px-2.5 rounded-full text-[11px] font-semibold transition-all whitespace-nowrap w-fit"
-          style={{
-            background: reserved
-              ? 'rgba(74,217,138,0.14)'
-              : 'rgba(171,199,255,0.10)',
-            color: reserved ? '#4ad98a' : 'var(--color-obs-primary)',
-            boxShadow: reserved
-              ? 'inset 0 0 0 1px rgba(74,217,138,0.32)'
-              : 'inset 0 0 0 1px rgba(171,199,255,0.32)',
-            cursor: reserving || reserved ? 'default' : 'pointer',
-          }}
-          title="この企業をエンリッチ対象として予約"
-        >
-          {reserved ? '✓ 予約済み' : reserving ? '予約中...' : '★ エンリッチ予約'}
-        </button>
+        <span className="text-[12px]" style={{ color: 'var(--color-obs-text-subtle)', opacity: 0.55 }}>—</span>
       )}
 
       {/* 1st パーティーシグナル — 取引(/deals)に紐づく企業のみ表示 */}
@@ -1799,7 +1784,7 @@ function AddCompanyModal({
         <div className="px-5 py-4" style={{ boxShadow: 'inset 0 -1px 0 var(--color-obs-surface-low)' }}>
           <h2 className="text-[16px] font-bold" style={{ color: 'var(--color-obs-text)' }}>企業を追加</h2>
           <p className="text-[12px] mt-1" style={{ color: 'var(--color-obs-text-muted)' }}>
-            手動で企業を追加します。後でエンリッチ予約すると詳細データが自動取得されます
+            手動で企業を追加します
           </p>
         </div>
         <div className="px-5 py-4 space-y-3">

@@ -396,20 +396,25 @@ const DropdownItem = ({
 )
 
 // ---------- Option chips (model / scope / person / external) ----------
-type ModelKey      = 'gpt-4o-mini' | 'gpt-4o' | 'claude-opus-4' | 'claude-sonnet-4-5' | 'gemini-2-5-pro'
-type FeatureScope  = 'all' | 'crm' | 'marketing' | 'pdm' | 'support' | 'helpdesk'
+type ModelKey      = 'gemini-2.5-flash-lite' | 'gpt-4o-mini' | 'gpt-4o'
+type FeatureAgentId = 'sales' | 'marketing' | 'support' | 'helpdesk' | 'pdm'
+
+// サービス側 AssigneeFilter と整合させる: バッジ色 / イニシャル / 表示名
+const FEATURE_AGENTS: { id: FeatureAgentId; name: string; initial: string; color: string }[] = [
+  { id: 'sales',     name: 'Sales Agent',     initial: 'S', color: '#abc7ff' },
+  { id: 'marketing', name: 'Marketing Agent', initial: 'M', color: '#ffcf4a' },
+  { id: 'support',   name: 'Customer Agent',  initial: 'C', color: '#ff8dcf' },
+  { id: 'helpdesk',  name: 'Knowledge Agent', initial: 'K', color: '#c8b9ff' },
+  { id: 'pdm',       name: 'PDM Agent',       initial: 'P', color: '#8dffc9' },
+]
+const ALL_FEATURE_AGENT_IDS: FeatureAgentId[] = FEATURE_AGENTS.map((a) => a.id)
 type PersonScope   = 'all' | 'tanaka' | 'suzuki' | 'sato' | 'takahashi' | 'watanabe'
-type ExternalScope = 'off' | 'web' | 'google'
+type ExternalScope = 'off' | 'web'
 
 const MODEL_LABELS: Record<ModelKey, string> = {
+  'gemini-2.5-flash-lite': 'Gemini 2.5 Flash Lite',
   'gpt-4o-mini':     'GPT-4o mini',
   'gpt-4o':          'GPT-4o',
-  'claude-opus-4':   'Claude Opus 4.7',
-  'claude-sonnet-4-5': 'Claude Sonnet 4.6',
-  'gemini-2-5-pro':  'Gemini 2.5 Pro',
-}
-const FEATURE_LABELS: Record<FeatureScope, string> = {
-  all: '全て', crm: 'CRM', marketing: 'マーケ', pdm: 'PDM', support: 'サポート', helpdesk: 'ヘルプデスク',
 }
 const PERSON_LABELS: Record<PersonScope, string> = {
   all: '全て',
@@ -430,17 +435,14 @@ const PERSON_ROLES: Record<PersonScope, string> = {
 const EXTERNAL_LABELS: Record<ExternalScope, string> = {
   off: 'OFF',
   web: '外部リサーチ',
-  google: 'Google 連携',
 }
 const EXTERNAL_SHORT: Record<ExternalScope, string> = {
   off: 'OFF',
-  web: 'リサーチ',
-  google: 'Google',
+  web: 'ON',
 }
 const EXTERNAL_DESC: Record<ExternalScope, string> = {
   off: '内部データのみを参照',
   web: 'Web検索結果も併用',
-  google: 'Gmail / Calendar / Drive を併用',
 }
 
 export const Hero = () => {
@@ -461,9 +463,13 @@ export const Hero = () => {
   const [phShow, setPhShow] = useState(true)
   const [demoView, setDemoView] = useState<HeroDemoKey>('chat')
   const [model, setModel] = useState<ModelKey>('gpt-4o-mini')
-  const [featureScope, setFeatureScope] = useState<FeatureScope>('all')
+  const [featureAgents, setFeatureAgents] = useState<Set<FeatureAgentId>>(
+    () => new Set(ALL_FEATURE_AGENT_IDS),
+  )
+  const allFeaturesOn = featureAgents.size === ALL_FEATURE_AGENT_IDS.length
+  const featureChipLabel = allFeaturesOn ? '全て' : `${featureAgents.size}/${ALL_FEATURE_AGENT_IDS.length}`
   const [personScope, setPersonScope] = useState<PersonScope>('all')
-  const [externalScope, setExternalScope] = useState<ExternalScope>('off')
+  const [externalScope, setExternalScope] = useState<ExternalScope>('web')
   const [openMenu, setOpenMenu] = useState<'model' | 'feature' | 'person' | 'external' | null>(null)
   const threadRef = useRef<HTMLDivElement | null>(null)
   const inputRef = useRef<HTMLInputElement | null>(null)
@@ -507,12 +513,13 @@ export const Hero = () => {
       : ''
     const externalPrefix = externalScope === 'web'
       ? '※ 外部リサーチ（Web検索）の最新情報も反映しています。\n\n'
-      : externalScope === 'google'
-        ? '※ Google Workspace（Gmail / Calendar / Drive）の関連データも反映しています。\n\n'
-        : ''
-    const scopeNote = featureScope === 'all' && personScope === 'all' && externalScope === 'off'
+      : ''
+    const featureScopeLabel = allFeaturesOn
+      ? '全て'
+      : FEATURE_AGENTS.filter((a) => featureAgents.has(a.id)).map((a) => a.name).join('・') || 'なし'
+    const scopeNote = allFeaturesOn && personScope === 'all' && externalScope === 'off'
       ? ''
-      : `\n\n（参照スコープ：機能=${FEATURE_LABELS[featureScope]} ／ 人=${PERSON_LABELS[personScope]} ／ 外部=${EXTERNAL_LABELS[externalScope]}）`
+      : `\n\n（参照スコープ：機能=${featureScopeLabel} ／ 人=${PERSON_LABELS[personScope]} ／ 外部=${EXTERNAL_LABELS[externalScope]}）`
     const modelNote = `\n— Powered by ${MODEL_LABELS[model]}`
     const text = personPrefix + externalPrefix + baseText + scopeNote + modelNote
     setMessages((ms) => [...ms, { id, role: 'agent', agent, text: '', rich }])
@@ -532,7 +539,7 @@ export const Hero = () => {
     }
     timer = setTimeout(step, 220)
     return () => clearTimeout(timer)
-  }, [model, featureScope, personScope, externalScope])
+  }, [model, featureAgents, personScope, externalScope, allFeaturesOn])
 
   const sendChip = useCallback(
     (sug: Suggestion) => {
@@ -595,7 +602,7 @@ export const Hero = () => {
       <div className="relative mx-auto max-w-6xl px-6 pt-32 md:pt-40 pb-24 md:pb-32 min-h-screen flex flex-col justify-center">
         <div className="text-center">
           <div className="flex justify-center mb-6">
-            <Eyebrow color="#abc7ff">CHAT CRM ／ ルキスマCRM</Eyebrow>
+            <Eyebrow color="#abc7ff">CHAT CRM</Eyebrow>
           </div>
           <h1 className="font-display font-bold tracking-[-0.025em] text-[2.6rem] sm:text-[3.4rem] md:text-[4.6rem] leading-[1.04]">
             <span className="block">
@@ -773,7 +780,7 @@ export const Hero = () => {
                         )}
                       </div>
 
-                      {/* Feature scope dropdown */}
+                      {/* Feature scope dropdown — サービス側 AssigneeFilter と同UI(エージェント別マルチセレクト) */}
                       <div className="relative">
                         <button
                           type="button"
@@ -781,21 +788,67 @@ export const Hero = () => {
                           onClick={(e) => { e.stopPropagation(); setOpenMenu(openMenu === 'feature' ? null : 'feature') }}
                         >
                           <Layers size={11} color="#abc7ff" />
-                          機能 <span className="text-[#7e7c83]">{FEATURE_LABELS[featureScope]}</span>
+                          機能 <span className="text-[#7e7c83]">{featureChipLabel}</span>
                           <ChevronDown size={11} color="#7e7c83" />
                         </button>
                         {openMenu === 'feature' && (
-                          <DropdownMenu>
-                            <DropdownHeader>参照する機能</DropdownHeader>
-                            {(Object.keys(FEATURE_LABELS) as FeatureScope[]).map((k) => (
-                              <DropdownItem
-                                key={k}
-                                selected={featureScope === k}
-                                onClick={() => { setFeatureScope(k); setOpenMenu(null) }}
+                          <DropdownMenu wide>
+                            <div className="flex items-center justify-between px-3 pt-2 pb-1">
+                              <span className="text-[10px] font-semibold tracking-[0.06em] uppercase text-[#9b99a0]">
+                                機能
+                                <span className="ml-1.5 tabular-nums opacity-70">
+                                  {featureAgents.size}/{ALL_FEATURE_AGENT_IDS.length}
+                                </span>
+                              </span>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setFeatureAgents(
+                                    allFeaturesOn ? new Set() : new Set(ALL_FEATURE_AGENT_IDS),
+                                  )
+                                }}
+                                className="text-[10.5px] font-semibold px-1.5 py-0.5 rounded-[4px] transition-colors"
+                                style={{
+                                  color: allFeaturesOn ? '#abc7ff' : '#9b99a0',
+                                  backgroundColor: allFeaturesOn ? 'rgba(171,199,255,0.12)' : 'transparent',
+                                }}
                               >
-                                {FEATURE_LABELS[k]}
-                              </DropdownItem>
-                            ))}
+                                {allFeaturesOn ? '全てON' : '全て選択'}
+                              </button>
+                            </div>
+                            {FEATURE_AGENTS.map((a) => {
+                              const checked = featureAgents.has(a.id)
+                              return (
+                                <button
+                                  key={a.id}
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    setFeatureAgents((prev) => {
+                                      const next = new Set(prev)
+                                      if (next.has(a.id)) next.delete(a.id)
+                                      else next.add(a.id)
+                                      return next
+                                    })
+                                  }}
+                                  className="w-full flex items-center gap-2.5 px-3 py-1.5 transition-colors hover:bg-shimmer/40 text-left"
+                                  style={{ opacity: checked ? 1 : 0.45 }}
+                                >
+                                  <span
+                                    className="inline-flex items-center justify-center w-[20px] h-[20px] rounded-[5px] text-[10px] font-semibold tabular-nums shrink-0"
+                                    style={{
+                                      backgroundColor: checked ? `${a.color}28` : `${a.color}14`,
+                                      color: a.color,
+                                      boxShadow: `inset 0 0 0 1px ${a.color}38`,
+                                    }}
+                                  >
+                                    {a.initial}
+                                  </span>
+                                  <span className="text-[12.5px] text-[#e7e5ea]">{a.name}</span>
+                                </button>
+                              )
+                            })}
                           </DropdownMenu>
                         )}
                       </div>
@@ -914,16 +967,15 @@ export const Hero = () => {
                 {
                   tag: '標準連携',           tagColor: '#8dffc9', tagBg: 'rgba(141,255,201,0.10)',
                   items: [
-                    { l: 'Google Workspace', c: '#abc7ff', sub: 'Gmail / Meet / カレンダー / Googleドライブ' },
-                    { l: 'Notion',           c: '#e7e5ea', sub: 'ドキュメント / ナレッジ' },
+                    { l: 'Google Workspace', c: '#abc7ff', sub: 'Gmail / Meet / Calendar' },
+                    { l: 'Notion',           c: '#e7e5ea', sub: '議事録' },
                   ],
                 },
                 {
                   tag: '近日対応予定',        tagColor: '#ffcf4a', tagBg: 'rgba(255,207,74,0.10)',
                   items: [
-                    { l: 'Microsoft 365',    c: '#abc7ff', sub: 'Outlook / Teams / OneDrive / SharePoint' },
-                    { l: 'Zoom',             c: '#7aa4ff', sub: '議事録 / Meeting' },
-                    { l: 'Slack',            c: '#c8b9ff' },
+                    { l: 'Microsoft 365',    c: '#abc7ff', sub: 'Outlook / Teams' },
+                    { l: 'Zoom',             c: '#7aa4ff', sub: '議事録' },
                   ],
                 },
                 {
@@ -935,7 +987,7 @@ export const Hero = () => {
                   ],
                 },
                 {
-                  tag: '追加対応（初期費用）', tagColor: '#d3a5ff', tagBg: 'rgba(211,165,255,0.10)',
+                  tag: 'カスタム連携', tagColor: '#d3a5ff', tagBg: 'rgba(211,165,255,0.10)',
                   items: [
                     { l: 'その他カスタム連携',  c: '#9b99a0', sub: 'お気軽にご相談ください' },
                   ],
@@ -948,19 +1000,22 @@ export const Hero = () => {
                   >
                     {group.tag}
                   </span>
-                  {group.items.map((s) => (
-                    <span
-                      key={s.l}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-pitch/60 fo-glass-rim text-[12px] text-[#c7c5c9] hover:text-[#e7e5ea] hover:bg-shimmer/40 transition-colors"
-                      title={s.sub}
-                    >
-                      <span className="w-1.5 h-1.5 rounded-full" style={{ background: s.c, boxShadow: `0 0 6px ${s.c}` }} />
-                      {s.l}
-                      {s.sub && (
-                        <span className="text-[10px] text-[#7e7c83] hidden md:inline">／ {s.sub}</span>
-                      )}
-                    </span>
-                  ))}
+                  {group.items.map((s) => {
+                    const sub = 'sub' in s ? s.sub : undefined
+                    return (
+                      <span
+                        key={s.l}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-pitch/60 fo-glass-rim text-[12px] text-[#c7c5c9] hover:text-[#e7e5ea] hover:bg-shimmer/40 transition-colors"
+                        title={sub}
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full" style={{ background: s.c, boxShadow: `0 0 6px ${s.c}` }} />
+                        {s.l}
+                        {sub && (
+                          <span className="text-[10px] text-[#7e7c83] hidden md:inline">／ {sub}</span>
+                        )}
+                      </span>
+                    )
+                  })}
                 </div>
               ))}
             </div>

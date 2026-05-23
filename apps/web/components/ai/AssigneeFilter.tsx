@@ -2,37 +2,21 @@
 
 import { useEffect, useRef, useState } from 'react'
 import {
-  Check,
   Layers,
   Globe,
-  // 機能アイコン
-  BookOpen,
-  Activity,
-  Flame,
-  ClipboardList,
-  Inbox,
-  CheckSquare,
-  Briefcase,
-  Users as UsersIcon,
-  Building2,
-  Columns3,
   // 人アイコン
   UserRound,
 } from 'lucide-react'
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
+// 機能スコープ = 5 体のエージェント (Sales / Marketing / Support / Helpdesk / PDM)
 export type FeatureScopeId =
-  | 'team_faq'
-  | 'first_party'
-  | 'dev_priority'
-  | 'action_board'
-  | 'tickets'
-  | 'tasks'
-  | 'deals'
-  | 'contacts'
-  | 'companies'
-  | 'pipeline'
+  | 'sales'
+  | 'marketing'
+  | 'support'
+  | 'helpdesk'
+  | 'pdm'
 
 export type PersonScopeId = string
 
@@ -50,9 +34,12 @@ export interface AssigneeScopeValue {
 
 interface FeatureMeta {
   id: FeatureScopeId
+  /** エージェント名 (例: "Sales Agent") */
   name: string
-  icon: React.ElementType
-  tint: string
+  /** 1文字イニシャル — サイドバーバッジと同じ規則 */
+  initial: string
+  /** バッジ色 (atoms.tsx の AGENTS と一致) */
+  color: string
 }
 
 interface PersonMeta {
@@ -60,25 +47,23 @@ interface PersonMeta {
   name: string
 }
 
+// サイドバー / atoms.tsx の AGENTS と同じ色 + 1文字イニシャル
 const FEATURES: FeatureMeta[] = [
-  { id: 'team_faq', name: 'チームFAQ', icon: BookOpen, tint: 'var(--color-obs-middle)' },
-  { id: 'first_party', name: 'ファーストパーティ', icon: Activity, tint: 'var(--color-obs-low)' },
-  { id: 'dev_priority', name: '開発優先度', icon: Flame, tint: 'var(--color-obs-hot)' },
-  {
-    id: 'action_board',
-    name: 'アクションボード',
-    icon: ClipboardList,
-    tint: 'var(--color-obs-primary)',
-  },
-  { id: 'tickets', name: 'チケット', icon: Inbox, tint: 'var(--color-obs-low)' },
-  { id: 'tasks', name: 'タスク一覧', icon: CheckSquare, tint: 'var(--color-obs-primary)' },
-  { id: 'deals', name: '取引', icon: Briefcase, tint: 'var(--color-obs-middle)' },
-  { id: 'contacts', name: 'コンタクト', icon: UsersIcon, tint: 'var(--color-obs-primary)' },
-  { id: 'companies', name: '企業', icon: Building2, tint: 'var(--color-obs-low)' },
-  { id: 'pipeline', name: 'パイプライン', icon: Columns3, tint: 'var(--color-obs-primary)' },
+  { id: 'sales',     name: 'Sales Agent',     initial: 'S', color: '#abc7ff' },
+  { id: 'marketing', name: 'Marketing Agent', initial: 'M', color: '#ffcf4a' },
+  { id: 'support',   name: 'Customer Agent',  initial: 'C', color: '#ff8dcf' },
+  { id: 'helpdesk',  name: 'Knowledge Agent',  initial: 'K', color: '#c8b9ff' },
+  { id: 'pdm',       name: 'PDM Agent',       initial: 'P', color: '#8dffc9' },
 ]
 
-const PERSONS: PersonMeta[] = []
+// Phase 1: モック。将来的にはワークスペースのメンバー一覧から取得する。
+const PERSONS: PersonMeta[] = [
+  { id: 'dev-taro',     name: '開発 太郎' },
+  { id: 'sales-hanako', name: '営業 花子' },
+  { id: 'mkt-jiro',     name: 'マーケ 次郎' },
+  { id: 'is-saburo',    name: 'IS 三郎' },
+  { id: 'cs-shiro',     name: 'CS 四郎' },
+]
 
 const ALL_FEATURE_IDS = FEATURES.map((f) => f.id)
 const ALL_PERSON_IDS = PERSONS.map((p) => p.id)
@@ -187,18 +172,15 @@ function FeatureMultiSelect({
               onChange(isAll ? new Set<FeatureScopeId>() : new Set<FeatureScopeId>(ALL_FEATURE_IDS))
             }
           />
-          {FEATURES.map((f) => {
-            const Icon = f.icon
-            return (
-              <ScopeRow
-                key={f.id}
-                checked={selected.has(f.id)}
-                onClick={() => toggle(f.id)}
-                icon={<Icon size={12} style={{ color: f.tint }} className="shrink-0" />}
-                name={f.name}
-              />
-            )
-          })}
+          {FEATURES.map((f) => (
+            <ScopeRow
+              key={f.id}
+              checked={selected.has(f.id)}
+              onClick={() => toggle(f.id)}
+              badge={{ initial: f.initial, color: f.color }}
+              name={f.name}
+            />
+          ))}
         </DropdownPanel>
       )}
     </div>
@@ -266,13 +248,7 @@ function PersonMultiSelect({
               key={p.id}
               checked={selected.has(p.id)}
               onClick={() => toggle(p.id)}
-              icon={
-                <UserRound
-                  size={12}
-                  style={{ color: 'var(--color-obs-text-subtle)' }}
-                  className="shrink-0"
-                />
-              }
+              badge={{ initial: p.name.slice(0, 1), color: '#abc7ff' }}
               name={p.name}
             />
           ))}
@@ -401,21 +377,23 @@ function SectionHeader({
 function ScopeRow({
   checked,
   onClick,
-  icon,
+  badge,
   name,
 }: {
   checked: boolean
   onClick: () => void
-  icon: React.ReactNode
+  /** イニシャル+カラー。バッジ自身が ON/OFF 表示を兼ねる(チェックボックスは廃止) */
+  badge: { initial: string; color: string }
   name: string
 }) {
+  const { initial, color } = badge
   return (
     <button
       type="button"
       onClick={onClick}
       className="w-[calc(100%-8px)] mx-1 flex items-center gap-2 px-3 py-[7px] rounded-[6px] text-left transition-colors duration-100"
       style={{
-        color: 'var(--color-obs-text)',
+        color: checked ? 'var(--color-obs-text)' : 'var(--color-obs-text-subtle)',
         fontWeight: checked ? 600 : 500,
         backgroundColor: 'transparent',
       }}
@@ -426,21 +404,23 @@ function ScopeRow({
       onMouseOut={(e) => {
         ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
       }}
+      title={checked ? `${name} を除外する` : `${name} を含める`}
     >
+      {/* イニシャルバッジ: 選択時は色付き + 発光、非選択時はグレースケール */}
       <span
-        className="inline-flex items-center justify-center w-4 h-4 rounded-[4px] shrink-0"
+        className="inline-flex items-center justify-center w-[22px] h-[22px] rounded-[5px] text-[10.5px] font-semibold tabular-nums shrink-0 transition-all duration-150"
         style={{
-          backgroundColor: checked ? 'var(--color-obs-primary)' : 'transparent',
+          backgroundColor: checked ? `${color}24` : 'rgba(109,106,111,0.10)',
+          color: checked ? color : 'var(--color-obs-text-subtle)',
           boxShadow: checked
-            ? 'inset 0 0 0 1px var(--color-obs-primary)'
-            : 'inset 0 0 0 1px rgba(109,106,111,0.32)',
+            ? `inset 0 0 0 1px ${color}66, 0 0 12px ${color}55`
+            : 'inset 0 0 0 1px rgba(109,106,111,0.22)',
+          opacity: checked ? 1 : 0.55,
         }}
+        title={`${initial} = ${name}`}
       >
-        {checked && (
-          <Check size={11} strokeWidth={3} style={{ color: 'var(--color-obs-on-primary)' }} />
-        )}
+        {initial}
       </span>
-      {icon}
       <span className="text-[13px] tracking-[-0.01em] flex-1">{name}</span>
     </button>
   )

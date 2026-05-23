@@ -5,6 +5,29 @@ export const dynamic = 'force-dynamic'
 
 const INTENT_PRIORITY: Record<string, number> = { HOT: 4, MIDDLE: 3, LOW: 2, NONE: 1 }
 
+// 表記揺れバリエーション生成（半角/全角/カタカナ/ひらがな）
+function toFullWidth(s: string): string {
+  return s.replace(/[!-~]/g, c => String.fromCharCode(c.charCodeAt(0) + 0xFEE0))
+}
+function toHalfWidth(s: string): string {
+  return s.replace(/[！-～]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
+}
+function kataToHira(s: string): string {
+  return s.replace(/[ァ-ヶ]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60))
+}
+function hiraToKata(s: string): string {
+  return s.replace(/[ぁ-ゖ]/g, c => String.fromCharCode(c.charCodeAt(0) + 0x60))
+}
+function expandSearchVariants(s: string): string[] {
+  const set = new Set<string>()
+  for (const c of [s, toFullWidth(s), toHalfWidth(s)]) {
+    set.add(c)
+    set.add(kataToHira(c))
+    set.add(hiraToKata(c))
+  }
+  return Array.from(set).filter(Boolean).slice(0, 8)
+}
+
 let _client: ReturnType<typeof createClient> | null = null
 function sb() {
   if (_client) return _client
@@ -42,22 +65,41 @@ export async function GET(req: NextRequest) {
 
   const supabase = sb()
 
+  // 290万社全件 + name部分一致 で count: 'exact' を取ると statement timeout になるため、
+  // search 指定時は count を取らない。それ以外（エンリッチ済モード）は exact count を取得
+  const countMode = (search || !onlyEnriched) ? undefined : ('exact' as const)
   let q = supabase
     .from('companies')
     .select(
       'id, corporate_number, name, name_kana, website_url, prefecture, city, address, corporate_type, employee_count, employee_count_num, revenue, hq_phone, service_summary, company_features, enrichment_status, industry_id, created_at, updated_at',
-      { count: 'exact' },
+      countMode ? { count: countMode } : undefined,
     )
 
   if (onlyEnriched) q = q.eq('enrichment_status', 'completed')
   if (industryId) q = q.eq('industry_id', industryId)
   if (minEmployees) q = q.gte('employee_count_num', minEmployees)
-  if (search) q = q.or(`name.ilike.%${search}%,corporate_number.ilike.%${search}%`)
+  if (search) {
+    // 13桁の数字なら法人番号 完全一致
+    if (/^\d{13}$/.test(search.trim())) {
+      q = q.eq('corporate_number', search.trim())
+    } else {
+      // 表記揺れ展開: 半角/全角/カナ/ひらがな で name 部分一致（pg_trgm GIN index 利用）
+      const variants = expandSearchVariants(search)
+      const escape = (v: string) => v.replace(/,/g, '\\,').replace(/\(/g, '\\(').replace(/\)/g, '\\)')
+      const nameClause = variants.map(v => `name.ilike.%${escape(v)}%`).join(',')
+      q = q.or(nameClause)
+    }
+  }
 
-  q = q
-    .order('employee_count_num', { ascending: false, nullsFirst: false })
-    .range(skip, skip + take - 1)
-    .limit(take)  // PostgREST のデフォルト 1000 行制限を上書き
+  // search 時は employee_count_num の全件ソートが重いので corporate_number 順（B-tree 効く）
+  if (search) {
+    q = q.order('corporate_number', { ascending: true })
+  } else {
+    q = q.order('employee_count_num', { ascending: false, nullsFirst: false })
+  }
+  // search 時は take を小さめに（最大200件）
+  const effectiveTake = search ? Math.min(take, 200) : take
+  q = q.range(skip, skip + effectiveTake - 1).limit(effectiveTake)
   const { data: rows, error, count } = await q
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 

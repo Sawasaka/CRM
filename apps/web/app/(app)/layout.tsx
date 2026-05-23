@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { Suspense, type ReactNode } from 'react'
 import { Sidebar } from '@/components/layout/sidebar'
 import { Header } from '@/components/layout/header'
 import { ActiveCallWidget } from '@/components/calls/ActiveCallWidget'
@@ -32,7 +32,9 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       className="min-h-screen relative"
       style={{ backgroundColor: 'var(--color-obs-surface)', color: 'var(--color-obs-text)' }}
     >
-      <Sidebar />
+      <Suspense fallback={null}>
+        <Sidebar />
+      </Suspense>
       <Header />
       <main
         className="relative pt-[56px] min-h-screen transition-[margin-left] duration-200"

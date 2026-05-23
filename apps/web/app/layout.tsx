@@ -1,6 +1,16 @@
 import type { Metadata } from 'next'
 import { DM_Sans, Inter, Plus_Jakarta_Sans } from 'next/font/google'
 import { SessionProvider } from 'next-auth/react'
+import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics'
+import {
+  googleSiteVerification,
+  publicSiteDescription,
+  publicSiteKeywords,
+  publicSiteTitle,
+  publicSiteUrl,
+  serviceName,
+  shortServiceName,
+} from '@/lib/public-site'
 import { TRPCProvider } from '@/lib/trpc/provider'
 import './globals.css'
 
@@ -29,8 +39,31 @@ const plusJakarta = Plus_Jakarta_Sans({
 })
 
 export const metadata: Metadata = {
-  title: 'ルキスマCRM — 営業データから、何でも答えるチャットCRM',
-  description: 'PDM視点CRM × 企業マスター — 顧客の声をプロダクトに還元する受注実行基盤',
+  metadataBase: new URL(publicSiteUrl),
+  title: publicSiteTitle,
+  description: publicSiteDescription,
+  keywords: publicSiteKeywords,
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    title: publicSiteTitle,
+    description: publicSiteDescription,
+    url: '/',
+    siteName: `${serviceName}（${shortServiceName}）`,
+    type: 'website',
+    locale: 'ja_JP',
+  },
+  twitter: {
+    card: 'summary',
+    title: publicSiteTitle,
+    description: publicSiteDescription,
+  },
+  verification: googleSiteVerification
+    ? {
+        google: googleSiteVerification,
+      }
+    : undefined,
   icons: {
     icon: [
       { url: '/icon.svg', type: 'image/svg+xml' },
@@ -39,6 +72,7 @@ export const metadata: Metadata = {
     shortcut: '/icon.svg',
     apple: '/icon.svg',
   },
+  manifest: '/manifest.webmanifest',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -50,6 +84,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             {children}
           </TRPCProvider>
         </SessionProvider>
+        <GoogleAnalytics />
       </body>
     </html>
   )

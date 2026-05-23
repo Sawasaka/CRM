@@ -62,7 +62,7 @@ const AGENTS_DATA: AgentEntry[] = [
   },
   {
     id: 'support',
-    name: 'Support Agent',
+    name: 'Customer Agent',
     accent: '#ff8dcf',
     index: '03',
     tagline: '1次回答は、AI。難しいときは、人。',
@@ -78,7 +78,7 @@ const AGENTS_DATA: AgentEntry[] = [
   },
   {
     id: 'helpdesk',
-    name: 'Helpdesk Agent',
+    name: 'Knowledge Agent',
     accent: '#c8b9ff',
     index: '04',
     tagline: 'ベテランの知恵を、新人にも。',
@@ -264,7 +264,7 @@ const HelpdeskMock = ({ accent }: { accent: string }) => (
       <div className="flex gap-2 items-start">
         <div className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold text-[#0a0a0c]" style={{ background: accent }}>H</div>
         <div className="flex-1">
-          <div className="text-[10px]" style={{ color: accent }}>Helpdesk Agent</div>
+          <div className="text-[10px]" style={{ color: accent }}>Knowledge Agent</div>
           <div className="text-[11px] text-[#e7e5ea] mt-0.5 leading-relaxed">
             国内出張は宿泊8,000円/日、海外は地域A〜Cで上限が異なります。詳細は経費規程をご確認ください。
           </div>
@@ -511,14 +511,14 @@ const AgentScene = ({ agent, isActive }: { agent: AgentEntry; isActive: boolean 
 // AgenticEra から移植。ヘッダ直下に「5 体が連携している」イメージを概観表示する。
 const AgentOrbCluster = () => {
   // 各オーブの中央に頭文字を重ねる
-  // 並び: Sales → Support(C) → Marketing → PDM → Helpdesk
-  // Support は「カスタマーサポート」の C を採用 (Sales と頭文字 S が衝突するため)
+  // 並び: Sales → Support(C) → Marketing → PDM → Knowledge(N=ナレッジ)
+  // Support は「カスタマーサポート」の C、Knowledge は ナレッジ の N を採用
   const agents: { agent: AgentKey; x: string; initial: string }[] = [
     { agent: 'sales',     x: '14%', initial: 'S' },
     { agent: 'support',   x: '32%', initial: 'C' },
     { agent: 'marketing', x: '50%', initial: 'M' },
     { agent: 'pdm',       x: '68%', initial: 'P' },
-    { agent: 'helpdesk',  x: '86%', initial: 'H' },
+    { agent: 'helpdesk',  x: '86%', initial: 'K' },
   ]
   return (
     <div className="relative mt-0 mx-auto max-w-4xl h-[140px] md:h-[160px]">

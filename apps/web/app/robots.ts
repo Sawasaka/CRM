@@ -1,10 +1,5 @@
 import type { MetadataRoute } from 'next'
-
-const siteUrl =
-  process.env.AUTH_URL ??
-  process.env.NEXTAUTH_URL ??
-  process.env.NEXT_PUBLIC_APP_URL ??
-  'https://www.rookiesmart-jp.com'
+import { publicSiteUrl } from '@/lib/public-site'
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -18,7 +13,7 @@ export default function robots(): MetadataRoute.Robots {
         '/admin',
       ],
     },
-    sitemap: `${siteUrl.replace(/\/+$/, '')}/sitemap.xml`,
-    host: siteUrl.replace(/\/+$/, ''),
+    sitemap: `${publicSiteUrl}/sitemap.xml`,
+    host: publicSiteUrl,
   }
 }

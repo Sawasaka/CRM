@@ -45,14 +45,9 @@ const providers = [
           clientSecret: process.env.GOOGLE_CLIENT_SECRET,
           authorization: {
             params: {
-              // Google Cloud 側に登録済みの NextAuth callback で、まず Gmail 連携を実用化する。
-              // Drive / Calendar / Meet は /api/google/install の incremental authorization で追加取得する。
-              scope: [
-                'openid',
-                'email',
-                'profile',
-                'https://www.googleapis.com/auth/gmail.modify',
-              ].join(' '),
+              // Sign-in stays identity-only. Workspace permissions are requested
+              // from /api/google/install per integration to keep OAuth review scoped.
+              scope: ['openid', 'email', 'profile'].join(' '),
               access_type: 'offline',
               prompt: 'consent',
             },

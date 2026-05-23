@@ -147,8 +147,8 @@ export default function TicketsPage() {
     <ObsPageShell>
       <div className="w-full px-8 xl:px-12 2xl:px-16 pb-16">
       <ObsHero
-        eyebrow="チケット"
-        title="チケット一覧"
+        eyebrow="TICKETS"
+        title="問い合わせチケット"
         caption="取引(Deal)に紐づくチケットを管理します。"
       />
 
