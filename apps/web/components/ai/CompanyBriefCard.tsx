@@ -115,12 +115,7 @@ export function CompanyBriefCard({ brief }: { brief: CompanyBrief }) {
                   {section.title}
                 </h3>
               </div>
-              <p
-                className="text-[12.5px] leading-relaxed whitespace-pre-line"
-                style={{ color: 'var(--color-obs-text-muted)' }}
-              >
-                {section.body}
-              </p>
+              <SectionBody body={section.body} />
             </section>
           )
         })}
@@ -130,6 +125,73 @@ export function CompanyBriefCard({ brief }: { brief: CompanyBrief }) {
 }
 
 const sectionIcons = [TrendingUp, Target, Users, Search]
+
+function SectionBody({ body }: { body: string }) {
+  const lines = body
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+
+  if (lines.length === 0) return null
+
+  return (
+    <div className="space-y-2 text-[12.5px] leading-relaxed">
+      {lines.map((line, index) => {
+        const bullet = line.match(/^[-*・]\s+(.+)$/)
+        const keyValue = line.match(/^([^:：]{1,18})[:：]\s*(.+)$/)
+        const labelOnly = line.match(/^([^:：]{1,18})[:：]$/)
+
+        if (bullet?.[1]) {
+          return (
+            <div key={`${index}-${line.slice(0, 20)}`} className="flex gap-2">
+              <span className="mt-[0.65em] h-1 w-1 shrink-0 rounded-full bg-[var(--color-obs-primary)]" />
+              <span style={{ color: 'var(--color-obs-text-muted)' }}>
+                {cleanText(bullet[1])}
+              </span>
+            </div>
+          )
+        }
+
+        if (keyValue?.[1] && keyValue?.[2] && isCompactLabel(keyValue[1])) {
+          return (
+            <div
+              key={`${index}-${line.slice(0, 20)}`}
+              className="grid gap-1 sm:grid-cols-[72px_1fr]"
+            >
+              <span
+                className="text-[11.5px] font-medium"
+                style={{ color: 'var(--color-obs-primary)' }}
+              >
+                {cleanText(keyValue[1])}
+              </span>
+              <span style={{ color: 'var(--color-obs-text-muted)' }}>
+                {cleanText(keyValue[2])}
+              </span>
+            </div>
+          )
+        }
+
+        if (labelOnly?.[1] && isCompactLabel(labelOnly[1])) {
+          return (
+            <div
+              key={`${index}-${line.slice(0, 20)}`}
+              className="text-[11.5px] font-medium"
+              style={{ color: 'var(--color-obs-primary)' }}
+            >
+              {cleanText(labelOnly[1])}:
+            </div>
+          )
+        }
+
+        return (
+          <p key={`${index}-${line.slice(0, 20)}`} style={{ color: 'var(--color-obs-text-muted)' }}>
+            {cleanText(line)}
+          </p>
+        )
+      })}
+    </div>
+  )
+}
 
 function extractSections(content: string): Section[] {
   const lines = content.split('\n')
@@ -158,10 +220,12 @@ function extractSections(content: string): Section[] {
     return [{ title: '企業ブリーフ', body: cleanText(content).slice(0, 700) }]
   }
 
-  return sections.map((section) => ({
-    title: normalizeTitle(section.title),
-    body: section.body.slice(0, 700),
-  }))
+  return mergeDuplicateSections(
+    sections.map((section) => ({
+      title: normalizeTitle(section.title),
+      body: section.body,
+    }))
+  )
 }
 
 function extractBullets(content: string): string[] {
@@ -202,4 +266,34 @@ function cleanText(text: string): string {
     .replace(/\*\*/g, '')
     .replace(/`/g, '')
     .trim()
+}
+
+function isCompactLabel(label: string): boolean {
+  return /^(氏名|所属|役職|根拠|推測|仮説|事業内容|特記事項|課題|確認|次|出典|示唆)$/.test(
+    cleanText(label)
+  )
+}
+
+function mergeDuplicateSections(sections: Section[]): Section[] {
+  const merged = new Map<string, string[]>()
+
+  for (const section of sections) {
+    const title = section.title
+    const lines = section.body
+      .split('\n')
+      .map((line) => cleanText(line))
+      .filter(Boolean)
+
+    if (!merged.has(title)) merged.set(title, [])
+    const current = merged.get(title)!
+
+    for (const line of lines) {
+      if (!current.includes(line)) current.push(line)
+    }
+  }
+
+  return Array.from(merged.entries()).map(([title, lines]) => ({
+    title,
+    body: lines.join('\n').slice(0, 900),
+  }))
 }

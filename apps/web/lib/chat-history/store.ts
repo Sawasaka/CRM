@@ -35,6 +35,28 @@ function notify() {
   window.dispatchEvent(new CustomEvent(EVENT_NAME))
 }
 
+// 古い/壊れた title を持つレコードを開いた時に、最初の user message から
+// タイトルを再生成する。ユーザーが手動でリネームしたタイトルは保持する。
+const GENERIC_TITLES = new Set(['', '新しいチャット', '無題のチャット'])
+
+function repairTitle(c: ChatRecord): ChatRecord {
+  const current = (c.title ?? '').trim()
+  if (!GENERIC_TITLES.has(current)) return c
+  const firstUser = c.messages?.find(
+    (m) => m.role === 'user' && typeof m.content === 'string' && m.content.trim().length > 0,
+  )
+  if (!firstUser) return c
+  const next = deriveTitle(firstUser.content)
+  if (next === current) return c
+  return { ...c, title: next }
+}
+
+function hasUserMessage(c: ChatRecord): boolean {
+  return !!c.messages?.some(
+    (m) => m.role === 'user' && typeof m.content === 'string' && m.content.trim().length > 0,
+  )
+}
+
 export function loadAllChats(): ChatRecord[] {
   if (typeof window === 'undefined') return []
   try {
@@ -42,9 +64,14 @@ export function loadAllChats(): ChatRecord[] {
     if (!raw) return []
     const parsed = JSON.parse(raw) as unknown
     if (!Array.isArray(parsed)) return []
-    return parsed.filter((c): c is ChatRecord =>
-      !!c && typeof c === 'object' && typeof (c as ChatRecord).id === 'string'
-    )
+    return parsed
+      .filter((c): c is ChatRecord =>
+        !!c && typeof c === 'object' && typeof (c as ChatRecord).id === 'string',
+      )
+      // user message が無い空のチャット (過去バージョンや fallback で
+      // 生まれた "新しいチャット" 表示の幽霊レコード) は履歴から外す。
+      .filter(hasUserMessage)
+      .map(repairTitle)
   } catch {
     return []
   }

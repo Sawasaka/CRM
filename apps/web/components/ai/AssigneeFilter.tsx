@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import {
   Layers,
   Globe,
+  Check,
   // 人アイコン
   UserRound,
 } from 'lucide-react'
@@ -40,29 +41,33 @@ interface FeatureMeta {
   initial: string
   /** バッジ色 (atoms.tsx の AGENTS と一致) */
   color: string
+  /** 役割の補足説明 (ドロップダウンで2行目に表示) */
+  description: string
 }
 
 interface PersonMeta {
   id: PersonScopeId
   name: string
+  /** 役職・役割の補足 */
+  role: string
 }
 
 // サイドバー / atoms.tsx の AGENTS と同じ色 + 1文字イニシャル
 const FEATURES: FeatureMeta[] = [
-  { id: 'sales',     name: 'Sales Agent',     initial: 'S', color: '#abc7ff' },
-  { id: 'marketing', name: 'Marketing Agent', initial: 'M', color: '#ffcf4a' },
-  { id: 'support',   name: 'Customer Agent',  initial: 'C', color: '#ff8dcf' },
-  { id: 'helpdesk',  name: 'Knowledge Agent',  initial: 'K', color: '#c8b9ff' },
-  { id: 'pdm',       name: 'PDM Agent',       initial: 'P', color: '#8dffc9' },
+  { id: 'sales',     name: 'Sales Agent',     initial: 'S', color: '#abc7ff', description: '商談・取引・コンタクト' },
+  { id: 'marketing', name: 'Marketing Agent', initial: 'M', color: '#ffcf4a', description: 'メール配信・インテント' },
+  { id: 'support',   name: 'Customer Agent',  initial: 'C', color: '#ff8dcf', description: '問い合わせ・チケット' },
+  { id: 'helpdesk',  name: 'Knowledge Agent', initial: 'K', color: '#c8b9ff', description: 'ナレッジ・社内Q&A' },
+  { id: 'pdm',       name: 'Product Agent',   initial: 'P', color: '#8dffc9', description: '顧客の声・要望集計' },
 ]
 
 // Phase 1: モック。将来的にはワークスペースのメンバー一覧から取得する。
 const PERSONS: PersonMeta[] = [
-  { id: 'dev-taro',     name: '開発 太郎' },
-  { id: 'sales-hanako', name: '営業 花子' },
-  { id: 'mkt-jiro',     name: 'マーケ 次郎' },
-  { id: 'is-saburo',    name: 'IS 三郎' },
-  { id: 'cs-shiro',     name: 'CS 四郎' },
+  { id: 'dev-taro',     name: '開発 太郎', role: 'プロダクト開発' },
+  { id: 'sales-hanako', name: '営業 花子', role: 'エンタープライズ営業' },
+  { id: 'mkt-jiro',     name: 'マーケ 次郎', role: 'マーケティング' },
+  { id: 'is-saburo',    name: 'IS 三郎',   role: 'インサイドセールス' },
+  { id: 'cs-shiro',     name: 'CS 四郎',   role: 'カスタマーサクセス' },
 ]
 
 const ALL_FEATURE_IDS = FEATURES.map((f) => f.id)
@@ -134,10 +139,10 @@ function FeatureMultiSelect({
 
   const isAll = selected.size === ALL_FEATURE_IDS.length
   const label = isAll
-    ? '機能 全て'
+    ? '5 AGENTS'
     : selected.size === 0
-      ? '機能 なし'
-      : `機能 ${selected.size}/${ALL_FEATURE_IDS.length}`
+      ? 'Agent なし'
+      : `${selected.size}/${ALL_FEATURE_IDS.length} AGENTS`
 
   const toggle = (id: FeatureScopeId) => {
     const next = new Set(selected)
@@ -162,7 +167,7 @@ function FeatureMultiSelect({
         {label}
       </ChipButton>
       {open && (
-        <DropdownPanel width={280}>
+        <DropdownPanel width={260}>
           <SectionHeader
             label="機能"
             allOn={isAll}
@@ -179,6 +184,7 @@ function FeatureMultiSelect({
               onClick={() => toggle(f.id)}
               badge={{ initial: f.initial, color: f.color }}
               name={f.name}
+              description={f.description}
             />
           ))}
         </DropdownPanel>
@@ -205,7 +211,7 @@ function PersonMultiSelect({
     ALL_PERSON_IDS.length === 0
       ? '人 未設定'
       : isAll
-        ? '人 全て'
+        ? '人'
         : selected.size === 0
           ? '人 なし'
           : `人 ${selected.size}/${ALL_PERSON_IDS.length}`
@@ -233,7 +239,7 @@ function PersonMultiSelect({
         {label}
       </ChipButton>
       {open && (
-        <DropdownPanel width={220}>
+        <DropdownPanel width={260}>
           <SectionHeader
             label="人"
             allOn={isAll}
@@ -244,12 +250,12 @@ function PersonMultiSelect({
             }
           />
           {PERSONS.map((p) => (
-            <ScopeRow
+            <CheckboxRow
               key={p.id}
               checked={selected.has(p.id)}
               onClick={() => toggle(p.id)}
-              badge={{ initial: p.name.slice(0, 1), color: '#abc7ff' }}
               name={p.name}
+              role={p.role}
             />
           ))}
         </DropdownPanel>
@@ -271,10 +277,10 @@ function ExternalToggle({ on, onChange }: { on: boolean; onChange: (next: boolea
         color: on ? 'var(--color-obs-low)' : 'var(--color-obs-text-muted)',
         boxShadow: on ? 'inset 0 0 0 1px rgba(126,198,255,0.42)' : undefined,
       }}
-      title={on ? 'Web等の外部情報を併用中(クリックでOFF)' : '外部情報をONにする'}
+      title={on ? '企業DB(290万社) + Web 外部情報を併用中(クリックでOFF)' : '外部情報をONにする'}
     >
       <Globe size={12} />
-      外部 {on ? 'ON' : 'OFF'}
+      {on ? '外部 ON' : '外部 OFF'}
     </button>
   )
 }
@@ -315,11 +321,12 @@ function ChipButton({
 function DropdownPanel({ width, children }: { width: number; children: React.ReactNode }) {
   return (
     <div
-      className="absolute bottom-full left-0 mb-2 rounded-[var(--radius-obs-md)] py-1 z-50 max-h-[420px] overflow-auto"
+      className="absolute bottom-full left-0 mb-2 rounded-[var(--radius-obs-lg)] py-2 z-50 max-h-[420px] overflow-auto"
       style={{
         width,
-        backgroundColor: 'var(--color-obs-surface-highest)',
-        boxShadow: '0 10px 30px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(109,106,111,0.14)',
+        backgroundColor: 'var(--color-obs-surface-high)',
+        border: '1px solid var(--color-obs-border)',
+        boxShadow: '0 10px 30px rgba(0,0,0,0.4)',
       }}
     >
       {children}
@@ -342,10 +349,10 @@ function SectionHeader({
 }) {
   return (
     <div
-      className="flex items-center justify-between px-3 pt-2 pb-1"
-      style={{ color: 'var(--color-obs-text-subtle)' }}
+      className="flex items-center justify-between px-3 pb-1.5"
+      style={{ color: 'var(--color-obs-text-muted)' }}
     >
-      <span className="text-[10px] font-semibold tracking-[0.06em] uppercase">
+      <span className="text-[10px] font-medium tracking-[0.1em] uppercase">
         {label}
         <span className="ml-1.5 tabular-nums" style={{ opacity: 0.7 }}>
           {count}/{total}
@@ -354,21 +361,20 @@ function SectionHeader({
       <button
         type="button"
         onClick={onToggleAll}
-        className="text-[10.5px] font-semibold px-1.5 py-0.5 rounded-[4px] transition-colors"
+        className="text-[10.5px] font-medium tracking-[0.04em] transition-colors duration-150"
         style={{
-          color: allOn ? 'var(--color-obs-primary)' : 'var(--color-obs-text-muted)',
-          backgroundColor: allOn ? 'rgba(171,199,255,0.12)' : 'transparent',
+          color: allOn ? 'var(--color-obs-primary)' : 'var(--color-obs-text-subtle)',
         }}
         onMouseOver={(e) => {
-          if (!allOn)
-            (e.currentTarget as HTMLButtonElement).style.backgroundColor =
-              'var(--color-obs-surface-low)'
+          ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-obs-text)'
         }}
         onMouseOut={(e) => {
-          if (!allOn) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
+          ;(e.currentTarget as HTMLButtonElement).style.color = allOn
+            ? 'var(--color-obs-primary)'
+            : 'var(--color-obs-text-subtle)'
         }}
       >
-        {allOn ? '全てON' : '全て選択'}
+        {allOn ? '全てOFF' : '全てON'}
       </button>
     </div>
   )
@@ -379,49 +385,110 @@ function ScopeRow({
   onClick,
   badge,
   name,
+  description,
 }: {
   checked: boolean
   onClick: () => void
-  /** イニシャル+カラー。バッジ自身が ON/OFF 表示を兼ねる(チェックボックスは廃止) */
+  /** イニシャル+カラー。先頭のオーブとして使う */
   badge: { initial: string; color: string }
   name: string
+  description?: string
 }) {
-  const { initial, color } = badge
+  const { color } = badge
   return (
     <button
       type="button"
       onClick={onClick}
-      className="w-[calc(100%-8px)] mx-1 flex items-center gap-2 px-3 py-[7px] rounded-[6px] text-left transition-colors duration-100"
-      style={{
-        color: checked ? 'var(--color-obs-text)' : 'var(--color-obs-text-subtle)',
-        fontWeight: checked ? 600 : 500,
-        backgroundColor: 'transparent',
-      }}
+      className="w-full flex items-center gap-2 px-3 py-2 text-left transition-colors duration-150"
+      style={{ color: 'var(--color-obs-text)' }}
       onMouseOver={(e) => {
         ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
-          'var(--color-obs-surface-low)'
+          'var(--color-obs-surface-highest)'
       }}
       onMouseOut={(e) => {
         ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
       }}
       title={checked ? `${name} を除外する` : `${name} を含める`}
     >
-      {/* イニシャルバッジ: 選択時は色付き + 発光、非選択時はグレースケール */}
+      {/* 先頭オーブ(エージェントカラー) — 選択時は発光、未選択時は無発光で淡く */}
       <span
-        className="inline-flex items-center justify-center w-[22px] h-[22px] rounded-[5px] text-[10.5px] font-semibold tabular-nums shrink-0 transition-all duration-150"
-        style={{
-          backgroundColor: checked ? `${color}24` : 'rgba(109,106,111,0.10)',
-          color: checked ? color : 'var(--color-obs-text-subtle)',
-          boxShadow: checked
-            ? `inset 0 0 0 1px ${color}66, 0 0 12px ${color}55`
-            : 'inset 0 0 0 1px rgba(109,106,111,0.22)',
-          opacity: checked ? 1 : 0.55,
-        }}
-        title={`${initial} = ${name}`}
+        className="inline-flex items-center justify-center w-[16px] h-[16px] shrink-0"
+        aria-hidden
       >
-        {initial}
+        <span
+          className="inline-block rounded-full transition-all duration-200"
+          style={{
+            width: 9,
+            height: 9,
+            background: checked
+              ? `radial-gradient(circle at 30% 30%, #ffffff 0%, ${color} 35%, ${color}80 80%)`
+              : `${color}24`,
+            boxShadow: checked ? `0 0 8px ${color}aa, 0 0 16px ${color}55` : 'none',
+            opacity: checked ? 1 : 0.5,
+          }}
+        />
       </span>
-      <span className="text-[13px] tracking-[-0.01em] flex-1">{name}</span>
+      <div className="flex-1 min-w-0">
+        <div className="text-[13px] font-medium leading-tight">{name}</div>
+        {description && (
+          <div
+            className="text-[11.5px] leading-tight mt-0.5"
+            style={{ color: 'var(--color-obs-text-muted)' }}
+          >
+            {description}
+          </div>
+        )}
+      </div>
+      {checked && <Check size={14} style={{ color: 'var(--color-obs-primary)' }} />}
+    </button>
+  )
+}
+
+// ─── CheckboxRow: 人 用。ModelSelector と同じく アイコン + 名前/役職 + 右側 Check ────
+function CheckboxRow({
+  checked,
+  onClick,
+  name,
+  role,
+}: {
+  checked: boolean
+  onClick: () => void
+  name: string
+  role?: string
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full flex items-center gap-2 px-3 py-2 text-left transition-colors duration-150"
+      style={{ color: 'var(--color-obs-text)' }}
+      onMouseOver={(e) => {
+        ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
+          'var(--color-obs-surface-highest)'
+      }}
+      onMouseOut={(e) => {
+        ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
+      }}
+      title={checked ? `${name} を除外する` : `${name} を含める`}
+    >
+      <UserRound
+        size={13}
+        style={{
+          color: checked ? 'var(--color-obs-primary)' : 'var(--color-obs-text-muted)',
+        }}
+      />
+      <div className="flex-1 min-w-0">
+        <div className="text-[13px] font-medium leading-tight">{name}</div>
+        {role && (
+          <div
+            className="text-[11.5px] leading-tight mt-0.5"
+            style={{ color: 'var(--color-obs-text-muted)' }}
+          >
+            {role}
+          </div>
+        )}
+      </div>
+      {checked && <Check size={14} style={{ color: 'var(--color-obs-primary)' }} />}
     </button>
   )
 }

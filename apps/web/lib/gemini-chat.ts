@@ -18,6 +18,25 @@ type GeminiResponse = {
   }
 }
 
+// Gemini が "high demand" などで 503/429 を返した時の指数バックオフ付き再試行。
+// 1回目: 約 600ms 待機、2回目: 約 1.5s、3回目: 約 3s。
+async function fetchGeminiWithRetry(
+  url: string,
+  init: RequestInit,
+  maxRetries = 3,
+): Promise<Response> {
+  let lastRes: Response | null = null
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const res = await fetch(url, init)
+    if (res.status !== 503 && res.status !== 429) return res
+    lastRes = res
+    if (attempt === maxRetries) break
+    const waitMs = Math.round(600 * Math.pow(2.2, attempt) + Math.random() * 200)
+    await new Promise((r) => setTimeout(r, waitMs))
+  }
+  return lastRes ?? (await fetch(url, init))
+}
+
 export async function generateGeminiChat({
   messages,
   model = DEFAULT_GEMINI_CHAT_MODEL,
@@ -44,7 +63,7 @@ export async function generateGeminiChat({
       parts: [{ text: m.content }],
     }))
 
-  const res = await fetch(
+  const res = await fetchGeminiWithRetry(
     `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
     {
       method: 'POST',
@@ -59,6 +78,12 @@ export async function generateGeminiChat({
 
   const json = (await res.json().catch(() => ({}))) as GeminiResponse
   if (!res.ok) {
+    // 高負荷時 (503) は UI 側で対処しやすい文言にする。
+    if (res.status === 503) {
+      throw new Error(
+        `Gemini ${model} が混雑しています。少し時間を置くか、モデルセレクターから別モデルに切り替えてください。`,
+      )
+    }
     throw new Error(json.error?.message || `Gemini API HTTP ${res.status}`)
   }
 

@@ -11,17 +11,15 @@ import {
   Check,
   Crown,
   X,
-  Wrench,
-  Send,
   ChevronRight,
   Users,
   Mail,
   Shield,
   UserPlus,
   Trash2,
-  Sparkles,
-  Database,
-  TrendingUp,
+  Star,
+  Plug,
+  ExternalLink,
 } from 'lucide-react'
 import { ObsButton, ObsCard, ObsHero, ObsPageShell, ObsSectionHeader } from '@/components/obsidian'
 
@@ -48,185 +46,83 @@ interface Plan {
   contractTerm?: string // 例: "3ヶ月契約・3ヶ月ごとに更新"
 }
 
-// シート課金プラン (Lite / Standard / PRO)
-// HP の Pricing セクション (components/landing/sections/Pricing.tsx) と同期する。
+// SALES × CRM パートナーシッププラン (CxO / 営業責任者 / IS 設計)
+// HP の Pricing セクション (components/landing/sections/Pricing.tsx) と完全同期。
 // 変更時は両方を必ず揃える。
+// 戦略: 5社限定 (1 + 1 + 3 = 5枠) で、営業実行 + CRM 構築をセット提供。
 const PLANS: Plan[] = [
   {
-    id: 'lite',
-    name: 'Lite',
-    tagline: '営業 1-3名の小規模チームに最適',
-    priceMonthly: 4300,
-    priceAnnual: 3000,
-    credits: 500,
+    id: 'cxo',
+    name: 'CxO',
+    tagline: '事業設計 / IS 設計 / FS・CS の営業実装',
+    priceMonthly: 500000,
+    priceAnnual: 500000,
+    credits: 30000,
     minSeats: 1,
+    isTenantPrice: true,
+    slotsTotal: 1,
+    slotsRemaining: 1,
+    contractTerm: '3ヶ月契約・3ヶ月ごとに更新',
     additions: [
-      'AIモデル: Gemini 2.5 Flash Lite / GPT-4o mini / GPT-4o 選択可',
-      'CRM全機能 (企業・コンタクト・取引・パイプライン・チケット管理)',
-      'Google Workspace・Microsoft 365 連携 + 議事録自動取得 (BANT)',
-      'ナレッジ自動生成 (FAQ) + 開発優先度分析',
-      'メール配信 + 1stパーティ計測・効果測定',
-      '企業DB (290万社) + 求人インテント',
-      '外部リサーチ (ウェブ検索)',
-      '500クレジットで ワンクリック通話 + コール議事録自動作成',
+      '【営業範囲】事業設計',
+      '【営業範囲】IS 設計',
+      '【営業範囲】FS / CS の営業実装',
+      '【CRM 提供】CRM 構築',
+      '【CRM 提供】CRM 全機能',
+      '【CRM 提供】月30,000クレジット 込み (チーム合計)',
+      '【稼働条件】1日2商談まで',
+      '【稼働条件】平日 日中稼働',
     ],
-    seatNote: '担当者へのチャット相談 (10シート以上で付帯)',
-    icon: Zap,
+    icon: Crown,
   },
   {
-    id: 'standard',
-    name: 'Standard',
-    tagline: 'AI品質と通話機能で営業を本格運用',
-    priceMonthly: 8300,
-    priceAnnual: 5800,
-    credits: 1000,
+    id: 'sales-director',
+    name: '営業責任者',
+    tagline: 'IS 設計 / FS・CS の営業実装 / 分析レポーティング',
+    priceMonthly: 300000,
+    priceAnnual: 300000,
+    credits: 20000,
     minSeats: 1,
-    baseLabel: 'Lite 全機能',
+    isTenantPrice: true,
+    slotsTotal: 1,
+    slotsRemaining: 1,
+    contractTerm: '3ヶ月契約・3ヶ月ごとに更新',
     additions: [
-      'AIモデル: Gemini 2.5 Flash Lite / GPT-4o mini / GPT-4o 選択可',
-      'シンキングモード: 拡張',
+      '【営業範囲】IS 設計',
+      '【営業範囲】FS / CS の営業実装',
+      '【営業範囲】分析レポーティング',
+      '【CRM 提供】CRM 構築',
+      '【CRM 提供】CRM 全機能',
+      '【CRM 提供】月20,000クレジット 込み (チーム合計)',
+      '【稼働条件】1日1商談まで',
+      '【稼働条件】平日 日中稼働',
     ],
-    seatNote: '担当者へのチャット相談 (5シート以上で付帯)',
-    icon: TrendingUp,
+    icon: Star,
     popular: true,
   },
-]
-
-// ─── 開発依頼サンプル ─────────────────────────────────────────
-
-// ステータス: submitted(依頼中) / approved(承認済) / in_progress(開発中) / completed(完了) / rejected(却下)
-type DevRequestStatus = 'submitted' | 'approved' | 'in_progress' | 'completed' | 'rejected'
-
-// AI見積もり (3軸: 工数 / 検証 / メンテ + 30%バッファ)
-interface AiEstimation {
-  workHours: number // 工数 (時間)
-  verifyHours: number // 検証 (時間)
-  maintenanceHours: number // メンテ (時間)
-  baseAmount: number // 基準金額 (時間×¥10,000)
-  bufferAmount: number // 30% バッファ
-  finalAmount: number // 最終金額 (1万円単位丸め)
-  confidence: 'low' | 'medium' | 'high'
-  rationale: string // AI判断の根拠
-}
-
-// 修正依頼の履歴 (1チケットあたり最大3回まで)
-interface RevisionEntry {
-  id: string
-  message: string // 修正内容
-  requestedAt: string
-  resolvedAt?: string // 修正対応完了日時
-}
-
-interface DevRequest {
-  id: string
-  title: string
-  description: string
-  amount: number
-  status: DevRequestStatus
-  estimation?: AiEstimation
-  progress?: number
-  createdAt: string
-  expectedDelivery?: string
-  // 修正履歴 (3回まで)
-  revisions?: RevisionEntry[]
-  // 決済情報 (Stripe)
-  stripePaymentIntentId?: string
-  stripeReceiptUrl?: string
-}
-
-// 1チケットあたりの修正可能回数
-const REVISION_LIMIT = 3
-
-// AI算出関数 (現状はモック・実装時はLLM呼び出しに差し替え)
-function estimateFeatureRequest(title: string, description: string): AiEstimation {
-  const totalLength = title.length + description.length
-
-  // 簡易ヒューリスティック (実装時はGPT-4o miniで構造化出力)
-  const baseHours = Math.max(2, Math.floor(totalLength / 30))
-  const workHours = baseHours
-  const verifyHours = Math.max(1, Math.floor(baseHours * 0.4))
-  const maintenanceHours = Math.max(0, Math.floor(baseHours * 0.2))
-
-  const totalHours = workHours + verifyHours + maintenanceHours
-  const baseAmount = totalHours * 10000
-  const bufferAmount = Math.round(baseAmount * 0.3)
-  const finalAmount = Math.ceil((baseAmount + bufferAmount) / 10000) * 10000
-
-  const confidence: 'low' | 'medium' | 'high' =
-    totalLength < 50 ? 'low' : totalLength < 200 ? 'medium' : 'high'
-
-  const rationale =
-    description.length < 100
-      ? '入力情報が少ないため概算です。詳細を追記すると精度が向上します。'
-      : description.length < 300
-        ? '入力内容を分析した中規模の見積もりです。30%の不確実性プレミアムを含みます。'
-        : '十分な情報を元に算出した見積もりです。実装にはバッファ込みで対応可能です。'
-
-  return {
-    workHours,
-    verifyHours,
-    maintenanceHours,
-    baseAmount,
-    bufferAmount,
-    finalAmount,
-    confidence,
-    rationale,
-  }
-}
-
-const SAMPLE_REQUESTS: DevRequest[] = [
   {
-    id: 'r1',
-    title: '売上レポート改修',
-    description:
-      '部署別フィルター追加と新KPI(部門別マージン率)の集計ロジック実装。Excelエクスポートも対応希望。',
-    amount: 130000,
-    status: 'in_progress',
-    progress: 60,
-    createdAt: '2026-04-25',
-    expectedDelivery: '2026-05-09',
-    estimation: {
-      workHours: 6,
-      verifyHours: 3,
-      maintenanceHours: 1,
-      baseAmount: 100000,
-      bufferAmount: 30000,
-      finalAmount: 130000,
-      confidence: 'medium',
-      rationale: '既存レポート画面の拡張。中規模の改修・標準的な実装で対応可能。',
-    },
-    revisions: [
-      {
-        id: 'rev1',
-        message: 'Excelエクスポート時にカラム順序を「部署 → 売上 → マージン率」に変更してほしい',
-        requestedAt: '2026-05-02T14:30:00',
-        resolvedAt: '2026-05-04T11:00:00',
-      },
+    id: 'is-design',
+    name: 'IS 設計',
+    tagline: 'IS チーム組成 / IS 設計 / IS マネジメント',
+    priceMonthly: 200000,
+    priceAnnual: 200000,
+    credits: 10000,
+    minSeats: 1,
+    isTenantPrice: true,
+    slotsTotal: 3,
+    slotsRemaining: 3,
+    contractTerm: '3ヶ月契約・3ヶ月ごとに更新',
+    additions: [
+      '【営業範囲】IS チーム組成',
+      '【営業範囲】IS 設計',
+      '【営業範囲】IS マネジメント',
+      '【CRM 提供】CRM 構築',
+      '【CRM 提供】CRM 全機能',
+      '【CRM 提供】月10,000クレジット 込み (チーム合計)',
+      '【稼働条件】週1回の社内MTG',
+      '【稼働条件】平日 日中稼働',
     ],
-    stripePaymentIntentId: 'pi_3ABCdefGHIjklMNop1234',
-    stripeReceiptUrl: 'https://pay.stripe.com/receipts/example/r_001',
-  },
-  {
-    id: 'r2',
-    title: 'Slack通知追加',
-    description:
-      '商談ステージが「PROPOSAL」「CONTRACT」に遷移した際、Slackの#sales-alertsチャンネルに自動通知。担当者・金額・次アクションを含めること。',
-    amount: 50000,
-    status: 'submitted',
-    createdAt: '2026-04-28',
-    estimation: {
-      workHours: 3,
-      verifyHours: 1,
-      maintenanceHours: 0,
-      baseAmount: 40000,
-      bufferAmount: 12000,
-      finalAmount: 50000,
-      confidence: 'high',
-      rationale: '既存のSlack連携への通知トリガー追加。シンプルな実装で対応可能。',
-    },
-    revisions: [],
-    stripePaymentIntentId: 'pi_3ABCdefGHIjklMNop5678',
-    stripeReceiptUrl: 'https://pay.stripe.com/receipts/example/r_002',
+    icon: Zap,
   },
 ]
 
@@ -268,27 +164,20 @@ export default function SubscriptionPage() {
 }
 
 function SubscriptionPageContent() {
-  // タブ: subscription(プラン・クレジット・機能リクエスト含む) / members(メンバー管理)
   const searchParams = useSearchParams()
   const initialTab = (() => {
     const t = searchParams?.get('tab')
-    if (t === 'members') return 'members'
-    // 旧URL ?tab=requests は機能リクエスト統合により subscription タブへフォールバック
-    return 'subscription'
+    if (t === 'integrations') return 'integrations'
+    return 'team'
   })()
-  const [tab, setTab] = useState<'subscription' | 'members'>(initialTab)
+  const [tab, setTab] = useState<'team' | 'integrations'>(initialTab)
 
-  // URL ?tab=members を反映 (例: メニューから直接遷移した場合)
   useEffect(() => {
     const next = searchParams?.get('tab')
-    if (next === 'members') setTab('members')
-    else setTab('subscription')
+    if (next === 'integrations') setTab('integrations')
+    else setTab('team')
   }, [searchParams])
-  const [currentPlan, setCurrentPlan] = useState('standard')
-  // データ移行サポート: not_requested(未申込) / requested(申込済) / in_progress(移行中) / completed(完了)
-  const [migrationStatus, setMigrationStatus] = useState<
-    'not_requested' | 'requested' | 'in_progress' | 'completed'
-  >('not_requested')
+  const [currentPlan, setCurrentPlan] = useState('sales-director')
   const [confirmDialog, setConfirmDialog] = useState<{
     title: string
     message: string
@@ -302,29 +191,12 @@ function SubscriptionPageContent() {
   const [purchasedRemaining] = useState(1500) // 購入残(永久有効)
   // 個人クレジットは「今月の自分の消費量」可視化のみ。実際の消費はテナントプールから引かれる
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('annual')
-  const checkoutState = searchParams?.get('checkout')
-  const [checkoutBusyPlan, setCheckoutBusyPlan] = useState<string | null>(null)
-  const [checkoutError, setCheckoutError] = useState<string | null>(null)
   const [showBuyCredits, setShowBuyCredits] = useState(false)
-  const [showNewRequest, setShowNewRequest] = useState(false)
   const [showInviteMember, setShowInviteMember] = useState(false)
   const [showAddSeats, setShowAddSeats] = useState(false)
   const [pendingSeats, setPendingSeats] = useState(seats)
   const [creditsTab, setCreditsTab] = useState<'team' | 'purchased'>('team')
   const [purchaseAmount, setPurchaseAmount] = useState(500) // 500単位
-  // 機能リクエスト関連
-  const [requestTitle, setRequestTitle] = useState('')
-  const [requestDescription, setRequestDescription] = useState('')
-  const [aiEstimation, setAiEstimation] = useState<AiEstimation | null>(null)
-  const [isEstimating, setIsEstimating] = useState(false)
-  // 1テナント・1日10回までのAI算出制限 (本番ではDBで管理)
-  const [aiEstimateCount, setAiEstimateCount] = useState(0)
-  const AI_ESTIMATE_DAILY_LIMIT = 10
-  const [requests, setRequests] = useState<DevRequest[]>(SAMPLE_REQUESTS)
-  const [selectedRequest, setSelectedRequest] = useState<DevRequest | null>(null)
-  // 修正依頼モーダル
-  const [revisionTarget, setRevisionTarget] = useState<DevRequest | null>(null)
-  const [revisionMessage, setRevisionMessage] = useState('')
   const [members, setMembers] = useState<Member[]>(SAMPLE_MEMBERS)
   const [openRoleMenuId, setOpenRoleMenuId] = useState<string | null>(null)
   const [inviteRole, setInviteRole] = useState<MemberRole>('member')
@@ -368,90 +240,11 @@ function SubscriptionPageContent() {
     }
   }, [])
 
-  const startStripeCheckout = async (plan: Plan) => {
-    setCheckoutError(null)
-    setCheckoutBusyPlan(plan.id)
-    try {
-      const res = await fetch('/api/stripe/checkout', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          planId: plan.id,
-          billingCycle,
-          seats: Math.max(seats, plan.minSeats),
-        }),
-      })
-      const data = (await res.json().catch(() => ({}))) as { url?: string; error?: string }
-      if (!res.ok || !data.url) {
-        setCheckoutError(data.error ?? 'Stripe Checkoutを開始できませんでした。')
-        return
-      }
-      window.location.href = data.url
-    } finally {
-      setCheckoutBusyPlan(null)
-    }
-  }
-
-  // AI見積もりを実行 (現状はモック・本番ではAPI呼出 → LLM)
-  const runAiEstimation = async () => {
-    if (!requestTitle.trim() || !requestDescription.trim()) return
-    if (aiEstimateCount >= AI_ESTIMATE_DAILY_LIMIT) return
-    setIsEstimating(true)
-    setAiEstimation(null)
-    // ローディングを見せるための擬似遅延 (本番では実APIの応答時間でOK)
-    await new Promise((r) => setTimeout(r, 1200))
-    const result = estimateFeatureRequest(requestTitle, requestDescription)
-    setAiEstimation(result)
-    setAiEstimateCount((c) => c + 1)
-    setIsEstimating(false)
-  }
-
-  // モーダル閉じるときにstateをリセット
-  const closeNewRequest = () => {
-    setShowNewRequest(false)
-    setRequestTitle('')
-    setRequestDescription('')
-    setAiEstimation(null)
-    setIsEstimating(false)
-  }
-
-  // 修正依頼を送信
-  const submitRevision = () => {
-    if (!revisionTarget || !revisionMessage.trim()) return
-    const newRevision: RevisionEntry = {
-      id: `rev-${Date.now()}`,
-      message: revisionMessage.trim(),
-      requestedAt: new Date().toISOString(),
-    }
-    setRequests((prev) =>
-      prev.map((r) =>
-        r.id === revisionTarget.id ? { ...r, revisions: [...(r.revisions ?? []), newRevision] } : r
-      )
-    )
-    // 詳細モーダルが開いていれば反映
-    setSelectedRequest((prev) =>
-      prev && prev.id === revisionTarget.id
-        ? { ...prev, revisions: [...(prev.revisions ?? []), newRevision] }
-        : prev
-    )
-    setRevisionTarget(null)
-    setRevisionMessage('')
-  }
-
-  const STATUS_META: Record<DevRequestStatus, { label: string; bg: string; fg: string }> = {
-    submitted: { label: '依頼中', bg: 'rgba(255,193,7,0.14)', fg: '#FFC107' },
-    approved: { label: '承認済', bg: 'rgba(171,199,255,0.14)', fg: 'var(--color-obs-primary)' },
-    in_progress: { label: '開発中', bg: 'rgba(80,200,255,0.14)', fg: '#50C8FF' },
-    completed: { label: '完了', bg: 'rgba(75,200,140,0.14)', fg: '#4BC88C' },
-    rejected: { label: '却下', bg: 'rgba(255,90,90,0.14)', fg: '#FF5A5A' },
-  }
-
   const currentPlanData = PLANS.find((p) => p.id === currentPlan)
   const subscriptionTotal = (currentPlanData?.credits ?? 0) * seats // 今月のサブスク付与量
   const subscriptionUsagePct =
     subscriptionTotal > 0 ? (subscriptionRemaining / subscriptionTotal) * 100 : 0
 
-  const formatPrice = (n: number) => `¥${n.toLocaleString()}`
   const CREDIT_UNIT_PRICE = 10 // ¥10 per credit (¥5,000 / 500c)
   const CREDIT_STEP = 500 // 500-unit step
 
@@ -460,10 +253,10 @@ function SubscriptionPageContent() {
       <div className="w-full px-8 xl:px-12 2xl:px-16 pb-16">
         <ObsHero
           eyebrow="Subscription"
-          title="プラン・クレジット"
-          caption="クレジット利用状況とプラン管理。必要な量だけチャージして利用。"
+          title="設定"
+          caption="クレジット・メンバー・外部サービス連携をまとめて管理"
           action={
-            isSuperAdmin && tab === 'subscription' ? (
+            isSuperAdmin && tab === 'team' ? (
               <ObsButton variant="primary" size="md" onClick={() => setShowBuyCredits(true)}>
                 <Plus size={14} className="inline mr-1.5" />
                 クレジット追加
@@ -479,8 +272,8 @@ function SubscriptionPageContent() {
         >
           {(
             [
-              { key: 'subscription', label: 'プラン・クレジット', icon: CreditCard },
-              { key: 'members', label: 'メンバー管理', icon: Users },
+              { key: 'team', label: 'チーム', icon: Users },
+              { key: 'integrations', label: '連携', icon: Plug },
             ] as const
           ).map((t) => {
             const active = tab === t.key
@@ -504,7 +297,7 @@ function SubscriptionPageContent() {
         </div>
 
         {/* ── Credit usage card (管理者のみ) ── */}
-        {tab === 'subscription' && isAdmin && (
+        {tab === 'team' && isAdmin && (
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
             <ObsCard depth="high" padding="lg" radius="xl" className="relative overflow-hidden">
               <div
@@ -686,7 +479,7 @@ function SubscriptionPageContent() {
         )}
 
         {/* ── Credit usage card (メンバー用・読み取り専用シンプル版) ── */}
-        {tab === 'subscription' && !isAdmin && (
+        {tab === 'team' && !isAdmin && (
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
             <ObsCard depth="high" padding="lg" radius="xl" className="relative overflow-hidden">
               <div
@@ -817,558 +610,12 @@ function SubscriptionPageContent() {
           </motion.div>
         )}
 
-        {/* ── Plans (特権管理者のみ・お金回り) ── */}
-        {tab === 'subscription' && isSuperAdmin && (
-          <div className="mt-8">
-            {checkoutState === 'required' && (
-              <ObsCard depth="high" padding="md" radius="xl" className="mb-5">
-                <div className="flex items-start gap-3">
-                  <CreditCard size={18} style={{ color: 'var(--color-obs-primary)' }} />
-                  <div>
-                    <div className="text-[14px] font-semibold" style={{ color: 'var(--color-obs-text)' }}>
-                      利用開始にはプラン決済が必要です
-                    </div>
-                    <p className="mt-1 text-[12.5px]" style={{ color: 'var(--color-obs-text-muted)' }}>
-                      プランを選ぶとStripeの安全な決済画面に移動します。決済完了後、この画面へ戻ります。
-                    </p>
-                  </div>
-                </div>
-              </ObsCard>
-            )}
-            {checkoutState === 'success' && (
-              <ObsCard depth="high" padding="md" radius="xl" className="mb-5">
-                <div className="flex items-start gap-3">
-                  <Check size={18} style={{ color: '#4ad98a' }} />
-                  <div>
-                    <div className="text-[14px] font-semibold" style={{ color: 'var(--color-obs-text)' }}>
-                      決済が完了しました
-                    </div>
-                    <p className="mt-1 text-[12.5px]" style={{ color: 'var(--color-obs-text-muted)' }}>
-                      Stripe Webhookの反映後、プラン状態が更新されます。
-                    </p>
-                  </div>
-                </div>
-              </ObsCard>
-            )}
-            {checkoutState === 'cancelled' && (
-              <ObsCard depth="high" padding="md" radius="xl" className="mb-5">
-                <div className="flex items-start gap-3">
-                  <X size={18} style={{ color: 'var(--color-obs-middle)' }} />
-                  <div>
-                    <div className="text-[14px] font-semibold" style={{ color: 'var(--color-obs-text)' }}>
-                      決済をキャンセルしました
-                    </div>
-                    <p className="mt-1 text-[12.5px]" style={{ color: 'var(--color-obs-text-muted)' }}>
-                      必要なタイミングで再度プランを選択できます。
-                    </p>
-                  </div>
-                </div>
-              </ObsCard>
-            )}
-            {checkoutError && (
-              <ObsCard depth="high" padding="md" radius="xl" className="mb-5">
-                <div className="flex items-start gap-3">
-                  <X size={18} style={{ color: 'var(--color-obs-hot)' }} />
-                  <p className="text-[12.5px]" style={{ color: 'var(--color-obs-text-muted)' }}>
-                    {checkoutError}
-                  </p>
-                </div>
-              </ObsCard>
-            )}
-            <div className="flex items-end justify-between mb-5">
-              <div>
-                <ObsSectionHeader
-                  title="営業実行支援パートナーシップ (5社限定)"
-                  caption="HubSpotには勝てない。だから属人性を極めた高密度実行 + ルキスマCRMをセットで。1年経過後に一般プラン公開予定"
-                />
-              </div>
-              {/* 実行支援モデルは固定価格のため、月額/年額トグルは非表示 */}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              {PLANS.map((plan, i) => {
-                const Icon = plan.icon
-                const isCurrent = currentPlan === plan.id
-                const price = billingCycle === 'annual' ? plan.priceAnnual : plan.priceMonthly
-                return (
-                  <motion.div
-                    key={plan.id}
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 + i * 0.08, duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                  >
-                    <ObsCard
-                      depth={isCurrent ? 'highest' : 'high'}
-                      padding="lg"
-                      radius="xl"
-                      className="relative h-full flex flex-col"
-                    >
-                      <div
-                        className="w-11 h-11 rounded-[var(--radius-obs-md)] flex items-center justify-center mb-4"
-                        style={{
-                          background:
-                            'linear-gradient(135deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
-                        }}
-                      >
-                        <Icon size={20} style={{ color: 'var(--color-obs-on-primary)' }} />
-                      </div>
-
-                      <h3
-                        className="font-[family-name:var(--font-display)] text-lg font-semibold tracking-[-0.02em] mb-1"
-                        style={{ color: 'var(--color-obs-text)' }}
-                      >
-                        {plan.name}
-                      </h3>
-                      <p
-                        className="text-[11.5px] mb-3"
-                        style={{ color: 'var(--color-obs-text-subtle)' }}
-                      >
-                        {plan.tagline}
-                      </p>
-                      <div className="flex items-baseline gap-1 mb-1">
-                        <span
-                          className="font-[family-name:var(--font-display)] text-[30px] font-bold tracking-[-0.03em]"
-                          style={{ color: 'var(--color-obs-text)' }}
-                        >
-                          {formatPrice(price)}
-                        </span>
-                        <span
-                          className="text-[13px]"
-                          style={{ color: 'var(--color-obs-text-muted)' }}
-                        >
-                          {plan.isTenantPrice ? '/月' : '/seat /月'}
-                        </span>
-                      </div>
-                      {/* 残り枠バッジ (実行支援モデル) */}
-                      {plan.slotsTotal !== undefined && (
-                        <div className="flex items-center gap-1.5 mb-2">
-                          <span
-                            className="inline-flex items-center gap-1 text-[10.5px] font-semibold px-2 py-[3px] rounded-full uppercase tracking-[0.08em]"
-                            style={{
-                              backgroundColor:
-                                (plan.slotsRemaining ?? 0) > 0
-                                  ? 'rgba(255,193,7,0.14)'
-                                  : 'rgba(255,90,90,0.14)',
-                              color: (plan.slotsRemaining ?? 0) > 0 ? '#FFC107' : '#FF5A5A',
-                            }}
-                          >
-                            🔥 残り {plan.slotsRemaining ?? 0} 枠 / {plan.slotsTotal}社限定
-                          </span>
-                        </div>
-                      )}
-                      <p
-                        className="text-[12px] font-medium tabular-nums mb-1"
-                        style={{ color: 'var(--color-obs-primary)' }}
-                      >
-                        月間 {plan.credits.toLocaleString()} クレジット
-                        {plan.isTenantPrice ? ' (チーム合計)' : '込 / seat'}
-                      </p>
-                      {plan.contractTerm && (
-                        <p
-                          className="text-[11px] mb-1"
-                          style={{ color: 'var(--color-obs-text-subtle)' }}
-                        >
-                          {plan.contractTerm}
-                        </p>
-                      )}
-                      <p
-                        className={plan.seatNote ? 'text-[11px]' : 'text-[11px] mb-4'}
-                        style={{ color: 'var(--color-obs-text-subtle)' }}
-                      >
-                        {plan.maxSeats
-                          ? `最大${plan.maxSeats}シートまで`
-                          : `${plan.minSeats}シートから購入可能`}
-                      </p>
-                      {plan.seatNote && (
-                        <p className="text-[11px] mb-4" style={{ color: 'var(--color-obs-low)' }}>
-                          {plan.seatNote}
-                        </p>
-                      )}
-
-                      <div className="space-y-2 mb-6 flex-1">
-                        {/* 下位プラン継承 */}
-                        {plan.baseLabel && (
-                          <>
-                            <div className="flex items-start gap-2">
-                              <Check
-                                size={13}
-                                className="shrink-0 mt-0.5"
-                                strokeWidth={2.5}
-                                style={{ color: 'var(--color-obs-low)' }}
-                              />
-                              <span
-                                className="text-[12.5px] leading-relaxed font-medium"
-                                style={{ color: 'var(--color-obs-text)' }}
-                              >
-                                {plan.baseLabel}
-                              </span>
-                            </div>
-
-                            {/* + 区切り */}
-                            <div className="flex items-center gap-2 pl-[3px] py-1">
-                              <Plus
-                                size={12}
-                                strokeWidth={3}
-                                style={{ color: 'var(--color-obs-primary)' }}
-                              />
-                              <div
-                                className="flex-1 h-px"
-                                style={{ backgroundColor: 'rgba(171,199,255,0.18)' }}
-                              />
-                            </div>
-                          </>
-                        )}
-
-                        {/* 追加機能 */}
-                        {plan.additions.map((f, j) => (
-                          <div key={j} className="flex items-start gap-2">
-                            <Check
-                              size={13}
-                              className="shrink-0 mt-0.5"
-                              strokeWidth={2.5}
-                              style={{ color: 'var(--color-obs-low)' }}
-                            />
-                            <span
-                              className="text-[12.5px] leading-relaxed"
-                              style={{ color: 'var(--color-obs-text-muted)' }}
-                            >
-                              {f}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-
-                      {isCurrent ? (
-                        <div
-                          className="w-full flex flex-col"
-                          style={{ minHeight: isAdmin ? 88 : 40 }}
-                        >
-                          {isAdmin && (
-                            <button
-                              onClick={() => {
-                                setPendingSeats(Math.max(seats, plan.minSeats))
-                                setShowAddSeats(true)
-                              }}
-                              className="w-full mb-2 h-10 rounded-[var(--radius-obs-md)] flex items-center justify-center gap-2 text-[13px] font-semibold transition-colors"
-                              style={{
-                                backgroundColor: 'var(--color-obs-surface-highest)',
-                                color: 'var(--color-obs-text)',
-                                boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.20)',
-                              }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = 'rgba(171,199,255,0.10)'
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor =
-                                  'var(--color-obs-surface-highest)'
-                              }}
-                            >
-                              <Users size={14} style={{ color: 'var(--color-obs-primary)' }} />
-                              シート数を変更
-                              <span
-                                className="text-[11.5px] font-medium px-2 py-[2px] rounded-full ml-0.5"
-                                style={{
-                                  backgroundColor: 'rgba(171,199,255,0.16)',
-                                  color: 'var(--color-obs-primary)',
-                                }}
-                              >
-                                現在 {Math.max(seats, plan.minSeats)} 名
-                              </span>
-                            </button>
-                          )}
-                          <div
-                            className="w-full h-10 rounded-[var(--radius-obs-md)] flex items-center justify-center text-[13px] font-semibold"
-                            style={{
-                              background:
-                                'linear-gradient(135deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
-                              color: 'var(--color-obs-on-primary)',
-                            }}
-                          >
-                            現在のプラン
-                          </div>
-                        </div>
-                      ) : isAdmin ? (
-                        (() => {
-                          // シート課金プランの料金高い順 = ランク高い。
-                          const PLAN_RANK: Record<string, number> = {
-                            lite: 1,
-                            standard: 2,
-                          }
-                          const isDowngrade =
-                            (PLAN_RANK[plan.id] ?? 0) < (PLAN_RANK[currentPlan] ?? 0)
-                          const isSoldOut = (plan.slotsRemaining ?? 1) <= 0
-                          return (
-                            <div
-                              className="w-full flex flex-col justify-end"
-                              style={{ minHeight: 88 }}
-                            >
-                              <button
-                                onClick={() => {
-                                  if (isSoldOut) return
-                                  setConfirmDialog({
-                                    title: `${plan.name} プランで決済へ進む`,
-                                    message: `${plan.name} プランを ${billingCycle === 'annual' ? '年額' : '月額'}・${Math.max(seats, plan.minSeats)}シートで開始します。\n\n次にStripeの安全な決済画面へ移動します。決済完了後、ルキスマCRMに戻ります。`,
-                                    confirmLabel: 'Stripe決済へ進む',
-                                    variant: 'primary',
-                                    onConfirm: () => startStripeCheckout(plan),
-                                  })
-                                }}
-                                disabled={isSoldOut || checkoutBusyPlan === plan.id}
-                                className="w-full h-10 rounded-[var(--radius-obs-md)] text-[13px] font-medium transition-colors"
-                                style={
-                                  isSoldOut
-                                    ? {
-                                        backgroundColor: 'transparent',
-                                        color: 'var(--color-obs-text-subtle)',
-                                        boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.06)',
-                                        cursor: 'not-allowed',
-                                      }
-                                    : isDowngrade
-                                      ? {
-                                          backgroundColor: 'transparent',
-                                          color: 'var(--color-obs-text-muted)',
-                                          boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.08)',
-                                        }
-                                      : {
-                                          background:
-                                            'linear-gradient(135deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
-                                          color: 'var(--color-obs-on-primary)',
-                                          fontWeight: 600,
-                                        }
-                                }
-                              >
-                                {checkoutBusyPlan === plan.id
-                                  ? 'Stripeへ移動中...'
-                                  : isSoldOut
-                                  ? '満枠 (キャンセル待ち)'
-                                  : isDowngrade
-                                    ? 'このプランへ変更を相談'
-                                    : 'Stripe決済へ進む'}
-                              </button>
-                            </div>
-                          )
-                        })()
-                      ) : (
-                        <div className="w-full flex flex-col justify-end" style={{ minHeight: 88 }}>
-                          <div
-                            className="w-full h-10 rounded-[var(--radius-obs-md)] flex items-center justify-center text-[12px]"
-                            style={{
-                              backgroundColor: 'transparent',
-                              color: 'var(--color-obs-text-subtle)',
-                              boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.06)',
-                            }}
-                          >
-                            管理者のみ変更可
-                          </div>
-                        </div>
-                      )}
-                    </ObsCard>
-                  </motion.div>
-                )
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* ── 初期費用オプション (特権管理者のみ・お金回り) ── */}
-        {tab === 'subscription' && isSuperAdmin && (
-          <div className="mt-12">
-            <ObsCard
-              depth="high"
-              padding="lg"
-              radius="xl"
-              className={
-                migrationStatus !== 'not_requested'
-                  ? 'relative overflow-hidden ring-2 ring-[var(--color-obs-primary)]'
-                  : 'relative overflow-hidden'
-              }
-            >
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '-30%',
-                  right: '-10%',
-                  width: '400px',
-                  height: '400px',
-                  background:
-                    migrationStatus !== 'not_requested'
-                      ? 'radial-gradient(circle, rgba(75,200,140,0.10) 0%, transparent 70%)'
-                      : 'radial-gradient(circle, rgba(171,199,255,0.10) 0%, transparent 70%)',
-                  pointerEvents: 'none',
-                }}
-              />
-              <div className="relative grid grid-cols-[1fr_auto] gap-8 items-center">
-                <div>
-                  <div className="flex items-center gap-3 mb-3">
-                    <div
-                      className="w-11 h-11 rounded-[var(--radius-obs-md)] flex items-center justify-center"
-                      style={{
-                        background:
-                          'linear-gradient(135deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
-                      }}
-                    >
-                      <Database size={20} style={{ color: 'var(--color-obs-on-primary)' }} />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3
-                          className="font-[family-name:var(--font-display)] text-lg font-semibold tracking-[-0.02em]"
-                          style={{ color: 'var(--color-obs-text)' }}
-                        >
-                          データ移行サポート
-                        </h3>
-                        {migrationStatus === 'requested' && (
-                          <span
-                            className="text-[10px] font-semibold px-2 py-[3px] rounded-full uppercase tracking-[0.08em] flex items-center gap-1"
-                            style={{
-                              backgroundColor: 'rgba(255,193,7,0.14)',
-                              color: '#FFC107',
-                            }}
-                          >
-                            申込済
-                          </span>
-                        )}
-                        {migrationStatus === 'in_progress' && (
-                          <span
-                            className="text-[10px] font-semibold px-2 py-[3px] rounded-full uppercase tracking-[0.08em] flex items-center gap-1"
-                            style={{
-                              backgroundColor: 'rgba(171,199,255,0.14)',
-                              color: 'var(--color-obs-primary)',
-                            }}
-                          >
-                            移行中
-                          </span>
-                        )}
-                        {migrationStatus === 'completed' && (
-                          <span
-                            className="text-[10px] font-semibold px-2 py-[3px] rounded-full uppercase tracking-[0.08em] flex items-center gap-1"
-                            style={{
-                              backgroundColor: 'rgba(75,200,140,0.14)',
-                              color: '#4BC88C',
-                            }}
-                          >
-                            <Check size={10} strokeWidth={3} />
-                            完了
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-[12px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
-                        既存データを当方で取り込み・項目マッピングまで対応
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-x-6 gap-y-2 mt-4">
-                    {[
-                      '1時間オンボーディングMTG',
-                      'CSV / Excel / スプレッドシート 取込',
-                      '項目マッピング・データクレンジング',
-                    ].map((f, j) => (
-                      <div key={j} className="flex items-start gap-2">
-                        <Check
-                          size={13}
-                          className="shrink-0 mt-0.5"
-                          strokeWidth={2.5}
-                          style={{ color: 'var(--color-obs-low)' }}
-                        />
-                        <span
-                          className="text-[12.5px] leading-relaxed"
-                          style={{ color: 'var(--color-obs-text-muted)' }}
-                        >
-                          {f}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <p
-                    className="text-[11px] mt-4 leading-relaxed"
-                    style={{ color: 'var(--color-obs-text-subtle)' }}
-                  >
-                    ※ 取込件数の上限なし。HubSpot / Salesforce
-                    からの移行は、各サービスのCSVエクスポート機能でデータをご用意ください。
-                  </p>
-                </div>
-
-                <div className="text-right">
-                  <p
-                    className="text-[10px] font-medium uppercase tracking-[0.1em] mb-1"
-                    style={{ color: 'var(--color-obs-text-subtle)' }}
-                  >
-                    初回のみ (買い切り)
-                  </p>
-                  <div className="flex items-baseline gap-1 justify-end mb-1">
-                    <span className="text-[14px]" style={{ color: 'var(--color-obs-text-muted)' }}>
-                      +
-                    </span>
-                    <span
-                      className="font-[family-name:var(--font-display)] text-[34px] font-bold tabular-nums tracking-[-0.03em]"
-                      style={{ color: 'var(--color-obs-text)' }}
-                    >
-                      ¥100,000
-                    </span>
-                  </div>
-                  <p
-                    className="text-[11.5px] mb-4"
-                    style={{ color: 'var(--color-obs-text-subtle)' }}
-                  >
-                    一括 (税抜)
-                  </p>
-                  {migrationStatus === 'not_requested' ? (
-                    <ObsButton
-                      variant="primary"
-                      size="md"
-                      onClick={() =>
-                        setConfirmDialog({
-                          title: 'データ移行サポートを申込む',
-                          message:
-                            '初期費用 ¥100,000 (税抜) でデータ移行サポートを申込みます。お申込後、担当者よりCSV/Excel/スプレッドシートのアップロード手順とオンボーディングMTGの日程調整をご案内します。料金は次回請求に追加されます。',
-                          confirmLabel: '申込む',
-                          variant: 'primary',
-                          onConfirm: () => setMigrationStatus('requested'),
-                        })
-                      }
-                    >
-                      申込む
-                    </ObsButton>
-                  ) : (
-                    <button
-                      onClick={() =>
-                        setConfirmDialog({
-                          title: '申込状況の詳細',
-                          message:
-                            migrationStatus === 'requested'
-                              ? '担当者からのご連絡をお待ちください。3営業日以内にCSVアップロード手順とオンボーディングMTGの日程調整をご案内します。'
-                              : migrationStatus === 'in_progress'
-                                ? '現在、データ移行作業を進めております。完了次第、担当者よりご連絡いたします。'
-                                : 'データ移行が完了しました。お困りのことがあれば担当者までご連絡ください。',
-                          confirmLabel: 'OK',
-                          variant: 'primary',
-                          onConfirm: () => {},
-                        })
-                      }
-                      className="px-4 py-2 rounded-[var(--radius-obs-md)] text-[13px] font-medium transition-colors"
-                      style={{
-                        backgroundColor: 'transparent',
-                        color: 'var(--color-obs-text-muted)',
-                        boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.08)',
-                      }}
-                    >
-                      詳細を見る
-                    </button>
-                  )}
-                </div>
-              </div>
-            </ObsCard>
-          </div>
-        )}
-
         {/* ── Members (管理者のみ) ── */}
-        {tab === 'members' && isAdmin && (
+        {tab === 'team' && isAdmin && (
           <div className="mt-12">
             <ObsSectionHeader
               title="メンバー"
-              caption="管理者以上がメンバーの招待・削除・権限変更を行えます。プラン編集・クレジット追加・機能リクエストなどお金回りは特権管理者のみ可能です"
+              caption="管理者以上がメンバーの招待・削除・権限変更を行えます。クレジット追加など費用が発生する操作は特権管理者のみ可能です"
             />
 
             <ObsCard depth="high" padding="lg" radius="xl">
@@ -1747,125 +994,55 @@ function SubscriptionPageContent() {
           </div>
         )}
 
-        {/* ── Custom Dev Requests (初期費用オプションの直下・特権管理者のみ) ── */}
-        {tab === 'subscription' && isSuperAdmin && (
-          <div id="feature-requests" className="mt-12 scroll-mt-24">
+        {/* ── Integrations (管理者のみ) ── */}
+        {tab === 'integrations' && isAdmin && (
+          <div className="mt-12">
             <ObsSectionHeader
-              title="機能リクエスト"
-              caption="追加機能を1万円単位の希望額で開発依頼。承認時のみ課金され、スキルもしくは全体機能としてサービスに追加されます"
+              title="連携設定"
+              caption="Google Workspace / Microsoft 365 / Slack 等の外部サービスとの連携を管理します"
             />
-
-            <ObsCard depth="high" padding="lg" radius="xl">
-              {/* Header: Title + Send button */}
-              <div className="flex items-center justify-between mb-5">
-                <div className="flex items-center gap-4">
+            <div className="mt-6">
+              <ObsCard depth="high" padding="lg" radius="xl">
+                <div className="flex items-start gap-4">
                   <div
-                    className="w-11 h-11 rounded-[var(--radius-obs-md)] flex items-center justify-center"
+                    className="shrink-0 w-11 h-11 rounded-[var(--radius-obs-md)] flex items-center justify-center"
                     style={{
                       background:
                         'linear-gradient(135deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
                     }}
                   >
-                    <Wrench size={20} style={{ color: 'var(--color-obs-on-primary)' }} />
+                    <Plug size={18} style={{ color: 'var(--color-obs-on-primary)' }} />
                   </div>
-                  <div>
-                    <p
-                      className="text-[11px] font-medium uppercase tracking-[0.1em] mb-0.5"
-                      style={{ color: 'var(--color-obs-text-subtle)' }}
-                    >
-                      依頼一覧
-                    </p>
-                    <p
-                      className="text-[15px] font-semibold"
+                  <div className="flex-1">
+                    <h3
+                      className="font-[family-name:var(--font-display)] text-lg font-semibold tracking-[-0.02em]"
                       style={{ color: 'var(--color-obs-text)' }}
                     >
-                      {requests.length} 件
+                      外部サービス連携
+                    </h3>
+                    <p
+                      className="text-[13px] mt-1.5 leading-relaxed"
+                      style={{ color: 'var(--color-obs-text-muted)' }}
+                    >
+                      Google Workspace (Gmail / カレンダー / Drive / Meet)・Microsoft 365・Slack・gBizINFO
+                      など、外部サービスとの接続・OAuth 認証・同期設定は連携設定画面で管理します。
                     </p>
+                    <a
+                      href="/settings/integrations"
+                      className="mt-5 inline-flex items-center gap-2 rounded-[var(--radius-obs-md)] px-4 py-2.5 text-[13px] font-semibold transition-colors"
+                      style={{
+                        background:
+                          'linear-gradient(135deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
+                        color: 'var(--color-obs-on-primary)',
+                      }}
+                    >
+                      連携設定を開く
+                      <ExternalLink size={14} />
+                    </a>
                   </div>
                 </div>
-                <ObsButton variant="primary" size="md" onClick={() => setShowNewRequest(true)}>
-                  <Send size={14} className="inline mr-1.5" />
-                  機能リクエストを送信
-                </ObsButton>
-              </div>
-
-              {/* Request list */}
-              {requests.length === 0 ? (
-                <div
-                  className="rounded-[var(--radius-obs-md)] p-8 text-center"
-                  style={{ backgroundColor: 'var(--color-obs-surface-high)' }}
-                >
-                  <p className="text-[13px]" style={{ color: 'var(--color-obs-text-muted)' }}>
-                    まだリクエストはありません。「機能リクエストを送信」から最初の提案を作成してください。
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {requests.map((req) => {
-                    const meta = STATUS_META[req.status]
-                    return (
-                      <motion.button
-                        key={req.id}
-                        whileHover={{ y: -1 }}
-                        whileTap={{ scale: 0.995 }}
-                        onClick={() => setSelectedRequest(req)}
-                        className="group w-full rounded-[var(--radius-obs-md)] p-4 text-left transition-all cursor-pointer"
-                        style={{ backgroundColor: 'var(--color-obs-surface-high)' }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = 'var(--color-obs-surface-highest)'
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = 'var(--color-obs-surface-high)'
-                        }}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1.5">
-                              <p
-                                className="text-[14px] font-semibold truncate transition-colors"
-                                style={{ color: 'var(--color-obs-text)' }}
-                              >
-                                {req.title}
-                              </p>
-                              <span
-                                className="text-[10px] font-semibold px-2 py-[3px] rounded-full uppercase tracking-[0.08em] whitespace-nowrap"
-                                style={{ backgroundColor: meta.bg, color: meta.fg }}
-                              >
-                                {meta.label}
-                              </span>
-                            </div>
-                            <div
-                              className="flex items-center gap-3 text-[11.5px]"
-                              style={{ color: 'var(--color-obs-text-subtle)' }}
-                            >
-                              <span
-                                className="font-semibold tabular-nums"
-                                style={{ color: 'var(--color-obs-text)' }}
-                              >
-                                ¥{req.amount.toLocaleString()}
-                              </span>
-                              <span>依頼日 {req.createdAt}</span>
-                            </div>
-                          </div>
-
-                          {/* 詳細表示の手がかり */}
-                          <div
-                            className="flex items-center gap-1 shrink-0 text-[11.5px] font-medium opacity-60 group-hover:opacity-100 transition-opacity"
-                            style={{ color: 'var(--color-obs-text-muted)' }}
-                          >
-                            <span>詳細</span>
-                            <ChevronRight
-                              size={16}
-                              className="transition-transform group-hover:translate-x-0.5"
-                            />
-                          </div>
-                        </div>
-                      </motion.button>
-                    )
-                  })}
-                </div>
-              )}
-            </ObsCard>
+              </ObsCard>
+            </div>
           </div>
         )}
 
@@ -2602,798 +1779,6 @@ function SubscriptionPageContent() {
                   <ObsButton variant="primary" size="lg" className="w-full">
                     ¥{(purchaseAmount * CREDIT_UNIT_PRICE).toLocaleString()} で購入する
                   </ObsButton>
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* ── Request detail modal ── */}
-        <AnimatePresence>
-          {selectedRequest && (
-            <motion.div
-              className="fixed inset-0 z-50 flex items-center justify-center p-4"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <div
-                className="absolute inset-0 backdrop-blur-sm"
-                style={{ backgroundColor: 'rgba(14,14,16,0.72)' }}
-                onClick={() => setSelectedRequest(null)}
-              />
-              <motion.div
-                className="relative w-full max-w-[560px] rounded-[var(--radius-obs-xl)] overflow-hidden"
-                style={{
-                  backgroundColor: 'var(--color-obs-surface-highest)',
-                  boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
-                }}
-                initial={{ opacity: 0, scale: 0.95, y: 12 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 12 }}
-              >
-                <div className="flex items-center justify-between px-6 py-4">
-                  <div className="flex items-center gap-2">
-                    <Wrench size={16} style={{ color: 'var(--color-obs-primary)' }} />
-                    <h2
-                      className="font-[family-name:var(--font-display)] text-base font-semibold tracking-[-0.01em]"
-                      style={{ color: 'var(--color-obs-text)' }}
-                    >
-                      依頼詳細
-                    </h2>
-                  </div>
-                  <button
-                    onClick={() => setSelectedRequest(null)}
-                    className="p-1.5 rounded-full transition-colors hover:bg-[var(--color-obs-surface-high)]"
-                  >
-                    <X size={16} style={{ color: 'var(--color-obs-text-muted)' }} />
-                  </button>
-                </div>
-
-                <div className="px-6 pb-6 space-y-5 max-h-[70vh] overflow-y-auto">
-                  {/* Status badge */}
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="text-[10px] font-semibold px-2 py-[3px] rounded-full uppercase tracking-[0.08em]"
-                      style={{
-                        backgroundColor: STATUS_META[selectedRequest.status].bg,
-                        color: STATUS_META[selectedRequest.status].fg,
-                      }}
-                    >
-                      {STATUS_META[selectedRequest.status].label}
-                    </span>
-                    <span
-                      className="text-[11.5px]"
-                      style={{ color: 'var(--color-obs-text-subtle)' }}
-                    >
-                      ID: {selectedRequest.id}
-                    </span>
-                  </div>
-
-                  {/* Title */}
-                  <div>
-                    <p
-                      className="text-[10px] font-medium uppercase tracking-[0.1em] mb-1"
-                      style={{ color: 'var(--color-obs-text-subtle)' }}
-                    >
-                      タイトル
-                    </p>
-                    <p
-                      className="text-[18px] font-semibold leading-tight"
-                      style={{ color: 'var(--color-obs-text)' }}
-                    >
-                      {selectedRequest.title}
-                    </p>
-                  </div>
-
-                  {/* Amount */}
-                  <div>
-                    <p
-                      className="text-[10px] font-medium uppercase tracking-[0.1em] mb-1"
-                      style={{ color: 'var(--color-obs-text-subtle)' }}
-                    >
-                      希望支払額
-                    </p>
-                    <p
-                      className="font-[family-name:var(--font-display)] text-[28px] font-bold tabular-nums tracking-[-0.03em]"
-                      style={{ color: 'var(--color-obs-text)' }}
-                    >
-                      ¥{selectedRequest.amount.toLocaleString()}
-                    </p>
-                  </div>
-
-                  {/* Description */}
-                  <div>
-                    <p
-                      className="text-[10px] font-medium uppercase tracking-[0.1em] mb-1.5"
-                      style={{ color: 'var(--color-obs-text-subtle)' }}
-                    >
-                      詳細・要件
-                    </p>
-                    <div
-                      className="rounded-[var(--radius-obs-md)] p-3.5 text-[13px] leading-relaxed whitespace-pre-wrap"
-                      style={{
-                        backgroundColor: 'var(--color-obs-surface-high)',
-                        color: 'var(--color-obs-text-muted)',
-                      }}
-                    >
-                      {selectedRequest.description}
-                    </div>
-                  </div>
-
-                  {/* Meta + 領収書 */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div
-                      className="rounded-[var(--radius-obs-md)] p-3.5"
-                      style={{ backgroundColor: 'var(--color-obs-surface-high)' }}
-                    >
-                      <p
-                        className="text-[10px] font-medium uppercase tracking-[0.1em] mb-1"
-                        style={{ color: 'var(--color-obs-text-subtle)' }}
-                      >
-                        依頼日
-                      </p>
-                      <p
-                        className="text-[12.5px] tabular-nums"
-                        style={{ color: 'var(--color-obs-text)' }}
-                      >
-                        {selectedRequest.createdAt}
-                      </p>
-                    </div>
-                    {selectedRequest.stripeReceiptUrl && (
-                      <a
-                        href={selectedRequest.stripeReceiptUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="rounded-[var(--radius-obs-md)] p-3.5 transition-colors"
-                        style={{ backgroundColor: 'var(--color-obs-surface-high)' }}
-                      >
-                        <p
-                          className="text-[10px] font-medium uppercase tracking-[0.1em] mb-1 flex items-center gap-1"
-                          style={{ color: 'var(--color-obs-text-subtle)' }}
-                        >
-                          <CreditCard size={10} />
-                          Stripe領収書
-                        </p>
-                        <p
-                          className="text-[12.5px] flex items-center gap-1"
-                          style={{ color: 'var(--color-obs-primary)' }}
-                        >
-                          領収書を表示 →
-                        </p>
-                      </a>
-                    )}
-                  </div>
-
-                  {/* 修正履歴・修正依頼 */}
-                  {(selectedRequest.status === 'in_progress' ||
-                    selectedRequest.status === 'completed' ||
-                    (selectedRequest.revisions && selectedRequest.revisions.length > 0)) && (
-                    <div
-                      className="rounded-[var(--radius-obs-md)] p-3.5"
-                      style={{
-                        backgroundColor: 'rgba(171,199,255,0.06)',
-                        boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.16)',
-                      }}
-                    >
-                      {(() => {
-                        const used = selectedRequest.revisions?.length ?? 0
-                        const remaining = REVISION_LIMIT - used
-                        return (
-                          <>
-                            <div className="flex items-center justify-between mb-2.5">
-                              <p
-                                className="text-[10.5px] font-medium uppercase tracking-[0.1em] flex items-center gap-1"
-                                style={{ color: 'var(--color-obs-primary)' }}
-                              >
-                                <Wrench size={11} />
-                                修正依頼 ({used}/{REVISION_LIMIT}回 使用)
-                              </p>
-                              <span
-                                className="text-[10.5px] font-semibold px-2 py-[2px] rounded-full"
-                                style={{
-                                  backgroundColor:
-                                    remaining > 0
-                                      ? 'var(--color-obs-surface-highest)'
-                                      : 'rgba(255,90,90,0.14)',
-                                  color: remaining > 0 ? 'var(--color-obs-text-muted)' : '#FF5A5A',
-                                }}
-                              >
-                                残り {remaining}/{REVISION_LIMIT}
-                              </span>
-                            </div>
-
-                            {/* 修正履歴リスト */}
-                            {used > 0 && (
-                              <div className="space-y-2 mb-3">
-                                {selectedRequest.revisions!.map((rev, i) => (
-                                  <div
-                                    key={rev.id}
-                                    className="rounded-[var(--radius-obs-sm)] p-2.5"
-                                    style={{
-                                      backgroundColor: 'var(--color-obs-surface-highest)',
-                                    }}
-                                  >
-                                    <div className="flex items-center gap-2 mb-1">
-                                      <span
-                                        className="text-[10px] font-semibold px-1.5 py-[1px] rounded"
-                                        style={{
-                                          backgroundColor: 'rgba(171,199,255,0.16)',
-                                          color: 'var(--color-obs-primary)',
-                                        }}
-                                      >
-                                        #{i + 1}
-                                      </span>
-                                      <span
-                                        className="text-[10.5px] tabular-nums"
-                                        style={{ color: 'var(--color-obs-text-subtle)' }}
-                                      >
-                                        {new Date(rev.requestedAt).toLocaleString('ja-JP', {
-                                          month: 'numeric',
-                                          day: 'numeric',
-                                          hour: '2-digit',
-                                          minute: '2-digit',
-                                        })}
-                                      </span>
-                                      {rev.resolvedAt && (
-                                        <span
-                                          className="text-[10px] font-semibold px-1.5 py-[1px] rounded-full"
-                                          style={{
-                                            backgroundColor: 'rgba(75,200,140,0.14)',
-                                            color: '#4BC88C',
-                                          }}
-                                        >
-                                          ✓ 対応済
-                                        </span>
-                                      )}
-                                    </div>
-                                    <p
-                                      className="text-[12px] leading-relaxed whitespace-pre-wrap"
-                                      style={{ color: 'var(--color-obs-text-muted)' }}
-                                    >
-                                      {rev.message}
-                                    </p>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-
-                            {/* 修正依頼ボタン */}
-                            {remaining > 0 ? (
-                              <button
-                                onClick={() => {
-                                  setRevisionTarget(selectedRequest)
-                                  setRevisionMessage('')
-                                }}
-                                className="w-full h-10 rounded-[var(--radius-obs-md)] text-[12.5px] font-semibold transition-colors flex items-center justify-center gap-1.5"
-                                style={{
-                                  backgroundColor: 'var(--color-obs-surface-highest)',
-                                  color: 'var(--color-obs-text)',
-                                  boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.20)',
-                                }}
-                              >
-                                <Wrench size={13} />
-                                修正を依頼する (残り {remaining} 回)
-                              </button>
-                            ) : (
-                              <div
-                                className="rounded-[var(--radius-obs-md)] p-3 text-[11.5px] leading-relaxed"
-                                style={{
-                                  backgroundColor: 'rgba(255,193,7,0.10)',
-                                  color: '#FFC107',
-                                }}
-                              >
-                                ⚠ 修正回数の上限({REVISION_LIMIT}
-                                回)に達しました。追加の修正は新規リクエストとして送信してください(別途見積もり)。
-                              </div>
-                            )}
-                          </>
-                        )
-                      })()}
-                    </div>
-                  )}
-
-                  {/* Action buttons */}
-                  <div className="pt-2">
-                    <ObsButton
-                      variant="primary"
-                      size="md"
-                      className="w-full"
-                      onClick={() => setSelectedRequest(null)}
-                    >
-                      閉じる
-                    </ObsButton>
-                  </div>
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* ── Revision request modal ── */}
-        <AnimatePresence>
-          {revisionTarget && (
-            <motion.div
-              className="fixed inset-0 z-[55] flex items-center justify-center p-4"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <div
-                className="absolute inset-0 backdrop-blur-sm"
-                style={{ backgroundColor: 'rgba(14,14,16,0.78)' }}
-                onClick={() => {
-                  setRevisionTarget(null)
-                  setRevisionMessage('')
-                }}
-              />
-              <motion.div
-                className="relative w-full max-w-[480px] rounded-[var(--radius-obs-xl)] overflow-hidden"
-                style={{
-                  backgroundColor: 'var(--color-obs-surface-highest)',
-                  boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
-                }}
-                initial={{ opacity: 0, scale: 0.95, y: 12 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 12 }}
-              >
-                <div className="flex items-center justify-between px-6 py-4">
-                  <div className="flex items-center gap-2">
-                    <Wrench size={16} style={{ color: 'var(--color-obs-primary)' }} />
-                    <h2
-                      className="font-[family-name:var(--font-display)] text-base font-semibold tracking-[-0.01em]"
-                      style={{ color: 'var(--color-obs-text)' }}
-                    >
-                      修正を依頼
-                    </h2>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setRevisionTarget(null)
-                      setRevisionMessage('')
-                    }}
-                    className="p-1.5 rounded-full transition-colors hover:bg-[var(--color-obs-surface-high)]"
-                  >
-                    <X size={16} style={{ color: 'var(--color-obs-text-muted)' }} />
-                  </button>
-                </div>
-
-                <div className="px-6 pb-6 space-y-4">
-                  {/* 対象チケット情報 */}
-                  <div
-                    className="rounded-[var(--radius-obs-md)] p-3"
-                    style={{ backgroundColor: 'var(--color-obs-surface-high)' }}
-                  >
-                    <p
-                      className="text-[10px] font-medium uppercase tracking-[0.1em] mb-1"
-                      style={{ color: 'var(--color-obs-text-subtle)' }}
-                    >
-                      対象チケット
-                    </p>
-                    <p
-                      className="text-[13px] font-semibold"
-                      style={{ color: 'var(--color-obs-text)' }}
-                    >
-                      {revisionTarget.title}
-                    </p>
-                    <p
-                      className="text-[11px] mt-1"
-                      style={{ color: 'var(--color-obs-text-subtle)' }}
-                    >
-                      残り修正回数:{' '}
-                      <span className="font-semibold" style={{ color: 'var(--color-obs-text)' }}>
-                        {REVISION_LIMIT - (revisionTarget.revisions?.length ?? 0)} /{' '}
-                        {REVISION_LIMIT}
-                      </span>
-                    </p>
-                  </div>
-
-                  {/* 修正内容入力 */}
-                  <div>
-                    <label
-                      className="text-[11px] font-medium uppercase tracking-[0.1em] mb-1.5 block"
-                      style={{ color: 'var(--color-obs-text-subtle)' }}
-                    >
-                      修正内容 *
-                    </label>
-                    <textarea
-                      rows={5}
-                      value={revisionMessage}
-                      onChange={(e) => setRevisionMessage(e.target.value)}
-                      placeholder="修正してほしい点を具体的に記載してください。例: フィルター項目の順序を入れ替えてほしい / グラフの色を青系に変更してほしい / 等"
-                      className="w-full px-3 py-2.5 rounded-[var(--radius-obs-md)] text-[13px] outline-none border-0 resize-none"
-                      style={{
-                        backgroundColor: 'var(--color-obs-surface-high)',
-                        color: 'var(--color-obs-text)',
-                      }}
-                    />
-                  </div>
-
-                  {/* 注意書き */}
-                  <div
-                    className="p-3 rounded-[var(--radius-obs-md)] text-[11.5px] leading-relaxed space-y-1.5"
-                    style={{
-                      backgroundColor: 'rgba(255,193,7,0.08)',
-                      color: 'var(--color-obs-text-muted)',
-                    }}
-                  >
-                    <p>
-                      💡 修正は <strong style={{ color: '#FFC107' }}>元の仕様の範囲内</strong>{' '}
-                      での対応となります。
-                    </p>
-                    <p>
-                      新機能の追加や仕様変更を伴う内容は、別途新規リクエストとして送信していただく必要があります(別料金が発生します)。
-                    </p>
-                  </div>
-
-                  {/* アクションボタン */}
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => {
-                        setRevisionTarget(null)
-                        setRevisionMessage('')
-                      }}
-                      className="flex-1 h-11 rounded-[var(--radius-obs-md)] text-[13px] font-medium transition-colors"
-                      style={{
-                        backgroundColor: 'transparent',
-                        color: 'var(--color-obs-text-muted)',
-                        boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.08)',
-                      }}
-                    >
-                      キャンセル
-                    </button>
-                    <ObsButton
-                      variant="primary"
-                      size="lg"
-                      className="flex-1"
-                      disabled={!revisionMessage.trim()}
-                      onClick={submitRevision}
-                    >
-                      修正を依頼する
-                    </ObsButton>
-                  </div>
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* ── New dev request modal ── */}
-        <AnimatePresence>
-          {showNewRequest && (
-            <motion.div
-              className="fixed inset-0 z-50 flex items-center justify-center p-4"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <div
-                className="absolute inset-0 backdrop-blur-sm"
-                style={{ backgroundColor: 'rgba(14,14,16,0.72)' }}
-                onClick={closeNewRequest}
-              />
-              <motion.div
-                className="relative w-full max-w-[560px] rounded-[var(--radius-obs-xl)] overflow-hidden"
-                style={{
-                  backgroundColor: 'var(--color-obs-surface-highest)',
-                  boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
-                }}
-                initial={{ opacity: 0, scale: 0.95, y: 12 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 12 }}
-              >
-                <div className="flex items-center justify-between px-6 py-4">
-                  <div className="flex items-center gap-2">
-                    <Send size={16} style={{ color: 'var(--color-obs-primary)' }} />
-                    <h2
-                      className="font-[family-name:var(--font-display)] text-base font-semibold tracking-[-0.01em]"
-                      style={{ color: 'var(--color-obs-text)' }}
-                    >
-                      機能リクエストを送信
-                    </h2>
-                  </div>
-                  <button
-                    onClick={closeNewRequest}
-                    className="p-1.5 rounded-full transition-colors hover:bg-[var(--color-obs-surface-high)]"
-                  >
-                    <X size={16} style={{ color: 'var(--color-obs-text-muted)' }} />
-                  </button>
-                </div>
-
-                <div className="px-6 pb-6 space-y-4 max-h-[80vh] overflow-y-auto">
-                  {/* タイトル入力 */}
-                  <div>
-                    <label
-                      className="text-[11px] font-medium uppercase tracking-[0.1em] mb-1.5 block"
-                      style={{ color: 'var(--color-obs-text-subtle)' }}
-                    >
-                      タイトル *
-                    </label>
-                    <input
-                      type="text"
-                      value={requestTitle}
-                      onChange={(e) => {
-                        setRequestTitle(e.target.value)
-                        setAiEstimation(null)
-                      }}
-                      placeholder="例: 売上レポートに部署別フィルター追加"
-                      className="w-full px-3 py-2.5 rounded-[var(--radius-obs-md)] text-[13px] outline-none border-0"
-                      style={{
-                        backgroundColor: 'var(--color-obs-surface-high)',
-                        color: 'var(--color-obs-text)',
-                      }}
-                    />
-                  </div>
-
-                  {/* 詳細入力 */}
-                  <div>
-                    <label
-                      className="text-[11px] font-medium uppercase tracking-[0.1em] mb-1.5 block"
-                      style={{ color: 'var(--color-obs-text-subtle)' }}
-                    >
-                      詳細・要件 *
-                    </label>
-                    <textarea
-                      rows={4}
-                      value={requestDescription}
-                      onChange={(e) => {
-                        setRequestDescription(e.target.value)
-                        setAiEstimation(null)
-                      }}
-                      placeholder="期待する成果物・必要な機能・参考画面など。詳しく書くほど見積もり精度が上がります。"
-                      className="w-full px-3 py-2.5 rounded-[var(--radius-obs-md)] text-[13px] outline-none border-0 resize-none"
-                      style={{
-                        backgroundColor: 'var(--color-obs-surface-high)',
-                        color: 'var(--color-obs-text)',
-                      }}
-                    />
-                  </div>
-
-                  {/* AI算出セクション */}
-                  {!aiEstimation && !isEstimating && (
-                    <div>
-                      <button
-                        onClick={runAiEstimation}
-                        disabled={
-                          !requestTitle.trim() ||
-                          !requestDescription.trim() ||
-                          aiEstimateCount >= AI_ESTIMATE_DAILY_LIMIT
-                        }
-                        className="w-full h-12 rounded-[var(--radius-obs-md)] text-[13.5px] font-semibold transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
-                        style={{
-                          background:
-                            'linear-gradient(135deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
-                          color: 'var(--color-obs-on-primary)',
-                        }}
-                      >
-                        <Sparkles size={15} />
-                        AIに見積もりを依頼
-                      </button>
-                      <p
-                        className="text-[11px] mt-2 text-center"
-                        style={{ color: 'var(--color-obs-text-subtle)' }}
-                      >
-                        本日の残り算出回数:{' '}
-                        <span style={{ color: 'var(--color-obs-text-muted)' }}>
-                          {Math.max(0, AI_ESTIMATE_DAILY_LIMIT - aiEstimateCount)} /{' '}
-                          {AI_ESTIMATE_DAILY_LIMIT}
-                        </span>
-                      </p>
-                    </div>
-                  )}
-
-                  {/* AI算出中 */}
-                  {isEstimating && (
-                    <div
-                      className="rounded-[var(--radius-obs-md)] p-6 flex flex-col items-center gap-3"
-                      style={{ backgroundColor: 'var(--color-obs-surface-high)' }}
-                    >
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
-                      >
-                        <Sparkles size={24} style={{ color: 'var(--color-obs-primary)' }} />
-                      </motion.div>
-                      <p
-                        className="text-[12.5px] font-medium"
-                        style={{ color: 'var(--color-obs-text)' }}
-                      >
-                        AIが内容を分析しています…
-                      </p>
-                      <p className="text-[11px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
-                        工数 / 検証 / メンテ を算出中
-                      </p>
-                    </div>
-                  )}
-
-                  {/* AI算出結果 */}
-                  {aiEstimation && (
-                    <div
-                      className="rounded-[var(--radius-obs-md)] overflow-hidden"
-                      style={{
-                        background:
-                          'linear-gradient(180deg, rgba(171,199,255,0.10) 0%, rgba(171,199,255,0.04) 100%)',
-                        boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.20)',
-                      }}
-                    >
-                      {/* メイン金額 */}
-                      <div className="px-4 pt-4 pb-3">
-                        <div className="flex items-center justify-between mb-1.5">
-                          <span
-                            className="text-[10.5px] font-medium uppercase tracking-[0.1em] flex items-center gap-1"
-                            style={{ color: 'var(--color-obs-primary)' }}
-                          >
-                            <Sparkles size={10} />
-                            AI算出
-                          </span>
-                          <span
-                            className="text-[10px] font-medium px-1.5 py-[1px] rounded-full"
-                            style={{
-                              backgroundColor: 'var(--color-obs-surface-highest)',
-                              color: 'var(--color-obs-text-subtle)',
-                            }}
-                          >
-                            自信度:{' '}
-                            {aiEstimation.confidence === 'high'
-                              ? '★★★'
-                              : aiEstimation.confidence === 'medium'
-                                ? '★★☆'
-                                : '★☆☆'}
-                          </span>
-                        </div>
-                        <p
-                          className="font-[family-name:var(--font-display)] text-[36px] font-bold tabular-nums tracking-[-0.03em]"
-                          style={{ color: 'var(--color-obs-text)' }}
-                        >
-                          ¥{aiEstimation.finalAmount.toLocaleString()}
-                          <span
-                            className="text-[14px] font-medium ml-2"
-                            style={{ color: 'var(--color-obs-text-subtle)' }}
-                          >
-                            (税抜)
-                          </span>
-                        </p>
-                      </div>
-
-                      {/* 内訳 (ざっくり) */}
-                      <div
-                        className="px-4 py-3"
-                        style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}
-                      >
-                        <p
-                          className="text-[10.5px] font-medium uppercase tracking-[0.1em] mb-2"
-                          style={{ color: 'var(--color-obs-text-subtle)' }}
-                        >
-                          ざっくり内訳
-                        </p>
-                        <div className="space-y-1.5">
-                          {[
-                            { label: '工数', hours: aiEstimation.workHours },
-                            { label: '検証', hours: aiEstimation.verifyHours },
-                            { label: 'メンテ', hours: aiEstimation.maintenanceHours },
-                          ].map((item) => (
-                            <div
-                              key={item.label}
-                              className="flex items-center justify-between text-[12px]"
-                            >
-                              <span style={{ color: 'var(--color-obs-text-muted)' }}>
-                                {item.label}
-                              </span>
-                              <span
-                                className="tabular-nums"
-                                style={{ color: 'var(--color-obs-text)' }}
-                              >
-                                約{item.hours}h ・ ¥{(item.hours * 10000).toLocaleString()}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                        <div
-                          className="mt-2.5 pt-2.5 space-y-1 text-[11.5px]"
-                          style={{ borderTop: '1px dashed rgba(255,255,255,0.08)' }}
-                        >
-                          <div className="flex items-center justify-between">
-                            <span style={{ color: 'var(--color-obs-text-subtle)' }}>基準金額</span>
-                            <span
-                              className="tabular-nums"
-                              style={{ color: 'var(--color-obs-text-muted)' }}
-                            >
-                              ¥{aiEstimation.baseAmount.toLocaleString()}
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span style={{ color: 'var(--color-obs-text-subtle)' }}>
-                              不確実性プレミアム (+30%)
-                            </span>
-                            <span
-                              className="tabular-nums"
-                              style={{ color: 'var(--color-obs-text-muted)' }}
-                            >
-                              ¥{aiEstimation.bufferAmount.toLocaleString()}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* AI判断 */}
-                      <div
-                        className="px-4 py-3 flex gap-2"
-                        style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}
-                      >
-                        <span className="text-[14px] leading-none">💡</span>
-                        <p
-                          className="text-[11.5px] leading-relaxed"
-                          style={{ color: 'var(--color-obs-text-muted)' }}
-                        >
-                          {aiEstimation.rationale}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 補足説明 */}
-                  <div className="space-y-2">
-                    <div
-                      className="p-3 rounded-[var(--radius-obs-md)] space-y-1.5"
-                      style={{ backgroundColor: 'var(--color-obs-surface-high)' }}
-                    >
-                      <p
-                        className="text-[11.5px] leading-relaxed flex items-start gap-1.5"
-                        style={{ color: 'var(--color-obs-text-muted)' }}
-                      >
-                        <CreditCard size={12} className="shrink-0 mt-0.5" />
-                        <span>
-                          <strong style={{ color: 'var(--color-obs-text)' }}>
-                            決済タイミング:
-                          </strong>{' '}
-                          「依頼する」を押すとStripeのカード決済画面に進みます。決済完了後に担当者が確認し、
-                          却下時は全額返金されます。
-                        </span>
-                      </p>
-                      <p
-                        className="text-[11.5px] leading-relaxed flex items-start gap-1.5"
-                        style={{ color: 'var(--color-obs-text-muted)' }}
-                      >
-                        <Wrench size={12} className="shrink-0 mt-0.5" />
-                        <span>
-                          <strong style={{ color: 'var(--color-obs-text)' }}>修正対応:</strong>{' '}
-                          1チケットあたり{REVISION_LIMIT}回まで修正を含みます。 ({REVISION_LIMIT}
-                          回を超える修正・元仕様外の追加は新規リクエスト扱いとなります)
-                        </span>
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* アクションボタン */}
-                  {aiEstimation && (
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setAiEstimation(null)}
-                        className="flex-1 h-11 rounded-[var(--radius-obs-md)] text-[13px] font-medium transition-colors"
-                        style={{
-                          backgroundColor: 'transparent',
-                          color: 'var(--color-obs-text-muted)',
-                          boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.08)',
-                        }}
-                      >
-                        詳細を追記して再算出
-                      </button>
-                      <ObsButton
-                        variant="primary"
-                        size="lg"
-                        className="flex-1"
-                        onClick={() => {
-                          // TODO: 実装時は Stripe Checkout / PaymentIntent を起動
-                          // const intent = await stripe.paymentIntents.create({...})
-                          // 決済成功後にチケットを作成する
-                          closeNewRequest()
-                        }}
-                      >
-                        <CreditCard size={14} className="inline mr-1.5" />
-                        この金額で依頼する
-                      </ObsButton>
-                    </div>
-                  )}
                 </div>
               </motion.div>
             </motion.div>

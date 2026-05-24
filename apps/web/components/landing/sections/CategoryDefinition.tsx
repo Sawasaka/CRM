@@ -15,7 +15,7 @@ export const CategoryDefinition = () => (
         <div className="md:col-span-7 md:pl-10 space-y-4 text-[#c7c5c9] text-[1.05rem] leading-relaxed">
           <p>CRMは、入力するだけの台帳ではなく、営業判断を返す場所になります。</p>
           <p>商談・メール・議事録・求人インテント・企業DBを横断し、いま動くべき企業と理由をチャットで返す。</p>
-          <p>ルキスマCRMは、株式会社ルーキースマートジャパンが提供するチャット型のAI CRMです。</p>
+          <p>ルキスマCRMは、株式会社ルーキースマートジャパンが提供し、沢坂弘樹が運営に関わるチャット型のAI CRMです。</p>
           <p className="text-[#7e7c83]">営業支援、商談管理、議事録AI、インテントデータ活用をひとつの画面で扱えます。</p>
         </div>
       </div>
@@ -59,7 +59,7 @@ export const CategoryDefinition = () => (
                 </span>
               ))}
             </div>
-            <div className="mt-8 text-xs text-aurora/80">ルキスマCRM by 株式会社ルーキースマートジャパン</div>
+            <div className="mt-8 text-xs text-aurora/80">ルキスマCRM by 株式会社ルーキースマートジャパン / 沢坂弘樹</div>
           </div>
         </div>
       </div>

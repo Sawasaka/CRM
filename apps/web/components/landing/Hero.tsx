@@ -422,7 +422,7 @@ const FEATURE_AGENTS: { id: FeatureAgentId; name: string; initial: string; color
   { id: 'marketing', name: 'Marketing Agent', initial: 'M', color: '#ffcf4a' },
   { id: 'support',   name: 'Customer Agent',  initial: 'C', color: '#ff8dcf' },
   { id: 'helpdesk',  name: 'Knowledge Agent', initial: 'K', color: '#c8b9ff' },
-  { id: 'pdm',       name: 'PDM Agent',       initial: 'P', color: '#8dffc9' },
+  { id: 'pdm',       name: 'Product Agent',   initial: 'P', color: '#8dffc9' },
 ]
 const ALL_FEATURE_AGENT_IDS: FeatureAgentId[] = FEATURE_AGENTS.map((a) => a.id)
 type PersonScope   = 'all' | 'tanaka' | 'suzuki' | 'sato' | 'takahashi' | 'watanabe'
@@ -654,7 +654,7 @@ export const Hero = () => {
       <div className="relative mx-auto max-w-6xl px-6 pt-32 md:pt-40 pb-24 md:pb-32 min-h-screen flex flex-col justify-center">
         <div className="text-center">
           <div className="flex justify-center mb-6">
-            <Eyebrow color="#abc7ff">CHAT CRM</Eyebrow>
+            <Eyebrow color="#abc7ff">CHAT CRM ／ 株式会社ルーキースマートジャパン</Eyebrow>
           </div>
           <h1 className="font-display font-bold tracking-[-0.025em] text-[2.6rem] sm:text-[3.4rem] md:text-[4.6rem] leading-[1.04]">
             <span className="block">
@@ -906,19 +906,32 @@ export const Hero = () => {
                                     })
                                   }}
                                   className="w-full flex items-center gap-2.5 px-3 py-1.5 transition-colors hover:bg-shimmer/40 text-left"
-                                  style={{ opacity: checked ? 1 : 0.45 }}
                                 >
+                                  {/* Orb スタイルのドット — クリックで光が消える */}
                                   <span
-                                    className="inline-flex items-center justify-center w-[20px] h-[20px] rounded-[5px] text-[10px] font-semibold tabular-nums shrink-0"
-                                    style={{
-                                      backgroundColor: checked ? `${a.color}28` : `${a.color}14`,
-                                      color: a.color,
-                                      boxShadow: `inset 0 0 0 1px ${a.color}38`,
-                                    }}
+                                    className="inline-flex items-center justify-center w-[20px] h-[20px] shrink-0"
+                                    aria-hidden
                                   >
-                                    {a.initial}
+                                    <span
+                                      className="inline-block rounded-full transition-all duration-200"
+                                      style={{
+                                        width: 11,
+                                        height: 11,
+                                        background: checked
+                                          ? `radial-gradient(circle at 30% 30%, #ffffff 0%, ${a.color} 35%, ${a.color}80 80%)`
+                                          : `radial-gradient(circle at 30% 30%, #2a2a2e 0%, #1a1a1c 60%, ${a.color}30 100%)`,
+                                        boxShadow: checked
+                                          ? `0 0 8px ${a.color}aa, 0 0 20px ${a.color}55`
+                                          : `inset 0 0 0 1px ${a.color}40`,
+                                      }}
+                                    />
                                   </span>
-                                  <span className="text-[12.5px] text-[#e7e5ea]">{a.name}</span>
+                                  <span
+                                    className="text-[12.5px] transition-colors duration-200"
+                                    style={{ color: checked ? '#e7e5ea' : '#7e7c83' }}
+                                  >
+                                    {a.name}
+                                  </span>
                                 </button>
                               )
                             })}

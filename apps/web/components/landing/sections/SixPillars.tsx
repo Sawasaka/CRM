@@ -32,7 +32,7 @@ const PILLARS: Pillar[] = [
   {
     Icon: Boxes, tone: '#8dffc9', eyebrow: 'PDM',
     title: '議事録から、次の機能が立ち上がる。',
-    body: '商談・サポート議事録から、PDM Agent が「課題」「要望機能」「ニーズ」を自動抽出。企業数 × 重要度でスコアリング。プロダクトマネージャーの「声を集める仕事」をゼロに。',
+    body: '商談・サポート議事録から、Product Agent が「課題」「要望機能」「ニーズ」を自動抽出。企業数 × 重要度でスコアリング。プロダクトマネージャーの「声を集める仕事」をゼロに。',
   },
   {
     Icon: Book, tone: '#c8b9ff', eyebrow: 'KNOWLEDGE',

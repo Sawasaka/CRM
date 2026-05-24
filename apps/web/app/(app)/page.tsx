@@ -10,8 +10,8 @@ import {
   type AssigneeScopeValue,
 } from '@/components/ai/AssigneeFilter'
 import { ModelSelector } from '@/components/ai/ModelSelector'
-import { ChatPolicySelector } from '@/components/ai/ChatPolicySelector'
 import { CompanyBriefCard, type CompanyBrief } from '@/components/ai/CompanyBriefCard'
+import { ChatAnswer } from '@/components/ai/ChatAnswer'
 import { useFileAttachments, HiddenFileInput, AttachmentChip } from '@/components/ai/file-attach'
 import { DEFAULT_CHAT_POLICY_STATE } from '@/lib/chat-policy-presets'
 import type { ModelKind, ThinkingDepth } from '@/components/ai/ModelSelector'
@@ -110,7 +110,7 @@ function HomePageContent() {
   const [chatId, setChatId] = useState<string | null>(null)
   const [model, setModel] = useState<ModelKind>('gemini-2.5-flash-lite')
   const [thinking, setThinking] = useState<ThinkingDepth>('standard')
-  const [policy, setPolicy] = useState(DEFAULT_CHAT_POLICY_STATE)
+  const policy = DEFAULT_CHAT_POLICY_STATE
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [scope, setScope] = useState<AssigneeScopeValue>(() => ({
@@ -350,14 +350,14 @@ function HomePageContent() {
                           </span>
                         </div>
                         <div
-                          className="rounded-[var(--radius-obs-xl)] rounded-tl-md px-4 py-3 text-[14px] leading-relaxed whitespace-pre-wrap"
+                          className="rounded-[var(--radius-obs-xl)] rounded-tl-md px-4 py-3"
                           style={{
                             backgroundColor: 'var(--color-obs-surface-high)',
                             color: 'var(--color-obs-text)',
                             border: '1px solid var(--color-obs-border)',
                           }}
                         >
-                          {m.content}
+                          <ChatAnswer content={m.content} />
                           {m.model && (
                             <div
                               className="mt-2 text-[11px]"
@@ -508,8 +508,6 @@ function HomePageContent() {
                   onModelChange={setModel}
                   onThinkingChange={setThinking}
                 />
-
-                <ChatPolicySelector value={policy} onChange={setPolicy} />
 
                 {/* ── 参照スコープ(全員 / チームFAQ / 担当者) ── */}
                 <AssigneeFilter value={scope} onChange={setScope} />

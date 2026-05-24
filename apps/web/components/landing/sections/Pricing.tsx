@@ -1,5 +1,8 @@
+'use client'
+
+import { useState } from 'react'
 import { Check, Sparkles, Crown, Star, Zap, FileSpreadsheet, ArrowRight } from 'lucide-react'
-import { Eyebrow, Section } from '../atoms'
+import { AGENTS, type AgentKey, Eyebrow, Orb, Section } from '../atoms'
 
 // サービス本体 (/subscription) の PLANS と完全同期する。
 // 価格・クレジット・機能項目は app/(app)/subscription/page.tsx の PLANS が
@@ -47,7 +50,7 @@ const partnershipTiers: PartnershipTier[] = [
       '月30,000クレジット 込み',
     ],
     cadenceItems: [
-      '1日2商談まで',
+      '1日2商談',
       '平日 日中稼働',
       '3ヶ月契約・3ヶ月ごとに更新',
     ],
@@ -73,7 +76,7 @@ const partnershipTiers: PartnershipTier[] = [
       '月20,000クレジット 込み',
     ],
     cadenceItems: [
-      '1日1商談まで',
+      '1日1商談',
       '平日 日中稼働',
       '3ヶ月契約・3ヶ月ごとに更新',
     ],
@@ -105,15 +108,66 @@ const partnershipTiers: PartnershipTier[] = [
   },
 ]
 
-const selfServeFeats = [
-  'CRM 全機能 (企業・コンタクト・取引・パイプライン・チケット)',
-  'AIモデル: Gemini 2.5 Flash Lite / GPT-4o mini / GPT-4o 選択可',
-  'エージェントモード (ブラウザ自動操作)',
-  '議事録自動取得 + BANT 自動入力',
-  'ナレッジ自動生成 (FAQ) + 開発優先度分析',
-  'メール配信 + 1stパーティ計測・効果測定',
-  '企業DB (290万社) + 求人インテント + 外部リサーチ',
-  'Google Workspace / Microsoft 365 連携',
+// 5 エージェント × 機能（両プラン共通）
+const agentFeats: { key: AgentKey; items: string[] }[] = [
+  {
+    key: 'sales',
+    items: ['商談前ブリーフィング', '議事録 → BANT 自動入力', '次アクション提案'],
+  },
+  {
+    key: 'marketing',
+    items: ['採用インテント検知', 'メール配信 + 効果測定', '1st パーティ計測'],
+  },
+  {
+    key: 'support',
+    items: ['チケット 1 次回答', '有人エスカレーション', 'SLA 管理'],
+  },
+  {
+    key: 'helpdesk',
+    items: ['社内 Q&A 即答', 'ナレッジ自動生成 (FAQ)', '継続チューニング'],
+  },
+  {
+    key: 'pdm',
+    items: ['議事録 → 要望集計', '開発優先度スコアリング', 'ロードマップ提案'],
+  },
+]
+
+// 5 エージェント横断のデータ基盤・連携機能
+const platformFeats: { label: string; detail: string }[] = [
+  { label: '企業データベース', detail: '290 万社 + 求人インテント + 外部リサーチ' },
+  { label: 'AI モデル選択', detail: 'Gemini 2.5 Flash Lite / GPT-4o mini / GPT-4o' },
+  { label: 'エージェントモード', detail: 'ブラウザ自動操作' },
+  { label: '外部連携', detail: 'Gmail / Google Calendar / Notion 議事録' },
+  { label: 'カスタム連携', detail: 'その他は都度ご相談で対応可能' },
+]
+
+// セルフサーブ CRM 単独プラン
+// 年間プランは月額から30%OFF。表示は月額換算。
+interface SelfServePlan {
+  id: 'standard' | 'pro'
+  name: string
+  credits: number // 月間クレジット (チーム合計)
+  monthly: number // 月額プラン: 月額
+  annualMonthly: number // 年間プラン: 月額換算 (= monthly × 0.7)
+  featured?: boolean
+}
+
+const selfServePlans: SelfServePlan[] = [
+  {
+    id: 'standard',
+    name: 'Standard',
+    credits: 10000,
+    monthly: 42000,
+    annualMonthly: 29000,
+  },
+  {
+    id: 'pro',
+    name: 'Pro',
+    credits: 50000,
+    monthly: 140000,
+    annualMonthly: 98000,
+    featured: true,
+  },
 ]
 
 const formatPrice = (n: number) => `¥${n.toLocaleString()}`
@@ -285,6 +339,7 @@ export const Pricing = () => {
                       {formatPrice(t.price)}
                     </span>
                     <span className="text-[12.5px] text-[#9b99a0]">/ 月</span>
+                    <span className="text-[10.5px] text-[#7e7c83]">税抜</span>
                   </div>
 
                   {/* CTA */}
@@ -301,9 +356,9 @@ export const Pricing = () => {
                             boxShadow: `0 10px 28px -10px rgba(${rgb},0.50)`,
                           }
                         : {
-                            background: `rgba(${rgb},0.10)`,
+                            background: `rgba(${rgb},0.22)`,
                             color: accent,
-                            boxShadow: `inset 0 0 0 1px rgba(${rgb},0.28)`,
+                            boxShadow: `inset 0 0 0 1px rgba(${rgb},0.55)`,
                           }
                     }
                   >
@@ -336,121 +391,23 @@ export const Pricing = () => {
           />
         </div>
 
-        {/* ── ③ SELF-SERVE card (¥29,800 CRM 単独) ────────── */}
-        <div>
+        {/* ── ③ SELF-SERVE: 2プラン × 年/月タブ ────────── */}
+        <SelfServeBlock />
+
+        {/* ── Migration helper (セクション最下部) ── */}
+        <div className="mt-8">
           <div
             className="rounded-[28px] p-[1px] relative"
             style={{
               background:
-                'linear-gradient(135deg, rgba(171,199,255,0.30) 0%, rgba(0,113,227,0.18) 35%, rgba(171,199,255,0.06) 70%, transparent 100%)',
+                'linear-gradient(135deg, rgba(255,193,7,0.22) 0%, rgba(255,193,7,0.05) 60%, transparent 100%)',
             }}
           >
-            <div className="rounded-[27px] bg-dusk fo-glass-rim relative overflow-hidden p-7 md:p-9">
+            <div className="rounded-[27px] bg-dusk fo-glass-rim relative overflow-hidden p-5 md:p-6">
               <div
-                className="absolute -top-24 -left-24 w-72 h-72 rounded-full pointer-events-none"
-                style={{
-                  background: 'radial-gradient(circle, rgba(171,199,255,0.12), transparent 60%)',
-                  filter: 'blur(40px)',
-                }}
-              />
-
-              <div className="relative grid md:grid-cols-[0.85fr,1.4fr] gap-8 items-start">
-                {/* Left: price + CTA */}
-                <div>
-                  <div className="flex items-center gap-2 mb-3 flex-wrap">
-                    <Sparkles size={13} style={{ color: '#abc7ff' }} />
-                    <span
-                      className="font-semibold tracking-[0.02em] text-[12.5px]"
-                      style={{ color: '#abc7ff' }}
-                    >
-                      セルフサーブ · CRM 単独プラン
-                    </span>
-                  </div>
-
-                  <div className="flex items-baseline gap-2 flex-wrap">
-                    <span className="font-display font-bold tracking-[-0.03em] text-[2.4rem] md:text-[2.8rem] leading-[0.95] fo-gradient-text">
-                      ¥29,800
-                    </span>
-                    <span className="text-[#9b99a0] text-[13px] mb-0.5">/ 月</span>
-                    {/* CRM リリース準備中バッジ */}
-                    <span
-                      className="inline-flex items-center gap-1.5 text-[10.5px] font-medium px-2 py-1 rounded-full ml-1 mb-1"
-                      style={{
-                        background: 'rgba(255,193,7,0.10)',
-                        color: '#FFD54F',
-                        boxShadow: 'inset 0 0 0 1px rgba(255,193,7,0.28)',
-                      }}
-                    >
-                      <span
-                        className="w-1.5 h-1.5 rounded-full animate-pulse"
-                        style={{ backgroundColor: '#FFC107' }}
-                      />
-                      CRM リリース準備中
-                    </span>
-                  </div>
-
-                  <div
-                    className="mt-3 flex flex-wrap gap-2"
-                  >
-                    <span
-                      className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5"
-                      style={{
-                        background: 'rgba(171,199,255,0.10)',
-                        boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.22)',
-                      }}
-                    >
-                      <span className="text-[10.5px] uppercase tracking-[0.14em] text-[#9b99a0]">
-                        月間
-                      </span>
-                      <span className="font-display text-[17px] font-bold tabular-nums fo-gradient-text-soft">
-                        10,000
-                      </span>
-                      <span className="text-[11.5px] text-[#c7c5c9]">クレジット (チーム合計)</span>
-                    </span>
-                  </div>
-
-                  <p className="mt-4 text-[12.5px] text-[#9b99a0] leading-[1.7]">
-                    <span className="text-[#e7e5ea] font-semibold">100名まで無料</span>
-                    でチーム全員に。CRM 全機能 + クレジット込み。
-                    <br />
-                    100名超は <span className="text-[#e7e5ea] font-medium">1ライセンス ¥1,000/月</span>{' '}
-                    (1,000cr 込み)。追加クレジット 1,000cr ¥1,000。
-                  </p>
-
-                  <a
-                    href="#waitlist"
-                    className="mt-5 inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-[12.5px] font-medium text-aurora bg-shimmer/30 hover:bg-shimmer/60 transition-colors"
-                  >
-                    先行予約に登録
-                    <ArrowRight size={13} />
-                  </a>
-                </div>
-
-                {/* Right: feature list (8 items, 2-col grid) */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-2">
-                  {selfServeFeats.map((f) => (
-                    <div key={f} className="flex items-start gap-2.5">
-                      <div
-                        className="shrink-0 mt-0.5 w-[16px] h-[16px] rounded-full flex items-center justify-center"
-                        style={{
-                          background: 'rgba(171,199,255,0.14)',
-                          boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.26)',
-                        }}
-                      >
-                        <Check size={10} strokeWidth={3} style={{ color: '#abc7ff' }} />
-                      </div>
-                      <span className="text-[12px] leading-[1.5] text-[#c7c5c9]">{f}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* ── Excel migration helper (戦略カード内に統合) ── */}
-              <div
-                className="relative mt-6 rounded-2xl px-4 py-3.5 md:px-5 md:py-4 flex items-center gap-3.5"
+                className="relative rounded-2xl px-4 py-3.5 md:px-5 md:py-4 flex items-center gap-3.5"
                 style={{
                   background: 'rgba(255,193,7,0.05)',
-                  boxShadow: 'inset 0 0 0 1px rgba(255,193,7,0.20)',
                 }}
               >
                 <div
@@ -473,8 +430,8 @@ export const Pricing = () => {
                   <p className="mt-0.5 text-[12px] text-[#c7c5c9] leading-[1.55]">
                     <span className="text-[#e7e5ea] font-medium">
                       Excel / Spreadsheet / HubSpot / Salesforce
-                    </span>{' '}
-                    からのデータ移行に対応。
+                    </span>
+                    などからのデータ移行に対応。
                     <span className="text-[#9b99a0]">
                       データ構造整理 + 初期セットアップを承ります。
                     </span>
@@ -498,5 +455,318 @@ export const Pricing = () => {
         </div>
       </div>
     </Section>
+  )
+}
+
+// ── セルフサーブ CRM 単独 2プラン (年間 / 月額タブ) ──────────────────────────────
+function SelfServeBlock() {
+  const [billing, setBilling] = useState<'annual' | 'monthly'>('annual')
+
+  return (
+    <div>
+      {/* Header row: title + tab */}
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-5">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Sparkles size={14} style={{ color: '#abc7ff' }} />
+          <span
+            className="font-semibold tracking-[0.02em] text-[13px]"
+            style={{ color: '#abc7ff' }}
+          >
+            セルフサーブ · CRM 単独プラン
+          </span>
+          <span
+            className="inline-flex items-center gap-1.5 text-[10.5px] font-medium px-2 py-0.5 rounded-full ml-1"
+            style={{
+              background: 'rgba(255,193,7,0.10)',
+              color: '#FFD54F',
+              boxShadow: 'inset 0 0 0 1px rgba(255,193,7,0.28)',
+            }}
+          >
+            <span
+              className="w-1.5 h-1.5 rounded-full animate-pulse"
+              style={{ backgroundColor: '#FFC107' }}
+            />
+            CRM リリース準備中
+          </span>
+        </div>
+
+        {/* Billing toggle (年間 / 月額) */}
+        <div
+          className="inline-flex items-center gap-1 rounded-full p-1 self-start sm:self-auto"
+          style={{
+            background: 'rgba(171,199,255,0.06)',
+            boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.18)',
+          }}
+        >
+          {(['annual', 'monthly'] as const).map((b) => {
+            const active = billing === b
+            return (
+              <button
+                key={b}
+                type="button"
+                onClick={() => setBilling(b)}
+                className="relative inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[11.5px] font-medium transition-colors"
+                style={{
+                  background: active ? 'linear-gradient(135deg, #abc7ff, #0071e3)' : 'transparent',
+                  color: active ? '#0a0a0c' : '#9b99a0',
+                }}
+              >
+                {b === 'annual' ? '年間' : '月額'}
+                {b === 'annual' && (
+                  <span
+                    className="text-[9.5px] font-mono uppercase tracking-[0.10em] px-1.5 py-0.5 rounded-full"
+                    style={{
+                      background: active ? 'rgba(10,10,12,0.18)' : 'rgba(141,255,201,0.16)',
+                      color: active ? '#0a0a0c' : '#8dffc9',
+                    }}
+                  >
+                    約 30% OFF
+                  </span>
+                )}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Plan cards */}
+      <div className="grid md:grid-cols-2 gap-5">
+        {selfServePlans.map((p) => {
+          const displayPrice = billing === 'annual' ? p.annualMonthly : p.monthly
+          return (
+            <div
+              key={p.id}
+              className="rounded-[24px] p-[1px] relative flex"
+              style={{
+                background: p.featured
+                  ? 'linear-gradient(135deg, rgba(171,199,255,0.55) 0%, rgba(0,113,227,0.22) 45%, rgba(171,199,255,0.06) 75%, transparent 100%)'
+                  : 'linear-gradient(135deg, rgba(171,199,255,0.25) 0%, rgba(171,199,255,0.05) 60%, transparent 100%)',
+                boxShadow: p.featured
+                  ? '0 24px 60px -20px rgba(171,199,255,0.32), 0 0 0 1px rgba(171,199,255,0.10)'
+                  : '0 10px 30px -15px rgba(0,0,0,0.5), 0 0 0 1px rgba(171,199,255,0.04)',
+              }}
+            >
+              <div className="rounded-[23px] bg-dusk fo-glass-rim relative overflow-hidden p-6 md:p-7 flex flex-col w-full">
+                <div
+                  className="absolute -top-24 -right-20 w-56 h-56 rounded-full pointer-events-none"
+                  style={{
+                    background: p.featured
+                      ? 'radial-gradient(circle, rgba(171,199,255,0.22), transparent 60%)'
+                      : 'radial-gradient(circle, rgba(171,199,255,0.10), transparent 60%)',
+                    filter: 'blur(45px)',
+                  }}
+                />
+
+                {/* Plan name */}
+                <div className="relative">
+                  <h4 className="font-display font-semibold text-[1.05rem] text-[#e7e5ea]">
+                    {p.name}
+                  </h4>
+                </div>
+
+                {/* Price */}
+                <div className="mt-4 flex items-baseline gap-2 flex-wrap relative">
+                  <span className="font-display font-bold tracking-[-0.03em] text-[2rem] md:text-[2.4rem] leading-[0.95] fo-gradient-text">
+                    {formatPrice(displayPrice)}
+                  </span>
+                  <span className="text-[#9b99a0] text-[12.5px] mb-0.5">/ 月</span>
+                  <span className="text-[10.5px] text-[#7e7c83] mb-0.5">税抜</span>
+                  {billing === 'annual' && (
+                    <span className="text-[11px] text-[#7e7c83] line-through mb-0.5 ml-1 tabular-nums">
+                      {formatPrice(p.monthly)}
+                    </span>
+                  )}
+                </div>
+
+                {/* Agents + Credits chip */}
+                <div className="mt-5 flex items-center gap-2 flex-wrap">
+                  <span
+                    className="inline-flex items-center gap-2.5 rounded-full pl-2.5 pr-4 py-1.5 transition-all duration-200 hover:-translate-y-[1px]"
+                    style={
+                      p.featured
+                        ? {
+                            background:
+                              'linear-gradient(135deg, rgba(171,199,255,0.22), rgba(171,199,255,0.10))',
+                            boxShadow:
+                              'inset 0 0 0 1px rgba(171,199,255,0.50), 0 4px 14px -8px rgba(171,199,255,0.30)',
+                          }
+                        : {
+                            background: 'rgba(171,199,255,0.06)',
+                            boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.18)',
+                          }
+                    }
+                  >
+                    {/* 5 agent orbs */}
+                    <span className="inline-flex items-center -space-x-1.5">
+                      {(Object.keys(AGENTS) as AgentKey[]).map((k) => (
+                        <Orb key={k} color={AGENTS[k].color} size={11} glow={0.6} />
+                      ))}
+                    </span>
+                    <span
+                      className="text-[11.5px] font-semibold leading-none"
+                      style={{ color: p.featured ? '#e7e5ea' : '#c7c5c9' }}
+                    >
+                      5 エージェント
+                    </span>
+                    <span
+                      className="text-[10.5px] leading-none"
+                      style={{ color: '#7e7c83' }}
+                    >
+                      ・
+                    </span>
+                    <span className="font-display text-[15.5px] font-bold tabular-nums fo-gradient-text-soft leading-none">
+                      {p.credits.toLocaleString()}
+                    </span>
+                    <span
+                      className="text-[11px] leading-none"
+                      style={{ color: p.featured ? '#cfdcff' : '#9b99a0' }}
+                    >
+                      チームクレジット
+                    </span>
+                  </span>
+                </div>
+
+                {/* CTA */}
+                <a
+                  href={SPIR_BOOKING_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-5 inline-flex items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-[13px] font-semibold transition-all duration-200 hover:-translate-y-0.5 w-full"
+                  style={{
+                    background: 'linear-gradient(135deg, #8fb0e8, #1e6fcc)',
+                    color: '#0a0a0c',
+                    boxShadow: '0 6px 18px -10px rgba(171,199,255,0.32)',
+                  }}
+                >
+                  先行予約に登録 <ArrowRight size={13} />
+                </a>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Shared feature list — 5 エージェント別 */}
+      <div
+        className="mt-6 rounded-2xl px-5 py-6 md:px-6 md:py-7"
+        style={{
+          background: 'rgba(171,199,255,0.04)',
+          boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.10)',
+        }}
+      >
+        <div className="text-[10.5px] uppercase tracking-[0.16em] text-[#9b99a0] mb-5">
+          両プラン共通 · 5 エージェント全機能
+        </div>
+
+        {/* Agents grid (5 columns on lg, fluid below) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          {agentFeats.map(({ key, items }) => {
+            const a = AGENTS[key]
+            return (
+              <div
+                key={key}
+                className="rounded-xl px-3.5 py-3.5"
+                style={{
+                  background: `linear-gradient(180deg, ${a.color}10, transparent 70%)`,
+                  boxShadow: `inset 0 0 0 1px ${a.color}24`,
+                }}
+              >
+                <div className="flex items-center gap-2 mb-2.5">
+                  <Orb color={a.color} size={11} glow={0.7} />
+                  <span
+                    className="text-[12.5px] font-semibold tracking-[0.01em]"
+                    style={{ color: a.color }}
+                  >
+                    {a.name.replace(' Agent', '')}
+                  </span>
+                </div>
+                <ul className="space-y-1.5">
+                  {items.map((f) => (
+                    <li
+                      key={f}
+                      className="flex items-start gap-1.5 text-[11.5px] leading-[1.45] text-[#c7c5c9]"
+                    >
+                      <Check
+                        size={10}
+                        strokeWidth={3}
+                        className="shrink-0 mt-[3px]"
+                        style={{ color: a.color, opacity: 0.85 }}
+                      />
+                      <span>{f}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* 外部連携 (エージェントカードと基盤セクションの中間) */}
+        <div className="mt-5 flex items-center gap-2.5 flex-wrap">
+          <span className="text-[10.5px] uppercase tracking-[0.16em] text-[#9b99a0] shrink-0">
+            外部連携
+          </span>
+          {['Gmail', 'Google Calendar', 'Notion 議事録'].map((s) => (
+            <span
+              key={s}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] text-[#c7c5c9]"
+              style={{
+                background: 'rgba(171,199,255,0.06)',
+                boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.18)',
+              }}
+            >
+              <span
+                className="inline-block w-1.5 h-1.5 rounded-full"
+                style={{ background: '#8dffc9', boxShadow: '0 0 6px #8dffc9aa' }}
+              />
+              {s}
+            </span>
+          ))}
+          <span className="text-[10.5px] text-[#7e7c83]">
+            その他カスタム連携は都度ご相談で対応可能
+          </span>
+        </div>
+
+        {/* Platform features (5 エージェント横断のデータ基盤・連携) */}
+        <div
+          className="mt-5 pt-5"
+          style={{ borderTop: '1px solid rgba(171,199,255,0.10)' }}
+        >
+          <div className="flex items-center gap-2 flex-wrap mb-3">
+            <span
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold tracking-[0.02em]"
+              style={{
+                background:
+                  'linear-gradient(135deg, rgba(171,199,255,0.20), rgba(171,199,255,0.06))',
+                color: '#cfdcff',
+                boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.36)',
+              }}
+            >
+              <span className="font-mono text-[12px] leading-none">＋</span>
+              企業DB
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-2">
+            {platformFeats.map((f) => (
+              <div key={f.label} className="flex items-start gap-2.5">
+                <div
+                  className="shrink-0 mt-0.5 w-[16px] h-[16px] rounded-full flex items-center justify-center"
+                  style={{
+                    background: 'rgba(171,199,255,0.14)',
+                    boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.26)',
+                  }}
+                >
+                  <Check size={10} strokeWidth={3} style={{ color: '#abc7ff' }} />
+                </div>
+                <span className="text-[12px] leading-[1.5] text-[#c7c5c9]">
+                  <span className="text-[#e7e5ea] font-medium">{f.label}</span>
+                  <span className="text-[#9b99a0]"> — {f.detail}</span>
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }

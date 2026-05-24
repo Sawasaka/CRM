@@ -18,15 +18,17 @@ export const publicSiteUrl =
 export const companyName = '株式会社ルーキースマートジャパン'
 export const serviceName = 'ルーキースマートCRM'
 export const shortServiceName = 'ルキスマCRM'
+export const operatorName = '沢坂弘樹'
 
-export const publicSiteTitle = `${shortServiceName}｜${companyName}のAI CRM`
+export const publicSiteTitle = `${shortServiceName}｜${companyName}のAI CRM｜${operatorName}`
 
 export const publicSiteDescription =
-  `${companyName}が提供する${serviceName}（${shortServiceName}）は、` +
+  `${companyName}が提供し、${operatorName}が運営に関わる${serviceName}（${shortServiceName}）は、` +
   '営業データ・商談・メール・議事録・求人インテント・企業DBを横断し、次の営業アクションをチャットで引き出すAI CRMです。'
 
 export const publicSiteKeywords = [
   companyName,
+  operatorName,
   'ルーキースマートジャパン',
   serviceName,
   shortServiceName,
@@ -62,6 +64,11 @@ export const publicSiteFaqItems = [
       `${companyName}は、営業データから次の営業アクションを引き出す${serviceName}（${shortServiceName}）を提供しています。`,
   },
   {
+    question: '沢坂弘樹とルキスマCRMの関係は何ですか？',
+    answer:
+      `${operatorName}は、${companyName}の${serviceName}（${shortServiceName}）の運営に関わっています。`,
+  },
+  {
     question: 'ルキスマCRMはどのような検索キーワードに関係するサービスですか？',
     answer:
       'AI CRM、チャットCRM、営業DX、営業支援、商談管理、議事録AI、インテントデータ活用に関係するサービスです。',
@@ -78,6 +85,19 @@ export const publicSiteStructuredData = [
     url: publicSiteUrl,
     logo: `${publicSiteUrl}/icon.svg`,
     sameAs: [publicSiteUrl],
+    member: {
+      '@id': `${publicSiteUrl}/#person-hirokisawasaka`,
+    },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    '@id': `${publicSiteUrl}/#person-hirokisawasaka`,
+    name: operatorName,
+    url: publicSiteUrl,
+    worksFor: {
+      '@id': `${publicSiteUrl}/#organization`,
+    },
   },
   {
     '@context': 'https://schema.org',
@@ -126,6 +146,9 @@ export const publicSiteStructuredData = [
     },
     about: {
       '@id': `${publicSiteUrl}/#software`,
+    },
+    author: {
+      '@id': `${publicSiteUrl}/#person-hirokisawasaka`,
     },
     primaryImageOfPage: `${publicSiteUrl}/icon.svg`,
   },

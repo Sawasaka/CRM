@@ -1,6 +1,10 @@
 import { Sparkles, ArrowRight, Calendar } from 'lucide-react'
 import { Eyebrow, Section } from '../atoms'
 
+// Spir 予約 URL (Nav / Pricing と統一)
+const SPIR_BOOKING_URL =
+  'https://app.spirinc.com/t/3u_FXTG5abaFIZ-D7as8v/as/5j4iMsFHgutg6an7CRg9o/confirm'
+
 /**
  * CUSTOMER VOICE — 現在リリース前のため「先行予約受付中」プレースホルダーを表示。
  * 導入実績が貯まったら従来の声カードに差し替える想定。
@@ -45,15 +49,15 @@ export const CustomerVoice = () => (
               ルキスマCRM はリリース準備中です。
             </h3>
 
-            <p className="mt-5 text-[#c7c5c9] text-[1rem] md:text-[1.05rem] leading-relaxed max-w-2xl mx-auto">
-              先行予約にご登録いただいた企業様から、順次ご案内・先行アクセスをご提供します。
-              <br className="hidden md:block" />
-              現場で使いながら一緒にプロダクトを磨いていただける企業様を募集中です。
+            <p className="mt-5 text-[#c7c5c9] text-[1rem] md:text-[1.05rem] leading-relaxed max-w-3xl mx-auto">
+              先行予約にご登録いただいた企業様から、順次ご案内・先行アクセスをご提供します。現場で使いながら一緒にプロダクトを磨いていただける企業様を募集中です。
             </p>
 
             <div className="mt-8 flex items-center justify-center gap-3 flex-wrap">
               <a
-                href="#waitlist-form"
+                href={SPIR_BOOKING_URL}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-5 py-3 rounded-lg text-sm font-semibold text-[#0a0a0c] transition-transform hover:-translate-y-0.5"
                 style={{
                   background: 'linear-gradient(135deg, #abc7ff, #0071e3)',
@@ -64,16 +68,15 @@ export const CustomerVoice = () => (
                 <ArrowRight size={14} strokeWidth={2.5} />
               </a>
               <a
-                href="#contact"
+                href={SPIR_BOOKING_URL}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-5 py-3 rounded-lg text-sm font-medium text-aurora bg-shimmer/30 hover:bg-shimmer/60 transition-colors"
               >
                 導入相談 →
               </a>
             </div>
 
-            <div className="mt-6 text-[11px] text-[#7e7c83]">
-              先行登録企業には、機能要望の優先反映 + リリース時の優先アクセス + 導入サポート無償 などの特典をご用意しています。
-            </div>
           </div>
         </div>
       </div>

@@ -1,11 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Bell, Plus, MessageCircle } from 'lucide-react'
-import { ObsLogo } from '@/components/obsidian'
+import { Bell, Plus } from 'lucide-react'
 import { HeaderSearch } from './HeaderSearch'
 import { SupportPanel } from './SupportPanel'
 import { NotificationPanel } from './NotificationPanel'
@@ -96,15 +94,6 @@ export function Header() {
           transitionTimingFunction: 'var(--ease-liquid)',
         }}
       >
-        {/* ── Service brand (HOME = チャット画面 へ戻る) ── */}
-        <Link
-          href="/"
-          aria-label="ルキスマCRM ホーム"
-          className="flex items-center mr-1 transition-opacity duration-150 hover:opacity-85"
-        >
-          <ObsLogo size={28} />
-        </Link>
-
         {/* ── Global search (CRM 横断) ── */}
         <HeaderSearch />
 

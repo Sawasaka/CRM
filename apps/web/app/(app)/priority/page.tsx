@@ -212,8 +212,8 @@ export default function DevelopmentPriorityPage() {
     <ObsPageShell>
       <div className="w-full px-8 xl:px-12 2xl:px-16 pb-24">
         <ObsHero
-          eyebrow="Development Priority"
-          title="開発優先度"
+          eyebrow="Voice of Customer"
+          title="顧客の声"
           caption={`議事録 ${overall.totalDocs} 件 / ${overall.totalCompanies} 社の発言から自動抽出。クリックで議事録の引用とリンクが見られます。`}
         />
 

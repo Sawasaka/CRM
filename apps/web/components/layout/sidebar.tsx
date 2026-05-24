@@ -7,10 +7,7 @@ import { useSession } from 'next-auth/react'
 import {
   PenSquare,
   Search,
-  CreditCard,
-  Plug,
   ChevronUp,
-  Users,
   MoreHorizontal,
   Pin,
   Pencil,
@@ -18,9 +15,9 @@ import {
   PanelLeft,
   Activity,
   ShieldAlert,
-  Wrench,
+  Settings,
 } from 'lucide-react'
-import { deleteChatRecord, renameChatRecord } from '@/lib/chat-history/store'
+import { deleteChatRecord, getChat, renameChatRecord } from '@/lib/chat-history/store'
 import { useChatHistory } from '@/lib/chat-history/use-chat-history'
 
 // ─── ワークスペースナビ項目 ─────────────────────────────────────────────────
@@ -40,8 +37,8 @@ const NAV_ITEMS: NavItemDef[] = [
   { href: '/tasks',     label: 'タスク一覧',       initial: 'S', color: '#abc7ff' },
   { href: '/dashboard', label: 'アクションボード', initial: 'S', color: '#abc7ff' },
   { href: '/tickets',   label: '問い合わせチケット', initial: 'C', color: '#ff8dcf' },
-  { href: '/priority',  label: '開発優先度',       initial: 'P', color: '#8dffc9' },
   { href: '/mail',      label: 'メール配信',       initial: 'M', color: '#ffcf4a' },
+  { href: '/priority',  label: '顧客の声',         initial: 'P', color: '#8dffc9' },
   { href: '/knowledge', label: 'ナレッジ',         initial: 'K', color: '#c8b9ff' },
 ]
 
@@ -102,7 +99,6 @@ function TopNavItem({
 // ─── ワークスペースナビ用 Link アイテム ─────────────────────────────────────
 function WorkspaceNavItem({
   href,
-  initial,
   color,
   label,
   active,
@@ -130,15 +126,22 @@ function WorkspaceNavItem({
           transitionTimingFunction: 'var(--ease-liquid)',
         }}
       >
+        {/* LP Pricing と同じ Orb スタイルのドット(放射グラデーション + 二重グロー) */}
         <span
-          className="inline-flex items-center justify-center w-[20px] h-[20px] rounded-[5px] text-[10px] font-semibold tabular-nums shrink-0"
-          style={{
-            backgroundColor: active ? `${color}28` : `${color}14`,
-            color,
-            boxShadow: `inset 0 0 0 1px ${color}38`,
-          }}
+          className="inline-flex items-center justify-center w-[20px] h-[20px] shrink-0"
+          aria-hidden
         >
-          {initial}
+          <span
+            className="inline-block rounded-full"
+            style={{
+              width: 11,
+              height: 11,
+              background: `radial-gradient(circle at 30% 30%, #ffffff 0%, ${color} 35%, ${color}80 80%)`,
+              boxShadow: active
+                ? `0 0 10px ${color}cc, 0 0 24px ${color}66`
+                : `0 0 8px ${color}aa, 0 0 20px ${color}55`,
+            }}
+          />
         </span>
         <span
           className="text-[13px] tracking-[-0.01em] leading-none"
@@ -384,21 +387,18 @@ function ChatItem({
 
 // ─── User menu (drop-up) ────────────────────────────────────────────────────
 type MenuItem = { href: string; icon: React.ElementType; label: string }
-type MenuSection = { title?: string; items: MenuItem[] }
+type MenuSection = { title?: string; items: MenuItem[]; horizontal?: boolean }
 
 const USER_MENU_SECTIONS: MenuSection[] = [
   {
+    title: 'クレジット・メンバー・連携',
     items: [
-      { href: '/subscription', icon: CreditCard, label: 'プラン・クレジット' },
-      { href: '/subscription?tab=members', icon: Users, label: 'メンバー管理' },
-      { href: '/subscription#feature-requests', icon: Wrench, label: '機能リクエスト' },
-      { href: '/settings/integrations', icon: Plug, label: '連携設定' },
+      { href: '/subscription', icon: Settings, label: '設定' },
     ],
   },
   {
     title: 'コンプライアンス',
     items: [
-      { href: '/settings/billing', icon: CreditCard, label: '支払い履歴' },
       { href: '/settings/audit-log', icon: Activity, label: '監査ログ' },
     ],
   },
@@ -410,13 +410,29 @@ const ADMIN_MENU_SECTION: MenuSection = {
   title: '開発者専用',
   items: [
     { href: '/admin/customer-ops', icon: ShieldAlert, label: 'Customer Operations' },
-    { href: '/admin/feature-requests', icon: Wrench, label: '機能リクエスト管理' },
   ],
 }
 
-// MVP: モック (本番ではauth context + env でテナントID判定)
 function useIsBGMTenant(): boolean {
-  return true
+  const [allowed, setAllowed] = useState(false)
+
+  useEffect(() => {
+    let mounted = true
+    fetch('/api/admin/customer-ops/access', { cache: 'no-store' })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { allowed?: boolean } | null) => {
+        if (mounted) setAllowed(Boolean(data?.allowed))
+      })
+      .catch(() => {
+        if (mounted) setAllowed(false)
+      })
+
+    return () => {
+      mounted = false
+    }
+  }, [])
+
+  return allowed
 }
 
 function UserMenu({ userName, userInitial }: { userName: string; userInitial: string }) {
@@ -461,39 +477,78 @@ function UserMenu({ userName, userInitial }: { userName: string; userInitial: st
                   style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
                 />
               )}
-              {/* セクションタイトル */}
-              {section.title && (
-                <div
-                  className="px-3 pt-1 pb-0.5 text-[10px] font-medium uppercase tracking-[0.1em]"
-                  style={{ color: 'var(--color-obs-text-subtle)' }}
-                >
-                  {section.title}
-                </div>
+              {/* horizontal セクション (タイトル先、項目を1行で表示) */}
+              {section.horizontal ? (
+                <>
+                  {section.title && (
+                    <div
+                      className="px-3 pt-1 pb-0.5 text-[10px] font-medium uppercase tracking-[0.1em]"
+                      style={{ color: 'var(--color-obs-text-subtle)' }}
+                    >
+                      {section.title}
+                    </div>
+                  )}
+                  <div className="flex items-center gap-1 mx-1 px-1 py-1">
+                    {section.items.map((m) => (
+                      <Link
+                        key={m.href}
+                        href={m.href}
+                        onClick={() => setOpen(false)}
+                        className="flex-1 flex items-center justify-center px-2 py-1.5 rounded-[6px] transition-colors duration-100"
+                        style={{ color: 'var(--color-obs-text)' }}
+                        onMouseOver={(e) => {
+                          ;(e.currentTarget as HTMLAnchorElement).style.backgroundColor =
+                            'var(--color-obs-surface-low)'
+                        }}
+                        onMouseOut={(e) => {
+                          ;(e.currentTarget as HTMLAnchorElement).style.backgroundColor =
+                            'transparent'
+                        }}
+                      >
+                        <span className="text-[12px] tracking-[-0.01em] whitespace-nowrap">
+                          {m.label}
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* 通常セクション (タイトル先、項目後) */}
+                  {section.title && (
+                    <div
+                      className="px-3 pt-1 pb-0.5 text-[10px] font-medium uppercase tracking-[0.1em]"
+                      style={{ color: 'var(--color-obs-text-subtle)' }}
+                    >
+                      {section.title}
+                    </div>
+                  )}
+                  {section.items.map((m) => (
+                    <Link
+                      key={m.href}
+                      href={m.href}
+                      onClick={() => setOpen(false)}
+                      className="flex items-center gap-2.5 px-3 py-[7px] mx-1 rounded-[6px] transition-colors duration-100"
+                      style={{ color: 'var(--color-obs-text)' }}
+                      onMouseOver={(e) => {
+                        ;(e.currentTarget as HTMLAnchorElement).style.backgroundColor =
+                          'var(--color-obs-surface-low)'
+                      }}
+                      onMouseOut={(e) => {
+                        ;(e.currentTarget as HTMLAnchorElement).style.backgroundColor =
+                          'transparent'
+                      }}
+                    >
+                      <m.icon
+                        size={14}
+                        strokeWidth={1.9}
+                        style={{ color: 'var(--color-obs-text-muted)', flexShrink: 0 }}
+                      />
+                      <span className="text-[13px] tracking-[-0.01em]">{m.label}</span>
+                    </Link>
+                  ))}
+                </>
               )}
-              {/* セクション内のアイテム */}
-              {section.items.map((m) => (
-                <Link
-                  key={m.href}
-                  href={m.href}
-                  onClick={() => setOpen(false)}
-                  className="flex items-center gap-2.5 px-3 py-[7px] mx-1 rounded-[6px] transition-colors duration-100"
-                  style={{ color: 'var(--color-obs-text)' }}
-                  onMouseOver={(e) => {
-                    ;(e.currentTarget as HTMLAnchorElement).style.backgroundColor =
-                      'var(--color-obs-surface-low)'
-                  }}
-                  onMouseOut={(e) => {
-                    ;(e.currentTarget as HTMLAnchorElement).style.backgroundColor = 'transparent'
-                  }}
-                >
-                  <m.icon
-                    size={14}
-                    strokeWidth={1.9}
-                    style={{ color: 'var(--color-obs-text-muted)', flexShrink: 0 }}
-                  />
-                  <span className="text-[13px] tracking-[-0.01em]">{m.label}</span>
-                </Link>
-              ))}
             </div>
           ))}
         </div>
@@ -587,13 +642,22 @@ export function Sidebar() {
   }, [menuOpenId])
 
   const visibleChats = useMemo(() => {
-    return [...chats].sort((a, b) => {
+    const list = [...chats]
+    // URL に ?chat=<id> があるのに list に存在しない場合、
+    // localStorage を直接読み込んで補完する。
+    // (useChatHistory の同期が遅れたり、page.tsx 側の upsertChat 直後の
+    //  レンダーで chats が空のまま表示されるのを防ぐための fallback)
+    if (activeChatId && !list.some((c) => c.id === activeChatId)) {
+      const fallback = getChat(activeChatId)
+      if (fallback) list.unshift(fallback)
+    }
+    return list.sort((a, b) => {
       const ap = pinnedIds.has(a.id) ? 1 : 0
       const bp = pinnedIds.has(b.id) ? 1 : 0
       if (ap !== bp) return bp - ap
       return a.updatedAt < b.updatedAt ? 1 : -1
     })
-  }, [chats, pinnedIds])
+  }, [chats, pinnedIds, activeChatId])
 
   const isHomePathname = pathname === '/'
   const isNavActive = (href: string) =>

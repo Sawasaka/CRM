@@ -15,7 +15,7 @@ export const UseCases = () => {
     {
       eyebrow: 'CS／サポート／PDM', color: '#ff8dcf',
       title: 'チケット → ナレッジ → 機能要望。',
-      body: 'Customer Agent と PDM Agent が連携。チケット対応とナレッジ蓄積、要望機能の集計まで同時進行。PdM 会議が半減します。',
+      body: 'Customer Agent と Product Agent が連携。チケット対応とナレッジ蓄積、要望機能の集計まで同時進行。PdM 会議が半減します。',
     },
   ]
   return (

@@ -26,7 +26,7 @@ export const AGENTS: Record<AgentKey, AgentMeta> = {
   marketing: { name: 'Marketing Agent', initial: 'M', color: '#ffcf4a', token: 'amber',  desc: 'インテント検知・ナーチャリング起動・キャンペーン実行' },
   support:   { name: 'Customer Agent',  initial: 'C', color: '#ff8dcf', token: 'coral',  desc: 'チケット1次回答・有人エスカレーション・SLA管理' },
   helpdesk:  { name: 'Knowledge Agent',  initial: 'K', color: '#c8b9ff', token: 'lilac',  desc: '社内Q&A即答・ナレッジ自動蓄積・継続チューニング' },
-  pdm:       { name: 'PDM Agent',       initial: 'P', color: '#8dffc9', token: 'mint',   desc: '議事録から課題抽出・優先度スコア・ロードマップ提案' },
+  pdm:       { name: 'Product Agent',   initial: 'P', color: '#8dffc9', token: 'mint',   desc: '議事録から課題抽出・優先度スコア・ロードマップ提案' },
 }
 
 // ---------- Eyebrow chip ----------

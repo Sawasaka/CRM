@@ -94,7 +94,7 @@ const AGENTS_DATA: AgentEntry[] = [
   },
   {
     id: 'pdm',
-    name: 'PDM Agent',
+    name: 'Product Agent',
     accent: '#8dffc9',
     index: '05',
     tagline: '顧客の声から、次の機能が立ち上がる。',
