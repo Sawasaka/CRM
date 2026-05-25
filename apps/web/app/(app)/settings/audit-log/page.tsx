@@ -318,26 +318,6 @@ export default function AuditLogPage() {
   const [periodFilter, setPeriodFilter] = useState<'24h' | '7d' | '30d' | '1y' | 'all'>('30d')
   const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null)
 
-  // 特権管理者以外はアクセス不可
-  if (!isSuperAdmin) {
-    return (
-      <ObsPageShell>
-        <div className="w-full px-8 py-16 flex flex-col items-center justify-center gap-3">
-          <ShieldAlert size={48} style={{ color: '#FFC107' }} />
-          <h2
-            className="font-[family-name:var(--font-display)] text-xl font-semibold"
-            style={{ color: 'var(--color-obs-text)' }}
-          >
-            アクセス権限がありません
-          </h2>
-          <p className="text-[13px]" style={{ color: 'var(--color-obs-text-muted)' }}>
-            監査ログは特権管理者(オーナー)のみが閲覧できます。
-          </p>
-        </div>
-      </ObsPageShell>
-    )
-  }
-
   const filteredLogs = useMemo(() => {
     const now = new Date()
     const periodDays: Record<typeof periodFilter, number> = {
@@ -381,6 +361,26 @@ export default function AuditLogPage() {
     })
     return counts
   }, [])
+
+  // 特権管理者以外はアクセス不可
+  if (!isSuperAdmin) {
+    return (
+      <ObsPageShell>
+        <div className="w-full px-8 py-16 flex flex-col items-center justify-center gap-3">
+          <ShieldAlert size={48} style={{ color: '#FFC107' }} />
+          <h2
+            className="font-[family-name:var(--font-display)] text-xl font-semibold"
+            style={{ color: 'var(--color-obs-text)' }}
+          >
+            アクセス権限がありません
+          </h2>
+          <p className="text-[13px]" style={{ color: 'var(--color-obs-text-muted)' }}>
+            監査ログは特権管理者(オーナー)のみが閲覧できます。
+          </p>
+        </div>
+      </ObsPageShell>
+    )
+  }
 
   return (
     <ObsPageShell>

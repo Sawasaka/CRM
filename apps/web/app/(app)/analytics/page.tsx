@@ -791,12 +791,12 @@ export default function AnalyticsPage() {
   const totalLeads = LEAD_SOURCES.reduce((s, x) => s + x.leads, 0)
   const totalWon   = LEAD_SOURCES.reduce((s, x) => s + x.won, 0)
   const avgWinRate = Math.round((totalWon / LEAD_SOURCES.reduce((s, x) => s + x.deals, 0)) * 100)
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const bestROI = [...LEAD_SOURCES].sort((a, b) => {
+  const roiSorted = [...LEAD_SOURCES].sort((a, b) => {
     const ra = parseInt(costMap[a.id] || '0') > 0 ? (a.won * a.avgDealAmount) / parseInt(costMap[a.id] || '0') : 0
     const rb = parseInt(costMap[b.id] || '0') > 0 ? (b.won * b.avgDealAmount) / parseInt(costMap[b.id] || '0') : 0
     return rb - ra
-  })[0]!
+  })
+  const bestROI = roiSorted[0] ?? LEAD_SOURCES[0]!
 
   const TABS: { key: AnalyticsTab; label: string; icon: React.ElementType }[] = [
     { key: 'channel',  label: 'IS経路分析',      icon: TrendingUp },

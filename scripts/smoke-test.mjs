@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { spawn } from 'node:child_process'
+import { rm } from 'node:fs/promises'
 import net from 'node:net'
 import process from 'node:process'
 import { setTimeout as sleep } from 'node:timers/promises'
@@ -8,6 +9,7 @@ import { fileURLToPath } from 'node:url'
 import { chromium } from 'playwright'
 
 const rootDir = fileURLToPath(new URL('..', import.meta.url))
+const webNextDir = fileURLToPath(new URL('../apps/web/.next', import.meta.url))
 const routes = [
   '/',
   '/lp',
@@ -218,6 +220,7 @@ async function checkApis(baseUrl) {
 }
 
 async function main() {
+  await rm(webNextDir, { recursive: true, force: true })
   const port = await findFreePort(Number(process.env.SMOKE_PORT ?? 3302))
   const baseUrl = `http://localhost:${port}`
   const server = startWebServer(port)

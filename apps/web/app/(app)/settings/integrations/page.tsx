@@ -1,6 +1,7 @@
 'use client'
 
 import { type FormEvent, useEffect, useState } from 'react'
+import Image from 'next/image'
 import {
   Calendar as CalendarLucide,
   Check,
@@ -953,7 +954,7 @@ function OfficialIcon({
   const [errored, setErrored] = useState(false)
   if (errored) return <>{fallback}</>
   return (
-    <img
+    <Image
       src={src}
       alt={alt}
       width={size}

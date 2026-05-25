@@ -2,12 +2,11 @@
 
 /**
  * Footer 内に表示するお問い合わせフォーム。
- * /api/contact に POST し、成功時は /lp/thanks に遷移する。
+ * /api/contact に POST し、成功時はページ遷移せず中央モーダルで日程調整CTAを表示する。
  */
 
-import { useState, type FormEvent } from 'react'
-import { useRouter } from 'next/navigation'
-import { Send, Loader2 } from 'lucide-react'
+import { useEffect, useState, type FormEvent } from 'react'
+import { Send, Loader2, CalendarCheck, Check, X, ArrowRight } from 'lucide-react'
 
 interface FieldState {
   company: string
@@ -23,16 +22,34 @@ const INITIAL: FieldState = {
   message: '',
 }
 
+const SPIR_BOOKING_URL =
+  'https://app.spirinc.com/t/3u_FXTG5abaFIZ-D7as8v/as/5j4iMsFHgutg6an7CRg9o/confirm'
+
 export const ContactForm = () => {
-  const router = useRouter()
   const [values, setValues] = useState<FieldState>(INITIAL)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
 
   const update =
     (key: keyof FieldState) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       setValues((v) => ({ ...v, [key]: e.target.value }))
     }
+
+  // ESC でモーダルを閉じる + body スクロール停止
+  useEffect(() => {
+    if (!success) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSuccess(false)
+    }
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', onKey)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prevOverflow
+    }
+  }, [success])
 
   const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -53,14 +70,17 @@ export const ContactForm = () => {
         const j = await res.json().catch(() => ({}))
         throw new Error(j.error || `送信に失敗しました (HTTP ${res.status})`)
       }
-      router.push('/lp/thanks')
+      setValues(INITIAL)
+      setSuccess(true)
     } catch (err) {
       setError(err instanceof Error ? err.message : '送信に失敗しました。')
+    } finally {
       setSubmitting(false)
     }
   }
 
   return (
+    <>
     <form
       onSubmit={onSubmit}
       className="rounded-2xl p-5 md:p-6 space-y-3.5"
@@ -149,6 +169,119 @@ export const ContactForm = () => {
         </button>
       </div>
     </form>
+
+    {success && <SuccessModal onClose={() => setSuccess(false)} />}
+    </>
+  )
+}
+
+function SuccessModal({ onClose }: { onClose: () => void }) {
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center px-4 py-8"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="contact-success-title"
+    >
+      {/* バックドロップ */}
+      <button
+        type="button"
+        aria-label="閉じる"
+        onClick={onClose}
+        className="absolute inset-0 cursor-default"
+        style={{
+          background: 'rgba(10,10,12,0.72)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+        }}
+      />
+
+      {/* カード */}
+      <div
+        className="relative w-full max-w-[460px] rounded-3xl px-7 py-9 text-center animate-[fadeInUp_0.25s_ease-out]"
+        style={{
+          background:
+            'linear-gradient(180deg, rgba(28,28,32,0.96) 0%, rgba(20,20,23,0.96) 100%)',
+          boxShadow:
+            'inset 0 0 0 1px rgba(171,199,255,0.18), 0 30px 60px -20px rgba(0,0,0,0.6), 0 0 80px rgba(171,199,255,0.08)',
+        }}
+      >
+        {/* 閉じる */}
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="閉じる"
+          className="absolute top-3.5 right-3.5 w-8 h-8 inline-flex items-center justify-center rounded-full text-[#9b99a0] hover:text-[#e7e5ea] transition-colors"
+          style={{ background: 'rgba(255,255,255,0.04)' }}
+        >
+          <X size={15} strokeWidth={2.2} />
+        </button>
+
+        {/* チェック */}
+        <div
+          className="mx-auto w-14 h-14 rounded-full flex items-center justify-center"
+          style={{
+            background:
+              'linear-gradient(135deg, rgba(171,199,255,0.22) 0%, rgba(0,113,227,0.12) 100%)',
+            boxShadow: '0 0 0 1px rgba(171,199,255,0.32), 0 0 28px rgba(171,199,255,0.20)',
+          }}
+        >
+          <Check size={24} strokeWidth={2.4} color="#abc7ff" />
+        </div>
+
+        <h3
+          id="contact-success-title"
+          className="mt-5 font-display font-bold text-[1.35rem] leading-tight fo-gradient-text"
+        >
+          お問い合わせを受け付けました。
+        </h3>
+        <p className="mt-3 text-[12.5px] text-[#9b99a0] leading-relaxed">
+          1 営業日以内に代表 沢坂よりご返信いたします。
+          <br />
+          直接お話を伺いたい方は、下記から日程調整も可能です。
+        </p>
+
+        {/* 日程調整 CTA */}
+        <a
+          href={SPIR_BOOKING_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group mt-7 inline-flex items-center gap-2 px-5 h-11 rounded-[12px] text-[13px] font-semibold transition-transform hover:-translate-y-0.5"
+          style={{
+            background:
+              'linear-gradient(140deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
+            color: 'var(--color-obs-on-primary)',
+            boxShadow:
+              'inset 0 1px 0 rgba(255,255,255,0.18), 0 0 0 1px rgba(171,199,255,0.20), 0 8px 24px rgba(0,113,227,0.18)',
+          }}
+        >
+          <CalendarCheck size={15} strokeWidth={2.2} />
+          そのまま 30 分相談を予約
+          <ArrowRight size={13} strokeWidth={2.4} className="transition-transform group-hover:translate-x-0.5" />
+        </a>
+
+        <button
+          type="button"
+          onClick={onClose}
+          className="block mx-auto mt-4 text-[11.5px] text-[#7e7c83] hover:text-[#c7c5c9] transition-colors"
+        >
+          閉じる
+        </button>
+      </div>
+
+      <style>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(8px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
+    </div>
   )
 }
 

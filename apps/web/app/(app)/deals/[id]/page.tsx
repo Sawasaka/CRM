@@ -83,25 +83,7 @@ type ConfidenceLevel = 'High' | 'Medium' | 'Low'
 
 type ActivityType = 'call' | 'email' | 'note' | 'deal_advance'
 
-// ISフィールドの既定キー（電話とメール文から事実に基づき抽出される項目）
-// カスタム項目もユーザーが自由に追加可能なため key は string で扱う
-const DEFAULT_IS_FIELD_KEYS = [
-  '担当部署',
-  '役割',
-  '検討フェーズ',
-  'どこでサービスを知ったか',
-  '会社やサービスを知っているか',
-  '興味やニーズ',
-  '背景',
-  '課題や問題',
-  '求めているもの',
-  '解決したいことや達成したいこと',
-  '次の進めかた',
-  'タスク',
-  '希望連絡手段',
-] as const
-type DefaultISFieldKey = (typeof DEFAULT_IS_FIELD_KEYS)[number]
-type ISFieldKey = DefaultISFieldKey | string
+type ISFieldKey = string
 
 // IS段階の選択値（チップで表示する系）
 type ISConsiderationPhase = '情報収集' | '検討中' | '比較検討' | '導入決定間近' | '未確認'
@@ -120,30 +102,7 @@ interface ISField {
   chipList?: (ISRequestedItem | ISTaskItem)[]
 }
 
-// 営業フィールドの既定キー（議事録から自動抽出される項目）
-// カスタム項目もユーザーが自由に追加可能なため key は string で扱う
-const DEFAULT_SALES_FIELD_KEYS = [
-  '出席者',
-  '商談に至った背景',
-  '社内状況',
-  '課題',
-  'ニーズ',
-  '達成したい事',
-  '必要なこと',
-  '現状',
-  '理想',
-  'タイムライン',
-  '検討フェーズ',
-  '予算',
-  '稟議プロセス',
-  '競合',
-  '導入の選定基準',
-  '期待すること',
-  '障壁',
-  '今後の流れ',
-] as const
-type DefaultSalesFieldKey = (typeof DEFAULT_SALES_FIELD_KEYS)[number]
-type SalesFieldKey = DefaultSalesFieldKey | string
+type SalesFieldKey = string
 
 // 出席者：取引に参加した人。コンタクトIDで紐付けて詳細ページへワンクリック遷移
 interface Participant {
@@ -1852,7 +1811,6 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
     const list = DEAL_PROPOSALS[id] ?? DEAL_PROPOSALS['d1'] ?? []
     setProposals(list)
     setActiveProposalId(list[0]?.id ?? null)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
   // 議事録タブ: デフォルト最新
@@ -4251,7 +4209,7 @@ function ProposalEditModal({
             </button>
           </div>
 
-          <style jsx>{`
+          <style>{`
             .modal-input {
               width: 100%;
               height: 32px;

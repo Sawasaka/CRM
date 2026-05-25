@@ -1,3 +1,6 @@
+/* eslint-env node */
+/* global process */
+
 import { readFileSync } from 'fs'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'

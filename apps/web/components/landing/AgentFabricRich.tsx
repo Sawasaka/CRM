@@ -571,6 +571,7 @@ const AgentOrbCluster = () => {
 // ---------- Main ----------
 export const AgentFabricRich = () => {
   const [activeId, setActiveId] = useState<AgentId>('sales')
+  const showAgentDetails = false
 
   useEffect(() => {
     if (typeof IntersectionObserver === 'undefined') return
@@ -599,10 +600,7 @@ export const AgentFabricRich = () => {
         <AgentOrbCluster />
       </div>
 
-      {/* 個別エージェント詳細 (AGENT FABRIC / 01-05 / xxx Agent) は LP 非表示に。
-          ヘッダ + 5 オーブ + AgentPicker までで概観を伝え、詳細パネルは別途
-          (ドキュメント or サービス本体) に逃がす方針。 */}
-      {false && AGENTS_DATA.map((a) => (
+      {showAgentDetails && AGENTS_DATA.map((a) => (
         <AgentScene key={a.id} agent={a} isActive={activeId === a.id} />
       ))}
 

@@ -1,3 +1,5 @@
+/* eslint-disable react/prop-types */
+
 /**
  * Liquid Obsidian — 共通コンポーネント
  * 参照: bgm/docs/DESIGN.md

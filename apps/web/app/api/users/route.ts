@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@bgm/db'
 
@@ -16,7 +16,7 @@ async function getOrgId() {
   return user?.orgId ?? null
 }
 
-export async function GET(_req: NextRequest) {
+export async function GET() {
   const orgId = await getOrgId()
   if (!orgId) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
 

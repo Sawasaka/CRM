@@ -248,12 +248,13 @@ const DUMMY_CONTACTS: NonNullable<Raw['contacts']> = [
 ]
 
 export default function CompanyDetailClient({
-  id: _id,
+  id,
   initialData,
 }: {
   id: string
   initialData: Raw | null
 }) {
+  void id
   const c = initialData
   const [copiedEmail, setCopiedEmail] = useState<string | null>(null)
 

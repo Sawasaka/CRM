@@ -373,7 +373,7 @@ function formatRelative(iso: string | null): string {
 
 function getInitial(name: string): string {
   const clean = name.replace(/^(株式会社|有限会社|合同会社|合資会社|合名会社|一般社団法人|一般財団法人)/, '').trim()
-  if (/^[\x00-\x7F]+$/.test(clean)) {
+  if ([...clean].every((char) => char.charCodeAt(0) <= 0x7f)) {
     const parts = clean.split(/\s+/).slice(0, 2)
     return parts.map((p) => p[0]?.toUpperCase() ?? '').join('')
   }

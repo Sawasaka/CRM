@@ -129,8 +129,12 @@ export const DemoModal = ({ open, onClose }: DemoModalProps) => {
         </p>
 
         {/* ダミーデータ注釈 */}
-        <p className="mt-1.5 text-[10.5px] text-[#7e7c83]">
-          ※ デモ内のデータはすべてダミーです。
+        <p className="mt-1.5 text-[10.5px] text-[#9b99a0]">
+          ※ デモ内のデータはすべて
+          <span className="font-semibold" style={{ color: '#ffcf4a' }}>
+            ダミーデータ
+          </span>
+          です。
         </p>
 
         <form onSubmit={onSubmit} className="mt-4 space-y-2.5">

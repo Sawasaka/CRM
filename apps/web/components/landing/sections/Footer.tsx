@@ -5,6 +5,7 @@
  */
 
 import { ContactForm } from './ContactForm'
+import Link from 'next/link'
 
 export const Footer = () => (
   <footer id="contact" className="relative bg-[#0e0e10] scroll-mt-24">
@@ -126,15 +127,15 @@ export const Footer = () => (
           © 2026 <span className="fo-gradient-text font-semibold">ルキスマCRM</span>
         </div>
         <div className="flex flex-wrap gap-x-5 gap-y-2">
-          <a href="/legal/terms" className="hover:text-aurora transition-colors">
+          <Link href="/legal/terms" className="hover:text-aurora transition-colors">
             利用規約
-          </a>
-          <a href="/legal/privacy" className="hover:text-aurora transition-colors">
+          </Link>
+          <Link href="/legal/privacy" className="hover:text-aurora transition-colors">
             プライバシーポリシー
-          </a>
-          <a href="/legal/tokushoho" className="hover:text-aurora transition-colors">
+          </Link>
+          <Link href="/legal/tokushoho" className="hover:text-aurora transition-colors">
             特定商取引法
-          </a>
+          </Link>
         </div>
       </div>
     </div>

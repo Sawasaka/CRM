@@ -15,7 +15,7 @@ export const legalDocuments: LegalDocument[] = [
     slug: 'terms',
     title: '利用規約',
     description: 'ルキスマCRM の利用条件、料金、AI機能、禁止事項、責任範囲を定めます。',
-    updatedAt: '2026-05-17',
+    updatedAt: '2026-05-25',
     sourcePath: 'bgm/docs/legal/terms_of_service.md',
     sections: [
       {
@@ -60,7 +60,7 @@ export const legalDocuments: LegalDocument[] = [
         heading: '免責・責任制限',
         body: [
           '当社は、本サービスに事実上または法律上の瑕疵がないことを保証しません。',
-          '当社の損害賠償責任の総額は、当該損害事由が発生した時点を起算点として過去12ヶ月間に当社が受領した利用料金の額を上限とします。ただし、法令上制限できない責任を除きます。',
+          '当社が損害賠償責任を負う場合であっても、その責任の総額は、当該損害発生時点の直近1か月間に当社が受領した利用料金の額を上限とします。ただし、当社の故意または重過失による場合、または法令上制限できない責任を除きます。',
         ],
       },
       {
@@ -76,7 +76,7 @@ export const legalDocuments: LegalDocument[] = [
     slug: 'privacy',
     title: 'プライバシーポリシー',
     description: '本サービスにおける個人情報、顧客データ、AI処理、外部委託先の取扱いを定めます。',
-    updatedAt: '2026-05-17',
+    updatedAt: '2026-05-25',
     sourcePath: 'bgm/docs/legal/privacy_policy.md',
     sections: [
       {
@@ -104,6 +104,7 @@ export const legalDocuments: LegalDocument[] = [
         heading: '保管・安全管理',
         body: [
           '利用者データは原則として日本リージョンのクラウド基盤に保管し、通信時・保管時の暗号化、アクセス制御、ログ取得等の安全管理措置を講じます。',
+          '個人情報または利用者データの漏えい、滅失、毀損等が発生し、またはそのおそれを認識した場合、当社は事実確認、被害拡大防止、必要な報告・通知、再発防止を行います。',
           '退会後の利用者データは、法令上必要な情報を除き、所定期間内に削除します。',
         ],
       },
