@@ -3,6 +3,8 @@
  * /api/demo-access/route.ts と /demo, /demo-app の両方で参照する。
  */
 
+import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
+
 const SECRET =
   process.env.DEMO_ACCESS_SECRET ??
   'dev-only-fallback-please-set-DEMO_ACCESS_SECRET-in-prod'
@@ -21,36 +23,26 @@ export interface DemoClaims {
 }
 
 function b64urlEncodeBytes(bytes: Uint8Array): string {
-  const b64 = btoa(String.fromCharCode(...bytes))
-  return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+  return Buffer.from(bytes).toString('base64url')
 }
 
 function b64urlDecode(input: string): Uint8Array {
-  const pad = input.length % 4
-  const b64 = input.replace(/-/g, '+').replace(/_/g, '/') + (pad ? '='.repeat(4 - pad) : '')
-  const bin = atob(b64)
-  const bytes = new Uint8Array(bin.length)
-  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
-  return bytes
+  return new Uint8Array(Buffer.from(input, 'base64url'))
 }
 
-async function hmacBase64Url(message: string): Promise<string> {
-  const enc = new TextEncoder()
-  const key = await crypto.subtle.importKey(
-    'raw',
-    enc.encode(SECRET),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign'],
-  )
-  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(message))
-  return b64urlEncodeBytes(new Uint8Array(sig))
+function hmacBase64Url(message: string): string {
+  return createHmac('sha256', SECRET).update(message).digest('base64url')
+}
+
+function safeEqual(a: string, b: string): boolean {
+  const left = Buffer.from(a)
+  const right = Buffer.from(b)
+  if (left.length !== right.length) return false
+  return timingSafeEqual(left, right)
 }
 
 function generateSessionId(): string {
-  const bytes = new Uint8Array(16)
-  crypto.getRandomValues(bytes)
-  return b64urlEncodeBytes(bytes)
+  return b64urlEncodeBytes(randomBytes(16))
 }
 
 export async function buildDemoToken(input: {
@@ -80,8 +72,8 @@ export async function verifyDemoToken(token: string | null | undefined): Promise
   try {
     const [payload, sig] = token.split('.')
     if (!payload || !sig) return null
-    const expectedSig = await hmacBase64Url(payload)
-    if (expectedSig !== sig) return null
+    const expectedSig = hmacBase64Url(payload)
+    if (!safeEqual(expectedSig, sig)) return null
     const claims = JSON.parse(new TextDecoder().decode(b64urlDecode(payload))) as DemoClaims
     if (!claims || typeof claims.expiresAt !== 'number') return null
     if (typeof claims.sessionId !== 'string' || !claims.sessionId) return null
