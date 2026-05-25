@@ -25,14 +25,14 @@ type Row = { t: string; s: string; v: string; isTotal?: boolean }
 
 const others: Row[] = [
   { t: 'HubSpot / Salesforce', s: 'CRM ／ 3,000円 × 30名',          v: '90,000円' },
-  { t: 'SalesNow',             s: '企業DB ／ 月額固定費',             v: '150,000円' },
-  { t: '合計',                  s: '',                                v: '240,000円', isTotal: true },
+  { t: 'SalesNow',             s: '企業DB ／ 月額固定費',             v: '200,000円' },
+  { t: '合計',                  s: '',                                v: '290,000円', isTotal: true },
 ]
 
 const inhouse: Row[] = [
-  { t: 'インフラ・API', s: 'AWS S3 ／ 企業DB ／ LLM (Gemini / GPT)', v: '100,000円' },
+  { t: 'インフラ・API', s: 'AWS S3 ／ 企業DB ／ LLM (Gemini / GPT)', v: '300,000円' },
   { t: '開発費',        s: '開発者 1 名 × 1 人月',                  v: '500,000円' },
-  { t: '合計',          s: '',                                    v: '600,000円', isTotal: true },
+  { t: '合計',          s: '',                                    v: '800,000円', isTotal: true },
 ]
 
 const ComparisonCard = ({

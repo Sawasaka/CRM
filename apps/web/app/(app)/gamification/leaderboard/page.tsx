@@ -10,6 +10,8 @@ const LEADERBOARD = [
   { rank: 2, name: '田中太郎', points: 8500, level: 12, trend: '+1', color: '#0071E3' },
   { rank: 3, name: '佐藤次郎', points: 5200, level: 8, trend: '+2', color: '#FF9F0A' },
 ]
+const PODIUM = [LEADERBOARD[1]!, LEADERBOARD[0]!, LEADERBOARD[2]!]
+const PODIUM_HEIGHTS = [120, 160, 100]
 
 export default function LeaderboardPage() {
   return (
@@ -21,8 +23,7 @@ export default function LeaderboardPage() {
 
       {/* Podium */}
       <div className="flex items-end justify-center gap-4 pt-4 pb-2">
-        {[LEADERBOARD[1], LEADERBOARD[0], LEADERBOARD[2]].map((p, i) => {
-          const heights = [120, 160, 100]
+        {PODIUM.map((p, i) => {
           const isFirst = i === 1
           return (
             <motion.div key={p.name} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
@@ -33,7 +34,7 @@ export default function LeaderboardPage() {
               <p className="text-[13px] font-semibold text-[#EEEEFF] mb-1">{p.name}</p>
               <p className="text-[11px] text-[#99AACC] mb-2">Lv.{p.level}</p>
               <div className="w-full rounded-t-[8px] flex flex-col items-center justify-end pb-3"
-                style={{ height: heights[i], background: p.color + '15', border: `1px solid ${p.color}25`, borderBottom: 'none' }}>
+                style={{ height: PODIUM_HEIGHTS[i] ?? 100, background: p.color + '15', border: `1px solid ${p.color}25`, borderBottom: 'none' }}>
                 {isFirst && <Crown size={20} style={{ color: '#FFD60A' }} className="mb-1" />}
                 <span className="text-[18px] font-bold" style={{ color: p.color }}>{p.rank}</span>
                 <span className="text-[12px] font-semibold text-[#EEEEFF] tabular-nums mt-1">{p.points.toLocaleString()} pt</span>

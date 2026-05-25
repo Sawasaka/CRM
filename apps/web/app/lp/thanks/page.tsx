@@ -64,33 +64,6 @@ export default function ThanksPage() {
           <ArrowRight size={14} strokeWidth={2.4} className="transition-transform group-hover:translate-x-0.5" />
         </a>
 
-        {/* メモ */}
-        <div
-          className="mt-12 rounded-2xl px-5 py-4 text-left"
-          style={{
-            background: 'rgba(171,199,255,0.04)',
-            boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.10)',
-          }}
-        >
-          <div className="text-[10.5px] uppercase tracking-[0.14em] text-[#7e7c83] mb-2">
-            打ち合わせでお話できること
-          </div>
-          <ul className="text-[12.5px] text-[#c7c5c9] leading-relaxed space-y-1.5">
-            <li className="flex items-start gap-2">
-              <span className="mt-[8px] inline-block w-1 h-1 rounded-full bg-[#abc7ff]" />
-              現状のCRM・営業データ運用のヒアリング(30分〜)
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="mt-[8px] inline-block w-1 h-1 rounded-full bg-[#abc7ff]" />
-              ルキスマCRMで何ができるか、デモを交えてご案内
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="mt-[8px] inline-block w-1 h-1 rounded-full bg-[#abc7ff]" />
-              先行利用パートナー枠(残数限定)のご相談
-            </li>
-          </ul>
-        </div>
-
         <div className="mt-12 text-[12px] text-[#7e7c83]">
           <Link href="/lp" className="hover:text-aurora transition-colors">
             ← トップに戻る

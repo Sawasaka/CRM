@@ -12,7 +12,6 @@ import { Send, Loader2 } from 'lucide-react'
 interface FieldState {
   company: string
   name: string
-  title: string
   email: string
   message: string
 }
@@ -20,7 +19,6 @@ interface FieldState {
 const INITIAL: FieldState = {
   company: '',
   name: '',
-  title: '',
   email: '',
   message: '',
 }
@@ -65,13 +63,13 @@ export const ContactForm = () => {
   return (
     <form
       onSubmit={onSubmit}
-      className="rounded-2xl p-6 md:p-7 space-y-4"
+      className="rounded-2xl p-5 md:p-6 space-y-3.5"
       style={{
         background: 'rgba(171,199,255,0.04)',
         boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.14)',
       }}
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3.5">
         <Field
           label="会社名"
           required
@@ -86,20 +84,16 @@ export const ContactForm = () => {
           onChange={update('name')}
           placeholder="田中 太郎"
         />
-        <Field
-          label="役職"
-          value={values.title}
-          onChange={update('title')}
-          placeholder="営業部長"
-        />
-        <Field
-          label="メールアドレス"
-          required
-          type="email"
-          value={values.email}
-          onChange={update('email')}
-          placeholder="taro@example.co.jp"
-        />
+        <div className="md:col-span-2">
+          <Field
+            label="メールアドレス"
+            required
+            type="email"
+            value={values.email}
+            onChange={update('email')}
+            placeholder="taro@example.co.jp"
+          />
+        </div>
       </div>
 
       <FieldArea
@@ -219,7 +213,7 @@ function FieldArea({
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        rows={4}
+        rows={3}
         className="mt-1.5 w-full px-3 py-2.5 rounded-[10px] text-[13px] outline-none resize-y leading-relaxed transition-colors"
         style={FIELD_INPUT_STYLE}
       />

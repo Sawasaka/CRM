@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
+import type { Variants } from 'framer-motion'
 import { Search, Plus, Users, CalendarCheck, X, ChevronDown } from 'lucide-react'
 import type { CallList } from '@/types/crm'
 
@@ -65,11 +66,11 @@ const COLOR_ACCENT: Record<string, string> = {
 
 // ─── Card animation ──────────────────────────────────────────────────────────
 
-const cardVariant = {
+const cardVariant: Variants = {
   hidden: { opacity: 0, y: 8 },
   visible: (i: number) => ({
     opacity: 1, y: 0,
-    transition: { duration: 0.28, delay: i * 0.06, ease: [0.16, 1, 0.3, 1] },
+    transition: { duration: 0.28, delay: i * 0.06, ease: [0.16, 1, 0.3, 1] as const },
   }),
 }
 

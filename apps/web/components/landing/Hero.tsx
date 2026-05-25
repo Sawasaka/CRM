@@ -683,10 +683,15 @@ export const Hero = () => {
           </p>
 
           {/* Top trust strip — 数値プルーフ */}
-          <div className="mt-8 flex flex-wrap justify-center items-center gap-x-8 sm:gap-x-12 gap-y-3 fo-word-in" style={{ animationDelay: '780ms' }}>
+          <div className="mt-8 flex flex-wrap justify-center items-center gap-x-6 sm:gap-x-10 gap-y-3 fo-word-in" style={{ animationDelay: '780ms' }}>
             <div className="flex items-baseline gap-2">
-              <span className="font-display font-bold fo-gradient-text text-[1.5rem] sm:text-[1.8rem] leading-none">約6,000</span>
-              <span className="text-[10px] uppercase tracking-[0.14em] text-[#9b99a0]">社 累計エンリッチ</span>
+              <span className="font-display font-bold fo-gradient-text text-[1.5rem] sm:text-[1.8rem] leading-none">290万</span>
+              <span className="text-[10px] uppercase tracking-[0.14em] text-[#9b99a0]">社 企業DB</span>
+            </div>
+            <span className="hidden sm:inline-block h-6 w-px bg-white/[0.08]" />
+            <div className="flex items-baseline gap-2">
+              <span className="font-display font-bold fo-gradient-text text-[1.5rem] sm:text-[1.8rem] leading-none">180万</span>
+              <span className="text-[10px] uppercase tracking-[0.14em] text-[#9b99a0]">件 部署直通番号</span>
             </div>
             <span className="hidden sm:inline-block h-6 w-px bg-white/[0.08]" />
             <div className="flex items-baseline gap-2">
@@ -695,8 +700,8 @@ export const Hero = () => {
             </div>
             <span className="hidden sm:inline-block h-6 w-px bg-white/[0.08]" />
             <div className="flex items-baseline gap-2">
-              <span className="font-display font-bold fo-gradient-text text-[1.5rem] sm:text-[1.8rem] leading-none">2,900,000</span>
-              <span className="text-[10px] uppercase tracking-[0.14em] text-[#9b99a0]">社 収録企業</span>
+              <span className="font-display font-bold fo-gradient-text text-[1.1rem] sm:text-[1.3rem] leading-none">採用予算</span>
+              <span className="text-[10px] uppercase tracking-[0.14em] text-[#9b99a0]">部門別に可視化</span>
             </div>
           </div>
         </div>
@@ -1108,14 +1113,13 @@ export const Hero = () => {
           </div>
 
           <div className="text-[#c7c5c9] text-sm">
-            実際にあなたの組織のデータで試すには →{' '}
             <a
               href="https://app.spirinc.com/t/3u_FXTG5abaFIZ-D7as8v/as/5j4iMsFHgutg6an7CRg9o/confirm"
               target="_blank"
               rel="noopener noreferrer"
               className="text-aurora underline-offset-4 hover:underline"
             >
-              営業相談を予約
+              CRM構築を相談する →
             </a>
           </div>
         </div>

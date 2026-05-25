@@ -23,6 +23,10 @@ const RANKING = [
   { rank: 4, name: '山本佳子', score: 58.2, rankLabel: 'シルバー', trend: '+1.8', color: '#FF9F0A' },
   { rank: 5, name: '小林健太', score: 44.7, rankLabel: 'ブロンズ', trend: '+0.9', color: '#FF3B30' },
 ]
+const PODIUM = [RANKING[1]!, RANKING[0]!, RANKING[2]!]
+const PODIUM_HEIGHTS = [80, 110, 60]
+const PODIUM_COLORS = ['#FFDD44', '#E5E5FF', '#FF9F0A']
+const PODIUM_RANKS = [2, 1, 3]
 
 const MONTHLY_SCORES = [
   { month: '10月', score: 55 },
@@ -39,6 +43,7 @@ const RANK_COLORS: Record<string, string> = {
   'シルバー': '#AABBCC',
   'ブロンズ': '#FF9F0A',
 }
+const DEFAULT_RANK_COLOR = '#AABBCC'
 
 const cardStyle = {
   background: 'linear-gradient(180deg, #101838 0%, #0c1028 100%)',
@@ -78,9 +83,9 @@ export default function InfluencePage() {
             </div>
             <div style={{ textAlign: 'right' }}>
               <span style={{
-                background: `${RANK_COLORS[MY_SCORE.rank]}22`,
-                color: RANK_COLORS[MY_SCORE.rank],
-                border: `1px solid ${RANK_COLORS[MY_SCORE.rank]}66`,
+                background: `${RANK_COLORS[MY_SCORE.rank] ?? DEFAULT_RANK_COLOR}22`,
+                color: RANK_COLORS[MY_SCORE.rank] ?? DEFAULT_RANK_COLOR,
+                border: `1px solid ${RANK_COLORS[MY_SCORE.rank] ?? DEFAULT_RANK_COLOR}66`,
                 padding: '4px 12px', borderRadius: '12px', fontSize: '13px', fontWeight: 700
               }}>
                 {MY_SCORE.rank}
@@ -135,10 +140,8 @@ export default function InfluencePage() {
 
           {/* 表彰台 */}
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end', gap: '12px', marginBottom: '28px', height: '120px' }}>
-            {[RANKING[1], RANKING[0], RANKING[2]].map((person, idx) => {
-              const heights = [80, 110, 60]
-              const podiumColors = ['#FFDD44', '#E5E5FF', '#FF9F0A']
-              const ranks = [2, 1, 3]
+            {PODIUM.map((person, idx) => {
+              const podiumColor = PODIUM_COLORS[idx] ?? DEFAULT_RANK_COLOR
               return (
                 <motion.div
                   key={person.name}
@@ -149,13 +152,13 @@ export default function InfluencePage() {
                 >
                   <div style={{ fontSize: '11px', color: '#CCDDF0', fontWeight: 600 }}>{person.score}</div>
                   <div style={{
-                    width: '48px', background: `${podiumColors[idx]}22`,
-                    border: `1px solid ${podiumColors[idx]}55`,
+                    width: '48px', background: `${podiumColor}22`,
+                    border: `1px solid ${podiumColor}55`,
                     borderRadius: '8px 8px 0 0',
-                    height: `${heights[idx]}px`,
+                    height: `${PODIUM_HEIGHTS[idx] ?? 60}px`,
                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2px'
                   }}>
-                    <div style={{ fontSize: '18px', fontWeight: 800, color: podiumColors[idx] }}>{ranks[idx]}</div>
+                    <div style={{ fontSize: '18px', fontWeight: 800, color: podiumColor }}>{PODIUM_RANKS[idx] ?? person.rank}</div>
                   </div>
                   <div style={{ fontSize: '11px', color: '#EEEEFF', textAlign: 'center', maxWidth: '60px' }}>{person.name}</div>
                 </motion.div>

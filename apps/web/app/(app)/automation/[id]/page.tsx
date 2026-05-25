@@ -3,8 +3,8 @@
 import { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronLeft, Mail, Clock, GitBranch, CheckSquare, Plus, Users, MailOpen, MousePointerClick, Reply, Play, Pause, Trash2, Edit3, X } from 'lucide-react'
-import type { Sequence, SequenceStep, SequenceEnrollment, SequenceStatus, StepType } from '@/types/crm'
+import { ChevronLeft, Mail, Clock, GitBranch, CheckSquare, Plus, MailOpen, MousePointerClick, Reply, Play, Pause, Trash2, Edit3 } from 'lucide-react'
+import type { Sequence, SequenceStep, SequenceEnrollment, StepType } from '@/types/crm'
 
 // ─── Mock Data ───────────────────────────────────────────────────────────────
 
@@ -38,12 +38,14 @@ const STEP_COLORS: Record<string, { bg: string; color: string }> = {
   condition: { bg: 'rgba(255,159,10,0.1)', color: '#FF9F0A' },
   task: { bg: 'rgba(52,199,89,0.1)', color: '#34C759' },
 }
+const DEFAULT_STEP_COLOR = { bg: 'rgba(0,0,0,0.04)', color: '#CCDDF0' }
 const ENROLL_STATUS: Record<string, { bg: string; text: string }> = {
   active: { bg: 'rgba(0,113,227,0.1)', text: '#0071E3' },
   completed: { bg: 'rgba(52,199,89,0.1)', text: '#1A7A35' },
   paused: { bg: 'rgba(255,159,10,0.1)', text: '#C07000' },
   exited: { bg: 'rgba(255,59,48,0.1)', text: '#CF3131' },
 }
+const DEFAULT_ENROLL_STATUS = { bg: 'rgba(0,113,227,0.1)', text: '#0071E3' }
 const CARD_SHADOW = '0 0 0 1px rgba(0,0,0,0.05), 0 2px 8px rgba(0,0,0,0.07), 0 8px 28px rgba(0,0,0,0.05)'
 
 type Tab = 'builder' | 'monitor' | 'performance'
@@ -75,7 +77,6 @@ export default function AutomationDetailPage() {
   if (!seq) return <div className="text-center py-20"><p className="text-[14px] text-[#AEAEB2]">シーケンスが見つかりません</p></div>
 
   function addStep(index: number, type: StepType) {
-    const opt = STEP_TYPE_OPTIONS.find(o => o.key === type)!
     const newStep: SequenceStep = {
       type,
       label: type === 'wait' ? '1日待機' : type === 'email' ? '新規メール' : type === 'condition' ? '条件チェック' : '新規タスク',
@@ -93,8 +94,10 @@ export default function AutomationDetailPage() {
   }
 
   function startEdit(index: number) {
+    const step = steps[index]
+    if (!step) return
     setEditingStep(index)
-    setEditForm({ label: steps[index].label, detail: steps[index].detail })
+    setEditForm({ label: step.label, detail: step.detail })
   }
 
   function saveEdit() {
@@ -157,7 +160,7 @@ export default function AutomationDetailPage() {
 
                   {steps.map((step, si) => {
                     const StepIcon = STEP_ICONS[step.type] || Clock
-                    const sc = STEP_COLORS[step.type]
+                    const sc = STEP_COLORS[step.type] ?? DEFAULT_STEP_COLOR
                     const enrolledHere = enrollments.filter(e => e.currentStepIndex === si && e.status === 'active').length
                     const isEditing = editingStep === si
 
@@ -245,7 +248,7 @@ export default function AutomationDetailPage() {
                     ))}
                   </div>
                   {enrollments.map((enr, i) => {
-                    const es = ENROLL_STATUS[enr.status]
+                    const es = ENROLL_STATUS[enr.status] ?? DEFAULT_ENROLL_STATUS
                     return (
                       <motion.div key={enr.id} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.2, delay: i * 0.04 }}
@@ -294,7 +297,7 @@ export default function AutomationDetailPage() {
                     {['#', 'ステップ', '通過人数', 'ステータス'].map(h => <span key={h} className="text-[11px] font-medium text-[#AEAEB2] uppercase tracking-[0.04em]">{h}</span>)}
                   </div>
                   {seq.steps.map((step, si) => {
-                    const sc = STEP_COLORS[step.type]
+                    const sc = STEP_COLORS[step.type] ?? DEFAULT_STEP_COLOR
                     const passed = enrollments.filter(e => e.currentStepIndex > si || e.status === 'completed').length
                     const here = enrollments.filter(e => e.currentStepIndex === si && e.status === 'active').length
                     return (

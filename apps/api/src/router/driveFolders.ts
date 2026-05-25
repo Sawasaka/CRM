@@ -2,6 +2,10 @@ import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import { router, protectedProcedure } from '../middleware/trpc'
 
+const runtimeImport = new Function('specifier', 'return import(specifier)') as <T>(
+  specifier: string,
+) => Promise<T>
+
 // 連携対象として登録した Google Drive フォルダの管理。
 // 同期ジョブは別途 services/driveSync 配下が読み取る。
 export const driveFoldersRouter = router({
@@ -142,7 +146,9 @@ export const driveFoldersRouter = router({
   triggerSync: protectedProcedure
     .input(z.object({ id: z.string().optional() }).default({}))
     .mutation(async ({ ctx, input }) => {
-      const { syncDriveFolder } = await import('../services/driveSync.js')
+      const { syncDriveFolder } = await runtimeImport<typeof import('../services/driveSync.js')>(
+        '../services/driveSync.js',
+      )
       const folders = await ctx.prisma.driveFolderConnection.findMany({
         where: {
           orgId: ctx.orgId,

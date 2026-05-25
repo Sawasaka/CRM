@@ -13,54 +13,6 @@ const PAGE_ACTIONS: Record<string, { label: string }> = {
   '/tasks': { label: '追加' },
 }
 
-// ─── Ghost button (monochrome with subtle hover) ─────────────────────────────
-function GhostButton({
-  icon: Icon,
-  label,
-  title,
-  indicator,
-  active,
-  onClick,
-}: {
-  icon: React.ElementType
-  label?: string
-  title?: string
-  indicator?: boolean
-  active?: boolean
-  onClick?: () => void
-}) {
-  const [hover, setHover] = useState(false)
-  const showHigh = hover || active
-  return (
-    <motion.button
-      whileTap={{ scale: 0.96 }}
-      onClick={onClick}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-      className="relative h-[30px] px-2.5 inline-flex items-center gap-1.5 rounded-[var(--radius-obs-md)] text-[11px] font-medium transition-colors duration-150"
-      style={{
-        color: showHigh ? 'var(--color-obs-text)' : 'var(--color-obs-text-muted)',
-        backgroundColor: showHigh ? 'var(--color-obs-surface-high)' : 'transparent',
-        transitionTimingFunction: 'var(--ease-liquid)',
-      }}
-      title={title}
-      aria-pressed={active}
-    >
-      <Icon size={13} strokeWidth={1.8} />
-      {label && <span className="hidden xl:inline">{label}</span>}
-      {indicator && (
-        <span
-          className="absolute top-0.5 right-0.5 w-[6px] h-[6px] rounded-full"
-          style={{
-            backgroundColor: 'var(--color-obs-primary)',
-            boxShadow: '0 0 0 2px var(--color-obs-surface)',
-          }}
-        />
-      )}
-    </motion.button>
-  )
-}
-
 // ─── Main Header ─────────────────────────────────────────────────────────────
 export function Header() {
   const pathname = usePathname()
@@ -72,10 +24,6 @@ export function Header() {
   const [notifications, setNotifications] = useState<NotificationItem[]>(NOTIFICATIONS)
   const unreadCount = notifications.filter((n) => !n.read).length
 
-  const toggleSupport = () => {
-    setSupportOpen((v) => !v)
-    if (!supportOpen) setNotifOpen(false)
-  }
   const toggleNotif = () => {
     setNotifOpen((v) => !v)
     if (!notifOpen) setSupportOpen(false)

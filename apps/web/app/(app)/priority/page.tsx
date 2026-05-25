@@ -223,6 +223,7 @@ export default function DevelopmentPriorityPage() {
             const meta = CATEGORY_META[cat]
             const Icon = meta.Icon
             const allItems = itemsByCategory[cat]
+            const maxCount = Math.max(1, ...allItems.map(uniqueCompanyCount))
             return (
               <section key={cat}>
                 {/* セクション見出し */}
@@ -258,6 +259,17 @@ export default function DevelopmentPriorityPage() {
                   >
                     {meta.caption}
                   </p>
+                </div>
+
+                <div className="mb-4">
+                  <CategoryBarChart
+                    items={allItems}
+                    maxCount={maxCount}
+                    iconColor={meta.iconColor}
+                    barColor={meta.bg}
+                    ring={meta.ring}
+                    onBarClick={handleBarClick}
+                  />
                 </div>
 
                 {/* リスト (全ステータス同じテーブル内に表示) */}

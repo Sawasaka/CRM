@@ -151,6 +151,7 @@ const STATUS_STYLES: Record<string, ObsChipStyle> = {
   'アポ獲得':    { core: '#4ad98a',                     bg: 'rgba(74,217,138,0.14)' },
   'その他':      { core: 'var(--color-obs-text-muted)', bg: 'rgba(143,140,144,0.14)' },
 }
+const DEFAULT_STATUS_STYLE: ObsChipStyle = { core: 'var(--color-obs-text-muted)', bg: 'rgba(143,140,144,0.14)' }
 
 // ─── リード経由元（チャネル種別 — 共有モジュール `LeadSourceType` を使用) ──
 
@@ -169,7 +170,7 @@ const LEAD_SOURCE_STYLES: Record<LeadSourceType, { Icon: React.ElementType; labe
 }
 
 function LeadSourceBadge({ type }: { type: LeadSourceType }) {
-  const s = LEAD_SOURCE_STYLES[type]
+  const s = LEAD_SOURCE_STYLES[type] ?? LEAD_SOURCE_STYLES.other
   const Icon = s.Icon
   return (
     <span
@@ -185,7 +186,7 @@ function LeadSourceBadge({ type }: { type: LeadSourceType }) {
 // ─── Components ──────────────────────────────────────────────────────────────
 
 function StatusBadge({ status }: { status: string }) {
-  const s = STATUS_STYLES[status] ?? STATUS_STYLES['未着手']
+  const s = STATUS_STYLES[status] ?? DEFAULT_STATUS_STYLE
   return (
     <span
       className="inline-flex items-center gap-1.5 px-2 h-5 rounded-full text-[11px] font-medium tracking-[-0.005em] whitespace-nowrap"

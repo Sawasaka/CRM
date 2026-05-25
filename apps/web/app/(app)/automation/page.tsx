@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Plus, Mail, Clock, GitBranch, CheckSquare, Play, X, Users, MailOpen, MousePointerClick, Reply } from 'lucide-react'
+import { Search, Plus, Mail, Clock, GitBranch, CheckSquare, Play, X, Users, MailOpen } from 'lucide-react'
 import type { Sequence, SequenceStatus } from '@/types/crm'
 import {
   ObsButton,
@@ -123,14 +123,6 @@ const STATUS_TONE: Record<SequenceStatus, { tone: ChipTone; label: string }> = {
 
 const STEP_ICONS: Record<string, React.ElementType> = { wait: Clock, email: Mail, condition: GitBranch, task: CheckSquare }
 
-// ステップタイプ → ObsChip tone
-const STEP_TONE: Record<string, ChipTone> = {
-  email: 'primary',
-  condition: 'middle',
-  task: 'low',
-  wait: 'neutral',
-}
-
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function AutomationPage() {
@@ -170,14 +162,6 @@ export default function AutomationPage() {
     { label: 'メール送信数',     value: totalSent,       icon: Mail,     tone: 'primary' },
     { label: '平均開封率',       value: `${avgOpen}%`,   icon: MailOpen, tone: 'middle' },
   ]
-
-  const kpiIconColor = (tone: ChipTone): string => {
-    if (tone === 'hot') return 'var(--color-obs-hot)'
-    if (tone === 'middle') return 'var(--color-obs-middle)'
-    if (tone === 'low') return 'var(--color-obs-low)'
-    if (tone === 'primary') return 'var(--color-obs-primary)'
-    return 'var(--color-obs-text-muted)'
-  }
 
   return (
     <ObsPageShell>

@@ -15,9 +15,7 @@ import {
   Zap,
   BookOpen,
   CheckCircle2,
-  PhoneCall,
   Mail,
-  MessageSquare,
   Clock,
   Star,
   Plus,
@@ -46,7 +44,7 @@ import {
 } from 'lucide-react'
 import { ObsPageShell } from '@/components/obsidian'
 // コンタクト詳細と同じアクティビティ仕様を再利用 (タブ: すべて / コール / メール / 会議)
-import { ContactHistoryTimeline } from '@/app/(app)/contacts/[id]/page'
+import { ContactHistoryTimeline } from '@/app/(app)/contacts/_components/ContactHistoryTimeline'
 // 開発優先度ページから抽出データを取り込み (議事録 + 問い合わせチケット起点)
 import {
   MOCK_PRIORITY_ITEMS,
@@ -241,10 +239,10 @@ interface MeetingRecord {
   keyPoints: string[]
 }
 
-// 取引タスク (コンタクト詳細でも再利用するため export)
-export type DealTaskType = 'call' | 'email' | 'meeting' | 'proposal' | 'followup' | 'other'
+// 取引タスク
+type DealTaskType = 'call' | 'email' | 'meeting' | 'proposal' | 'followup' | 'other'
 
-export interface DealTask {
+interface DealTask {
   id: string
   type: DealTaskType
   title: string
@@ -939,7 +937,7 @@ interface DealTaskTypeStyle {
   iconColor: string
 }
 
-export const DEAL_TASK_TYPE_STYLES: Record<DealTaskType, DealTaskTypeStyle> = {
+const DEAL_TASK_TYPE_STYLES: Record<DealTaskType, DealTaskTypeStyle> = {
   call:     { Icon: Phone,        label: 'コール',   bg: 'rgba(126,198,255,0.14)', iconColor: 'var(--color-obs-low)' },
   email:    { Icon: Mail,         label: 'メール',   bg: 'rgba(171,199,255,0.14)', iconColor: 'var(--color-obs-primary)' },
   meeting:  { Icon: Briefcase,    label: '商談',     bg: 'rgba(74,217,138,0.14)',  iconColor: '#4ad98a' },
@@ -952,14 +950,6 @@ export const DEAL_TASK_TYPE_STYLES: Record<DealTaskType, DealTaskTypeStyle> = {
 // (既存データに meeting/proposal/followup が含まれている場合は表示時は STYLES から引いて表示するが、
 //  新規作成時は「コール / メール / その他」の3つに集約する)
 const ALL_DEAL_TASK_TYPES: DealTaskType[] = ['call', 'email', 'other']
-
-const MOCK_ACTIVITIES: ActivityItem[] = [
-  { id: '1', type: 'call',  timestamp: '2026-03-20T14:32', title: 'コール — アポ獲得', result: 'アポ獲得', durationSec: 154, description: '3/28 14:00 デモ商談を設定' },
-  { id: '2', type: 'deal_advance', timestamp: '2026-03-20T14:33', title: 'PROPOSAL → NEGOTIATION に進行' },
-  { id: '3', type: 'email', timestamp: '2026-03-17T09:00', title: 'メール送信', description: '会社紹介資料・比較表を添付' },
-  { id: '4', type: 'call',  timestamp: '2026-03-15T11:15', title: 'コール — 不在', result: '不在', durationSec: 0 },
-  { id: '5', type: 'note',  timestamp: '2026-03-10T16:00', title: 'メモ', description: 'CTOが4月以降のロードマップを検討中との情報あり' },
-]
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Style Config (Liquid Obsidian)
@@ -1049,13 +1039,6 @@ const IS_STATUS_TONE: Record<ISContactStatus, { bg: string; color: string; dot: 
   'コール不可':  { bg: 'rgba(255,107,107,0.14)', color: 'var(--color-obs-hot)',        dot: 'var(--color-obs-hot)'     },
   'アポ獲得':    { bg: 'rgba(126,198,255,0.18)', color: '#7ec6ff',                     dot: 'var(--color-obs-low)'     },
   'その他':      { bg: 'rgba(143,140,144,0.14)', color: 'var(--color-obs-text-muted)', dot: 'var(--color-obs-text-muted)' },
-}
-
-const ACTIVITY_ICON: Record<ActivityType, { icon: React.ElementType; color: string; bg: string }> = {
-  call:         { icon: PhoneCall,     color: 'var(--color-obs-low)',     bg: 'rgba(126,198,255,0.14)' },
-  email:        { icon: Mail,          color: 'var(--color-obs-primary)', bg: 'rgba(171,199,255,0.14)' },
-  note:         { icon: MessageSquare, color: 'var(--color-obs-text-muted)', bg: 'rgba(143,140,144,0.14)' },
-  deal_advance: { icon: TrendingUp,    color: 'var(--color-obs-middle)',  bg: 'rgba(255,184,107,0.14)' },
 }
 
 // 共通カードスタイル（No-Line Rule: surface shift + ゴーストアウトライン）
@@ -1460,13 +1443,6 @@ function formatDateShort(s: string): string {
   return `${d.getMonth() + 1}/${d.getDate()}`
 }
 
-function formatDuration(sec: number): string {
-  if (sec === 0) return ''
-  const m = Math.floor(sec / 60)
-  const s = sec % 60
-  return `${m}:${s.toString().padStart(2, '0')}`
-}
-
 function formatTimestamp(ts: string): string {
   const d = new Date(ts)
   return `${d.getMonth() + 1}/${d.getDate()} ${d.getHours()}:${d.getMinutes().toString().padStart(2, '0')}`
@@ -1520,7 +1496,7 @@ function toDealDetailFromDb(data: DbDealResponse['deal']): DealDetail {
 // Deal Task Modal
 // ═══════════════════════════════════════════════════════════════════════════════
 
-export function DealTaskModal({ task, onClose, onSave }: {
+function DealTaskModal({ task, onClose, onSave }: {
   task: DealTask | null
   onClose: () => void
   onSave: (t: DealTask) => void

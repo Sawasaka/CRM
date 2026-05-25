@@ -1729,7 +1729,7 @@ function SegmentedGauge({
       <div className="flex gap-[3px]">
         {[0, 1, 2, 3, 4].map((i) => {
           const filled = i < level
-          const tier = TIERS[i]
+          const tier = TIERS[i] ?? TIERS[0]!
           // 満たされた部分は、そのセグメントの tier 色で描画
           return (
             <div
@@ -1761,7 +1761,7 @@ function SegmentedGauge({
       {/* 目安の数字 */}
       <div className="flex items-center gap-[3px] mt-1">
         {labels.map((lab, i) => {
-          const tier = TIERS[i]
+          const tier = TIERS[i] ?? TIERS[0]!
           return (
             <span
               key={i}
@@ -1820,6 +1820,8 @@ function DealCard({
   const isPriority = deal.stage === 'PROJECT_PLANNED'
   const eLv = emailLevel(deal.emailCount)
   const mLv = meetingLevel(deal.meetingCount)
+  const emailTier = eLv > 0 ? TIERS[eLv - 1] ?? null : null
+  const meetingTier = mLv > 0 ? TIERS[mLv - 1] ?? null : null
 
   return (
     <div
@@ -1885,8 +1887,8 @@ function DealCard({
           <span
             className="text-[11px] font-black tabular-nums w-8 text-right shrink-0 leading-[8px]"
             style={{
-              color: eLv > 0 ? TIERS[eLv - 1].core : 'var(--color-obs-text-subtle)',
-              textShadow: eLv > 0 ? `0 0 6px ${TIERS[eLv - 1].glow}` : 'none',
+              color: emailTier ? emailTier.core : 'var(--color-obs-text-subtle)',
+              textShadow: emailTier ? `0 0 6px ${emailTier.glow}` : 'none',
             }}
           >
             {deal.emailCount}
@@ -1903,8 +1905,8 @@ function DealCard({
           <span
             className="text-[11px] font-black tabular-nums w-8 text-right shrink-0 leading-[8px]"
             style={{
-              color: mLv > 0 ? TIERS[mLv - 1].core : 'var(--color-obs-text-subtle)',
-              textShadow: mLv > 0 ? `0 0 6px ${TIERS[mLv - 1].glow}` : 'none',
+              color: meetingTier ? meetingTier.core : 'var(--color-obs-text-subtle)',
+              textShadow: meetingTier ? `0 0 6px ${meetingTier.glow}` : 'none',
             }}
           >
             {deal.meetingCount}

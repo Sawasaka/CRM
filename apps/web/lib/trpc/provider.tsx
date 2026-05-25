@@ -48,5 +48,5 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
 function getTrpcUrl() {
   const externalApiUrl = process.env.NEXT_PUBLIC_API_URL
   if (externalApiUrl) return `${externalApiUrl.replace(/\/+$/, '')}/trpc`
-  return process.env.NODE_ENV === 'production' ? '/api/trpc' : 'http://localhost:3001/trpc'
+  return '/api/trpc'
 }

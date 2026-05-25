@@ -54,6 +54,7 @@ export default function ImmersiveRoomPage() {
     { title: 'ステップ3: ネクストアクション', bullets: ['次回の会議日程をその場で確定', '誰が何をいつまでにやるかを明確に', 'フォローアップメールを24h以内に送信', '社内共有のタイミングも合意する'], accent: '#44FF88' },
     { title: 'まとめ & Q&A', bullets: ['ヒアリング → 深掘り → ネクストアクション', '「聞く7割、話す3割」を意識する', '次回研修: クロージング編（来週）', '質問・感想をチャットに書いてください'], accent: '#FFDD44' },
   ]
+  const currentSlideData = SLIDES[currentSlide] ?? SLIDES[0]!
 
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [chats])
 
@@ -89,7 +90,7 @@ export default function ImmersiveRoomPage() {
 
   let seatIndex = 0
   const seatedParticipants = PARTICIPANTS.map(p => {
-    const row = seatPositions[seatIndex < 3 ? 0 : 1]
+    const row = seatPositions[seatIndex < 3 ? 0 : 1] ?? seatPositions[0]!
     const seatInRow = seatIndex < 3 ? seatIndex : seatIndex - 3
     const seat = row.seats[seatInRow]
     seatIndex++
@@ -167,14 +168,14 @@ export default function ImmersiveRoomPage() {
                   <div style={{ fontSize: '9px', fontWeight: 700, color: '#99AACC', letterSpacing: '0.12em', marginBottom: '16px' }}>
                     SLIDE {currentSlide + 1} / {SLIDES.length}
                   </div>
-                  <h2 style={{ margin: '0 0 20px', fontSize: '22px', fontWeight: 800, color: SLIDES[currentSlide].accent, lineHeight: 1.3 }}>
-                    {SLIDES[currentSlide].title}
+                  <h2 style={{ margin: '0 0 20px', fontSize: '22px', fontWeight: 800, color: currentSlideData.accent, lineHeight: 1.3 }}>
+                    {currentSlideData.title}
                   </h2>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {SLIDES[currentSlide].bullets.map((bullet, bi) => (
+                    {currentSlideData.bullets.map((bullet, bi) => (
                       <motion.div key={bi} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.08 + bi * 0.07 }}
                         style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', marginTop: '7px', flexShrink: 0, background: SLIDES[currentSlide].accent, boxShadow: `0 0 6px ${SLIDES[currentSlide].accent}50` }} />
+                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', marginTop: '7px', flexShrink: 0, background: currentSlideData.accent, boxShadow: `0 0 6px ${currentSlideData.accent}50` }} />
                         <span style={{ fontSize: '15px', color: '#CCDDEE', lineHeight: 1.6 }}>{bullet}</span>
                       </motion.div>
                     ))}

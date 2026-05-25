@@ -67,7 +67,7 @@ function StatusObsBadge({ status, size = 'md' }: { status: ApproachStatus; size?
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
 // 取引詳細のタスクモーダルを再利用 (タスク作成 UI を統一)
-import { DealTaskModal, DEAL_TASK_TYPE_STYLES, type DealTask } from '@/app/(app)/deals/[id]/page'
+import { DealTaskModal, DEAL_TASK_TYPE_STYLES, type DealTask } from '@/app/(app)/deals/_components/DealTaskModal'
 
 type NextActionValue = string | null
 type PersonRole = '決裁者' | '推進者' | '一般'
@@ -905,7 +905,7 @@ function formatHistoryDateTime(iso: string): { date: string; time: string } {
 
 // コンタクト・取引両方で使えるアクティビティタイムライン
 // entries 省略時は MOCK_CONTACT_HISTORY を表示する (主にコンタクト詳細用)
-export function ContactHistoryTimeline({ entries }: { entries?: HistoryEntry[] } = {}) {
+function ContactHistoryTimeline({ entries }: { entries?: HistoryEntry[] } = {}) {
   const [filter, setFilter] = useState<HistoryKind | 'all'>('all')
   const source = entries ?? MOCK_CONTACT_HISTORY
 

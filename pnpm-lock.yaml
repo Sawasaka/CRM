@@ -259,6 +259,9 @@ importers:
         specifier: ^5.0.3
         version: 5.0.12(@types/react@19.2.2)(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))
     devDependencies:
+      '@repo/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
       '@tailwindcss/postcss':
         specifier: ^4.1.6
         version: 4.2.2

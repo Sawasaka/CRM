@@ -21,7 +21,7 @@ export const legalDocuments: LegalDocument[] = [
       {
         heading: '適用',
         body: [
-          '本利用規約は、株式会社ルーキースマートが提供するクラウドサービス「ルキスマCRM」の利用条件を定めるものです。',
+          '本利用規約は、株式会社ルーキースマートジャパンが提供するクラウドサービス「ルキスマCRM」の利用条件を定めるものです。',
           '本サービスの利用契約は、利用申込みに対して当社が承諾した時点で成立します。',
         ],
       },
@@ -46,7 +46,7 @@ export const legalDocuments: LegalDocument[] = [
         body: [
           'AI機能の出力は参考情報であり、当社は正確性、完全性、有用性、特定目的への適合性を保証しません。',
           '利用者は、AI機能に入力または連携する利用者データについて、第三者の権利を侵害せず、必要な権限、同意、通知その他の手続きを備えていることを保証します。',
-          '法律、医療、金融、採用、与信その他重要な判断について、AI出力のみを根拠として意思決定してはなりません。',
+          '顧客への送信、契約判断、採用・評価、与信、法務・医療・金融等の重要判断に利用する場合は、人による確認を行ってください。',
         ],
       },
       {
@@ -97,7 +97,7 @@ export const legalDocuments: LegalDocument[] = [
         body: [
           'AI機能では、入力データおよび連携データをOpenAI、Googleその他当社が選定するAI事業者に送信して処理することがあります。',
           '当社は、契約または設定により、送信データがAI事業者の汎用モデル学習に利用されないよう合理的な措置を講じます。',
-          'AI処理のため、日本国外のデータセンターまたは外国に所在する事業者に一時的に送信される場合があります。',
+          'AI処理のため、日本国外のデータセンターまたは外国に所在する事業者へ一時的に送信される場合があります。当社は、委託先の安全管理措置およびデータ利用条件を確認します。',
         ],
       },
       {
@@ -125,8 +125,7 @@ export const legalDocuments: LegalDocument[] = [
   {
     slug: 'ai-policy',
     title: 'AI利用ポリシー',
-    description:
-      'AI機能の入力、出力、禁止用途、人による確認、ログ、外部AI事業者への送信方針を定めます。',
+    description: 'AI機能の入力、出力、人による確認、外部AI事業者への送信方針を定めます。',
     updatedAt: '2026-05-17',
     sourcePath: 'bgm/docs/legal/ai_usage_policy.md',
     sections: [
@@ -148,7 +147,7 @@ export const legalDocuments: LegalDocument[] = [
         heading: '禁止される利用',
         body: [
           '虚偽、誤認、詐欺、なりすまし、スパム、違法な勧誘、差別、ハラスメント、プライバシー侵害、第三者の権利侵害につながる利用を禁止します。',
-          '人による確認なく、重要な法的・財務的・人事的・医療的判断を行う利用を禁止します。',
+          '人による確認なく、重要な法的・財務的・人事的・医療的判断を行う利用は避けてください。',
         ],
       },
       {
@@ -213,21 +212,22 @@ export const legalDocuments: LegalDocument[] = [
       {
         heading: '販売事業者',
         body: [
-          '株式会社ルーキースマート (Rookie Smart Inc.)',
-          '代表者、所在地、電話番号、問い合わせ先は公開前に法人登記情報および運用窓口に合わせて確定します。',
+          '株式会社ルーキースマートジャパン',
+          '所在地および電話番号は、請求があった場合、法令に基づき遅滞なく開示します。',
+          'お問い合わせ先: h.sawasaka@rookiesmart.jp',
         ],
       },
       {
         heading: '販売価格',
         body: [
-          '各プラン・オプションの価格は、本サービス内のプラン選択ページまたは料金ページに表示します。',
+          '各プラン・オプションの価格は、本サービス内の料金ページ、プラン選択画面または申込画面に表示します。',
           '表示価格は税抜価格であり、別途消費税相当額を申し受けます。',
         ],
       },
       {
         heading: '支払方法・提供時期',
         body: [
-          'クレジットカード決済および法人契約における銀行振込に対応予定です。',
+          'クレジットカード決済および法人契約における銀行振込に対応します。',
           '利用登録および決済完了後、即時にサービスをご利用いただけます。ただし、データ移行等の個別役務は別途合意したスケジュールに従います。',
         ],
       },
@@ -250,3 +250,13 @@ export const legalDocuments: LegalDocument[] = [
 
 export const getLegalDocument = (slug: string) =>
   legalDocuments.find((document) => document.slug === slug)
+
+const primaryLegalSlugs = new Set(['terms', 'privacy', 'tokushoho'])
+
+export const primaryLegalDocuments = legalDocuments.filter((document) =>
+  primaryLegalSlugs.has(document.slug)
+)
+
+export const supplementalLegalDocuments = legalDocuments.filter(
+  (document) => !primaryLegalSlugs.has(document.slug)
+)

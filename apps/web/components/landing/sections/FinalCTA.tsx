@@ -25,7 +25,7 @@ export const FinalCTA = () => (
             className="rounded-lg px-7 py-3.5 text-sm font-medium text-[#0a0a0c]"
             style={{ background: 'linear-gradient(135deg, #abc7ff, #0071e3)' }}
           >
-            営業相談を予約
+            CRM構築を相談する
           </a>
         </div>
       </div>

@@ -136,9 +136,6 @@ const agentFeats: { key: AgentKey; items: string[] }[] = [
 const platformFeats: { label: string; detail: string }[] = [
   { label: '企業データベース', detail: '290 万社 + 求人インテント + 外部リサーチ' },
   { label: 'AI モデル選択', detail: 'Gemini 2.5 Flash Lite / GPT-4o mini / GPT-4o' },
-  { label: 'エージェントモード', detail: 'ブラウザ自動操作' },
-  { label: '外部連携', detail: 'Gmail / Google Calendar / Notion 議事録' },
-  { label: 'カスタム連携', detail: 'その他は都度ご相談で対応可能' },
 ]
 
 // セルフサーブ CRM 単独プラン
@@ -472,7 +469,7 @@ function SelfServeBlock() {
             className="font-semibold tracking-[0.02em] text-[13px]"
             style={{ color: '#abc7ff' }}
           >
-            セルフサーブ · CRM 単独プラン
+            ルキスマCRM プラン
           </span>
           <span
             className="inline-flex items-center gap-1.5 text-[10.5px] font-medium px-2 py-0.5 rounded-full ml-1"
@@ -638,7 +635,7 @@ function SelfServeBlock() {
                     boxShadow: '0 6px 18px -10px rgba(171,199,255,0.32)',
                   }}
                 >
-                  先行予約に登録 <ArrowRight size={13} />
+                  無料相談 <ArrowRight size={13} />
                 </a>
               </div>
             </div>
@@ -744,6 +741,18 @@ function SelfServeBlock() {
             >
               <span className="font-mono text-[12px] leading-none">＋</span>
               企業DB
+            </span>
+            <span
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold tracking-[0.02em]"
+              style={{
+                background:
+                  'linear-gradient(135deg, rgba(171,199,255,0.20), rgba(171,199,255,0.06))',
+                color: '#cfdcff',
+                boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.36)',
+              }}
+            >
+              <span className="font-mono text-[12px] leading-none">＋</span>
+              LLM 搭載
             </span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-2">

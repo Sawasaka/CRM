@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronLeft, FileText, Eye, Users, Copy, Link2, Plus, Clock, Lock, Calendar, Tag } from 'lucide-react'
+import { ChevronLeft, Eye, Users, Plus, Clock, Lock, Calendar, Tag } from 'lucide-react'
 import type { ManagedDocument, DocumentShareLink, DocumentViewEvent } from '@/types/crm'
 
 // ─── Mock Data ───────────────────────────────────────────────────────────────
@@ -134,7 +134,7 @@ export default function DocumentDetailPage() {
                         <p className="text-[11px] text-[#AEAEB2]">{link.companyName || '全員'}</p>
                       </div>
                       <span className="text-[13px] tabular-nums font-semibold text-[#1D1D1F]">{link.viewCount}</span>
-                      <span className="text-[12px] text-[#CCDDF0]">{link.lastViewedAt ? link.lastViewedAt.split(' ')[0].slice(5) : '—'}</span>
+                      <span className="text-[12px] text-[#CCDDF0]">{link.lastViewedAt ? (link.lastViewedAt.split(' ')[0] ?? link.lastViewedAt).slice(5) : '—'}</span>
                       <span className="text-[12px] text-[#AEAEB2]">{link.createdAt.slice(5)}</span>
                     </div>
                   ))}

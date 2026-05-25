@@ -33,7 +33,7 @@ const MOCK_TEMPLATES: Template[] = [
 
 export default function ContentStudioPage() {
   const [templates] = useState(MOCK_TEMPLATES)
-  const [showUpload, setShowUpload] = useState(false)
+  const [, setShowUpload] = useState(false)
   const [generating, setGenerating] = useState<string | null>(null)
 
   function handleGenerate(templateId: string) {

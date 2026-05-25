@@ -41,11 +41,14 @@ const buttonStyle = {
   border: '1px solid #3355CC',
 }
 
+type ProposalVote = { up: number; down: number; voted: 'up' | 'down' | null }
+const DEFAULT_VOTE: ProposalVote = { up: 0, down: 0, voted: null }
+
 export default function ProposalsPage() {
   const [categoryFilter, setCategoryFilter] = useState('全て')
   const [statusFilter, setStatusFilter] = useState('全て')
   const [showModal, setShowModal] = useState(false)
-  const [votes, setVotes] = useState<Record<string, { up: number; down: number; voted: 'up' | 'down' | null }>>(
+  const [votes, setVotes] = useState<Record<string, ProposalVote>>(
     Object.fromEntries(PROPOSALS.map(p => [p.id, { up: p.upVotes, down: p.downVotes, voted: null }]))
   )
   const [newProposal, setNewProposal] = useState({ title: '', category: '新機能', description: '' })
@@ -58,9 +61,9 @@ export default function ProposalsPage() {
 
   const handleVote = (id: string, type: 'up' | 'down') => {
     setVotes(prev => {
-      const cur = prev[id]
+      const cur = prev[id] ?? DEFAULT_VOTE
       if (cur.voted === type) return prev
-      const next = { ...cur, voted: type }
+      const next: ProposalVote = { ...cur, voted: type }
       if (type === 'up') {
         next.up = cur.up + 1
         if (cur.voted === 'down') next.down = Math.max(0, cur.down - 1)
@@ -167,7 +170,7 @@ export default function ProposalsPage() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         <AnimatePresence>
           {filtered.map((p, i) => {
-            const v = votes[p.id]
+            const v = votes[p.id] ?? { up: p.upVotes, down: p.downVotes, voted: null }
             const total = v.up + v.down
             const upPct = total > 0 ? (v.up / total) * 100 : 50
             return (

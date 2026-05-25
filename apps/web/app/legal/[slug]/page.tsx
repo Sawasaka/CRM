@@ -59,17 +59,14 @@ export default async function LegalDocumentPage({ params }: LegalPageProps) {
           <p className="mt-5 text-sm leading-7 text-[#aaa7ad]">{document.description}</p>
           <dl className="mt-6 grid gap-3 text-xs text-[#8f8c90] sm:grid-cols-2">
             <div>
-              <dt className="font-semibold text-[#c7c5c9]">最終ドラフト更新</dt>
+              <dt className="font-semibold text-[#c7c5c9]">最終更新</dt>
               <dd className="mt-1">{document.updatedAt}</dd>
             </div>
             <div>
-              <dt className="font-semibold text-[#c7c5c9]">管理元</dt>
-              <dd className="mt-1">{document.sourcePath}</dd>
+              <dt className="font-semibold text-[#c7c5c9]">運営</dt>
+              <dd className="mt-1">株式会社ルーキースマートジャパン</dd>
             </div>
           </dl>
-          <p className="mt-5 rounded-lg bg-[#1b1b1d] p-4 text-xs leading-6 text-[#aaa7ad] shadow-[inset_0_0_0_1px_rgba(255,207,74,0.20)]">
-            このページは公開前ドラフトです。公開前に、法人情報、料金、問い合わせ先、委託先、AI事業者、決済条件を確定し、IT/SaaS法務に強い専門家レビューを行ってください。
-          </p>
         </header>
 
         <div className="mt-10 space-y-10">

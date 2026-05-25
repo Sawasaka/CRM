@@ -10,7 +10,6 @@ import {
   ChevronRight,
   ChevronUp,
   Filter,
-  List,
   Plus,
   Search,
   Square,
@@ -20,7 +19,6 @@ import {
 import {
   ObsButton,
   ObsCard,
-  ObsChip,
   ObsHero,
   ObsInput,
   ObsPageShell,
@@ -171,8 +169,8 @@ function parseRevenueOku(raw: string | null): number | null {
   const choM = s.match(/(\d+(?:\.\d+)?)兆/)
   const okuM = s.match(/(\d+(?:\.\d+)?)億/)
   let oku = 0
-  if (choM) oku += parseFloat(choM[1]) * 10000
-  if (okuM) oku += parseFloat(okuM[1])
+  if (choM?.[1]) oku += parseFloat(choM[1]) * 10000
+  if (okuM?.[1]) oku += parseFloat(okuM[1])
   return oku > 0 ? oku : null
 }
 
@@ -220,13 +218,6 @@ function formatRevenue(raw: string | null): string {
   const trimmed = raw.trim()
   if (trimmed.startsWith('約')) return trimmed
   return `約${trimmed}`
-}
-
-function mapSignal(level: string | undefined): Signal {
-  if (level === 'HOT') return 'Hot'
-  if (level === 'MIDDLE') return 'Middle'
-  if (level === 'LOW') return 'Low'
-  return 'None'
 }
 
 const INTENT_PRIORITY: Record<string, number> = { HOT: 4, MIDDLE: 3, LOW: 2, NONE: 1 }
@@ -1404,34 +1395,14 @@ function CompanyRowItem({
   onToggleSelect,
 }: {
   row: CompanyRow
-  intent: { level: Signal; latestAt: string | null; signalCount: number; activeDepts: DepartmentType[] }
+  intent: ComputedIntent
   onClick: () => void
   onHover: () => void
   isSelected: boolean
   onToggleSelect: () => void
 }) {
   const isEnriched = row.enrichmentStatus === 'COMPLETED' || row.enrichmentStatus === 'completed'
-  const [reserving, setReserving] = useState(false)
-  const [reserved, setReserved] = useState(false)
   const firstPartySignal: FirstPartySignal | null = getCompanyFirstPartySignal(row.name)
-
-  async function handleReserve(e: React.MouseEvent) {
-    e.stopPropagation()
-    if (reserving || reserved) return
-    setReserving(true)
-    try {
-      const res = await fetch('/api/abm/reserve', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ids: [row.id], priority: 'high' }),
-      })
-      if (res.ok) setReserved(true)
-    } catch {
-      // 静かに失敗
-    } finally {
-      setReserving(false)
-    }
-  }
 
   return (
     <div
