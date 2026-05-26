@@ -134,7 +134,7 @@ const agentFeats: { key: AgentKey; items: string[] }[] = [
 
 // 5 エージェント横断のデータ基盤・連携機能
 const platformFeats: { label: string; detail: string }[] = [
-  { label: '企業データベース', detail: '290 万社 + 部署直通 180 万件 + 求人インテント 25 部門 + 採用予算' },
+  { label: '企業データベース', detail: '290 万社 + 求人インテント + 外部リサーチ' },
   { label: 'AI モデル選択', detail: 'Gemini 2.5 Flash Lite / GPT-4o mini / GPT-4o' },
 ]
 
@@ -153,14 +153,14 @@ const selfServePlans: SelfServePlan[] = [
   {
     id: 'standard',
     name: 'Standard',
-    credits: 10000,
+    credits: 5000,
     monthly: 42000,
     annualMonthly: 29000,
   },
   {
     id: 'pro',
     name: 'Pro',
-    credits: 50000,
+    credits: 30000,
     monthly: 140000,
     annualMonthly: 98000,
     featured: true,
@@ -777,10 +777,10 @@ function SelfServeBlock() {
             }}
           >
             <span className="text-[12px] text-[#c7c5c9]">
-              <span className="text-[#e7e5ea] font-semibold">Standard</span> 10,000 cr / 月
+              <span className="text-[#e7e5ea] font-semibold">Standard</span> 5,000 cr / 月
             </span>
             <span className="text-[11.5px] font-mono text-aurora">
-              ≒ 企業 <span className="font-bold">500 件</span> 取得 相当
+              ≒ 企業 <span className="font-bold">250 件</span> 取得 相当
             </span>
           </div>
           <div
@@ -791,10 +791,10 @@ function SelfServeBlock() {
             }}
           >
             <span className="text-[12px] text-[#c7c5c9]">
-              <span className="text-[#e7e5ea] font-semibold">Pro</span> 50,000 cr / 月
+              <span className="text-[#e7e5ea] font-semibold">Pro</span> 30,000 cr / 月
             </span>
             <span className="text-[11.5px] font-mono text-aurora">
-              ≒ 企業 <span className="font-bold">2,500 件</span> 取得 相当
+              ≒ 企業 <span className="font-bold">1,500 件</span> 取得 相当
             </span>
           </div>
         </div>
