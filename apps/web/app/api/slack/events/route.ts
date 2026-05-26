@@ -152,7 +152,7 @@ async function extractFaqFromConversation(opts: {
     const openai = new OpenAI({ apiKey })
     const systemPrompt = buildSystemPrompt(opts)
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-5.5',
       temperature: 0.2,
       response_format: { type: 'json_object' },
       messages: [

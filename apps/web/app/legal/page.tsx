@@ -1,17 +1,22 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { publicSiteUrl } from '@/lib/public-site'
 import { primaryLegalDocuments, supplementalLegalDocuments } from './_content'
 
 export const metadata: Metadata = {
-  title: 'Legal | ルキスマCRM',
+  metadataBase: new URL(publicSiteUrl),
+  title: '法務ドキュメント | ルキスマCRM | 株式会社ルーキースマートジャパン',
   description: 'ルキスマCRM の利用規約、プライバシーポリシー、特定商取引法に基づく表記です。',
+  alternates: {
+    canonical: '/legal',
+  },
 }
 
 export default function LegalIndexPage() {
   return (
     <main className="min-h-screen bg-[#0e0e10] text-[#e4e2e4]">
       <div className="mx-auto max-w-5xl px-6 py-16 md:py-24">
-        <Link href="/lp" className="text-sm text-[#abc7ff] hover:text-white">
+        <Link href="/" className="text-sm text-[#abc7ff] hover:text-white">
           ルキスマCRM
         </Link>
         <div className="mt-8 max-w-3xl">

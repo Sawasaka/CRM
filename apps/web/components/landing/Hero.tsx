@@ -413,7 +413,7 @@ const DropdownItem = ({
 )
 
 // ---------- Option chips (model / scope / person / external) ----------
-type ModelKey      = 'gemini-2.5-flash-lite' | 'gpt-4o-mini' | 'gpt-4o'
+type ModelKey      = 'gemini-3-flash-preview' | 'gpt-5.5'
 type FeatureAgentId = 'sales' | 'marketing' | 'support' | 'helpdesk' | 'pdm'
 
 // サービス側 AssigneeFilter と整合させる: バッジ色 / イニシャル / 表示名
@@ -421,17 +421,16 @@ const FEATURE_AGENTS: { id: FeatureAgentId; name: string; initial: string; color
   { id: 'sales',     name: 'Sales Agent',     initial: 'S', color: '#abc7ff' },
   { id: 'marketing', name: 'Marketing Agent', initial: 'M', color: '#ffcf4a' },
   { id: 'support',   name: 'Customer Agent',  initial: 'C', color: '#ff8dcf' },
-  { id: 'helpdesk',  name: 'Knowledge Agent', initial: 'K', color: '#c8b9ff' },
   { id: 'pdm',       name: 'Product Agent',   initial: 'P', color: '#8dffc9' },
+  { id: 'helpdesk',  name: 'Knowledge Agent', initial: 'K', color: '#c8b9ff' },
 ]
 const ALL_FEATURE_AGENT_IDS: FeatureAgentId[] = FEATURE_AGENTS.map((a) => a.id)
 type PersonScope   = 'all' | 'tanaka' | 'suzuki' | 'sato' | 'takahashi' | 'watanabe'
 type ExternalScope = 'off' | 'web'
 
 const MODEL_LABELS: Record<ModelKey, string> = {
-  'gemini-2.5-flash-lite': 'Gemini 2.5 Flash Lite',
-  'gpt-4o-mini':     'GPT-4o mini',
-  'gpt-4o':          'GPT-4o',
+  'gemini-3-flash-preview': 'Gemini 3 Flash Preview',
+  'gpt-5.5':                'GPT-5.5',
 }
 const PERSON_LABELS: Record<PersonScope, string> = {
   all: '全て',
@@ -479,7 +478,7 @@ export const Hero = () => {
   const [phIdx, setPhIdx] = useState(0)
   const [phShow, setPhShow] = useState(true)
   const [demoView, setDemoView] = useState<HeroDemoKey>('chat')
-  const [model, setModel] = useState<ModelKey>('gpt-4o-mini')
+  const [model, setModel] = useState<ModelKey>('gemini-3-flash-preview')
   const [featureAgents, setFeatureAgents] = useState<Set<FeatureAgentId>>(
     () => new Set(ALL_FEATURE_AGENT_IDS),
   )

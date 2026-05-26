@@ -46,8 +46,6 @@ import {
 const CATEGORY_META: Record<PriorityCategory, {
   Icon: React.ElementType
   iconColor: string
-  /** グラフバー専用のダークトーン色 (落ち着いた印象に) */
-  barColor: string
   bg: string
   ring: string
   label: string
@@ -56,7 +54,6 @@ const CATEGORY_META: Record<PriorityCategory, {
   要望機能: {
     Icon: Sparkles,
     iconColor: '#abc7ff',
-    barColor: '#3a5378',
     bg: 'rgba(171,199,255,0.10)',
     ring: 'rgba(171,199,255,0.28)',
     label: '要望機能',
@@ -65,7 +62,6 @@ const CATEGORY_META: Record<PriorityCategory, {
   ニーズ: {
     Icon: Lightbulb,
     iconColor: '#ffb86b',
-    barColor: '#7a5530',
     bg: 'rgba(255,184,107,0.10)',
     ring: 'rgba(255,184,107,0.28)',
     label: 'ニーズ',
@@ -74,7 +70,6 @@ const CATEGORY_META: Record<PriorityCategory, {
   課題: {
     Icon: AlertTriangle,
     iconColor: '#ff6b6b',
-    barColor: '#7a3838',
     bg: 'rgba(255,107,107,0.10)',
     ring: 'rgba(255,107,107,0.28)',
     label: '課題',
@@ -83,7 +78,6 @@ const CATEGORY_META: Record<PriorityCategory, {
   問題: {
     Icon: LifeBuoy,
     iconColor: '#c8b9ff',
-    barColor: '#544781',
     bg: 'rgba(200,185,255,0.10)',
     ring: 'rgba(200,185,255,0.28)',
     label: '問題',
@@ -163,20 +157,6 @@ export default function DevelopmentPriorityPage() {
       return next
     })
 
-  // バークリック時: 展開 + 該当行へスムーススクロール
-  const handleBarClick = (id: string) => {
-    setExpandedIds((prev) => {
-      const next = new Set(prev)
-      next.add(id)
-      return next
-    })
-    // 次の paint で row が展開されてからスクロール
-    requestAnimationFrame(() => {
-      const el = document.getElementById(`priority-row-${id}`)
-      el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    })
-  }
-
   // カテゴリごとに「言及企業数 降順」でソート
   const itemsByCategory = useMemo(() => {
     const out: Record<PriorityCategory, PriorityItem[]> = {
@@ -223,7 +203,6 @@ export default function DevelopmentPriorityPage() {
             const meta = CATEGORY_META[cat]
             const Icon = meta.Icon
             const allItems = itemsByCategory[cat]
-            const maxCount = Math.max(1, ...allItems.map(uniqueCompanyCount))
             return (
               <section key={cat}>
                 {/* セクション見出し */}
@@ -259,17 +238,6 @@ export default function DevelopmentPriorityPage() {
                   >
                     {meta.caption}
                   </p>
-                </div>
-
-                <div className="mb-4">
-                  <CategoryBarChart
-                    items={allItems}
-                    maxCount={maxCount}
-                    iconColor={meta.iconColor}
-                    barColor={meta.bg}
-                    ring={meta.ring}
-                    onBarClick={handleBarClick}
-                  />
                 </div>
 
                 {/* リスト (全ステータス同じテーブル内に表示) */}
@@ -317,276 +285,6 @@ export default function DevelopmentPriorityPage() {
         </div>
       </div>
     </ObsPageShell>
-  )
-}
-
-// ─── 縦棒グラフ ────────────────────────────────────────────────────────────────
-//
-// 各カテゴリ内の項目を縦棒グラフで可視化。
-// 横並びで「どれが多くて、どれが少ないか」を一目で比較できる。
-
-function CategoryBarChart({
-  items,
-  maxCount,
-  iconColor,
-  barColor,
-  ring,
-  onBarClick,
-}: {
-  items: PriorityItem[]
-  maxCount: number
-  iconColor: string
-  barColor: string
-  ring: string
-  onBarClick?: (id: string) => void
-}) {
-  // Y 軸の目盛り (0 から maxCount まで等間隔で整数本)
-  const yTicks = useMemo(() => {
-    const ticks: number[] = []
-    const top = Math.max(1, maxCount)
-    for (let i = top; i >= 0; i--) ticks.push(i)
-    return ticks
-  }, [maxCount])
-
-  // バー領域とラベル領域を完全に分離するため、固定px で配分
-  const PLOT_HEIGHT = 180 // バーが伸びる領域
-  const LABEL_HEIGHT = 36 // X軸ラベル領域
-
-  return (
-    <ObsCard depth="high" padding="lg" radius="xl">
-      <div className="flex gap-3">
-        {/* Y 軸 (社数の目盛り) — プロット領域とぴったり同じ高さで配置 */}
-        <div
-          className="flex flex-col justify-between text-[10px] tabular-nums shrink-0 pr-1 text-right"
-          style={{
-            color: 'var(--color-obs-text-subtle)',
-            height: PLOT_HEIGHT,
-            minWidth: 18,
-          }}
-        >
-          {yTicks.map((v) => (
-            <span key={v} className="leading-none">
-              {v}
-            </span>
-          ))}
-        </div>
-
-        {/* グラフ本体 (プロット + ラベル) */}
-        <div className="relative flex-1">
-          {/* プロット領域 (バー + グリッド) */}
-          <div className="relative" style={{ height: PLOT_HEIGHT }}>
-            {/* Y 軸グリッド線 */}
-            <div className="absolute inset-0 pointer-events-none">
-              {yTicks.map((_, i) => {
-                const top = (i / (yTicks.length - 1)) * 100
-                const isBaseline = i === yTicks.length - 1
-                return (
-                  <span
-                    key={i}
-                    className="absolute left-0 right-0 h-px"
-                    style={{
-                      top: `${top}%`,
-                      backgroundColor: isBaseline
-                        ? 'rgba(255,255,255,0.10)'
-                        : 'rgba(255,255,255,0.05)',
-                    }}
-                  />
-                )
-              })}
-            </div>
-
-            {/* バー (item ごと) */}
-            <div className="relative flex items-end justify-around gap-2 h-full">
-              {items.map((it) => (
-                <ChartBar
-                  key={it.id}
-                  item={it}
-                  maxCount={maxCount}
-                  iconColor={iconColor}
-                  barColor={barColor}
-                  ring={ring}
-                  plotHeight={PLOT_HEIGHT}
-                  onClick={onBarClick ? () => onBarClick(it.id) : undefined}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* X 軸ラベル領域 — プロット領域と完全に分離してテキスト被り解消 */}
-          <div
-            className="flex justify-around gap-2 pt-2"
-            style={{ height: LABEL_HEIGHT }}
-          >
-            {items.map((it) => (
-              <div
-                key={it.id}
-                className="flex-1 min-w-0 text-center px-0.5"
-              >
-                <p
-                  className="text-[11px] leading-snug font-medium line-clamp-2"
-                  style={{ color: 'var(--color-obs-text-muted)' }}
-                  title={it.title}
-                >
-                  {it.title}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </ObsCard>
-  )
-}
-
-// 1 本の縦棒 + ホバーで言及企業一覧をポップオーバー表示
-// クリックで該当行を展開＋スクロールする (onClick が指定された場合)
-function ChartBar({
-  item,
-  maxCount,
-  iconColor,
-  barColor,
-  ring,
-  plotHeight,
-  onClick,
-}: {
-  item: PriorityItem
-  maxCount: number
-  iconColor: string
-  barColor: string
-  ring: string
-  plotHeight: number
-  onClick?: () => void
-}) {
-  const [hover, setHover] = useState(false)
-  const c = uniqueCompanyCount(item)
-  const heightPercent = (c / Math.max(1, maxCount)) * 100
-  // バー高さ = プロット領域に対する割合 - 数値ラベルの高さ余白
-  const NUM_LABEL_HEIGHT = 18
-  const barHeightPx = Math.max(
-    2,
-    ((plotHeight - NUM_LABEL_HEIGHT) * heightPercent) / 100,
-  )
-  // ユニークな企業名リスト (出現順を維持)
-  const companies = useMemo(() => {
-    const seen = new Set<string>()
-    const list: string[] = []
-    for (const e of item.evidence) {
-      if (!seen.has(e.companyId)) {
-        seen.add(e.companyId)
-        list.push(e.companyName)
-      }
-    }
-    return list
-  }, [item.evidence])
-
-  return (
-    <div
-      role={onClick ? 'button' : undefined}
-      tabIndex={onClick ? 0 : -1}
-      onClick={onClick}
-      onKeyDown={
-        onClick
-          ? (e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault()
-                onClick()
-              }
-            }
-          : undefined
-      }
-      aria-label={onClick ? `${item.title} の詳細を見る` : undefined}
-      title={onClick ? 'クリックで詳細を表示' : undefined}
-      className={`relative flex-1 flex flex-col items-center justify-end min-w-0 h-full ${
-        onClick ? 'cursor-pointer' : ''
-      }`}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-    >
-      {/* 数値 (バー上に表示) — hover時に矢印を添えて「クリックで詳細」を示唆 */}
-      <span
-        className="inline-flex items-center gap-0.5 text-[11.5px] font-bold tabular-nums mb-1 transition-transform duration-150"
-        style={{
-          color: iconColor,
-          transform: hover ? 'translateY(-2px)' : 'translateY(0)',
-        }}
-      >
-        {c}
-        {onClick && (
-          <ChevronDown
-            size={10}
-            strokeWidth={2.6}
-            style={{
-              opacity: hover ? 1 : 0,
-              transform: hover ? 'translateY(0)' : 'translateY(-2px)',
-              transition: 'opacity 150ms var(--ease-liquid), transform 150ms var(--ease-liquid)',
-              marginLeft: 1,
-            }}
-            aria-hidden
-          />
-        )}
-      </span>
-      {/* バー — ダークトーンで落ち着いた印象 / hover時にリングが出てクリック可能感を強める */}
-      <div className="relative w-full flex justify-center">
-        <div
-          className="w-full max-w-[48px] rounded-t-[5px] transition-all duration-300"
-          style={{
-            height: `${barHeightPx}px`,
-            // 上を少し明るく / 下に向かって暗く落とすダークグラデーション
-            background: `linear-gradient(180deg, ${barColor} 0%, ${barColor}cc 100%)`,
-            boxShadow: hover
-              ? `inset 0 1px 0 rgba(255,255,255,0.18), 0 0 0 2px ${ring}`
-              : `inset 0 1px 0 rgba(255,255,255,0.10)`,
-            filter: hover ? 'brightness(1.25)' : 'brightness(1)',
-          }}
-        />
-      </div>
-
-      {/* ホバーポップオーバー: 項目タイトル + 言及企業一覧 */}
-      {hover && (
-        <div
-          className="absolute left-1/2 -translate-x-1/2 z-50 animate-[fadeIn_0.16s_ease-out] pointer-events-none"
-          style={{ bottom: 'calc(100% + 4px)' }}
-        >
-          <div
-            className="rounded-[var(--radius-obs-md)] px-3 py-2.5 min-w-[200px] max-w-[260px]"
-            style={{
-              backgroundColor: 'var(--color-obs-surface-highest)',
-              boxShadow: `0 12px 32px rgba(0,0,0,0.5), inset 0 0 0 1px ${ring}`,
-            }}
-          >
-            <p
-              className="text-[12px] font-semibold leading-snug mb-2"
-              style={{ color: 'var(--color-obs-text)' }}
-            >
-              {item.title}
-            </p>
-            <ul className="space-y-1">
-              {companies.map((name) => (
-                <li
-                  key={name}
-                  className="text-[11.5px] leading-snug flex items-start gap-1.5"
-                  style={{ color: 'var(--color-obs-text-muted)' }}
-                >
-                  <span className="mt-1" style={{ color: iconColor }}>
-                    •
-                  </span>
-                  <span className="flex-1 min-w-0 break-words">{name}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-          {/* 矢印 */}
-          <span
-            className="absolute left-1/2 -translate-x-1/2 w-2.5 h-2.5 rotate-45"
-            style={{
-              bottom: '-4px',
-              backgroundColor: 'var(--color-obs-surface-highest)',
-              boxShadow: `2px 2px 0 0 ${ring}`,
-            }}
-          />
-        </div>
-      )}
-    </div>
   )
 }
 

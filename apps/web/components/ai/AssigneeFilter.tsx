@@ -57,8 +57,8 @@ const FEATURES: FeatureMeta[] = [
   { id: 'sales',     name: 'Sales Agent',     initial: 'S', color: '#abc7ff', description: '商談・取引・コンタクト' },
   { id: 'marketing', name: 'Marketing Agent', initial: 'M', color: '#ffcf4a', description: 'メール配信・インテント' },
   { id: 'support',   name: 'Customer Agent',  initial: 'C', color: '#ff8dcf', description: '問い合わせ・チケット' },
-  { id: 'helpdesk',  name: 'Knowledge Agent', initial: 'K', color: '#c8b9ff', description: 'ナレッジ・社内Q&A' },
   { id: 'pdm',       name: 'Product Agent',   initial: 'P', color: '#8dffc9', description: '顧客の声・要望集計' },
+  { id: 'helpdesk',  name: 'Knowledge Agent', initial: 'K', color: '#c8b9ff', description: 'ナレッジ・社内Q&A' },
 ]
 
 // Phase 1: モック。将来的にはワークスペースのメンバー一覧から取得する。

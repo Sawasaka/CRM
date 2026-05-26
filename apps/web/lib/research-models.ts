@@ -1,13 +1,13 @@
 // プラン × モデル × Thinking の組み合わせ制御
 // 既存 ModelSelector に合わせる：
-//   ModelKind: 'gemini-2.5-flash-lite' | 'gpt-4o-mini' | 'gpt-4o'
+//   ModelKind: 'gemini-3-flash-preview' | 'gpt-5.5'
 //   ThinkingDepth: 'standard' | 'extended'
 // 仕様:
-//   - 現行運用: Gemini / GPT-4o mini / GPT-4o を選択可能
+//   - 現行運用: Gemini 3 Flash Preview / GPT-5.5 を選択可能
 //   - FREE: 利用不可
 import type { Plan } from '@bgm/db'
 
-export type ModelKind = 'gemini-2.5-flash-lite' | 'gpt-4o-mini' | 'gpt-4o'
+export type ModelKind = 'gemini-3-flash-preview' | 'gpt-5.5'
 export type ThinkingDepth = 'standard' | 'extended'
 
 export type ResolvedResearchModel = {
@@ -25,7 +25,7 @@ export function resolveResearchModel(
   plan: Plan,
   requested: { model?: ModelKind; thinking?: ThinkingDepth }
 ): ResolvedResearchModel {
-  const model: ModelKind = requested.model ?? 'gemini-2.5-flash-lite'
+  const model: ModelKind = requested.model ?? 'gemini-3-flash-preview'
 
   // FREE は呼ばれない前提だが、保険で Gemini standard
   if (plan === 'FREE') {

@@ -14,7 +14,7 @@ import { Eyebrow, NebulaBG, Section } from './atoms'
  *
  *   B. 自社で内製する場合 (30名・最低限の運用)
  *       - AWS S3 + 周辺インフラ                30,000円
- *       - AI API (Gemini 2.5 Flash Lite / GPT-4o mini)                            90,000円
+ *       - AI API (Gemini 3 Flash Preview / GPT-5.5)                               90,000円
  *       - 開発者人件費 (1人 × 0.5人月、月額 300,000円 相当)                         150,000円
  *
  * vs ルキスマCRM は cost-plus モデルでクレジット課金のみ。固定費・シート

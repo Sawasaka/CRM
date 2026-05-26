@@ -122,7 +122,7 @@ async function extractAndSaveFaq(opts: {
         policies: rulebook?.policies ?? '',
       })
       const completion = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
+        model: 'gpt-5.5',
         temperature: 0.2,
         response_format: { type: 'json_object' },
         messages: [

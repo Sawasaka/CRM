@@ -41,7 +41,7 @@ export async function extractMeetingFields(
   transcript: string
 ): Promise<ExtractedMeetingFields> {
   const response = await openai.chat.completions.create({
-    model: 'gpt-4o',
+    model: 'gpt-5.5',
     response_format: { type: 'json_object' },
     messages: [
       { role: 'system', content: EXTRACTION_PROMPT },
@@ -51,7 +51,7 @@ export async function extractMeetingFields(
   })
 
   const content = response.choices[0]?.message.content
-  if (!content) throw new Error('No response from GPT-4o')
+  if (!content) throw new Error('No response from GPT-5.5')
 
   return JSON.parse(content) as ExtractedMeetingFields
 }

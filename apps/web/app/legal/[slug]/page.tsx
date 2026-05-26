@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { publicSiteUrl } from '@/lib/public-site'
 import { getLegalDocument, legalDocuments } from '../_content'
 
 type LegalPageProps = {
@@ -25,8 +26,12 @@ export const generateMetadata = async ({ params }: LegalPageProps): Promise<Meta
   }
 
   return {
-    title: `${document.title} | ルキスマCRM`,
+    metadataBase: new URL(publicSiteUrl),
+    title: `${document.title} | ルキスマCRM | 株式会社ルーキースマートジャパン`,
     description: document.description,
+    alternates: {
+      canonical: `/legal/${document.slug}`,
+    },
   }
 }
 
@@ -42,7 +47,7 @@ export default async function LegalDocumentPage({ params }: LegalPageProps) {
     <main className="min-h-screen bg-[#0e0e10] text-[#e4e2e4]">
       <article className="mx-auto max-w-3xl px-6 py-16 md:py-24">
         <nav className="flex items-center gap-3 text-sm text-[#8f8c90]">
-          <Link href="/lp" className="text-[#abc7ff] hover:text-white">
+          <Link href="/" className="text-[#abc7ff] hover:text-white">
             ルキスマCRM
           </Link>
           <span>/</span>

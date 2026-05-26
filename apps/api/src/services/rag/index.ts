@@ -138,7 +138,7 @@ export async function answerWithRag(opts: {
     .join('\n\n')
 
   const completion = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
+    model: 'gpt-5.5',
     temperature: 0.2,
     messages: [
       {

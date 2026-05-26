@@ -112,30 +112,24 @@ const partnershipTiers: PartnershipTier[] = [
 const agentFeats: { key: AgentKey; items: string[] }[] = [
   {
     key: 'sales',
-    items: ['商談前ブリーフィング', '議事録 → BANT 自動入力', '次アクション提案'],
+    items: ['議事録 → 自動登録', '企業リサーチのプリセット', 'チャット内から何でも質問'],
   },
   {
     key: 'marketing',
-    items: ['採用インテント検知', 'メール配信 + 効果測定', '1st パーティ計測'],
+    items: ['採用インテント検知', 'メール配信', '1st パーティ計測'],
   },
   {
     key: 'support',
-    items: ['チケット 1 次回答', '有人エスカレーション', 'SLA 管理'],
+    items: ['問い合わせ → チケット登録', 'ステータス管理', '過去履歴 参照'],
   },
   {
     key: 'helpdesk',
-    items: ['社内 Q&A 即答', 'ナレッジ自動生成 (FAQ)', '継続チューニング'],
+    items: ['議事録 → FAQ 自動作成', '自動タグ付け', 'ナレッジ絞り込み'],
   },
   {
     key: 'pdm',
-    items: ['議事録 → 要望集計', '開発優先度スコアリング', 'ロードマップ提案'],
+    items: ['議事録 → 課題集計', '議事録 → ニーズ集計', '優先度スコアリング'],
   },
-]
-
-// 5 エージェント横断のデータ基盤・連携機能
-const platformFeats: { label: string; detail: string }[] = [
-  { label: '企業データベース', detail: '290 万社 + 求人インテント + 外部リサーチ' },
-  { label: 'AI モデル選択', detail: 'Gemini 2.5 Flash Lite / GPT-4o mini / GPT-4o' },
 ]
 
 // セルフサーブ CRM 単独プラン
@@ -390,66 +384,6 @@ export const Pricing = () => {
 
         {/* ── ③ SELF-SERVE: 2プラン × 年/月タブ ────────── */}
         <SelfServeBlock />
-
-        {/* ── Migration helper (セクション最下部) ── */}
-        <div className="mt-8">
-          <div
-            className="rounded-[28px] p-[1px] relative"
-            style={{
-              background:
-                'linear-gradient(135deg, rgba(255,193,7,0.22) 0%, rgba(255,193,7,0.05) 60%, transparent 100%)',
-            }}
-          >
-            <div className="rounded-[27px] bg-dusk fo-glass-rim relative overflow-hidden p-5 md:p-6">
-              <div
-                className="relative rounded-2xl px-4 py-3.5 md:px-5 md:py-4 flex items-center gap-3.5"
-                style={{
-                  background: 'rgba(255,193,7,0.05)',
-                }}
-              >
-                <div
-                  className="shrink-0 w-9 h-9 rounded-lg flex items-center justify-center"
-                  style={{
-                    background:
-                      'linear-gradient(135deg, rgba(255,193,7,0.20), rgba(255,193,7,0.04))',
-                    boxShadow: 'inset 0 0 0 1px rgba(255,193,7,0.32)',
-                  }}
-                >
-                  <FileSpreadsheet size={15} style={{ color: '#FFC107' }} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div
-                    className="font-semibold tracking-[0.04em] text-[0.78rem]"
-                    style={{ color: '#FFC107' }}
-                  >
-                    既存ツールからの移行
-                  </div>
-                  <p className="mt-0.5 text-[12px] text-[#c7c5c9] leading-[1.55]">
-                    <span className="text-[#e7e5ea] font-medium">
-                      Excel / Spreadsheet / HubSpot / Salesforce
-                    </span>
-                    などからのデータ移行に対応。
-                    <span className="text-[#9b99a0]">
-                      データ構造整理 + 初期セットアップを承ります。
-                    </span>
-                  </p>
-                </div>
-                <a
-                  href={SPIR_BOOKING_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hidden md:inline-flex shrink-0 items-center gap-1.5 self-center rounded-lg px-3.5 py-1.5 text-[11.5px] font-medium whitespace-nowrap transition-colors"
-                  style={{
-                    background: 'linear-gradient(135deg, #FFD54F, #FFA000)',
-                    color: '#0a0a0c',
-                  }}
-                >
-                  相談する <ArrowRight size={12} />
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </Section>
   )
@@ -652,8 +586,10 @@ function SelfServeBlock() {
         }}
       >
         {/* ─ 1. 両プラン共通 · 5 エージェント全機能 ─ */}
-        <div className="text-[10.5px] uppercase tracking-[0.16em] text-[#9b99a0] mb-5">
-          両プラン共通 · 5 エージェント全機能
+        <div className="text-[12px] mb-5">
+          <span className="text-[#e7e5ea] font-semibold">両プラン共通</span>
+          <span className="mx-2 text-[#7e7c83]">·</span>
+          <span className="text-[#9b99a0]">5 エージェント全機能</span>
         </div>
 
         {/* Agents grid */}
@@ -701,7 +637,7 @@ function SelfServeBlock() {
 
         {/* 外部連携 */}
         <div className="mt-5 flex items-center gap-2.5 flex-wrap">
-          <span className="text-[10.5px] uppercase tracking-[0.16em] text-[#9b99a0] shrink-0">
+          <span className="text-[12px] font-semibold text-[#e7e5ea] shrink-0">
             外部連携
           </span>
           {['Gmail', 'Google Calendar', 'Notion 議事録'].map((s) => (
@@ -732,124 +668,170 @@ function SelfServeBlock() {
         />
 
         {/* ─ 2. クレジット消費の目安 ─ */}
-        <div className="flex items-baseline justify-between flex-wrap gap-2 mb-4">
-          <div className="text-[10.5px] uppercase tracking-[0.16em] text-[#9b99a0]">
-            クレジット消費の目安
+        {/* プラットフォーム機能行 (上) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-3 mb-5">
+          <div className="flex items-baseline gap-2 text-[12px] min-w-0">
+            <div className="min-w-0">
+              <span className="text-[#e7e5ea] font-semibold">企業データベース</span>
+              <span className="mx-2 text-[#7e7c83]">·</span>
+              <span className="text-[#9b99a0]">部署番号 + 採用動向 + 採用予算</span>
+            </div>
           </div>
-          <div className="text-[10.5px] text-[#7e7c83]">
-            1 クレジット = 約 ¥2.9
+          <div className="flex items-baseline gap-2 text-[12px] min-w-0">
+            <div className="min-w-0">
+              <span className="text-[#e7e5ea] font-semibold">AI モデル選択</span>
+              <span className="mx-2 text-[#7e7c83]">·</span>
+              <span className="text-[#9b99a0]">Gemini 3 Flash Preview / GPT-5.5</span>
+            </div>
           </div>
         </div>
 
-        {/* 単価リスト */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-          {[
-            { label: '企業 1 件取得', cr: '20 cr', sub: '企業データベースから' },
-            { label: '議事録 1 件取込', cr: '5 cr', sub: 'Meet / Notion から' },
-            { label: 'チャット 1 回答', cr: '1〜3 cr', sub: '質問の深さで変動' },
-          ].map((u) => (
+        {/* ヘッダー (eyebrow行) — プラットフォーム機能とデータの中間に配置 / 2カラム対応 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-1 mb-3">
+          <div className="flex items-baseline gap-2">
+            <span className="text-[10.5px] uppercase tracking-[0.16em] text-[#9b99a0]">
+              企業データ取得 目安
+            </span>
+            <span className="text-[10px] text-[#7e7c83]">
+              ／ 1 件 = 20 cr
+            </span>
+          </div>
+          <div className="flex items-baseline gap-2">
+            <span className="text-[10.5px] uppercase tracking-[0.16em] text-[#9b99a0]">
+              クレジット消費の目安
+            </span>
+            <span className="text-[10px] text-[#7e7c83]">
+              ／ 1 cr ≈ ¥2.9
+            </span>
+          </div>
+        </div>
+
+        {/* データ行 (下) — 左: プラン別取得目安 / 右: 単価 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
+          {/* LEFT: プラン別 月間取得目安 */}
+          <div className="space-y-2">
+            {[
+              { name: 'Standard', cr: '5,000', count: '250', accent: '#abc7ff' },
+              { name: 'Pro', cr: '30,000', count: '1,500', accent: '#FFC107' },
+            ].map((p) => (
+              <div
+                key={p.name}
+                className="flex items-baseline justify-between gap-3 text-[12px]"
+              >
+                <span className="flex items-baseline gap-2 min-w-0">
+                  <span
+                    className="inline-block w-1.5 h-1.5 rounded-full shrink-0"
+                    style={{
+                      backgroundColor: p.accent,
+                      boxShadow: `0 0 8px ${p.accent}88`,
+                    }}
+                  />
+                  <span className="text-[#e7e5ea] font-semibold">{p.name}</span>
+                  <span className="text-[10.5px] text-[#7e7c83] tabular-nums">
+                    {p.cr} cr / 月
+                  </span>
+                </span>
+                <span className="font-mono text-aurora text-[11.5px] shrink-0">
+                  ≒ 企業{' '}
+                  <span className="font-display text-[14px] font-bold fo-gradient-text tabular-nums">
+                    {p.count}
+                  </span>{' '}
+                  件
+                </span>
+              </div>
+            ))}
+
+            {/* 追加クレジット (1,000 cr 単位で指定購入) */}
             <div
-              key={u.label}
-              className="rounded-lg px-3.5 py-3"
+              className="h-px mt-10 mb-3"
               style={{
-                background: 'rgba(171,199,255,0.05)',
-                boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.14)',
+                background:
+                  'linear-gradient(90deg, transparent 0%, rgba(171,199,255,0.18) 50%, transparent 100%)',
               }}
-            >
-              <div className="flex items-baseline justify-between gap-2">
-                <span className="text-[12.5px] font-semibold text-[#e7e5ea]">{u.label}</span>
-                <span className="font-display text-[14px] font-bold tabular-nums fo-gradient-text-soft">
+            />
+            <div className="flex items-baseline justify-between gap-3 text-[11.5px] opacity-90">
+              <span className="flex items-baseline gap-2 min-w-0">
+                <span className="font-bold text-aurora shrink-0 leading-none">+</span>
+                <span className="text-[#c7c5c9]">追加クレジット</span>
+                <span className="text-[10px] text-[#7e7c83]">1,000 cr 単位 ／ 指定購入</span>
+              </span>
+              <span className="font-mono text-aurora text-[11px] shrink-0 tabular-nums">
+                1,000 cr ={' '}
+                <span className="font-display text-[13px] font-bold fo-gradient-text-soft">
+                  ¥5,000
+                </span>
+              </span>
+            </div>
+          </div>
+
+          {/* RIGHT: 単価 */}
+          <div className="space-y-2">
+            {[
+              { label: '議事録 1 件取込', cr: '5 cr', sub: 'Meet / Notion から' },
+              { label: 'チャット 1 回答', cr: '1〜3 cr', sub: '質問の深さで変動' },
+            ].map((u) => (
+              <div
+                key={u.label}
+                className="flex items-baseline justify-between gap-3 text-[12px]"
+              >
+                <span className="min-w-0">
+                  <span className="text-[#e7e5ea] font-semibold">{u.label}</span>
+                  <span className="ml-2 text-[10.5px] text-[#7e7c83]">{u.sub}</span>
+                </span>
+                <span className="font-display text-[14px] font-bold tabular-nums fo-gradient-text-soft shrink-0">
                   {u.cr}
                 </span>
               </div>
-              <div className="mt-1 text-[10.5px] text-[#9b99a0]">{u.sub}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* プラン換算 */}
-        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          <div
-            className="rounded-lg px-3.5 py-2.5 flex items-baseline justify-between gap-2"
-            style={{
-              background: 'rgba(171,199,255,0.06)',
-              boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.18)',
-            }}
-          >
-            <span className="text-[12px] text-[#c7c5c9]">
-              <span className="text-[#e7e5ea] font-semibold">Standard</span> 5,000 cr / 月
-            </span>
-            <span className="text-[11.5px] font-mono text-aurora">
-              ≒ 企業 <span className="font-bold">250 件</span> 取得 相当
-            </span>
-          </div>
-          <div
-            className="rounded-lg px-3.5 py-2.5 flex items-baseline justify-between gap-2"
-            style={{
-              background: 'rgba(171,199,255,0.06)',
-              boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.18)',
-            }}
-          >
-            <span className="text-[12px] text-[#c7c5c9]">
-              <span className="text-[#e7e5ea] font-semibold">Pro</span> 30,000 cr / 月
-            </span>
-            <span className="text-[11.5px] font-mono text-aurora">
-              ≒ 企業 <span className="font-bold">1,500 件</span> 取得 相当
-            </span>
+            ))}
           </div>
         </div>
 
-        {/* 企業DB / LLM カード */}
-        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {/* ─ 3. 既存ツールからの移行 ─ */}
+        <div
+          className="mt-5 pt-5 flex items-center gap-3.5"
+          style={{ borderTop: '1px solid rgba(255,193,7,0.14)' }}
+        >
           <div
-            className="rounded-xl px-4 py-3.5"
+            className="shrink-0 w-9 h-9 rounded-lg flex items-center justify-center"
             style={{
-              background: 'rgba(171,199,255,0.05)',
-              boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.16)',
+              background:
+                'linear-gradient(135deg, rgba(255,193,7,0.20), rgba(255,193,7,0.04))',
+              boxShadow: 'inset 0 0 0 1px rgba(255,193,7,0.32)',
             }}
           >
-            <div className="flex items-center gap-2 mb-2">
-              <span
-                className="inline-flex items-center justify-center w-[18px] h-[18px] rounded-md font-mono font-bold text-[12px] leading-none"
-                style={{
-                  background: 'rgba(171,199,255,0.20)',
-                  color: '#cfdcff',
-                  boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.36)',
-                }}
-              >
-                +
-              </span>
-              <span className="text-[12.5px] font-semibold text-[#e7e5ea]">企業データベース</span>
-            </div>
-            <div className="text-[11.5px] text-[#9b99a0] leading-[1.65] pl-7">
-              290 万社 ／ 部署直通 180 万件 ／ 求人インテント 25 部門 ／ 採用予算
-            </div>
+            <FileSpreadsheet size={15} style={{ color: '#FFC107' }} />
           </div>
-          <div
-            className="rounded-xl px-4 py-3.5"
+          <div className="flex-1 min-w-0">
+            <div
+              className="font-semibold tracking-[0.04em] text-[0.78rem]"
+              style={{ color: '#FFC107' }}
+            >
+              既存ツールからの移行
+            </div>
+            <p className="mt-0.5 text-[12px] text-[#c7c5c9] leading-[1.55]">
+              <span className="text-[#e7e5ea] font-medium">
+                Excel / Spreadsheet / HubSpot / Salesforce
+              </span>
+              などからのデータ移行に対応。
+              <span className="text-[#9b99a0]">
+                データ構造整理 + 初期セットアップを承ります。
+              </span>
+            </p>
+          </div>
+          <a
+            href={SPIR_BOOKING_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden md:inline-flex shrink-0 items-center gap-1.5 self-center rounded-lg px-3.5 py-1.5 text-[11.5px] font-medium whitespace-nowrap transition-colors"
             style={{
-              background: 'rgba(171,199,255,0.05)',
-              boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.16)',
+              background: 'linear-gradient(135deg, #FFD54F, #FFA000)',
+              color: '#0a0a0c',
             }}
           >
-            <div className="flex items-center gap-2 mb-2">
-              <span
-                className="inline-flex items-center justify-center w-[18px] h-[18px] rounded-md font-mono font-bold text-[12px] leading-none"
-                style={{
-                  background: 'rgba(171,199,255,0.20)',
-                  color: '#cfdcff',
-                  boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.36)',
-                }}
-              >
-                +
-              </span>
-              <span className="text-[12.5px] font-semibold text-[#e7e5ea]">LLM 搭載</span>
-            </div>
-            <div className="text-[11.5px] text-[#9b99a0] leading-[1.65] pl-7">
-              Gemini 2.5 Flash Lite ／ GPT-4o mini ／ GPT-4o
-            </div>
-          </div>
+            相談する <ArrowRight size={12} />
+          </a>
         </div>
+
       </div>
     </div>
   )

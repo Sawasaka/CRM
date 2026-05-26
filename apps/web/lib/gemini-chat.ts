@@ -1,5 +1,5 @@
 export const DEFAULT_GEMINI_CHAT_MODEL =
-  process.env.GEMINI_CHAT_MODEL ?? process.env.DEPT_PHONE_MODEL ?? 'gemini-2.5-flash-lite'
+  process.env.GEMINI_CHAT_MODEL ?? process.env.DEPT_PHONE_MODEL ?? 'gemini-3-flash-preview'
 
 export type GeminiChatMessage = {
   role: 'system' | 'user' | 'assistant'

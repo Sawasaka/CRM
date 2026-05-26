@@ -13,7 +13,7 @@ export const researchBriefWorker = new Worker(
     // 1. Tavily で企業検索
     const searchResults = await searchCompanyWithTavily(companyName)
 
-    // 2. GPT-4o で Research Brief 合成
+    // 2. GPT-5.5 で Research Brief 合成
     const briefData = await synthesizeResearchBrief(searchResults, companyName)
 
     // 3. DB に保存

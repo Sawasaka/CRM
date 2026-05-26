@@ -26,10 +26,10 @@ async function main() {
 
   const preset = RESEARCH_PRESETS.find((p) => p.id === 'company_intel')!
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-  console.log('\n=== gpt-4o-mini 呼び出し中... ===')
+  console.log('\n=== gpt-5.5 呼び出し中... ===')
   const t0 = Date.now()
   const completion = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
+    model: 'gpt-5.5',
     messages: [
       { role: 'system', content: sysPrompt },
       { role: 'user', content: preset.prompt },

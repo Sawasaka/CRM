@@ -41,9 +41,9 @@ interface Suggestion {
 
 const SUGGESTIONS: Suggestion[] = [
   { id: 'hot',    label: '今週アプローチすべきHOT企業を教えて',   agent: 'sales' },
-  { id: 'pdm',    label: '先週の議事録から要望機能を集計して',     agent: 'pdm' },
-  { id: 'ticket', label: '未対応チケットを担当者ごとに集計して',   agent: 'support' },
   { id: 'intent', label: '採用インテントが伸びてる企業 TOP10',      agent: 'marketing' },
+  { id: 'ticket', label: '未対応チケットを担当者ごとに集計して',   agent: 'support' },
+  { id: 'pdm',    label: '先週の議事録から要望機能を集計して',     agent: 'pdm' },
   { id: 'tmpl',   label: 'ベテランの提案テンプレートを教えて',     agent: 'helpdesk' },
 ]
 
@@ -108,8 +108,8 @@ function HomePageContent() {
   const [prompt, setPrompt] = useState('')
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [chatId, setChatId] = useState<string | null>(null)
-  const [model, setModel] = useState<ModelKind>('gemini-2.5-flash-lite')
-  const [thinking, setThinking] = useState<ThinkingDepth>('standard')
+  const [model, setModel] = useState<ModelKind>('gemini-3-flash-preview')
+  const [thinking, setThinking] = useState<ThinkingDepth>('extended')
   const policy = DEFAULT_CHAT_POLICY_STATE
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)

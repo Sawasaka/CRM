@@ -142,7 +142,7 @@ export async function POST(req: NextRequest) {
   const t0 = Date.now()
   try {
     const temperature = resolved.thinking === 'extended' ? 0.3 : 0.4
-    if (resolved.model === 'gemini-2.5-flash-lite') {
+    if (resolved.model.startsWith('gemini-')) {
       const completion = await generateGeminiChat({
         model: resolved.model,
         messages,

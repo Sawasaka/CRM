@@ -72,7 +72,7 @@ export function ResearchChatPanel({
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [model, setModel] = useState<ModelKind>('gemini-2.5-flash-lite')
+  const [model, setModel] = useState<ModelKind>('gemini-3-flash-preview')
   const [thinking, setThinking] = useState<ThinkingDepth>('standard')
   const [history, setHistory] = useState<HistoryEntry[]>([])
   const [expandedHistoryId, setExpandedHistoryId] = useState<string | null>(null)
