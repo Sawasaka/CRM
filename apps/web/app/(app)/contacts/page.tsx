@@ -1162,223 +1162,227 @@ export default function ContactsPage() {
 
         {/* ── Table ── */}
         <ObsCard depth="low" padding="none" radius="xl">
-          {/* Header */}
-          <div
-            className="grid grid-cols-[32px_240px_minmax(160px,1fr)_110px_80px_90px_100px_120px_120px_110px_56px_56px] gap-x-3 px-5 py-3 text-[11px] font-medium tracking-[0.08em] uppercase"
-            style={{ color: 'var(--color-obs-text-subtle)' }}
-          >
-            {/* 全選択チェックボックス */}
-            <button
-              type="button"
-              onClick={() => {
-                const ids = filtered.map((c) => c.id)
-                const allSelected = ids.length > 0 && ids.every((id) => selectedIds.has(id))
-                setSelectedIds((prev) => {
-                  const next = new Set(prev)
-                  if (allSelected) ids.forEach((id) => next.delete(id))
-                  else ids.forEach((id) => next.add(id))
-                  return next
-                })
-              }}
-              className="inline-flex items-center justify-center w-5 h-5 rounded transition-colors hover:bg-[var(--color-obs-surface-high)]"
-              title="一覧の全件を選択 / 解除"
-            >
-              {filtered.length > 0 && filtered.every((c) => selectedIds.has(c.id)) ? (
-                <CheckSquare size={13} style={{ color: 'var(--color-obs-primary)' }} />
-              ) : (
-                <Square size={13} style={{ color: 'var(--color-obs-text-subtle)' }} />
-              )}
-            </button>
-            {[
-              { label: '氏名',          key: 'name' as SortKey,         sortable: true },
-              { label: 'リード経由',     key: null,                       sortable: false },
-              { label: '求人インテント', key: null,                       sortable: false },
-              { label: '1st シグナル',   key: null,                       sortable: false },
-              { label: '部門',          key: null,                       sortable: false },
-              { label: '役職',          key: null,                       sortable: false },
-              { label: 'ステータス',     key: 'status' as SortKey,       sortable: true },
-              { label: 'Next Action',  key: null,                       sortable: false },
-              { label: '担当者',        key: 'owner' as SortKey,        sortable: true },
-              { label: 'コール',        key: 'callAttempts' as SortKey, sortable: true },
-              { label: 'メール',        key: 'emailsSent' as SortKey,   sortable: true },
-            ].map((col, i) => (
+          <div className="w-full overflow-x-auto">
+            <div className="min-w-[1400px]">
+              {/* Header */}
               <div
-                key={i}
-                className={`leading-none flex items-center ${
-                  col.sortable ? 'cursor-pointer select-none transition-colors' : ''
-                }`}
-                onClick={col.key ? () => toggleSort(col.key as SortKey) : undefined}
-                onMouseOver={col.sortable ? (e) => {
-                  ;(e.currentTarget as HTMLDivElement).style.color = 'var(--color-obs-text-muted)'
-                } : undefined}
-                onMouseOut={col.sortable ? (e) => {
-                  ;(e.currentTarget as HTMLDivElement).style.color = 'var(--color-obs-text-subtle)'
-                } : undefined}
+                className="grid grid-cols-[32px_240px_minmax(160px,1fr)_110px_80px_90px_100px_120px_120px_110px_56px_56px] gap-x-3 px-5 py-3 text-[11px] font-medium tracking-[0.08em] uppercase"
+                style={{ color: 'var(--color-obs-text-subtle)' }}
               >
-                {col.label}
-                {col.sortable && col.key && <SortIcon col={col.key} sortKey={sortKey} sortDir={sortDir} />}
-              </div>
-            ))}
-          </div>
-
-          {/* Rows */}
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={{ visible: { transition: { staggerChildren: 0.04 } } }}
-          >
-            {filtered.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 gap-3">
-                <div
-                  className="w-12 h-12 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: 'var(--color-obs-surface-high)' }}
+                {/* 全選択チェックボックス */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const ids = filtered.map((c) => c.id)
+                    const allSelected = ids.length > 0 && ids.every((id) => selectedIds.has(id))
+                    setSelectedIds((prev) => {
+                      const next = new Set(prev)
+                      if (allSelected) ids.forEach((id) => next.delete(id))
+                      else ids.forEach((id) => next.add(id))
+                      return next
+                    })
+                  }}
+                  className="inline-flex items-center justify-center w-5 h-5 rounded transition-colors hover:bg-[var(--color-obs-surface-high)]"
+                  title="一覧の全件を選択 / 解除"
                 >
-                  <User size={22} style={{ color: 'var(--color-obs-text-subtle)' }} />
-                </div>
-                <p className="text-sm" style={{ color: 'var(--color-obs-text-muted)' }}>
-                  条件に一致するコンタクトが見つかりません
-                </p>
-              </div>
-            ) : (
-              filtered.map((contact) => {
-                const dnc = contact.status === 'コール不可'
-                const isSelected = selectedIds.has(contact.id)
-
-                return (
-                  <motion.div
-                    key={contact.id}
-                    variants={{
-                      hidden: { opacity: 0, y: 8 },
-                      visible: { opacity: 1, y: 0, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } },
-                    }}
-                    onClick={() => router.push(`/contacts/${contact.id}`)}
-                    className={`grid grid-cols-[32px_240px_minmax(160px,1fr)_110px_80px_90px_100px_120px_120px_110px_56px_56px] gap-x-3 items-center px-5 py-3.5 transition-colors duration-150 group cursor-pointer ${dnc ? 'opacity-35' : ''}`}
-                    style={{
-                      transitionTimingFunction: 'var(--ease-liquid)',
-                      boxShadow: 'inset 0 -1px 0 0 var(--color-obs-surface)',
-                      backgroundColor: isSelected ? 'rgba(171,199,255,0.06)' : undefined,
-                    }}
-                    onMouseOver={(e) => {
-                      if (!dnc) (e.currentTarget as HTMLDivElement).style.backgroundColor = 'var(--color-obs-surface-high)'
-                    }}
-                    onMouseOut={(e) => {
-                      ;(e.currentTarget as HTMLDivElement).style.backgroundColor = isSelected
-                        ? 'rgba(171,199,255,0.06)'
-                        : 'transparent'
-                    }}
+                  {filtered.length > 0 && filtered.every((c) => selectedIds.has(c.id)) ? (
+                    <CheckSquare size={13} style={{ color: 'var(--color-obs-primary)' }} />
+                  ) : (
+                    <Square size={13} style={{ color: 'var(--color-obs-text-subtle)' }} />
+                  )}
+                </button>
+                {[
+                  { label: '氏名',          key: 'name' as SortKey,         sortable: true },
+                  { label: 'リード経由',     key: null,                       sortable: false },
+                  { label: '求人インテント', key: null,                       sortable: false },
+                  { label: '1st シグナル',   key: null,                       sortable: false },
+                  { label: '部門',          key: null,                       sortable: false },
+                  { label: '役職',          key: null,                       sortable: false },
+                  { label: 'ステータス',     key: 'status' as SortKey,       sortable: true },
+                  { label: 'Next Action',  key: null,                       sortable: false },
+                  { label: '担当者',        key: 'owner' as SortKey,        sortable: true },
+                  { label: 'コール',        key: 'callAttempts' as SortKey, sortable: true },
+                  { label: 'メール',        key: 'emailsSent' as SortKey,   sortable: true },
+                ].map((col, i) => (
+                  <div
+                    key={i}
+                    className={`leading-none flex items-center ${
+                      col.sortable ? 'cursor-pointer select-none transition-colors' : ''
+                    }`}
+                    onClick={col.key ? () => toggleSort(col.key as SortKey) : undefined}
+                    onMouseOver={col.sortable ? (e) => {
+                      ;(e.currentTarget as HTMLDivElement).style.color = 'var(--color-obs-text-muted)'
+                    } : undefined}
+                    onMouseOut={col.sortable ? (e) => {
+                      ;(e.currentTarget as HTMLDivElement).style.color = 'var(--color-obs-text-subtle)'
+                    } : undefined}
                   >
-                    {/* 行選択チェックボックス */}
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setSelectedIds((prev) => {
-                          const next = new Set(prev)
-                          if (next.has(contact.id)) next.delete(contact.id)
-                          else next.add(contact.id)
-                          return next
-                        })
-                      }}
-                      className="inline-flex items-center justify-center w-5 h-5 rounded transition-colors hover:bg-[var(--color-obs-surface-highest)]"
-                      title={isSelected ? '選択を解除' : '選択'}
-                    >
-                      {isSelected ? (
-                        <CheckSquare size={13} style={{ color: 'var(--color-obs-primary)' }} />
-                      ) : (
-                        <Square size={13} style={{ color: 'var(--color-obs-text-subtle)' }} />
-                      )}
-                    </button>
+                    {col.label}
+                    {col.sortable && col.key && <SortIcon col={col.key} sortKey={sortKey} sortDir={sortDir} />}
+                  </div>
+                ))}
+              </div>
 
-                    {/* 氏名 + 会社名(下) */}
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div
-                        className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-[11px] font-semibold"
+              {/* Rows */}
+              <motion.div
+                initial="hidden"
+                animate="visible"
+                variants={{ visible: { transition: { staggerChildren: 0.04 } } }}
+              >
+                {filtered.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16 gap-3">
+                    <div
+                      className="w-12 h-12 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: 'var(--color-obs-surface-high)' }}
+                    >
+                      <User size={22} style={{ color: 'var(--color-obs-text-subtle)' }} />
+                    </div>
+                    <p className="text-sm" style={{ color: 'var(--color-obs-text-muted)' }}>
+                      条件に一致するコンタクトが見つかりません
+                    </p>
+                  </div>
+                ) : (
+                  filtered.map((contact) => {
+                    const dnc = contact.status === 'コール不可'
+                    const isSelected = selectedIds.has(contact.id)
+
+                    return (
+                      <motion.div
+                        key={contact.id}
+                        variants={{
+                          hidden: { opacity: 0, y: 8 },
+                          visible: { opacity: 1, y: 0, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } },
+                        }}
+                        onClick={() => router.push(`/contacts/${contact.id}`)}
+                        className={`grid grid-cols-[32px_240px_minmax(160px,1fr)_110px_80px_90px_100px_120px_120px_110px_56px_56px] gap-x-3 items-center px-5 py-3.5 transition-colors duration-150 group cursor-pointer ${dnc ? 'opacity-35' : ''}`}
                         style={{
-                          backgroundColor: 'var(--color-obs-surface-highest)',
-                          color: 'var(--color-obs-text)',
+                          transitionTimingFunction: 'var(--ease-liquid)',
+                          boxShadow: 'inset 0 -1px 0 0 var(--color-obs-surface)',
+                          backgroundColor: isSelected ? 'rgba(171,199,255,0.06)' : undefined,
+                        }}
+                        onMouseOver={(e) => {
+                          if (!dnc) (e.currentTarget as HTMLDivElement).style.backgroundColor = 'var(--color-obs-surface-high)'
+                        }}
+                        onMouseOut={(e) => {
+                          ;(e.currentTarget as HTMLDivElement).style.backgroundColor = isSelected
+                            ? 'rgba(171,199,255,0.06)'
+                            : 'transparent'
                         }}
                       >
-                        {contact.name[0]}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-[13.5px] font-medium truncate leading-tight tracking-[-0.01em]" style={{ color: 'var(--color-obs-text)' }}>
-                          {contact.name}
-                        </p>
-                        <p className="text-[11.5px] truncate" style={{ color: 'var(--color-obs-text-subtle)' }}>
-                          {contact.company}
-                        </p>
-                      </div>
-                    </div>
+                        {/* 行選択チェックボックス */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setSelectedIds((prev) => {
+                              const next = new Set(prev)
+                              if (next.has(contact.id)) next.delete(contact.id)
+                              else next.add(contact.id)
+                              return next
+                            })
+                          }}
+                          className="inline-flex items-center justify-center w-5 h-5 rounded transition-colors hover:bg-[var(--color-obs-surface-highest)]"
+                          title={isSelected ? '選択を解除' : '選択'}
+                        >
+                          {isSelected ? (
+                            <CheckSquare size={13} style={{ color: 'var(--color-obs-primary)' }} />
+                          ) : (
+                            <Square size={13} style={{ color: 'var(--color-obs-text-subtle)' }} />
+                          )}
+                        </button>
 
-                    {/* リード経由 */}
-                    <LeadSourceCell source={contact.leadSource} />
+                        {/* 氏名 + 会社名(下) */}
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div
+                            className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-[11px] font-semibold"
+                            style={{
+                              backgroundColor: 'var(--color-obs-surface-highest)',
+                              color: 'var(--color-obs-text)',
+                            }}
+                          >
+                            {contact.name[0]}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[13.5px] font-medium truncate leading-tight tracking-[-0.01em]" style={{ color: 'var(--color-obs-text)' }}>
+                              {contact.name}
+                            </p>
+                            <p className="text-[11.5px] truncate" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                              {contact.company}
+                            </p>
+                          </div>
+                        </div>
 
-                    {/* 求人インテント */}
-                    <div onClick={(e) => e.stopPropagation()}>
-                      <IntentChip companyName={contact.company} />
-                    </div>
+                        {/* リード経由 */}
+                        <LeadSourceCell source={contact.leadSource} />
 
-                    {/* 1st パーティーシグナル */}
-                    <div onClick={(e) => e.stopPropagation()}>
-                      <FirstPartySignalCell companyName={contact.company} />
-                    </div>
+                        {/* 求人インテント */}
+                        <div onClick={(e) => e.stopPropagation()}>
+                          <IntentChip companyName={contact.company} />
+                        </div>
 
-                    {/* 部門 */}
-                    <span className="text-[12px] truncate" style={{ color: 'var(--color-obs-text-muted)' }}>
-                      {contact.department || '—'}
-                    </span>
+                        {/* 1st パーティーシグナル */}
+                        <div onClick={(e) => e.stopPropagation()}>
+                          <FirstPartySignalCell companyName={contact.company} />
+                        </div>
 
-                    {/* 役職 */}
-                    <div>
-                      <ObsChip tone={personRoleToTone(contact.personRole)}>
-                        {contact.personRole}
-                      </ObsChip>
-                    </div>
+                        {/* 部門 */}
+                        <span className="text-[12px] truncate" style={{ color: 'var(--color-obs-text-muted)' }}>
+                          {contact.department || '—'}
+                        </span>
 
-                    {/* アプローチ */}
-                    <div>
-                      <ObsChip tone={statusToTone(contact.status)}>
-                        {contact.status}
-                      </ObsChip>
-                    </div>
+                        {/* 役職 */}
+                        <div>
+                          <ObsChip tone={personRoleToTone(contact.personRole)}>
+                            {contact.personRole}
+                          </ObsChip>
+                        </div>
 
-                    {/* Next Action */}
-                    <div onClick={e => e.stopPropagation()}>
-                      <NextActionSelect
-                        value={contact.nextAction}
-                        onChange={val => setContacts(prev => prev.map(c => c.id === contact.id ? { ...c, nextAction: val } : c))}
-                      />
-                    </div>
+                        {/* アプローチ */}
+                        <div>
+                          <ObsChip tone={statusToTone(contact.status)}>
+                            {contact.status}
+                          </ObsChip>
+                        </div>
 
-                    {/* 担当者 */}
-                    <OwnerCell name={contact.owner} />
+                        {/* Next Action */}
+                        <div onClick={e => e.stopPropagation()}>
+                          <NextActionSelect
+                            value={contact.nextAction}
+                            onChange={val => setContacts(prev => prev.map(c => c.id === contact.id ? { ...c, nextAction: val } : c))}
+                          />
+                        </div>
 
-                    {/* コール数 */}
-                    <div className="flex items-center gap-1">
-                      <Phone size={11} className="shrink-0" style={{ color: 'var(--color-obs-low)' }} />
-                      <span
-                        className="text-[13px] font-semibold tabular-nums"
-                        style={{ color: 'var(--color-obs-text)' }}
-                      >
-                        {contact.callAttempts}
-                      </span>
-                    </div>
+                        {/* 担当者 */}
+                        <OwnerCell name={contact.owner} />
 
-                    {/* メール送信数 */}
-                    <div className="flex items-center gap-1">
-                      <Mail size={11} className="shrink-0" style={{ color: 'var(--color-obs-primary)' }} />
-                      <span
-                        className="text-[13px] font-semibold tabular-nums"
-                        style={{ color: 'var(--color-obs-text)' }}
-                      >
-                        {contact.emailsSent}
-                      </span>
-                    </div>
-                  </motion.div>
-                )
-              })
-            )}
-          </motion.div>
+                        {/* コール数 */}
+                        <div className="flex items-center gap-1">
+                          <Phone size={11} className="shrink-0" style={{ color: 'var(--color-obs-low)' }} />
+                          <span
+                            className="text-[13px] font-semibold tabular-nums"
+                            style={{ color: 'var(--color-obs-text)' }}
+                          >
+                            {contact.callAttempts}
+                          </span>
+                        </div>
+
+                        {/* メール送信数 */}
+                        <div className="flex items-center gap-1">
+                          <Mail size={11} className="shrink-0" style={{ color: 'var(--color-obs-primary)' }} />
+                          <span
+                            className="text-[13px] font-semibold tabular-nums"
+                            style={{ color: 'var(--color-obs-text)' }}
+                          >
+                            {contact.emailsSent}
+                          </span>
+                        </div>
+                      </motion.div>
+                    )
+                  })
+                )}
+              </motion.div>
+            </div>
+          </div>
         </ObsCard>
 
         {/* ── Create Contact Modal ── */}

@@ -7,7 +7,7 @@ import { DemoModal } from '../DemoModal'
 
 // Spir 予約 URL (Nav / Pricing と統一)
 const SPIR_BOOKING_URL =
-  'https://app.spirinc.com/t/3u_FXTG5abaFIZ-D7as8v/as/5j4iMsFHgutg6an7CRg9o/confirm'
+  'https://app.spirinc.com/t/3u_FXTG5abaFIZ-D7as8v/as/u1BDbJ3xnywQYp2rDZYxE/confirm'
 
 /**
  * PARTNER PROGRAM — 販売パートナー募集セクション。

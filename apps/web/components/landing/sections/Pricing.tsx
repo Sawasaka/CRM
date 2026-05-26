@@ -12,7 +12,7 @@ import { AGENTS, type AgentKey, Eyebrow, Orb, Section } from '../atoms'
 // CRM 無償は「まず試したい層への入口」としてセクション後段に置く。
 
 const SPIR_BOOKING_URL =
-  'https://app.spirinc.com/t/3u_FXTG5abaFIZ-D7as8v/as/5j4iMsFHgutg6an7CRg9o/confirm'
+  'https://app.spirinc.com/t/3u_FXTG5abaFIZ-D7as8v/as/u1BDbJ3xnywQYp2rDZYxE/confirm'
 
 interface PartnershipTier {
   id: string
@@ -134,7 +134,7 @@ const agentFeats: { key: AgentKey; items: string[] }[] = [
 
 // 5 エージェント横断のデータ基盤・連携機能
 const platformFeats: { label: string; detail: string }[] = [
-  { label: '企業データベース', detail: '290 万社 + 求人インテント + 外部リサーチ' },
+  { label: '企業データベース', detail: '290 万社 + 部署直通 180 万件 + 求人インテント 25 部門 + 採用予算' },
   { label: 'AI モデル選択', detail: 'Gemini 2.5 Flash Lite / GPT-4o mini / GPT-4o' },
 ]
 
@@ -153,14 +153,14 @@ const selfServePlans: SelfServePlan[] = [
   {
     id: 'standard',
     name: 'Standard',
-    credits: 10000,
+    credits: 5000,
     monthly: 42000,
     annualMonthly: 29000,
   },
   {
     id: 'pro',
     name: 'Pro',
-    credits: 50000,
+    credits: 30000,
     monthly: 140000,
     annualMonthly: 98000,
     featured: true,
@@ -643,7 +643,7 @@ function SelfServeBlock() {
         })}
       </div>
 
-      {/* Shared feature list — 5 エージェント別 */}
+      {/* ── 統合ボックス: 5エージェント全機能 + クレジット消費の目安 ── */}
       <div
         className="mt-6 rounded-2xl px-5 py-6 md:px-6 md:py-7"
         style={{
@@ -651,11 +651,12 @@ function SelfServeBlock() {
           boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.10)',
         }}
       >
+        {/* ─ 1. 両プラン共通 · 5 エージェント全機能 ─ */}
         <div className="text-[10.5px] uppercase tracking-[0.16em] text-[#9b99a0] mb-5">
           両プラン共通 · 5 エージェント全機能
         </div>
 
-        {/* Agents grid (5 columns on lg, fluid below) */}
+        {/* Agents grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {agentFeats.map(({ key, items }) => {
             const a = AGENTS[key]
@@ -698,7 +699,7 @@ function SelfServeBlock() {
           })}
         </div>
 
-        {/* 外部連携 (エージェントカードと基盤セクションの中間) */}
+        {/* 外部連携 */}
         <div className="mt-5 flex items-center gap-2.5 flex-wrap">
           <span className="text-[10.5px] uppercase tracking-[0.16em] text-[#9b99a0] shrink-0">
             外部連携
@@ -724,55 +725,129 @@ function SelfServeBlock() {
           </span>
         </div>
 
-        {/* Platform features (5 エージェント横断のデータ基盤・連携) */}
+        {/* ─ section divider ─ */}
         <div
-          className="mt-5 pt-5"
-          style={{ borderTop: '1px solid rgba(171,199,255,0.10)' }}
-        >
-          <div className="flex items-center gap-2 flex-wrap mb-3">
-            <span
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold tracking-[0.02em]"
-              style={{
-                background:
-                  'linear-gradient(135deg, rgba(171,199,255,0.20), rgba(171,199,255,0.06))',
-                color: '#cfdcff',
-                boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.36)',
-              }}
-            >
-              <span className="font-mono text-[12px] leading-none">＋</span>
-              企業DB
-            </span>
-            <span
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold tracking-[0.02em]"
-              style={{
-                background:
-                  'linear-gradient(135deg, rgba(171,199,255,0.20), rgba(171,199,255,0.06))',
-                color: '#cfdcff',
-                boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.36)',
-              }}
-            >
-              <span className="font-mono text-[12px] leading-none">＋</span>
-              LLM 搭載
-            </span>
+          className="my-7 h-px"
+          style={{ background: 'rgba(171,199,255,0.10)' }}
+        />
+
+        {/* ─ 2. クレジット消費の目安 ─ */}
+        <div className="flex items-baseline justify-between flex-wrap gap-2 mb-4">
+          <div className="text-[10.5px] uppercase tracking-[0.16em] text-[#9b99a0]">
+            クレジット消費の目安
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-2">
-            {platformFeats.map((f) => (
-              <div key={f.label} className="flex items-start gap-2.5">
-                <div
-                  className="shrink-0 mt-0.5 w-[16px] h-[16px] rounded-full flex items-center justify-center"
-                  style={{
-                    background: 'rgba(171,199,255,0.14)',
-                    boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.26)',
-                  }}
-                >
-                  <Check size={10} strokeWidth={3} style={{ color: '#abc7ff' }} />
-                </div>
-                <span className="text-[12px] leading-[1.5] text-[#c7c5c9]">
-                  <span className="text-[#e7e5ea] font-medium">{f.label}</span>
-                  <span className="text-[#9b99a0]"> — {f.detail}</span>
+          <div className="text-[10.5px] text-[#7e7c83]">
+            1 クレジット = 約 ¥2.9
+          </div>
+        </div>
+
+        {/* 単価リスト */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          {[
+            { label: '企業 1 件取得', cr: '20 cr', sub: '企業データベースから' },
+            { label: '議事録 1 件取込', cr: '5 cr', sub: 'Meet / Notion から' },
+            { label: 'チャット 1 回答', cr: '1〜3 cr', sub: '質問の深さで変動' },
+          ].map((u) => (
+            <div
+              key={u.label}
+              className="rounded-lg px-3.5 py-3"
+              style={{
+                background: 'rgba(171,199,255,0.05)',
+                boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.14)',
+              }}
+            >
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="text-[12.5px] font-semibold text-[#e7e5ea]">{u.label}</span>
+                <span className="font-display text-[14px] font-bold tabular-nums fo-gradient-text-soft">
+                  {u.cr}
                 </span>
               </div>
-            ))}
+              <div className="mt-1 text-[10.5px] text-[#9b99a0]">{u.sub}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* プラン換算 */}
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div
+            className="rounded-lg px-3.5 py-2.5 flex items-baseline justify-between gap-2"
+            style={{
+              background: 'rgba(171,199,255,0.06)',
+              boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.18)',
+            }}
+          >
+            <span className="text-[12px] text-[#c7c5c9]">
+              <span className="text-[#e7e5ea] font-semibold">Standard</span> 5,000 cr / 月
+            </span>
+            <span className="text-[11.5px] font-mono text-aurora">
+              ≒ 企業 <span className="font-bold">250 件</span> 取得 相当
+            </span>
+          </div>
+          <div
+            className="rounded-lg px-3.5 py-2.5 flex items-baseline justify-between gap-2"
+            style={{
+              background: 'rgba(171,199,255,0.06)',
+              boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.18)',
+            }}
+          >
+            <span className="text-[12px] text-[#c7c5c9]">
+              <span className="text-[#e7e5ea] font-semibold">Pro</span> 30,000 cr / 月
+            </span>
+            <span className="text-[11.5px] font-mono text-aurora">
+              ≒ 企業 <span className="font-bold">1,500 件</span> 取得 相当
+            </span>
+          </div>
+        </div>
+
+        {/* 企業DB / LLM カード */}
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div
+            className="rounded-xl px-4 py-3.5"
+            style={{
+              background: 'rgba(171,199,255,0.05)',
+              boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.16)',
+            }}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <span
+                className="inline-flex items-center justify-center w-[18px] h-[18px] rounded-md font-mono font-bold text-[12px] leading-none"
+                style={{
+                  background: 'rgba(171,199,255,0.20)',
+                  color: '#cfdcff',
+                  boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.36)',
+                }}
+              >
+                +
+              </span>
+              <span className="text-[12.5px] font-semibold text-[#e7e5ea]">企業データベース</span>
+            </div>
+            <div className="text-[11.5px] text-[#9b99a0] leading-[1.65] pl-7">
+              290 万社 ／ 部署直通 180 万件 ／ 求人インテント 25 部門 ／ 採用予算
+            </div>
+          </div>
+          <div
+            className="rounded-xl px-4 py-3.5"
+            style={{
+              background: 'rgba(171,199,255,0.05)',
+              boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.16)',
+            }}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <span
+                className="inline-flex items-center justify-center w-[18px] h-[18px] rounded-md font-mono font-bold text-[12px] leading-none"
+                style={{
+                  background: 'rgba(171,199,255,0.20)',
+                  color: '#cfdcff',
+                  boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.36)',
+                }}
+              >
+                +
+              </span>
+              <span className="text-[12.5px] font-semibold text-[#e7e5ea]">LLM 搭載</span>
+            </div>
+            <div className="text-[11.5px] text-[#9b99a0] leading-[1.65] pl-7">
+              Gemini 2.5 Flash Lite ／ GPT-4o mini ／ GPT-4o
+            </div>
           </div>
         </div>
       </div>

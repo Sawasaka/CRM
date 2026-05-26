@@ -19,7 +19,7 @@ export const FinalCTA = () => (
         </p>
         <div className="mt-10 flex flex-wrap justify-center gap-3">
           <a
-            href="https://app.spirinc.com/t/3u_FXTG5abaFIZ-D7as8v/as/5j4iMsFHgutg6an7CRg9o/confirm"
+            href="https://app.spirinc.com/t/3u_FXTG5abaFIZ-D7as8v/as/u1BDbJ3xnywQYp2rDZYxE/confirm"
             target="_blank"
             rel="noopener noreferrer"
             className="rounded-lg px-7 py-3.5 text-sm font-medium text-[#0a0a0c]"

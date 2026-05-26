@@ -1,8 +1,16 @@
+import type { Metadata } from 'next'
 import { Suspense, type ReactNode } from 'react'
 import { Sidebar } from '@/components/layout/sidebar'
 import { Header } from '@/components/layout/header'
 import { ActiveCallWidget } from '@/components/calls/ActiveCallWidget'
 import { CallResultModal } from '@/components/calls/CallResultModal'
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
+}
 
 const DEV_USER = {
   name: '開発 太郎',

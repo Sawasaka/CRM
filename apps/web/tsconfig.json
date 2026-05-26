@@ -29,7 +29,8 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "types/**/*.d.ts"
+    "types/**/*.d.ts",
+    "/tmp/bgm-web-next/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

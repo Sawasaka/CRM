@@ -26,7 +26,11 @@ try {
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Dropbox配下だとビルドキャッシュが同期で壊れるので、環境変数でDropbox外に逃がす
+  ...(process.env.NEXT_DIST_DIR ? { distDir: process.env.NEXT_DIST_DIR } : {}),
   transpilePackages: ['@bgm/db', '@bgm/types'],
+  // @prisma/clientは monorepo の packages/db 経由で利用するため、サーバー側で external 解決させる
+  serverExternalPackages: ['@prisma/client', '.prisma/client'],
   eslint: {
     ignoreDuringBuilds: true,
   },

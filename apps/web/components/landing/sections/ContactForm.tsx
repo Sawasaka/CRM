@@ -23,7 +23,7 @@ const INITIAL: FieldState = {
 }
 
 const SPIR_BOOKING_URL =
-  'https://app.spirinc.com/t/3u_FXTG5abaFIZ-D7as8v/as/5j4iMsFHgutg6an7CRg9o/confirm'
+  'https://app.spirinc.com/t/3u_FXTG5abaFIZ-D7as8v/as/u1BDbJ3xnywQYp2rDZYxE/confirm'
 
 export const ContactForm = () => {
   const [values, setValues] = useState<FieldState>(INITIAL)

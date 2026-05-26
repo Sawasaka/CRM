@@ -28,6 +28,7 @@
     "NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION",
     "NEXT_PUBLIC_SITE_URL",
     "NEXTAUTH_URL",
+    "NEXT_DIST_DIR",
     "NODE_ENV",
     "NOTION_API_KEY",
     "NOTION_AUTH_URL",
@@ -55,7 +56,8 @@
     "TWILIO_API_KEY",
     "TWILIO_API_SECRET",
     "TWILIO_AUTH_TOKEN",
-    "TWILIO_TWIML_APP_SID"
+    "TWILIO_TWIML_APP_SID",
+    "TURBOPACK"
   ],
   "tasks": {
     "build": {
