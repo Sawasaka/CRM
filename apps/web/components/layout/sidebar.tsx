@@ -151,8 +151,8 @@ function WorkspaceNavItem({
           className="text-[13px] tracking-[-0.01em] leading-none"
           style={{
             color: 'var(--color-obs-text)',
-            fontWeight: active ? 600 : 500,
-            opacity: active ? 1 : 0.88,
+            fontWeight: 500,
+            opacity: 0.9,
           }}
         >
           {label}
