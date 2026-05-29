@@ -80,6 +80,15 @@ export const Footer = () => (
               代表プロフィール
             </div>
 
+            <div className="space-y-1">
+              <div className="text-[#e7e5ea] text-sm font-semibold">
+                沢坂弘樹
+              </div>
+              <p className="text-[11.5px] text-[#9b99a0] leading-relaxed">
+                株式会社ルーキースマートジャパン代表。営業実行とCRM構築を同時に支援します。
+              </p>
+            </div>
+
             <ul className="space-y-2 text-[11.5px]">
               <li className="flex items-baseline gap-3">
                 <span className="text-[10px] uppercase tracking-[0.08em] text-[#7e7c83] w-[110px] shrink-0">

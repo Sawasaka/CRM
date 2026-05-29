@@ -149,9 +149,8 @@ HPの `Liquid Obsidian` をサービス側へ翻訳したものが、この `Pho
 ```css
 background-color: #131315;
 background-image:
-  radial-gradient(circle at 42% -8%, rgba(171,199,255,0.10) 0%, transparent 32%),
-  radial-gradient(circle at 84% 18%, rgba(0,113,227,0.045) 0%, transparent 30%),
-  linear-gradient(180deg, rgba(255,255,255,0.018) 0%, transparent 18%);
+  radial-gradient(circle at 50% 20%, rgba(171,199,255,0.06) 0%, transparent 45%),
+  radial-gradient(circle at 20% 80%, rgba(0,113,227,0.04) 0%, transparent 50%);
 ```
 
 使いどころ:
@@ -179,6 +178,7 @@ color: transparent;
 - 大見出しのみ使用する
 - テーブル内やカード内の小見出しには使わない
 - サービス画面では装飾しすぎず、タイトルの品位を保つ
+- 共通ページは `ObsPageShell` と `ObsHero` を使い、ページごとに見出し色を変えない
 
 ### Eyebrow
 
@@ -196,6 +196,12 @@ text-transform: uppercase;
 background: #abc7ff;
 box-shadow: 0 0 10px #abc7ff;
 ```
+
+ルール:
+
+- `ObsHero` の eyebrow は全ページで同じ表現にする
+- ページごとにグレー、青、白などを使い分けない
+- 英字ラベルの大きさ、letter-spacing、発光ドットは固定する
 
 ### Primary Button
 
@@ -329,6 +335,52 @@ box-shadow:
   inset 0 0 0 1px rgba(171,199,255,0.45),
   0 0 0 4px rgba(171,199,255,0.10);
 ```
+
+### App Sidebar / Global Navigation
+
+左サイドバーはサービス全体の背骨なので、ページや機能ごとにデザインを変えない。
+
+テキスト内容や項目順は情報設計として扱い、見た目は以下の共通ルールに固定する。
+
+```css
+background:
+  radial-gradient(circle at 18% 8%, rgba(171,199,255,0.070) 0%, transparent 30%),
+  radial-gradient(circle at 70% 0%, rgba(0,113,227,0.045) 0%, transparent 32%),
+  linear-gradient(180deg, rgba(10,10,12,0.92) 0%, rgba(10,10,12,0.86) 45%, rgba(8,8,10,0.94) 100%);
+box-shadow:
+  inset -1px 0 0 rgba(171,199,255,0.12),
+  16px 0 48px rgba(0,0,0,0.18);
+```
+
+ナビ項目の文字は全項目で統一する。
+
+```css
+font-size: 13px;
+font-weight: 500;
+color: rgba(231,229,234,0.92);
+opacity: 1;
+```
+
+Active状態は、文字を大きくしたり太くしたりせず、背景・左エッジ・ドットの発光で表現する。
+
+```css
+background: linear-gradient(135deg, rgba(171,199,255,0.135) 0%, rgba(0,113,227,0.145) 100%);
+box-shadow:
+  inset 2px 0 0 rgba(171,199,255,0.78),
+  inset 1px 1px 0 rgba(255,255,255,0.075),
+  inset 0 0 0 1px rgba(171,199,255,0.22),
+  0 0 18px rgba(171,199,255,0.10);
+```
+
+機能ごとの色は、大きな背景色ではなく小さな発光ドットに限定する。
+
+ルール:
+
+- サイドバーの各項目で、文字サイズ・太さ・色を変えない
+- Active状態は青いglass pill + 左エッジで統一する
+- 個別色はドットだけに使い、背景やテキストには広げない
+- サイドバー背景はHome / 290万社DB / パイプラインと同じ `Obsidian + blue ambient glow` 系にする
+- 新しいページを追加しても、サイドバー項目のデザインは増やさない
 
 ## ページ別の適用方針
 

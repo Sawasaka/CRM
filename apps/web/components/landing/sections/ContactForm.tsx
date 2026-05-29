@@ -141,7 +141,7 @@ export const ContactForm = () => {
         style={{ borderTop: '1px solid rgba(171,199,255,0.08)' }}
       >
         <p className="text-[10.5px] text-[#7e7c83] leading-relaxed">
-          1営業日以内に代表 沢坂 弘樹 より直接ご返信いたします。
+          1営業日以内に代表 沢坂弘樹 より直接ご返信いたします。
         </p>
         <button
           type="submit"
@@ -236,7 +236,7 @@ function SuccessModal({ onClose }: { onClose: () => void }) {
           お問い合わせを受け付けました。
         </h3>
         <p className="mt-3 text-[12.5px] text-[#9b99a0] leading-relaxed">
-          1 営業日以内に代表 沢坂よりご返信いたします。
+          1 営業日以内に代表 沢坂弘樹よりご返信いたします。
           <br />
           直接お話を伺いたい方は、下記から日程調整も可能です。
         </p>

@@ -18,6 +18,8 @@ export const publicSiteUrl =
 export const companyName = '株式会社ルーキースマートジャパン'
 export const serviceName = 'ルキスマCRM'
 export const operatorName = '沢坂弘樹'
+export const operatorNameWithSpace = '沢坂 弘樹'
+export const operatorRomanName = 'Hiroki Sawasaka'
 
 export const publicSiteTitle = `【公式】${serviceName}｜${companyName}`
 
@@ -27,6 +29,8 @@ export const publicSiteDescription =
 export const publicSiteKeywords = [
   companyName,
   operatorName,
+  operatorNameWithSpace,
+  operatorRomanName,
   'ルーキースマートジャパン',
   serviceName,
   'RookieSmart Japan',
@@ -63,7 +67,7 @@ export const publicSiteFaqItems = [
   {
     question: '沢坂弘樹とルキスマCRMの関係は何ですか？',
     answer:
-      `${operatorName}は、${companyName}の${serviceName}の運営に関わっています。`,
+      `${operatorName}は、${companyName}の代表として、${serviceName}の営業実行とCRM構築を支援しています。`,
   },
   {
     question: 'ルキスマCRMはどのような検索キーワードに関係するサービスですか？',
@@ -82,6 +86,9 @@ export const publicSiteStructuredData = [
     url: publicSiteUrl,
     logo: `${publicSiteUrl}/icon.svg`,
     sameAs: [publicSiteUrl],
+    founder: {
+      '@id': `${publicSiteUrl}/#person-hirokisawasaka`,
+    },
     member: {
       '@id': `${publicSiteUrl}/#person-hirokisawasaka`,
     },
@@ -91,10 +98,17 @@ export const publicSiteStructuredData = [
     '@type': 'Person',
     '@id': `${publicSiteUrl}/#person-hirokisawasaka`,
     name: operatorName,
+    alternateName: [operatorNameWithSpace, operatorRomanName],
+    jobTitle: `代表 / ${serviceName} 営業実行・CRM構築支援`,
+    description: `${operatorName}は、${companyName}の代表として、${serviceName}の営業実行とCRM構築を支援しています。`,
     url: publicSiteUrl,
     worksFor: {
       '@id': `${publicSiteUrl}/#organization`,
     },
+    affiliation: {
+      '@id': `${publicSiteUrl}/#organization`,
+    },
+    knowsAbout: ['営業実行', 'CRM構築', 'チャットCRM', '企業データベース', '部署直通番号'],
   },
   {
     '@context': 'https://schema.org',

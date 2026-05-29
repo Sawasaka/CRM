@@ -20,12 +20,19 @@ function cx(...parts: Array<string | false | null | undefined>): string {
   return parts.filter(Boolean).join(' ')
 }
 
+const SERVICE_PAGE_BACKGROUND =
+  'radial-gradient(circle at 50% 20%, rgba(171,199,255,0.06) 0%, transparent 45%), radial-gradient(circle at 20% 80%, rgba(0,113,227,0.04) 0%, transparent 50%)'
+
 // ─── Page Shell ────────────────────────────────────────────────────────────────
 export function ObsPageShell({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
     <div
       className={cx('min-h-full font-[family-name:var(--font-body)]', className)}
-      style={{ backgroundColor: 'var(--color-obs-surface)', color: 'var(--color-obs-text)' }}
+      style={{
+        backgroundColor: 'var(--color-obs-surface)',
+        backgroundImage: SERVICE_PAGE_BACKGROUND,
+        color: 'var(--color-obs-text)',
+      }}
     >
       {children}
     </div>
@@ -49,9 +56,17 @@ export function ObsHero({
       <div className="flex flex-col gap-3 max-w-3xl">
         {eyebrow && (
           <span
-            className="font-[family-name:var(--font-body)] text-xs font-medium tracking-[0.14em] uppercase"
-            style={{ color: 'var(--color-obs-text-subtle)' }}
+            className="inline-flex items-center gap-2 font-[family-name:var(--font-body)] text-[11px] font-semibold tracking-[0.16em] uppercase"
+            style={{ color: 'var(--color-aurora)' }}
           >
+            <span
+              className="block w-1.5 h-1.5 rounded-full"
+              style={{
+                background: 'var(--color-aurora)',
+                boxShadow: '0 0 10px var(--color-aurora)',
+              }}
+              aria-hidden
+            />
             {eyebrow}
           </span>
         )}
