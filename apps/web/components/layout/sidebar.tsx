@@ -42,6 +42,27 @@ const NAV_ITEMS: NavItemDef[] = [
   { href: '/knowledge', label: 'ナレッジ',         initial: 'K', color: '#c8b9ff' },
 ]
 
+const SIDEBAR_BG =
+  'radial-gradient(circle at 18% 8%, rgba(171,199,255,0.070) 0%, transparent 30%), radial-gradient(circle at 70% 0%, rgba(0,113,227,0.045) 0%, transparent 32%), linear-gradient(180deg, rgba(255,255,255,0.018) 0%, transparent 18%)'
+const SIDEBAR_SURFACE =
+  'linear-gradient(180deg, rgba(10,10,12,0.92) 0%, rgba(10,10,12,0.86) 45%, rgba(8,8,10,0.94) 100%)'
+const NAV_ITEM_ACTIVE_BG =
+  'linear-gradient(135deg, rgba(171,199,255,0.135) 0%, rgba(0,113,227,0.145) 100%)'
+const NAV_ITEM_HOVER_BG =
+  'linear-gradient(135deg, rgba(171,199,255,0.065) 0%, rgba(255,255,255,0.018) 100%)'
+const NAV_ITEM_ACTIVE_SHADOW =
+  'inset 2px 0 0 rgba(171,199,255,0.78), inset 1px 1px 0 rgba(255,255,255,0.075), inset 0 0 0 1px rgba(171,199,255,0.22), 0 0 18px rgba(171,199,255,0.10)'
+const NAV_ITEM_IDLE_SHADOW = 'inset 0 0 0 1px rgba(171,199,255,0)'
+const NAV_TEXT_STYLE = {
+  color: 'rgba(231,229,234,0.92)',
+  fontWeight: 500,
+  opacity: 1,
+} as const
+const MENU_SURFACE =
+  'linear-gradient(145deg, rgba(36,36,38,0.96) 0%, rgba(18,19,23,0.98) 100%)'
+const MENU_SHADOW =
+  '0 18px 44px rgba(0,0,0,0.48), inset 0 0 0 1px rgba(171,199,255,0.12), inset 1px 1px 0 rgba(255,255,255,0.045)'
+
 // ─── Top nav button (新しいチャット / 検索 / ナビ項目) ──────────────────────
 function TopNavItem({
   icon: Icon,
@@ -65,13 +86,11 @@ function TopNavItem({
       style={{
         width: 'calc(100% - 16px)',
         background: active
-          ? 'linear-gradient(135deg, rgba(171,199,255,0.16) 0%, rgba(0,113,227,0.16) 100%)'
+          ? NAV_ITEM_ACTIVE_BG
           : hover
-            ? 'rgba(171,199,255,0.055)'
+            ? NAV_ITEM_HOVER_BG
             : 'transparent',
-        boxShadow: active
-          ? 'inset 1px 1px 0 rgba(255,255,255,0.08), inset 0 0 0 1px rgba(171,199,255,0.24), 0 0 16px rgba(171,199,255,0.10)'
-          : undefined,
+        boxShadow: active ? NAV_ITEM_ACTIVE_SHADOW : NAV_ITEM_IDLE_SHADOW,
         transitionTimingFunction: 'var(--ease-liquid)',
       }}
     >
@@ -79,18 +98,14 @@ function TopNavItem({
         size={15}
         strokeWidth={active ? 2.2 : 1.9}
         style={{
-          color: active ? 'var(--color-obs-primary)' : 'var(--color-obs-text-muted)',
+          color: active ? 'var(--color-aurora)' : 'var(--color-obs-text-muted)',
           flexShrink: 0,
-          filter: active ? 'drop-shadow(0 0 6px rgba(171,199,255,0.45))' : undefined,
+          filter: active ? 'drop-shadow(0 0 8px rgba(171,199,255,0.42))' : undefined,
         }}
       />
       <span
-        className="text-[13.5px] tracking-[-0.01em] leading-none"
-        style={{
-          color: 'var(--color-obs-text)',
-          fontWeight: active ? 600 : 500,
-          opacity: active ? 1 : 0.92,
-        }}
+        className="text-[13px] tracking-[-0.01em] leading-none"
+        style={NAV_TEXT_STYLE}
       >
         {label}
       </span>
@@ -120,13 +135,11 @@ function WorkspaceNavItem({
         className="mx-2 flex items-center gap-2.5 px-3 py-[7px] rounded-[var(--radius-obs-md)] transition-colors duration-150"
         style={{
           background: active
-            ? 'linear-gradient(135deg, rgba(171,199,255,0.16) 0%, rgba(0,113,227,0.16) 100%)'
+            ? NAV_ITEM_ACTIVE_BG
             : hover
-              ? 'rgba(171,199,255,0.055)'
+              ? NAV_ITEM_HOVER_BG
               : 'transparent',
-          boxShadow: active
-            ? 'inset 1px 1px 0 rgba(255,255,255,0.08), inset 0 0 0 1px rgba(171,199,255,0.24), 0 0 16px rgba(171,199,255,0.10)'
-            : undefined,
+          boxShadow: active ? NAV_ITEM_ACTIVE_SHADOW : NAV_ITEM_IDLE_SHADOW,
           transitionTimingFunction: 'var(--ease-liquid)',
         }}
       >
@@ -138,22 +151,18 @@ function WorkspaceNavItem({
           <span
             className="inline-block rounded-full"
             style={{
-              width: 11,
-              height: 11,
-              background: `radial-gradient(circle at 30% 30%, #ffffff 0%, ${color} 35%, ${color}80 80%)`,
+              width: active ? 9 : 8,
+              height: active ? 9 : 8,
+              background: `radial-gradient(circle at 30% 30%, #ffffff 0%, ${color} 38%, ${color}78 82%)`,
               boxShadow: active
-                ? `0 0 10px ${color}cc, 0 0 24px ${color}66`
-                : `0 0 8px ${color}aa, 0 0 20px ${color}55`,
+                ? `0 0 10px ${color}d0, 0 0 22px ${color}5c`
+                : `0 0 7px ${color}9c, 0 0 16px ${color}44`,
             }}
           />
         </span>
         <span
           className="text-[13px] tracking-[-0.01em] leading-none"
-          style={{
-            color: 'var(--color-obs-text)',
-            fontWeight: 500,
-            opacity: 0.9,
-          }}
+          style={NAV_TEXT_STYLE}
         >
           {label}
         </span>
@@ -259,13 +268,11 @@ function ChatItem({
         className="flex items-center gap-2 px-3 py-[5px] rounded-[var(--radius-obs-md)] transition-colors duration-150 text-left cursor-pointer"
         style={{
           background: active
-            ? 'linear-gradient(135deg, rgba(171,199,255,0.15) 0%, rgba(0,113,227,0.14) 100%)'
+            ? NAV_ITEM_ACTIVE_BG
             : hover || menuOpen
-              ? 'rgba(171,199,255,0.052)'
+              ? NAV_ITEM_HOVER_BG
               : 'transparent',
-          boxShadow: active
-            ? 'inset 0 0 0 1px rgba(171,199,255,0.22), 0 0 14px rgba(171,199,255,0.08)'
-            : undefined,
+          boxShadow: active ? NAV_ITEM_ACTIVE_SHADOW : NAV_ITEM_IDLE_SHADOW,
           transitionTimingFunction: 'var(--ease-liquid)',
         }}
       >
@@ -310,9 +317,8 @@ function ChatItem({
           <span
             className="flex-1 text-[13px] leading-snug tracking-[-0.005em] truncate"
             style={{
-              color: 'var(--color-obs-text)',
-              fontWeight: active ? 600 : 450,
-              opacity: active ? 1 : 0.88,
+              ...NAV_TEXT_STYLE,
+              fontWeight: 450,
             }}
           >
             {title}
@@ -356,8 +362,10 @@ function ChatItem({
         <div
           className="absolute right-2 top-full mt-1 rounded-[var(--radius-obs-md)] py-1 z-50 min-w-[160px]"
           style={{
-            backgroundColor: 'var(--color-obs-surface-highest)',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(109,106,111,0.14)',
+            background: MENU_SURFACE,
+            backdropFilter: 'blur(20px) saturate(130%)',
+            WebkitBackdropFilter: 'blur(20px) saturate(130%)',
+            boxShadow: MENU_SHADOW,
           }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -471,8 +479,10 @@ function UserMenu({ userName, userInitial }: { userName: string; userInitial: st
         <div
           className="absolute left-0 right-0 bottom-full mb-2 rounded-[var(--radius-obs-md)] py-1.5 z-50 max-h-[420px] overflow-y-auto"
           style={{
-            backgroundColor: 'var(--color-obs-surface-highest)',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(109,106,111,0.14)',
+            background: MENU_SURFACE,
+            backdropFilter: 'blur(20px) saturate(130%)',
+            WebkitBackdropFilter: 'blur(20px) saturate(130%)',
+            boxShadow: MENU_SHADOW,
           }}
         >
           {sections.map((section, i) => (
@@ -569,8 +579,11 @@ function UserMenu({ userName, userInitial }: { userName: string; userInitial: st
         onMouseLeave={() => setHover(false)}
         className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-[var(--radius-obs-md)] cursor-pointer transition-colors duration-150"
         style={{
-          backgroundColor:
-            open || hover ? 'var(--color-obs-surface-low)' : 'var(--color-obs-surface)',
+          background: open || hover
+            ? NAV_ITEM_HOVER_BG
+            : 'linear-gradient(145deg, rgba(19,19,21,0.72) 0%, rgba(10,10,12,0.88) 100%)',
+          boxShadow:
+            'inset 0 0 0 1px rgba(171,199,255,0.09), inset 1px 1px 0 rgba(255,255,255,0.035)',
           transitionTimingFunction: 'var(--ease-liquid)',
         }}
       >
@@ -579,8 +592,9 @@ function UserMenu({ userName, userInitial }: { userName: string; userInitial: st
           className="w-[28px] h-[28px] rounded-full flex items-center justify-center shrink-0"
           style={{
             background:
-              'linear-gradient(140deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
-            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.2)',
+              'linear-gradient(140deg, rgba(171,199,255,0.28) 0%, rgba(0,113,227,0.50) 100%)',
+            boxShadow:
+              'inset 0 1px 0 rgba(255,255,255,0.22), inset 0 0 0 1px rgba(171,199,255,0.22), 0 0 16px rgba(171,199,255,0.13)',
           }}
         >
           <span
@@ -731,12 +745,12 @@ export function Sidebar() {
       <aside
         className="fixed left-0 top-0 bottom-0 w-[244px] flex flex-col z-30 select-none transition-transform duration-200"
         style={{
-          backgroundColor: 'rgba(10,10,12,0.86)',
-          backgroundImage:
-            'radial-gradient(circle at 24% 8%, rgba(171,199,255,0.055) 0%, transparent 34%), linear-gradient(180deg, rgba(255,255,255,0.014) 0%, transparent 18%)',
+          backgroundColor: 'rgba(10,10,12,0.90)',
+          backgroundImage: `${SIDEBAR_BG}, ${SIDEBAR_SURFACE}`,
           backdropFilter: 'blur(24px) saturate(140%)',
           WebkitBackdropFilter: 'blur(24px) saturate(140%)',
-          boxShadow: 'inset -1px 0 0 rgba(171,199,255,0.10)',
+          boxShadow:
+            'inset -1px 0 0 rgba(171,199,255,0.12), 16px 0 48px rgba(0,0,0,0.18)',
           transform: collapsed ? 'translateX(-100%)' : 'translateX(0)',
           transitionTimingFunction: 'var(--ease-liquid)',
         }}
