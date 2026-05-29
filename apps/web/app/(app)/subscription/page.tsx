@@ -57,7 +57,7 @@ const PLANS: Plan[] = [
     tagline: '事業設計 / IS 設計 / FS・CS の営業実装',
     priceMonthly: 500000,
     priceAnnual: 500000,
-    credits: 30000,
+    credits: 5000,
     minSeats: 1,
     isTenantPrice: true,
     slotsTotal: 1,
@@ -69,7 +69,7 @@ const PLANS: Plan[] = [
       '【営業範囲】FS / CS の営業実装',
       '【CRM 提供】CRM 構築',
       '【CRM 提供】CRM 全機能',
-      '【CRM 提供】月30,000クレジット 込み (チーム合計)',
+      '【CRM 提供】月5,000クレジット 込み (チーム合計)',
       '【稼働条件】1日2商談まで',
       '【稼働条件】平日 日中稼働',
     ],
@@ -81,7 +81,7 @@ const PLANS: Plan[] = [
     tagline: 'IS 設計 / FS・CS の営業実装 / 分析レポーティング',
     priceMonthly: 300000,
     priceAnnual: 300000,
-    credits: 20000,
+    credits: 5000,
     minSeats: 1,
     isTenantPrice: true,
     slotsTotal: 1,
@@ -93,7 +93,7 @@ const PLANS: Plan[] = [
       '【営業範囲】分析レポーティング',
       '【CRM 提供】CRM 構築',
       '【CRM 提供】CRM 全機能',
-      '【CRM 提供】月20,000クレジット 込み (チーム合計)',
+      '【CRM 提供】月5,000クレジット 込み (チーム合計)',
       '【稼働条件】1日1商談まで',
       '【稼働条件】平日 日中稼働',
     ],
@@ -106,7 +106,7 @@ const PLANS: Plan[] = [
     tagline: 'IS チーム組成 / IS 設計 / IS マネジメント',
     priceMonthly: 200000,
     priceAnnual: 200000,
-    credits: 10000,
+    credits: 5000,
     minSeats: 1,
     isTenantPrice: true,
     slotsTotal: 3,
@@ -118,7 +118,7 @@ const PLANS: Plan[] = [
       '【営業範囲】IS マネジメント',
       '【CRM 提供】CRM 構築',
       '【CRM 提供】CRM 全機能',
-      '【CRM 提供】月10,000クレジット 込み (チーム合計)',
+      '【CRM 提供】月5,000クレジット 込み (チーム合計)',
       '【稼働条件】週1回の社内MTG',
       '【稼働条件】平日 日中稼働',
     ],
@@ -155,6 +155,8 @@ const SAMPLE_MEMBERS: Member[] = [
   { id: 'u5', name: '高橋 三郎', email: 'takahashi@rookiesmart.jp', role: 'member', initial: '高' },
 ]
 
+const MONTHLY_TEAM_CREDIT_LIMIT = 5000
+
 export default function SubscriptionPage() {
   return (
     <Suspense fallback={null}>
@@ -187,16 +189,21 @@ function SubscriptionPageContent() {
   } | null>(null)
   const [seats, setSeats] = useState(5)
   // テナント単位の1プール構成。サブスク分(月次失効)と購入分(永久有効・解約時失効)を別管理
-  const [subscriptionRemaining] = useState(1620) // サブスク残 (5シート × 1000c = 5000c中)
-  const [purchasedRemaining] = useState(1500) // 購入残(永久有効)
+  const [subscriptionCredit, setSubscriptionCredit] = useState({
+    limitCredits: MONTHLY_TEAM_CREDIT_LIMIT,
+    usedCredits: 0,
+    remainingCredits: MONTHLY_TEAM_CREDIT_LIMIT,
+  })
+  const [purchasedRemaining, setPurchasedRemaining] = useState(1500) // 購入残(永久有効)
   // 個人クレジットは「今月の自分の消費量」可視化のみ。実際の消費はテナントプールから引かれる
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('annual')
   const [showBuyCredits, setShowBuyCredits] = useState(false)
+  const [creditCheckoutLoading, setCreditCheckoutLoading] = useState(false)
   const [showInviteMember, setShowInviteMember] = useState(false)
   const [showAddSeats, setShowAddSeats] = useState(false)
   const [pendingSeats, setPendingSeats] = useState(seats)
   const [creditsTab, setCreditsTab] = useState<'team' | 'purchased'>('team')
-  const [purchaseAmount, setPurchaseAmount] = useState(500) // 500単位
+  const [purchaseAmount, setPurchaseAmount] = useState(1000) // 1,000単位
   const [members, setMembers] = useState<Member[]>(SAMPLE_MEMBERS)
   const [openRoleMenuId, setOpenRoleMenuId] = useState<string | null>(null)
   const [inviteRole, setInviteRole] = useState<MemberRole>('member')
@@ -225,11 +232,31 @@ function SubscriptionPageContent() {
           planId?: string
           billingCycle?: 'monthly' | 'annual'
           seats?: number
+          credits?: {
+            limitCredits?: number
+            usedCredits?: number
+            remainingCredits?: number
+            subscriptionRemainingCredits?: number
+            purchasedRemainingCredits?: number
+          }
         }
         if (cancelled) return
-        if (data.planId) setCurrentPlan(data.planId)
+        if (data.planId && PLANS.some((p) => p.id === data.planId)) setCurrentPlan(data.planId)
         if (data.billingCycle) setBillingCycle(data.billingCycle)
         if (typeof data.seats === 'number') setSeats(data.seats)
+        if (data.credits) {
+          setSubscriptionCredit({
+            limitCredits: data.credits.limitCredits ?? MONTHLY_TEAM_CREDIT_LIMIT,
+            usedCredits: data.credits.usedCredits ?? 0,
+            remainingCredits:
+              data.credits.subscriptionRemainingCredits ??
+              data.credits.remainingCredits ??
+              Math.max(0, MONTHLY_TEAM_CREDIT_LIMIT - (data.credits.usedCredits ?? 0)),
+          })
+          if (typeof data.credits.purchasedRemainingCredits === 'number') {
+            setPurchasedRemaining(data.credits.purchasedRemainingCredits)
+          }
+        }
       } catch {
         // モック表示を維持する
       }
@@ -241,12 +268,34 @@ function SubscriptionPageContent() {
   }, [])
 
   const currentPlanData = PLANS.find((p) => p.id === currentPlan)
-  const subscriptionTotal = (currentPlanData?.credits ?? 0) * seats // 今月のサブスク付与量
+  const subscriptionTotal = subscriptionCredit.limitCredits // 今月のサブスク付与量
+  const subscriptionRemaining = subscriptionCredit.remainingCredits
   const subscriptionUsagePct =
     subscriptionTotal > 0 ? (subscriptionRemaining / subscriptionTotal) * 100 : 0
 
-  const CREDIT_UNIT_PRICE = 10 // ¥10 per credit (¥5,000 / 500c)
-  const CREDIT_STEP = 500 // 500-unit step
+  const CREDIT_UNIT_PRICE = 5 // ¥5 per credit (¥5,000 / 1,000cr)
+  const CREDIT_STEP = 1000 // 1,000-unit step
+
+  const startCreditCheckout = async () => {
+    setCreditCheckoutLoading(true)
+    try {
+      const res = await fetch('/api/stripe/credits/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credits: purchaseAmount }),
+      })
+      const data = (await res.json()) as { url?: string; error?: string }
+      if (!res.ok || !data.url) {
+        throw new Error(data.error ?? 'Stripe Checkoutの作成に失敗しました。')
+      }
+      window.location.href = data.url
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Stripe Checkoutの作成に失敗しました。'
+      alert(message)
+      setCreditCheckoutLoading(false)
+    }
+  }
 
   return (
     <ObsPageShell>
@@ -1679,13 +1728,13 @@ function SubscriptionPageContent() {
                     </div>
                   </div>
 
-                  {/* クレジット数ステッパー(500単位) */}
+                  {/* クレジット数ステッパー(1,000単位) */}
                   <div>
                     <label
                       className="text-[11px] font-medium uppercase tracking-[0.1em] mb-2 block"
                       style={{ color: 'var(--color-obs-text-subtle)' }}
                     >
-                      追加するクレジット数 (500単位)
+                      追加するクレジット数 (1,000cr単位)
                     </label>
                     <div
                       className="rounded-[var(--radius-obs-md)] p-4"
@@ -1742,7 +1791,7 @@ function SubscriptionPageContent() {
                     <div className="flex justify-between text-[12px] mb-1.5">
                       <span style={{ color: 'var(--color-obs-text-muted)' }}>単価</span>
                       <span className="tabular-nums" style={{ color: 'var(--color-obs-text)' }}>
-                        ¥{(CREDIT_UNIT_PRICE * 500).toLocaleString()} / 500クレジット
+                        ¥{(CREDIT_UNIT_PRICE * CREDIT_STEP).toLocaleString()} / 1,000cr
                       </span>
                     </div>
                     <div className="flex justify-between text-[12px] mb-1.5">
@@ -1776,8 +1825,16 @@ function SubscriptionPageContent() {
                     </p>
                   </div>
 
-                  <ObsButton variant="primary" size="lg" className="w-full">
-                    ¥{(purchaseAmount * CREDIT_UNIT_PRICE).toLocaleString()} で購入する
+                  <ObsButton
+                    variant="primary"
+                    size="lg"
+                    className="w-full"
+                    onClick={startCreditCheckout}
+                    disabled={creditCheckoutLoading}
+                  >
+                    {creditCheckoutLoading
+                      ? 'Stripeへ接続中...'
+                      : `¥${(purchaseAmount * CREDIT_UNIT_PRICE).toLocaleString()} で購入する`}
                   </ObsButton>
                 </div>
               </motion.div>

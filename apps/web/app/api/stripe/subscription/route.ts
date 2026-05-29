@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma, type BillingInterval, type Plan } from '@bgm/db'
 import { getBillingOrg } from '@/lib/stripe/auth'
+import { getMonthlyAiCreditStatus } from '@/lib/credit-usage'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -32,6 +33,7 @@ export async function GET() {
     where: { orgId: billingOrg.org.id },
     orderBy: { updatedAt: 'desc' },
   })
+  const credits = await getMonthlyAiCreditStatus({ orgId: billingOrg.org.id })
 
   return NextResponse.json({
     planId: subscription ? toPlanId(subscription.plan) : toPlanId(billingOrg.org.plan),
@@ -40,5 +42,6 @@ export async function GET() {
     status: subscription?.status ?? null,
     currentPeriodEnd: subscription?.currentPeriodEnd?.toISOString() ?? null,
     cancelAtPeriodEnd: subscription?.cancelAtPeriodEnd ?? false,
+    credits,
   })
 }

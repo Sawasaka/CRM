@@ -50,10 +50,28 @@ const SIGNAL_HITS: Record<Signal, Record<SignalChannel, boolean>> = {
   Low:    { email: true, doc: false, site: false },
 }
 
-const TONE_COLOR: Record<ChipTone, { fg: string; bg: string; ring: string }> = {
-  hot:    { fg: 'var(--color-obs-hot)',    bg: 'rgba(255,107,107,0.14)', ring: 'rgba(255,107,107,0.32)' },
-  middle: { fg: 'var(--color-obs-middle)', bg: 'rgba(255,184,107,0.14)', ring: 'rgba(255,184,107,0.32)' },
-  low:    { fg: 'var(--color-obs-low)',    bg: 'rgba(126,198,255,0.14)', ring: 'rgba(126,198,255,0.32)' },
+const TONE_COLOR: Record<ChipTone, { fg: string; bg: string; bgStrong: string; ring: string; glow: string }> = {
+  hot: {
+    fg: '#ff6f86',
+    bg: 'rgba(255,111,134,0.08)',
+    bgStrong: 'linear-gradient(145deg, rgba(255,111,134,0.12) 0%, rgba(39,35,41,0.78) 34%, rgba(24,25,29,0.94) 100%)',
+    ring: 'rgba(255,111,134,0.25)',
+    glow: 'rgba(255,111,134,0.075)',
+  },
+  middle: {
+    fg: '#8dffc9',
+    bg: 'rgba(141,255,201,0.06)',
+    bgStrong: 'linear-gradient(145deg, rgba(141,255,201,0.09) 0%, rgba(35,41,40,0.78) 34%, rgba(24,25,29,0.94) 100%)',
+    ring: 'rgba(141,255,201,0.20)',
+    glow: 'rgba(141,255,201,0.060)',
+  },
+  low: {
+    fg: '#abc7ff',
+    bg: 'rgba(171,199,255,0.06)',
+    bgStrong: 'linear-gradient(145deg, rgba(171,199,255,0.10) 0%, rgba(36,39,47,0.78) 34%, rgba(24,25,29,0.94) 100%)',
+    ring: 'rgba(171,199,255,0.21)',
+    glow: 'rgba(171,199,255,0.065)',
+  },
 }
 
 export function SignalBadge({ signal }: { signal: Signal }) {
@@ -72,8 +90,12 @@ export function SignalBadge({ signal }: { signal: Signal }) {
       onMouseLeave={() => setHover(false)}
     >
       <span
-        className="inline-flex items-center gap-1 h-6 px-2 rounded-full text-[11px] font-semibold cursor-help"
-        style={{ backgroundColor: c.bg, color: c.fg, boxShadow: `inset 0 0 0 1px ${c.ring}` }}
+        className="inline-flex items-center gap-1 h-6 px-2 rounded-[var(--radius-obs-md)] text-[11px] font-semibold cursor-help"
+        style={{
+          background: c.bgStrong,
+          color: c.fg,
+          boxShadow: `inset 2px 0 0 ${c.fg}, inset 0 0 0 1px ${c.ring}, inset 1px 1px 0 rgba(255,255,255,0.060), 0 0 14px ${c.glow}`,
+        }}
       >
         <Icon size={11} strokeWidth={2.4} />
         {label}
@@ -83,13 +105,18 @@ export function SignalBadge({ signal }: { signal: Signal }) {
         <div
           className="absolute left-0 top-full mt-1.5 z-30 w-[240px] rounded-[var(--radius-obs-md)] overflow-hidden animate-[fadeIn_0.18s_ease-out]"
           style={{
-            backgroundColor: 'var(--color-obs-surface-highest)',
-            boxShadow: '0 12px 40px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(65,71,83,0.4)',
+            background:
+              'linear-gradient(145deg, rgba(36,36,38,0.96) 0%, rgba(24,25,29,0.98) 100%)',
+            backdropFilter: 'blur(22px) saturate(130%)',
+            boxShadow: '0 18px 50px rgba(0,0,0,0.5), inset 1px 1px 0 rgba(171,199,255,0.08), inset -1px -1px 0 rgba(0,0,0,0.24)',
           }}
         >
           <div
             className="px-3 py-2 flex items-center justify-between"
-            style={{ backgroundColor: 'var(--color-obs-surface-low)' }}
+            style={{
+              background: c.bgStrong,
+              boxShadow: `inset 2px 0 0 ${c.fg}`,
+            }}
           >
             <span
               className="inline-flex items-center gap-1.5 text-[10.5px] font-bold tracking-[0.1em] uppercase"

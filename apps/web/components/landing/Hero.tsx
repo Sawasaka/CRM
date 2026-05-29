@@ -636,8 +636,8 @@ export const Hero = () => {
     { agent: 'helpdesk',  pos: 'top-[48%] left-[2%] hidden lg:block',     size: 32 },
   ]
 
-  const heroWords = ['営業の', 'すべての', '答えが、']
-  const heroLine2 = ['ひとつの', 'チャットに。']
+  const heroWords = ['CRMも', '部署番号も、', '無償。']
+  const heroLine2: string[] = []
 
   return (
     <Section id="hero" tone="obsidian" screenLabel="01 Hero">
@@ -653,32 +653,32 @@ export const Hero = () => {
       <div className="relative mx-auto max-w-6xl px-6 pt-32 md:pt-40 pb-24 md:pb-32 min-h-screen flex flex-col justify-center">
         <div className="text-center">
           <div className="flex justify-center mb-6">
-            <Eyebrow color="#abc7ff">CHAT CRM ／ 株式会社ルーキースマートジャパン</Eyebrow>
+            <Eyebrow color="#abc7ff">次世代型チャットCRM ／ 株式会社ルーキースマートジャパン</Eyebrow>
           </div>
-          <h1 className="font-display font-bold tracking-[-0.025em] text-[2.6rem] sm:text-[3.4rem] md:text-[4.6rem] leading-[1.04]">
-            <span className="block">
+          <h1 className="font-display font-bold tracking-[-0.025em] text-[2.1rem] sm:text-[2.9rem] md:text-[3.8rem] leading-[1.08]">
+            <span className="block sm:whitespace-nowrap">
               {heroWords.map((w, i) => (
                 <span key={i} className="fo-word-in inline-block fo-gradient-text" style={{ animationDelay: `${i * 80}ms` }}>
                   {w}
                 </span>
               ))}
             </span>
-            <span className="block mt-1">
-              {heroLine2.map((w, i) => (
-                <span
-                  key={i}
-                  className="fo-word-in inline-block fo-gradient-text"
-                  style={{ animationDelay: `${(i + heroWords.length) * 80}ms` }}
-                >
-                  {w}
-                </span>
-              ))}
-            </span>
+            {heroLine2.length > 0 && (
+              <span className="block mt-1 sm:whitespace-nowrap">
+                {heroLine2.map((w, i) => (
+                  <span
+                    key={i}
+                    className="fo-word-in inline-block fo-gradient-text"
+                    style={{ animationDelay: `${(i + heroWords.length) * 80}ms` }}
+                  >
+                    {w}
+                  </span>
+                ))}
+              </span>
+            )}
           </h1>
           <p className="mt-6 text-[#c7c5c9] max-w-2xl mx-auto text-[1.05rem] leading-relaxed fo-word-in" style={{ animationDelay: '650ms' }}>
-            商談・メール・議事録・求人インテント・290万社DBを横断し、
-            <br />
-            あなたの会社のデータを踏まえて答えます。
+            営業実行とCRM構築を同時に。
           </p>
 
           {/* Top trust strip — 数値プルーフ */}
@@ -708,33 +708,33 @@ export const Hero = () => {
         {/* Chat panel */}
         <div className="relative mt-10 md:mt-14 fo-word-in" style={{ animationDelay: '900ms' } as CSSProperties}>
           <div
-            className="absolute -inset-6 rounded-[2.2rem] fo-halo pointer-events-none"
+            className="absolute -inset-2 md:-inset-6 rounded-[2.2rem] fo-halo pointer-events-none"
             style={{
               background: 'linear-gradient(120deg, rgba(171,199,255,0.18), rgba(0,113,227,0.20))',
               filter: 'blur(40px)',
             }}
           />
-          <div className="relative rounded-[1.8rem] fo-glass-strong fo-glass-rim overflow-hidden fo-tilt-1400" style={{ transformStyle: 'preserve-3d' }}>
+          <div className="relative rounded-[1.2rem] md:rounded-[1.8rem] fo-glass-strong fo-glass-rim overflow-hidden md:fo-tilt-1400" style={{ transformStyle: 'preserve-3d' }}>
             <div className="flex">
               <HeroSidebar active={demoView} onSelect={setDemoView} />
-              <div className="flex-1 min-w-0 flex flex-col" style={{ minHeight: 540 }}>
+              <div className="flex-1 min-w-0 flex flex-col min-h-[480px] md:min-h-[540px]">
                 {demoView !== 'chat' && <HeroDemoView kind={demoView} />}
                 {demoView === 'chat' && (<>
             {/* Top bar */}
-            <div className="px-5 md:px-7 pt-5 pb-3 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="flex -space-x-1.5">
+            <div className="px-3 md:px-7 pt-4 md:pt-5 pb-3 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 md:gap-2.5 min-w-0">
+                <div className="flex -space-x-1.5 shrink-0">
                   {(Object.keys(AGENTS) as AgentKey[]).map((k) => (
                     <span key={k} className="rounded-full" style={{ padding: 1, background: '#1b1b1d' }}>
                       <Orb color={AGENTS[k].color} size={14} active={activeAgent === k} />
                     </span>
                   ))}
                 </div>
-                <span className="text-sm text-[#c7c5c9]">
-                  ルキスマCRM <span className="text-[#7e7c83]">／ Live RAG demo</span>
+                <span className="text-xs md:text-sm text-[#c7c5c9] truncate">
+                  ルキスマCRM <span className="text-[#7e7c83] hidden sm:inline">／ Live RAG demo</span>
                 </span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 shrink-0">
                 <span
                   className="rounded-full px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] font-mono"
                   style={{ background: 'rgba(141,255,201,0.10)', color: '#8dffc9' }}
@@ -748,8 +748,8 @@ export const Hero = () => {
             {/* Thread */}
             <div
               ref={threadRef}
-              className="px-5 md:px-7 py-4 space-y-5 overflow-y-auto fo-thin-scroll"
-              style={{ minHeight: 320, maxHeight: 480 }}
+              className="px-3 md:px-7 py-4 space-y-5 overflow-y-auto fo-thin-scroll"
+              style={{ minHeight: 280, maxHeight: 480 }}
             >
               {messages.map((m) => (
                 <ChatMessage key={m.id} m={m} streaming={m.id === streamingId} />
@@ -757,7 +757,7 @@ export const Hero = () => {
             </div>
 
             {/* Input */}
-            <div className="px-5 md:px-7 pb-5 pt-2">
+            <div className="px-3 md:px-7 pb-4 md:pb-5 pt-2">
               <div className="relative">
                 <div
                   className="absolute -inset-2 rounded-2xl pointer-events-none"
@@ -767,7 +767,7 @@ export const Hero = () => {
                   }}
                 />
                 <div
-                  className="relative rounded-2xl bg-pitch px-4 md:px-5 pt-4 pb-3"
+                  className="relative rounded-2xl bg-pitch px-3 md:px-5 pt-3 md:pt-4 pb-3"
                   style={{ boxShadow: 'inset 0 0 0 1px rgba(65,71,83,0.18)' }}
                   onClick={() => inputRef.current?.focus()}
                 >
@@ -809,26 +809,6 @@ export const Hero = () => {
                       >
                         <Paperclip size={14} />
                       </button>
-
-                      <span
-                        className={`h-8 px-2.5 rounded-full inline-flex items-center gap-1.5 text-[11.5px] ${
-                          demoLimitReached ? 'text-[#ffcf4a]' : 'text-[#c7c5c9]'
-                        }`}
-                        style={{
-                          background: demoLimitReached
-                            ? 'rgba(255,207,74,0.12)'
-                            : 'rgba(171,199,255,0.08)',
-                          boxShadow: `inset 0 0 0 1px ${
-                            demoLimitReached ? 'rgba(255,207,74,0.24)' : 'rgba(171,199,255,0.16)'
-                          }`,
-                        }}
-                        title="公開HPデモの上限です。1質問=1cr、1日10cr（約100円）まで。"
-                      >
-                        デモ
-                        <span className="font-mono tabular-nums">
-                          {demoCreditsUsed}/{LP_DEMO_DAILY_CREDIT_LIMIT}cr
-                        </span>
-                      </span>
 
                       {/* Model dropdown */}
                       <div className="relative">
@@ -1023,7 +1003,7 @@ export const Hero = () => {
               </div>
 
               {/* Suggested chips */}
-              <div className="mt-4 flex flex-wrap gap-2">
+              <div className="mt-4 flex flex-wrap justify-center gap-2">
                 {SUGGESTIONS.map((s) => {
                   const a = AGENTS[s.agent]
                   return (

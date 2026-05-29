@@ -87,7 +87,20 @@ export type StripeInvoice = {
 export type StripeCheckoutSession = {
   id: string
   url: string | null
+  mode?: 'payment' | 'setup' | 'subscription' | null
+  customer?: string | StripeIdObject | null
   subscription?: string | StripeIdObject | null
+  payment_intent?: string | StripeIdObject | null
+  payment_status?: 'paid' | 'unpaid' | 'no_payment_required' | null
+  amount_total?: number | null
+  currency?: string | null
+  metadata?: Record<string, string | undefined> | null
+  created?: number | null
+}
+
+export type StripePaymentIntent = {
+  id: string
+  latest_charge?: string | (StripeIdObject & { receipt_url?: string | null }) | null
 }
 
 export type StripeWebhookEvent = {

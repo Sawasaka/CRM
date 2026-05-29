@@ -76,41 +76,35 @@ const INITIAL_DEALS: Deal[] = [
 
 // ─── Stages ────────────────────────────────────────────────────────────────────
 
-// 色は Liquid Obsidian デザインシステムのパレット (primary / low / middle / hot / text系) のみで構成
-// アクセントは控えめ。ヘッダーやドットは subtle に光らせる程度。
 type StageColor = { accent: string; bg: string; glow: string; text: string }
 
-// フェーズの進行感は色相で表現（中立→primary→middle→success→hot/muted）
 const STAGES: { key: StageKey; label: string; desc: string; color: StageColor }[] = [
-  // 出発点 — outline / muted
   { key: 'IS',               label: 'IS',             desc: '未商談の企業へアプローチ',
-    color: { accent: '#8f8c90', bg: 'rgba(143,140,144,0.10)', glow: 'rgba(143,140,144,0.20)', text: '#c7c5c9' } },
-  // 商談 — primary blue
+    color: { accent: '#abc7ff', bg: 'rgba(171,199,255,0.075)', glow: 'rgba(171,199,255,0.13)', text: '#d5e2ff' } },
   { key: 'MEETING_PLANNED',  label: '商談予定',       desc: '初回商談がスケジュール済み',
-    color: { accent: '#abc7ff', bg: 'rgba(171,199,255,0.10)', glow: 'rgba(171,199,255,0.20)', text: '#c7d6ff' } },
+    color: { accent: '#7ec6ff', bg: 'rgba(126,198,255,0.072)',  glow: 'rgba(126,198,255,0.12)', text: '#c6e7ff' } },
   { key: 'MEETING_DONE',     label: '商談済み',       desc: '初回商談が完了した案件',
-    color: { accent: '#abc7ff', bg: 'rgba(171,199,255,0.12)', glow: 'rgba(171,199,255,0.22)', text: '#c7d6ff' } },
-  // PJ化 — low (cyan-blue)
+    color: { accent: '#88bbff', bg: 'rgba(136,187,255,0.070)',  glow: 'rgba(136,187,255,0.12)', text: '#d1e0ff' } },
   { key: 'PROJECT_PLANNED',  label: 'PJ化予定あり',   desc: '具体的なプロジェクト化が見込める',
-    color: { accent: '#7ec6ff', bg: 'rgba(126,198,255,0.12)', glow: 'rgba(126,198,255,0.22)', text: '#a8d6ff' } },
-  // PJ進行 / 検証 — middle (orange)
+    color: { accent: '#8dffc9', bg: 'rgba(141,255,201,0.070)',  glow: 'rgba(141,255,201,0.12)', text: '#c8ffe6' } },
   { key: 'MULTI_MEETING',    label: '複数商談済み',   desc: '2回以上の商談を実施済み',
-    color: { accent: '#ffb86b', bg: 'rgba(255,184,107,0.10)', glow: 'rgba(255,184,107,0.20)', text: '#ffce99' } },
+    color: { accent: '#c8b9ff', bg: 'rgba(200,185,255,0.062)',  glow: 'rgba(200,185,255,0.105)', text: '#e2dcff' } },
   { key: 'POC',              label: 'POC',            desc: '検証・トライアルを実施中',
-    color: { accent: '#ffb86b', bg: 'rgba(255,184,107,0.12)', glow: 'rgba(255,184,107,0.22)', text: '#ffce99' } },
-  // 受注 — emerald (success の唯一の例外色。緑で成功を伝える)
+    color: { accent: '#ffcf4a', bg: 'rgba(255,207,74,0.060)',  glow: 'rgba(255,207,74,0.10)', text: '#ffeaa0' } },
   { key: 'CLOSED_WON',       label: '受注',           desc: '契約締結が完了した案件',
-    color: { accent: '#6ee7a1', bg: 'rgba(110,231,161,0.12)', glow: 'rgba(110,231,161,0.22)', text: '#9af0c0' } },
-  // 失注・チャーン — hot
+    color: { accent: '#8dffc9', bg: 'rgba(141,255,201,0.075)',  glow: 'rgba(141,255,201,0.13)', text: '#c8ffe6' } },
   { key: 'LOST_DEAL',        label: '失注',           desc: 'POC後に受注に至らなかった案件',
-    color: { accent: '#ff6b6b', bg: 'rgba(255,107,107,0.10)', glow: 'rgba(255,107,107,0.20)', text: '#ff8a8a' } },
+    color: { accent: '#ff6b7a', bg: 'rgba(255,107,122,0.065)',  glow: 'rgba(255,107,122,0.11)', text: '#ffc7cf' } },
   { key: 'CHURN',            label: 'チャーン',       desc: '契約後に解約となった案件',
-    color: { accent: '#ff6b6b', bg: 'rgba(255,107,107,0.10)', glow: 'rgba(255,107,107,0.20)', text: '#ff8a8a' } },
+    color: { accent: '#ff6b7a', bg: 'rgba(255,107,122,0.065)',  glow: 'rgba(255,107,122,0.11)', text: '#ffc7cf' } },
   { key: 'LOST',             label: 'ロスト',         desc: '追客を完全に終了した案件',
-    color: { accent: '#6d6a6f', bg: 'rgba(109,106,111,0.12)', glow: 'rgba(109,106,111,0.18)', text: '#8f8c90' } },
+    color: { accent: '#ff6b7a', bg: 'rgba(255,107,122,0.065)',  glow: 'rgba(255,107,122,0.11)', text: '#ffc7cf' } },
 ]
 
 const OWNERS = ['全員', '田中太郎', '鈴木花子', '佐藤次郎']
+
+const SERVICE_PAGE_BACKGROUND =
+  'radial-gradient(circle at 50% 20%, rgba(171,199,255,0.06) 0%, transparent 45%), radial-gradient(circle at 20% 80%, rgba(0,113,227,0.04) 0%, transparent 50%)'
 
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -175,20 +169,32 @@ export default function PipelinePage() {
   return (
     <ObsPageShell>
       <div
-        className="w-full min-h-[calc(100vh-56px)] pb-16 stitch-dots"
-        style={{ backgroundColor: 'var(--color-obs-surface)' }}
+        className="w-full min-h-[calc(100vh-56px)] pb-16 relative overflow-hidden"
+        style={{
+          backgroundColor: 'var(--color-obs-surface)',
+          backgroundImage: SERVICE_PAGE_BACKGROUND,
+        }}
       >
-        <div className="w-full px-8 xl:px-12 2xl:px-16 pt-10">
-          {/* ── Hero ── */}
-          <div className="mb-10 max-w-5xl">
-            <span
-              className="inline-block text-[11px] font-medium tracking-[0.14em] uppercase mb-3"
-              style={{ color: 'var(--color-obs-text-subtle)' }}
+        <div className="relative w-full px-8 xl:px-12 2xl:px-16 pt-10">
+          {/* ── Hero (§15 Section Composition + §12 Service タイポスケール) ── */}
+          <div className="mb-8 max-w-5xl">
+            {/* Eyebrow — §17 Pattern Snippet */}
+            <div
+              className="inline-flex items-center gap-2 font-semibold uppercase tracking-[0.14em] text-[0.72rem] mb-3"
+              style={{ color: '#abc7ff' }}
             >
+              <span
+                className="block w-1.5 h-1.5 rounded-full"
+                style={{ background: '#abc7ff', boxShadow: '0 0 10px #abc7ff' }}
+              />
               Pipeline
-            </span>
+            </div>
+            {/* Page Title — fo-gradient-text 相当を inline で展開 (§12 サービス用大見出し) */}
             <h1
-              className="font-[family-name:var(--font-display)] text-[clamp(2rem,4vw,3.25rem)] font-semibold leading-[1.05] tracking-[-0.03em] mb-3 stitch-title-gradient"
+              className="fo-gradient-text font-[family-name:var(--font-display)] font-bold tracking-[-0.025em] text-[1.8rem] md:text-[2.4rem] leading-[1.06]"
+              style={{
+                WebkitTextFillColor: 'transparent',
+              }}
             >
               パイプライン
             </h1>
@@ -196,10 +202,9 @@ export default function PipelinePage() {
 
           {/* ── View Tabs（Segmented Control） ── */}
           <div
-            className="inline-flex items-center p-1 rounded-[var(--radius-obs-lg)] mb-6 relative"
+            className="inline-flex items-center p-1 rounded-full mb-6 fo-glass-rim"
             style={{
-              backgroundColor: 'var(--color-obs-surface-low)',
-              boxShadow: 'inset 0 0 0 1px rgba(65,71,83,0.3)',
+              background: 'rgba(171,199,255,0.04)',
             }}
           >
             {[
@@ -211,14 +216,16 @@ export default function PipelinePage() {
                 <button
                   key={t.k}
                   onClick={() => setView(t.k)}
-                  className="relative z-[1] h-9 px-5 rounded-[calc(var(--radius-obs-lg)-0.25rem)] text-[13px] font-medium transition-all duration-200 flex items-center gap-2"
+                  className="relative z-[1] h-8 px-4 rounded-full text-[12.5px] font-semibold transition-all duration-200 flex items-center gap-2"
                   style={{
-                    color: active ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
+                    color: active
+                      ? 'var(--color-obs-on-primary)'
+                      : 'var(--color-obs-text-muted)',
                     background: active
                       ? 'linear-gradient(140deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)'
                       : 'transparent',
                     boxShadow: active
-                      ? 'inset 0 1px 0 rgba(255,255,255,0.18), 0 4px 16px rgba(0,113,227,0.28)'
+                      ? 'inset 0 1px 0 rgba(255,255,255,0.18), 0 0 0 1px rgba(171,199,255,0.20)'
                       : 'none',
                     transitionTimingFunction: 'var(--ease-liquid)',
                   }}
@@ -226,9 +233,9 @@ export default function PipelinePage() {
                   {t.label}
                   {t.badge != null && (
                     <span
-                      className="min-w-[20px] h-[20px] px-1.5 rounded-full text-[10px] font-semibold tabular-nums flex items-center justify-center leading-none"
+                      className="rounded-full px-2 py-0.5 text-[10px] font-semibold tabular-nums leading-none inline-flex items-center"
                       style={{
-                        backgroundColor: active ? 'rgba(255,255,255,0.18)' : 'var(--color-obs-surface-high)',
+                        background: active ? 'rgba(255,255,255,0.18)' : 'rgba(171,199,255,0.10)',
                         color: active ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-subtle)',
                       }}
                     >
@@ -242,7 +249,7 @@ export default function PipelinePage() {
 
           {view === 'kanban' && (
             <>
-              {/* ── Owner Filter ── */}
+              {/* ── Owner Filter — §17 Pill / Chip パターン ── */}
               <div className="flex items-center gap-2 mb-6 flex-wrap">
                 {OWNERS.map((o) => {
                   const active = ownerFilter === o
@@ -250,25 +257,41 @@ export default function PipelinePage() {
                     <button
                       key={o}
                       onClick={() => setOwnerFilter(o)}
-                      className="h-8 px-3.5 rounded-full text-[11px] font-medium transition-colors duration-150"
-                      style={{
-                        backgroundColor: active ? 'rgba(0,113,227,0.14)' : 'rgba(65,71,83,0.15)',
-                        color: active ? 'var(--color-obs-primary)' : 'var(--color-obs-text-muted)',
-                        boxShadow: active ? 'inset 0 0 0 1px rgba(171,199,255,0.22)' : 'none',
-                        transitionTimingFunction: 'var(--ease-liquid)',
-                      }}
+                      className="h-8 px-3.5 rounded-full text-[11.5px] font-semibold transition-all duration-150"
+                      style={
+                        active
+                          ? {
+                              background:
+                                'linear-gradient(140deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
+                              color: 'var(--color-obs-on-primary)',
+                              boxShadow:
+                                'inset 0 1px 0 rgba(255,255,255,0.18), 0 0 0 1px rgba(171,199,255,0.20)',
+                              transitionTimingFunction: 'var(--ease-liquid)',
+                            }
+                          : {
+                              background: 'rgba(171,199,255,0.06)',
+                              color: 'var(--color-obs-text-muted)',
+                              boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.18)',
+                              transitionTimingFunction: 'var(--ease-liquid)',
+                            }
+                      }
                     >
                       {o}
                     </button>
                   )
                 })}
-                <span className="ml-auto text-[11px] tracking-[0.08em] uppercase" style={{ color: 'var(--color-obs-text-subtle)' }}>
-                  {filtered.length}件
+                <span
+                  className="ml-auto text-[10.5px] uppercase tracking-[0.16em] tabular-nums"
+                  style={{ color: 'var(--color-obs-text-subtle)' }}
+                >
+                  {filtered.length} 件
                 </span>
               </div>
 
-              {/* ── Kanban ── */}
-              <div className="flex gap-6 overflow-x-auto pb-8 stitch-scroll select-none">
+              {/* ── Kanban — §18 翻訳ガイドで Kanban 全体を覆う背景 gradient は撤去 ── */}
+              <div
+                className="flex gap-5 overflow-x-auto pb-8 fo-thin-scroll select-none"
+              >
             {STAGES.map((stage) => {
               const stageDeals = dealsByStage[stage.key]
               const isOver = dragOverStage === stage.key
@@ -280,29 +303,24 @@ export default function PipelinePage() {
                   onDragLeave={onColumnDragLeave}
                   onDrop={(e) => onDrop(e, stage.key)}
                 >
-                  {/* Column header — Liquid Obsidian トーン (subtle・フラット) */}
-                  <div className="mb-4">
+                  {/* Column header — §13 Recipe C (Flat Subtle Container) + stage 色は左 edge のみ */}
+                  <div className="mb-3">
                     <div
-                      className="rounded-[var(--radius-obs-md)] px-3 py-2.5 mb-1.5 relative overflow-hidden"
+                      className="rounded-2xl px-3.5 py-3 mb-1.5 relative overflow-hidden"
                       style={{
-                        backgroundColor: 'var(--color-obs-surface-high)',
-                        boxShadow: `inset 0 0 0 1px ${stage.color.accent}1f`,
+                        background: 'rgba(171,199,255,0.04)',
+                        boxShadow: `inset 2px 0 0 ${stage.color.accent}, inset 0 0 0 1px rgba(171,199,255,0.10)`,
                       }}
                     >
-                      {/* 左端のカラーバー — グロー削除、フラットなアクセント */}
-                      <span
-                        className="absolute left-0 top-0 bottom-0 w-[2px]"
-                        style={{
-                          backgroundColor: stage.color.accent,
-                          opacity: 0.7,
-                        }}
-                      />
-
-                      <div className="flex items-center justify-between mb-1 pl-1">
+                      <div className="relative flex items-center justify-between mb-1.5">
                         <div className="flex items-center gap-2 min-w-0">
+                          {/* Orb dot (§14 Agent Color Tokens 同パターン) */}
                           <span
-                            className="w-1.5 h-1.5 rounded-full shrink-0"
-                            style={{ backgroundColor: stage.color.accent }}
+                            className="w-2 h-2 rounded-full shrink-0"
+                            style={{
+                              background: `radial-gradient(circle at 30% 30%, #ffffff 0%, ${stage.color.accent} 48%, ${stage.color.accent}75 85%)`,
+                              boxShadow: `0 0 6px ${stage.color.accent}aa, 0 0 14px ${stage.color.accent}55`,
+                            }}
                           />
                           <h3
                             className="font-[family-name:var(--font-display)] text-[13px] font-semibold tracking-[-0.005em] leading-none"
@@ -310,11 +328,13 @@ export default function PipelinePage() {
                           >
                             {stage.label}
                           </h3>
+                          {/* 件数バッジ — §17 Pill / Chip */}
                           <span
-                            className="text-[10px] font-medium tabular-nums px-1.5 h-4 rounded-sm inline-flex items-center leading-none"
+                            className="text-[10px] font-bold tabular-nums rounded-full px-2 h-[18px] inline-flex items-center leading-none"
                             style={{
-                              backgroundColor: `${stage.color.accent}1f`,
-                              color: stage.color.accent,
+                              background: `${stage.color.accent}1a`,
+                              color: stage.color.text,
+                              boxShadow: `inset 0 0 0 1px ${stage.color.accent}30`,
                             }}
                           >
                             {stageDeals.length}
@@ -322,15 +342,15 @@ export default function PipelinePage() {
                         </div>
                         {stageDeals.length > 0 && (
                           <span
-                            className="text-[11px] font-semibold tabular-nums"
-                            style={{ color: 'var(--color-obs-text-muted)' }}
+                            className="font-mono text-[11px] font-bold tabular-nums"
+                            style={{ color: stage.color.text }}
                           >
                             {formatJpy(stageDeals.reduce((s, d) => s + d.amount, 0))}
                           </span>
                         )}
                       </div>
                       <p
-                        className="text-[10px] leading-tight pl-1"
+                        className="relative text-[10.5px] leading-tight"
                         style={{ color: 'var(--color-obs-text-subtle)' }}
                       >
                         {stage.desc}
@@ -338,12 +358,16 @@ export default function PipelinePage() {
                     </div>
                   </div>
 
-                  {/* Cards container */}
+                  {/* Cards container — drop highlight も §13 Recipe C トーン */}
                   <div
-                    className="flex flex-col gap-4 min-h-[120px] rounded-[var(--radius-obs-lg)] transition-colors duration-200"
+                    className="flex flex-col gap-3 min-h-[120px] rounded-2xl p-2 transition-colors duration-200"
                     style={{
-                      backgroundColor: isOver ? 'rgba(0,113,227,0.06)' : 'transparent',
-                      padding: isOver ? '0.5rem' : 0,
+                      background: isOver
+                        ? 'rgba(171,199,255,0.06)'
+                        : 'transparent',
+                      boxShadow: isOver
+                        ? 'inset 0 0 0 1px rgba(171,199,255,0.20)'
+                        : 'none',
                       transitionTimingFunction: 'var(--ease-liquid)',
                     }}
                   >
@@ -406,9 +430,9 @@ const DEFAULT_SUMMARY: SummaryState = {
 }
 
 const CONCLUSION_STYLE: Record<Conclusion, { color: string; bg: string; ring: string }> = {
-  '順調':   { color: '#6ee7a1',                       bg: 'rgba(110,231,161,0.12)', ring: 'rgba(110,231,161,0.35)' },
-  '要注意': { color: 'var(--color-obs-middle)',       bg: 'rgba(255,184,107,0.12)', ring: 'rgba(255,184,107,0.35)' },
-  '危険':   { color: 'var(--color-obs-hot)',          bg: 'rgba(255,107,107,0.12)', ring: 'rgba(255,107,107,0.35)' },
+  '順調':   { color: '#8dffc9', bg: 'rgba(141,255,201,0.13)', ring: 'rgba(141,255,201,0.38)' },
+  '要注意': { color: '#ffb45f', bg: 'rgba(255,180,95,0.14)', ring: 'rgba(255,180,95,0.40)' },
+  '危険':   { color: '#ff6b7a', bg: 'rgba(255,107,122,0.14)', ring: 'rgba(255,107,122,0.40)' },
 }
 
 // stage → レポート上の分類（ファネル＆バッジ共通）
@@ -439,13 +463,13 @@ function bucketOf(stage: StageKey): ReportBucket {
 //   契約     → 契約済み (グリーン)
 //   失注/ロスト → 失注（ロスト） (赤系 / グレー系で残しつつラベルは統合)
 const BADGE_STYLE: Record<ReportBucket, { label: string; color: string; bg: string } | null> = {
-  '有効商談': { label: '商談済み',              color: 'var(--color-obs-primary)',   bg: 'rgba(171,199,255,0.12)' },
-  'PJ可能':   { label: 'プロジェクト化予定あり', color: 'var(--color-obs-low)',       bg: 'rgba(126,198,255,0.14)' },
-  'PJ進行':   { label: 'プロジェクト進行中',     color: '#6ee7a1',                    bg: 'rgba(110,231,161,0.14)' },
-  '検証':     { label: '検証中',                color: '#c9a94b',                    bg: 'rgba(201,169,75,0.14)' },
-  '失注':     { label: '失注（ロスト）',         color: 'var(--color-obs-hot)',       bg: 'rgba(255,107,107,0.14)' },
-  '契約':     { label: '契約済み',              color: '#6ee7a1',                    bg: 'rgba(110,231,161,0.14)' },
-  'ロスト':   { label: '失注（ロスト）',         color: 'var(--color-obs-text-muted)', bg: 'rgba(143,140,144,0.16)' },
+  '有効商談': { label: '商談済み',              color: '#abc7ff', bg: 'rgba(171,199,255,0.14)' },
+  'PJ可能':   { label: 'プロジェクト化予定あり', color: '#ffb45f', bg: 'rgba(255,180,95,0.14)' },
+  'PJ進行':   { label: 'プロジェクト進行中',     color: '#8dffc9', bg: 'rgba(141,255,201,0.14)' },
+  '検証':     { label: '検証中',                color: '#c8b9ff', bg: 'rgba(200,185,255,0.14)' },
+  '失注':     { label: '失注（ロスト）',         color: '#ff6b7a', bg: 'rgba(255,107,122,0.14)' },
+  '契約':     { label: '契約済み',              color: '#8dffc9', bg: 'rgba(141,255,201,0.14)' },
+  'ロスト':   { label: '失注（ロスト）',         color: '#9b99a0', bg: 'rgba(155,153,160,0.16)' },
   'その他':   null,
 }
 
@@ -563,7 +587,18 @@ function FunnelReport({ deals }: { deals: Deal[] }) {
     <div className="mt-4 space-y-8 pb-10">
       {/* ─── フィルタバー：期間タブ ＋ 担当者 ─── */}
       <div className="flex flex-wrap items-center gap-3">
-        <div className="flex items-center gap-1">
+        <div
+          className="flex items-center gap-1 rounded-[var(--radius-obs-2xl)] p-1 relative overflow-hidden"
+          style={{
+            background: 'linear-gradient(145deg, rgba(45,47,54,0.58) 0%, rgba(18,19,23,0.88) 100%)',
+            boxShadow:
+              'inset 0 0 0 1px rgba(171,199,255,0.16), inset 1px 1px 0 rgba(255,255,255,0.06), 0 14px 36px rgba(0,0,0,0.26)',
+          }}
+        >
+          <span
+            className="pointer-events-none absolute inset-x-2 top-0 h-px"
+            style={{ background: 'linear-gradient(90deg, transparent, rgba(171,199,255,0.28), transparent)' }}
+          />
           {([
             { k: 'all',     label: '全期間' },
             { k: '2026-03', label: '3月' },
@@ -574,28 +609,25 @@ function FunnelReport({ deals }: { deals: Deal[] }) {
               <button
                 key={t.k}
                 onClick={() => setPeriod(t.k)}
-                className="h-9 px-4 text-[12px] font-medium transition-colors duration-150 relative"
+                className="h-8 px-4 rounded-full text-[12px] font-medium transition-colors duration-150 relative"
                 style={{
-                  color: active ? 'var(--color-obs-primary)' : 'var(--color-obs-text-muted)',
+                  color: active ? '#fcfbff' : '#c7c5c9',
+                  background: active
+                    ? 'linear-gradient(135deg, rgba(171,199,255,0.35) 0%, rgba(0,113,227,0.36) 100%)'
+                    : 'transparent',
+                  boxShadow: active
+                    ? 'inset 1px 1px 0 rgba(255,255,255,0.20), inset 0 0 0 1px rgba(171,199,255,0.34), 0 0 18px rgba(171,199,255,0.18)'
+                    : 'none',
                   transitionTimingFunction: 'var(--ease-liquid)',
                 }}
               >
                 {t.label}
-                {active && (
-                  <span
-                    className="absolute bottom-0 left-2 right-2 h-[2px] rounded-full"
-                    style={{
-                      background: 'linear-gradient(90deg, var(--color-obs-primary), var(--color-obs-primary-container))',
-                      boxShadow: '0 0 8px rgba(0,113,227,0.5)',
-                    }}
-                  />
-                )}
               </button>
             )
           })}
         </div>
 
-        <span className="h-6 w-px" style={{ backgroundColor: 'var(--color-obs-outline-variant)' }} />
+        <span className="h-6 w-px" style={{ backgroundColor: 'rgba(171,199,255,0.18)' }} />
 
         <div className="flex items-center gap-1.5 flex-wrap">
           {OWNER_LIST.map((o) => {
@@ -606,12 +638,21 @@ function FunnelReport({ deals }: { deals: Deal[] }) {
                 key={o}
                 onClick={() => setOwner(o)}
                 className="h-7 px-3 rounded-full text-[11px] font-medium transition-colors duration-150"
-                style={{
-                  backgroundColor: active ? 'rgba(0,113,227,0.14)' : 'transparent',
-                  color: active ? 'var(--color-obs-primary)' : 'var(--color-obs-text-muted)',
-                  boxShadow: active ? 'inset 0 0 0 1px rgba(171,199,255,0.22)' : 'none',
-                  transitionTimingFunction: 'var(--ease-liquid)',
-                }}
+                style={
+                  active
+                    ? {
+                        background: 'linear-gradient(140deg, rgba(171,199,255,0.16) 0%, rgba(0,113,227,0.18) 100%)',
+                        color: '#abc7ff',
+                        boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.30), 0 0 14px rgba(171,199,255,0.10)',
+                        transitionTimingFunction: 'var(--ease-liquid)',
+                      }
+                    : {
+                        background: 'rgba(36,36,38,0.52)',
+                        color: '#c7c5c9',
+                        boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.055)',
+                        transitionTimingFunction: 'var(--ease-liquid)',
+                      }
+                }
               >
                 {label}
               </button>
@@ -623,19 +664,42 @@ function FunnelReport({ deals }: { deals: Deal[] }) {
 
       {/* ─── エグゼクティブサマリー（常時編集可能・自動保存） ─── */}
       <div
-        className="stitch-glass stitch-glow-border rounded-[var(--radius-obs-xl)] p-6 relative"
+        className="rounded-3xl p-6 relative overflow-hidden"
+        style={{
+          background:
+            'radial-gradient(circle at 12% 18%, rgba(171,199,255,0.115) 0%, transparent 28%), radial-gradient(circle at 92% 0%, rgba(0,113,227,0.070) 0%, transparent 30%), linear-gradient(145deg, rgba(39,40,46,0.82) 0%, rgba(23,24,29,0.94) 48%, rgba(13,14,18,0.98) 100%)',
+          backdropFilter: 'blur(22px) saturate(135%)',
+          WebkitBackdropFilter: 'blur(22px) saturate(135%)',
+          boxShadow:
+            'inset 0 0 0 1px rgba(171,199,255,0.18), inset 1px 1px 0 rgba(255,255,255,0.07), inset -1px -1px 0 rgba(0,0,0,0.30), 0 22px 58px rgba(0,0,0,0.32)',
+        }}
       >
-        <div className="flex items-center gap-3 mb-5">
-          <span className="w-6 h-px" style={{ backgroundColor: 'var(--color-obs-outline-variant)' }} />
-          <span className="text-[11px] font-medium tracking-[0.1em] uppercase" style={{ color: 'var(--color-obs-text-muted)' }}>
+        <span
+          className="pointer-events-none absolute left-6 right-6 top-0 h-px"
+          style={{
+            background: 'linear-gradient(90deg, transparent 0%, rgba(171,199,255,0.34) 50%, transparent 100%)',
+          }}
+        />
+        {/* ambient orb */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute -top-24 -right-20 w-60 h-60 rounded-full"
+          style={{
+            background: 'radial-gradient(circle, rgba(171,199,255,0.12), transparent 62%)',
+            filter: 'blur(54px)',
+          }}
+        />
+        <div className="relative flex items-center gap-3 mb-5">
+          <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#abc7ff', boxShadow: '0 0 10px #abc7ff' }} />
+          <span className="text-[11px] font-semibold tracking-[0.14em] uppercase" style={{ color: '#abc7ff' }}>
             エグゼクティブサマリー
           </span>
-          <span className="text-[10px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
+          <span className="text-[10px]" style={{ color: '#7e7c83' }}>
             自動保存
           </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-[220px_1fr_1fr] gap-8">
+        <div className="relative grid grid-cols-1 md:grid-cols-[220px_1fr_1fr] gap-8">
           <div>
             <FieldLabel>結論</FieldLabel>
             <div className="mt-3">
@@ -652,11 +716,13 @@ function FunnelReport({ deals }: { deals: Deal[] }) {
               onChange={(e) => updateSummary({ next: e.target.value })}
               rows={6}
               placeholder="（未入力）"
-              className="mt-3 w-full rounded-[var(--radius-obs-md)] p-3 text-[12.5px] leading-[1.8] resize-y font-[family-name:var(--font-body)]"
+              className="mt-3 w-full rounded-xl bg-dusk p-3 text-[12.5px] leading-[1.8] resize-y font-[family-name:var(--font-body)] focus:outline-none transition-colors"
               style={{
-                backgroundColor: 'var(--color-obs-surface-low)',
-                color: 'var(--color-obs-text)',
-                boxShadow: 'inset 0 0 0 1px rgba(65,71,83,0.4)',
+                color: '#e7e5ea',
+                background:
+                  'radial-gradient(circle at 90% 0%, rgba(171,199,255,0.055) 0%, transparent 34%), linear-gradient(180deg, rgba(15,16,20,0.88) 0%, rgba(9,10,13,0.94) 100%)',
+                boxShadow:
+                  'inset 0 0 0 1px rgba(171,199,255,0.18), inset 1px 1px 0 rgba(255,255,255,0.045), 0 12px 28px rgba(0,0,0,0.16)',
                 minHeight: 150,
               }}
             />
@@ -668,11 +734,13 @@ function FunnelReport({ deals }: { deals: Deal[] }) {
               onChange={(e) => updateSummary({ help: e.target.value })}
               rows={6}
               placeholder="（未入力）"
-              className="mt-3 w-full rounded-[var(--radius-obs-md)] p-3 text-[12.5px] leading-[1.8] resize-y font-[family-name:var(--font-body)]"
+              className="mt-3 w-full rounded-xl bg-dusk p-3 text-[12.5px] leading-[1.8] resize-y font-[family-name:var(--font-body)] focus:outline-none transition-colors"
               style={{
-                backgroundColor: 'var(--color-obs-surface-low)',
-                color: 'var(--color-obs-text)',
-                boxShadow: 'inset 0 0 0 1px rgba(65,71,83,0.4)',
+                color: '#e7e5ea',
+                background:
+                  'radial-gradient(circle at 90% 0%, rgba(171,199,255,0.055) 0%, transparent 34%), linear-gradient(180deg, rgba(15,16,20,0.88) 0%, rgba(9,10,13,0.94) 100%)',
+                boxShadow:
+                  'inset 0 0 0 1px rgba(171,199,255,0.18), inset 1px 1px 0 rgba(255,255,255,0.045), 0 12px 28px rgba(0,0,0,0.16)',
                 minHeight: 150,
               }}
             />
@@ -682,16 +750,20 @@ function FunnelReport({ deals }: { deals: Deal[] }) {
 
       {/* ─── セクションラベル ─── */}
       <div className="flex items-center gap-3">
-        <span className="w-6 h-px" style={{ backgroundColor: 'var(--color-obs-outline-variant)' }} />
-        <span className="text-[11px] font-medium tracking-[0.1em] uppercase" style={{ color: 'var(--color-obs-text-muted)' }}>
+        <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#abc7ff', boxShadow: '0 0 10px #abc7ff' }} />
+        <span className="text-[11px] font-semibold tracking-[0.14em] uppercase" style={{ color: '#abc7ff' }}>
           商談パイプライン
         </span>
-        <span className="text-[11px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
+        <span className="text-[11px]" style={{ color: '#7e7c83' }}>
           — {ownerLabel} / {periodLabel}
         </span>
         <button
-          className="inline-flex items-center gap-1 h-6 px-2 rounded-full text-[10px] font-medium ml-2"
-          style={{ backgroundColor: 'rgba(65,71,83,0.2)', color: 'var(--color-obs-text-subtle)' }}
+          className="inline-flex items-center gap-1 h-6 px-2 rounded-full text-[10px] font-medium ml-2 transition-colors"
+          style={{
+            color: '#c7c5c9',
+            background: 'linear-gradient(145deg, rgba(36,36,38,0.62) 0%, rgba(20,21,25,0.80) 100%)',
+            boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.11), 0 0 12px rgba(171,199,255,0.05)',
+          }}
         >
           <HelpCircle size={10} />
           認定条件とは？
@@ -703,7 +775,7 @@ function FunnelReport({ deals }: { deals: Deal[] }) {
         <FunnelCard
           label="商談数"
           value={counts.valid}
-          color="var(--color-obs-primary)"
+          color="#abc7ff"
           condition={'商談済み'}
           activeDeals={stageGroups.valid}
           activeLabel="現在進行中の案件"
@@ -717,11 +789,11 @@ function FunnelReport({ deals }: { deals: Deal[] }) {
         <FunnelCard
           label="プロジェクト化予定あり"
           value={counts.pjPossible}
-          color="var(--color-obs-low)"
+          color="#ffb45f"
           condition={'プロジェクト化予定あり'}
           rateLabel="移行率"
           rate={counts.possibleRate}
-          rateColor="#6ee7a1"
+          rateColor="#8dffc9"
           activeDeals={stageGroups.pjPossible}
           activeLabel="現在進行中の案件"
           rateTotal={counts.totalValid}
@@ -734,11 +806,11 @@ function FunnelReport({ deals }: { deals: Deal[] }) {
         <FunnelCard
           label="プロジェクト進行"
           value={counts.pjRunning}
-          color="#6ee7a1"
+          color="#8dffc9"
           condition={'複数商談済み・POC'}
           rateLabel="移行率"
           rate={counts.runningRate}
-          rateColor="#6ee7a1"
+          rateColor="#8dffc9"
           accent
           activeDeals={stageGroups.pjRunning}
           activeLabel="現在進行中の案件"
@@ -789,28 +861,33 @@ function FunnelReport({ deals }: { deals: Deal[] }) {
       {/* ─── 有効商談一覧 ─── */}
       <div>
         <div className="flex items-center gap-3 mb-4">
-          <span className="w-6 h-px" style={{ backgroundColor: 'var(--color-obs-outline-variant)' }} />
-          <span className="text-[11px] font-medium tracking-[0.1em] uppercase" style={{ color: 'var(--color-obs-text-muted)' }}>
+          <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#abc7ff', boxShadow: '0 0 10px #abc7ff' }} />
+          <span className="text-[11px] font-semibold tracking-[0.14em] uppercase" style={{ color: '#abc7ff' }}>
             商談一覧
           </span>
-          <span className="text-[11px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
+          <span className="text-[11px]" style={{ color: '#7e7c83' }}>
             — {activeDeals.length}件
           </span>
         </div>
 
         <div
-          className="rounded-[var(--radius-obs-xl)] overflow-hidden"
+          className="rounded-3xl overflow-hidden"
           style={{
-            backgroundColor: 'var(--color-obs-surface-high)',
-            boxShadow: 'inset 0 0 0 1px rgba(65,71,83,0.2)',
+            background:
+              'linear-gradient(145deg, rgba(33,34,39,0.78) 0%, rgba(22,23,27,0.94) 100%)',
+            backdropFilter: 'blur(18px) saturate(135%)',
+            WebkitBackdropFilter: 'blur(18px) saturate(135%)',
+            boxShadow:
+              'inset 0 0 0 1px rgba(171,199,255,0.11), inset 1px 1px 0 rgba(255,255,255,0.045), 0 18px 46px rgba(0,0,0,0.26)',
           }}
         >
           <div
-            className="grid items-center px-5 py-3 text-[10.5px] font-medium tracking-[0.12em] uppercase"
+            className="grid items-center px-5 py-3 text-[10.5px] font-semibold tracking-[0.14em] uppercase"
             style={{
               gridTemplateColumns: '40px 1.3fr 0.7fr 1.4fr',
-              color: 'var(--color-obs-text-subtle)',
-              backgroundColor: 'var(--color-obs-surface-low)',
+              background:
+                'linear-gradient(90deg, rgba(171,199,255,0.060) 0%, rgba(171,199,255,0.020) 100%)',
+              color: '#9b99a0',
             }}
           >
             <span>#</span>
@@ -820,7 +897,7 @@ function FunnelReport({ deals }: { deals: Deal[] }) {
           </div>
 
           {activeDeals.length === 0 ? (
-            <div className="px-5 py-10 text-center text-[12px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
+            <div className="px-5 py-10 text-center text-[12px]" style={{ color: '#7e7c83' }}>
               該当する商談がありません
             </div>
           ) : activeDeals.map((d, i) => {
@@ -832,19 +909,19 @@ function FunnelReport({ deals }: { deals: Deal[] }) {
                 className="grid items-center px-5 py-4 transition-colors duration-150"
                 style={{
                   gridTemplateColumns: '40px 1.3fr 0.7fr 1.4fr',
-                  borderTop: i === 0 ? 'none' : '1px solid rgba(65,71,83,0.12)',
+                  borderTop: i === 0 ? 'none' : '1px solid rgba(171,199,255,0.08)',
                 }}
-                onMouseOver={(e) => (e.currentTarget.style.backgroundColor = 'rgba(65,71,83,0.12)')}
+                onMouseOver={(e) => (e.currentTarget.style.backgroundColor = 'rgba(171,199,255,0.05)')}
                 onMouseOut={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
               >
-                <span className="text-[12px] tabular-nums" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                <span className="font-mono text-[12px] tabular-nums" style={{ color: '#7e7c83' }}>
                   {String(i + 1).padStart(2, '0')}
                 </span>
                 <div className="min-w-0">
-                  <div className="text-[13px] font-semibold truncate" style={{ color: 'var(--color-obs-text)' }}>
+                  <div className="text-[13px] font-semibold truncate" style={{ color: '#e7e5ea' }}>
                     {d.company}
                   </div>
-                  <div className="text-[11px] mt-0.5" style={{ color: 'var(--color-obs-text-muted)' }}>
+                  <div className="text-[11px] mt-0.5" style={{ color: '#c7c5c9' }}>
                     {d.owner}
                   </div>
                 </div>
@@ -852,26 +929,33 @@ function FunnelReport({ deals }: { deals: Deal[] }) {
                   {badge && (
                     <span
                       className="inline-flex items-center gap-1.5 px-2.5 h-6 rounded-full text-[11px] font-medium"
-                      style={{ backgroundColor: badge.bg, color: badge.color }}
+                      style={{
+                        backgroundColor: badge.bg,
+                        color: badge.color,
+                        boxShadow: `inset 0 0 0 1px ${badge.color}33`,
+                      }}
                     >
-                      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: badge.color }} />
+                      <span
+                        className="w-1.5 h-1.5 rounded-full"
+                        style={{ backgroundColor: badge.color, boxShadow: `0 0 6px ${badge.color}` }}
+                      />
                       {badge.label}
                     </span>
                   )}
                 </div>
-                <div className="text-[11.5px] leading-[1.6] min-w-0" style={{ color: 'var(--color-obs-text-muted)' }}>
+                <div className="text-[11.5px] leading-[1.6] min-w-0" style={{ color: '#c7c5c9' }}>
                   {d.status && (
                     <div>
-                      <span style={{ color: 'var(--color-obs-text-subtle)' }}>Status：</span>
-                      <span style={{ color: 'var(--color-obs-text)' }}>{d.status}</span>
+                      <span style={{ color: '#7e7c83' }}>Status：</span>
+                      <span style={{ color: '#e7e5ea' }}>{d.status}</span>
                     </div>
                   )}
                   {d.nextAction && (
                     <div>
-                      <span style={{ color: 'var(--color-obs-text-subtle)' }}>Next：</span>
+                      <span style={{ color: '#7e7c83' }}>Next：</span>
                       <span>{d.nextAction}</span>
                       {d.nextActionDate && (
-                        <span className="ml-1.5" style={{ color: 'var(--color-obs-primary-dim)' }}>
+                        <span className="ml-1.5" style={{ color: '#abc7ff' }}>
                           ({d.nextActionDate})
                         </span>
                       )}
@@ -898,21 +982,32 @@ function ConclusionSelect({ value, onChange }: { value: Conclusion; onChange: (v
     <div className="relative mt-2">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between h-10 px-4 rounded-[var(--radius-obs-md)] text-[14px] font-semibold"
-        style={{ backgroundColor: cur.bg, color: cur.color, boxShadow: `inset 0 0 0 1px ${cur.ring}` }}
+        className="w-full flex items-center justify-between h-10 px-4 rounded-xl text-[14px] font-semibold transition-all duration-200"
+        style={{
+          background: `linear-gradient(145deg, ${cur.bg} 0%, rgba(30,31,36,0.78) 58%, rgba(18,19,23,0.92) 100%)`,
+          color: cur.color,
+          boxShadow: `inset 0 0 0 1px ${cur.ring}, inset 1px 1px 0 rgba(255,255,255,0.07), 0 0 18px ${cur.ring}`,
+          transitionTimingFunction: 'var(--ease-liquid)',
+        }}
       >
         <span className="inline-flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: cur.color }} />
+          <span
+            className="w-2 h-2 rounded-full"
+            style={{ backgroundColor: cur.color, boxShadow: `0 0 8px ${cur.color}` }}
+          />
           {value}
         </span>
         <ChevronDown size={14} />
       </button>
       {open && (
         <div
-          className="absolute z-10 mt-1 w-full rounded-[var(--radius-obs-md)] overflow-hidden"
+          className="absolute z-10 mt-1 w-full rounded-xl overflow-hidden"
           style={{
-            backgroundColor: 'var(--color-obs-surface-highest)',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(65,71,83,0.4)',
+            background: 'linear-gradient(180deg, rgba(29,30,35,0.96) 0%, rgba(14,15,18,0.98) 100%)',
+            backdropFilter: 'blur(18px) saturate(140%)',
+            WebkitBackdropFilter: 'blur(18px) saturate(140%)',
+            boxShadow:
+              'inset 0 0 0 1px rgba(171,199,255,0.14), inset 1px 1px 0 rgba(255,255,255,0.05), 0 18px 46px rgba(0,0,0,0.56)',
           }}
         >
           {(['順調', '要注意', '危険'] as Conclusion[]).map((opt) => {
@@ -926,7 +1021,10 @@ function ConclusionSelect({ value, onChange }: { value: Conclusion; onChange: (v
                 onMouseOver={(e) => (e.currentTarget.style.backgroundColor = s.bg)}
                 onMouseOut={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
               >
-                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: s.color }} />
+                <span
+                  className="w-2 h-2 rounded-full"
+                  style={{ backgroundColor: s.color, boxShadow: `0 0 6px ${s.color}` }}
+                />
                 {opt}
               </button>
             )
@@ -939,7 +1037,7 @@ function ConclusionSelect({ value, onChange }: { value: Conclusion; onChange: (v
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
-    <span className="text-[10px] font-medium tracking-[0.14em] uppercase" style={{ color: 'var(--color-obs-text-subtle)' }}>
+    <span className="text-[10px] font-semibold tracking-[0.14em] uppercase" style={{ color: '#abc7ff' }}>
       {children}
     </span>
   )
@@ -972,8 +1070,8 @@ type TrialChannel = {
 }
 
 const RATE_COLOR_GREEN = '#6ee7a1'
-const RATE_COLOR_GOLD = '#c9a94b'
-const RATE_COLOR_DIM = 'var(--color-obs-text-subtle)'
+const RATE_COLOR_GOLD = '#ffb86b'
+const RATE_COLOR_DIM = '#7e7c83'
 
 function rateColorFor(rate: number): string {
   if (rate <= 0) return RATE_COLOR_DIM
@@ -1032,9 +1130,12 @@ function TrialConversionTable({ deals }: { deals: Deal[] }) {
     <div>
       {/* セクション見出し */}
       <div className="flex items-center gap-3 mb-4 mt-2">
-        <span className="w-6 h-px" style={{ backgroundColor: RATE_COLOR_GOLD, opacity: 0.5 }} />
         <span
-          className="text-[11px] font-medium tracking-[0.1em] uppercase"
+          className="w-1.5 h-1.5 rounded-full"
+          style={{ background: RATE_COLOR_GOLD, boxShadow: `0 0 10px ${RATE_COLOR_GOLD}` }}
+        />
+        <span
+          className="text-[11px] font-semibold tracking-[0.14em] uppercase"
           style={{ color: RATE_COLOR_GOLD }}
         >
           POC移行率
@@ -1043,19 +1144,24 @@ function TrialConversionTable({ deals }: { deals: Deal[] }) {
 
       {/* テーブル */}
       <div
-        className="rounded-[var(--radius-obs-xl)] overflow-hidden"
+        className="rounded-3xl overflow-hidden"
         style={{
-          backgroundColor: 'var(--color-obs-surface-high)',
-          boxShadow: 'inset 0 0 0 1px rgba(65,71,83,0.2)',
+          background:
+            'linear-gradient(145deg, rgba(33,34,39,0.78) 0%, rgba(22,23,27,0.94) 100%)',
+          backdropFilter: 'blur(18px) saturate(135%)',
+          WebkitBackdropFilter: 'blur(18px) saturate(135%)',
+          boxShadow:
+            'inset 0 0 0 1px rgba(255,184,107,0.13), inset 1px 1px 0 rgba(255,255,255,0.045), 0 18px 46px rgba(0,0,0,0.26)',
         }}
       >
         {/* ヘッダ */}
         <div
-          className="grid items-center px-5 py-3 text-[10.5px] font-medium tracking-[0.12em] uppercase gap-4"
+          className="grid items-center px-5 py-3 text-[10.5px] font-semibold tracking-[0.14em] uppercase gap-4"
           style={{
             gridTemplateColumns: '1.6fr 0.6fr 0.8fr 0.6fr',
-            color: 'var(--color-obs-text-subtle)',
-            backgroundColor: 'var(--color-obs-surface-low)',
+            background:
+              'linear-gradient(90deg, rgba(255,184,107,0.075) 0%, rgba(171,199,255,0.025) 100%)',
+            color: '#9b99a0',
           }}
         >
           <span>経由元カテゴリ</span>
@@ -1068,7 +1174,7 @@ function TrialConversionTable({ deals }: { deals: Deal[] }) {
         {channels.length === 0 && (
           <div
             className="px-5 py-10 text-center text-[12px]"
-            style={{ color: 'var(--color-obs-text-subtle)' }}
+            style={{ color: '#7e7c83' }}
           >
             該当期間に経由元情報のある取引がありません
           </div>
@@ -1081,7 +1187,7 @@ function TrialConversionTable({ deals }: { deals: Deal[] }) {
             <div
               key={c.id}
               style={{
-                borderTop: i === 0 ? 'none' : '1px solid rgba(65,71,83,0.12)',
+                borderTop: i === 0 ? 'none' : '1px solid rgba(171,199,255,0.08)',
               }}
             >
               <button
@@ -1094,7 +1200,7 @@ function TrialConversionTable({ deals }: { deals: Deal[] }) {
                 }}
                 onMouseOver={(e) => {
                   ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
-                    'rgba(65,71,83,0.12)'
+                    'rgba(171,199,255,0.05)'
                 }}
                 onMouseOut={(e) => {
                   ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
@@ -1104,13 +1210,13 @@ function TrialConversionTable({ deals }: { deals: Deal[] }) {
                 <div className="min-w-0">
                   <div
                     className="text-[13px] font-semibold leading-tight"
-                    style={{ color: 'var(--color-obs-text)' }}
+                    style={{ color: '#e7e5ea' }}
                   >
                     {c.category}
                   </div>
                   <div
                     className="text-[11px] mt-1 leading-snug truncate"
-                    style={{ color: 'var(--color-obs-text-subtle)' }}
+                    style={{ color: '#7e7c83' }}
                     title={c.sources.join(' / ')}
                   >
                     {c.sources.join(' / ')}
@@ -1120,7 +1226,7 @@ function TrialConversionTable({ deals }: { deals: Deal[] }) {
                     strokeWidth={2}
                     className="mt-1.5"
                     style={{
-                      color: 'var(--color-obs-text-subtle)',
+                      color: '#7e7c83',
                       transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
                       transition: 'transform 150ms var(--ease-liquid)',
                     }}
@@ -1128,36 +1234,36 @@ function TrialConversionTable({ deals }: { deals: Deal[] }) {
                 </div>
                 <div className="text-right tabular-nums">
                   <span
-                    className="text-[18px] font-[family-name:var(--font-display)] font-bold"
-                    style={{ color: 'var(--color-obs-text)' }}
+                    className="font-mono text-[18px] font-bold"
+                    style={{ color: '#e7e5ea' }}
                   >
                     {c.acquired}
                   </span>
                   <span
                     className="ml-0.5 text-[11px]"
-                    style={{ color: 'var(--color-obs-text-subtle)' }}
+                    style={{ color: '#7e7c83' }}
                   >
                     社
                   </span>
                 </div>
                 <div className="text-right tabular-nums">
                   <span
-                    className="text-[18px] font-[family-name:var(--font-display)] font-bold"
-                    style={{ color: c.trials > 0 ? 'var(--color-obs-text)' : 'var(--color-obs-text-subtle)' }}
+                    className="font-mono text-[18px] font-bold"
+                    style={{ color: c.trials > 0 ? '#e7e5ea' : '#7e7c83' }}
                   >
                     {c.trials}
                   </span>
                   <span
                     className="ml-0.5 text-[11px]"
-                    style={{ color: 'var(--color-obs-text-subtle)' }}
+                    style={{ color: '#7e7c83' }}
                   >
                     社
                   </span>
                 </div>
                 <div className="text-right tabular-nums">
                   <span
-                    className="text-[20px] font-[family-name:var(--font-display)] font-bold"
-                    style={{ color: rColor }}
+                    className="font-mono text-[20px] font-bold"
+                    style={{ color: rColor, textShadow: rate > 0 ? `0 0 12px ${rColor}55` : 'none' }}
                   >
                     {rate}%
                   </span>
@@ -1168,13 +1274,13 @@ function TrialConversionTable({ deals }: { deals: Deal[] }) {
               {isOpen && c.details.length > 0 && (
                 <div
                   className="px-5 pb-4 pt-1"
-                  style={{ backgroundColor: 'rgba(65,71,83,0.06)' }}
+                  style={{ backgroundColor: 'rgba(171,199,255,0.035)' }}
                 >
                   <div
-                    className="grid items-center px-3 py-2 text-[10px] font-medium tracking-[0.1em] uppercase gap-4"
+                    className="grid items-center px-3 py-2 text-[10px] font-semibold tracking-[0.14em] uppercase gap-4"
                     style={{
                       gridTemplateColumns: '1.6fr 0.6fr 0.8fr 0.6fr',
-                      color: 'var(--color-obs-text-subtle)',
+                      color: '#7e7c83',
                     }}
                   >
                     <span>経由元</span>
@@ -1191,34 +1297,32 @@ function TrialConversionTable({ deals }: { deals: Deal[] }) {
                         className="grid items-center px-3 py-2 gap-4"
                         style={{
                           gridTemplateColumns: '1.6fr 0.6fr 0.8fr 0.6fr',
-                          borderTop: '1px solid rgba(65,71,83,0.1)',
+                          borderTop: '1px solid rgba(171,199,255,0.06)',
                         }}
                       >
                         <span
                           className="text-[12px] truncate"
-                          style={{ color: 'var(--color-obs-text-muted)' }}
+                          style={{ color: '#c7c5c9' }}
                           title={d.source}
                         >
                           {d.source}
                         </span>
                         <span
-                          className="text-right text-[12px] tabular-nums"
-                          style={{ color: 'var(--color-obs-text)' }}
+                          className="text-right font-mono text-[12px] tabular-nums"
+                          style={{ color: '#e7e5ea' }}
                         >
                           {d.acquired}社
                         </span>
                         <span
-                          className="text-right text-[12px] tabular-nums"
+                          className="text-right font-mono text-[12px] tabular-nums"
                           style={{
-                            color: d.trials > 0
-                              ? 'var(--color-obs-text)'
-                              : 'var(--color-obs-text-subtle)',
+                            color: d.trials > 0 ? '#e7e5ea' : '#7e7c83',
                           }}
                         >
                           {d.trials}社
                         </span>
                         <span
-                          className="text-right text-[13px] font-bold tabular-nums"
+                          className="text-right font-mono text-[13px] font-bold tabular-nums"
                           style={{ color: dColor }}
                         >
                           {dRate}%
@@ -1232,13 +1336,15 @@ function TrialConversionTable({ deals }: { deals: Deal[] }) {
           )
         })}
 
-        {/* 合計 */}
+        {/* 合計 — amber tint */}
         <div
           className="grid items-center px-5 py-4 gap-4"
           style={{
             gridTemplateColumns: '1.6fr 0.6fr 0.8fr 0.6fr',
-            backgroundColor: 'rgba(201,169,75,0.06)',
-            borderTop: '1px solid rgba(201,169,75,0.18)',
+            background:
+              'linear-gradient(90deg, rgba(255,184,107,0.08) 0%, rgba(255,184,107,0.04) 100%)',
+            borderTop: '1px solid rgba(255,184,107,0.28)',
+            boxShadow: 'inset 0 0 28px rgba(255,184,107,0.06)',
           }}
         >
           <span
@@ -1277,8 +1383,8 @@ function TrialConversionTable({ deals }: { deals: Deal[] }) {
           </div>
           <div className="text-right tabular-nums">
             <span
-              className="text-[20px] font-[family-name:var(--font-display)] font-bold"
-              style={{ color: RATE_COLOR_GOLD }}
+              className="font-mono text-[20px] font-bold"
+              style={{ color: RATE_COLOR_GOLD, textShadow: `0 0 14px ${RATE_COLOR_GOLD}66` }}
             >
               {totalRate}%
             </span>
@@ -1318,9 +1424,14 @@ function FunnelCard({
 
   return (
     <div
-      className="relative stitch-glass stitch-glow-border rounded-[var(--radius-obs-xl)] p-5 flex flex-col transition-all duration-200"
+      className="relative rounded-3xl p-5 flex flex-col transition-all duration-200 overflow-hidden"
       style={{
-        ...(accent ? { boxShadow: '0 0 20px rgba(110,231,161,0.15), inset 0 0 0 1.5px rgba(110,231,161,0.3)' } : {}),
+        background: `radial-gradient(circle at 10% 0%, ${color}1e 0%, transparent 34%), radial-gradient(circle at 92% 24%, ${color}10 0%, transparent 28%), linear-gradient(155deg, ${color}10 0%, rgba(39,40,45,0.88) 42%, rgba(13,14,18,0.98) 100%)`,
+        backdropFilter: 'blur(20px) saturate(140%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(140%)',
+        boxShadow: accent
+          ? `inset 2px 0 0 ${color}, inset 0 0 0 1px ${color}60, inset 1px 1px 0 rgba(255,255,255,0.08), inset -1px -1px 0 rgba(0,0,0,0.30), 0 20px 52px rgba(0,0,0,0.34), 0 0 34px ${color}1e`
+          : `inset 2px 0 0 ${color}d8, inset 0 0 0 1px rgba(171,199,255,0.13), inset 1px 1px 0 rgba(255,255,255,0.060), inset -1px -1px 0 rgba(0,0,0,0.30), 0 18px 46px rgba(0,0,0,0.30), 0 0 26px ${color}14`,
         transform: hover !== 'none' ? 'translateY(-2px)' : 'translateY(0)',
         transitionTimingFunction: 'var(--ease-liquid)',
         cursor: 'default',
@@ -1331,22 +1442,54 @@ function FunnelCard({
       onMouseEnter={() => setHover('card')}
       onMouseLeave={() => setHover('none')}
     >
-      <p className="text-[11px] font-bold tracking-[0.1em] uppercase mb-2" style={{ color }}>
+      <span
+        className="pointer-events-none absolute left-5 right-5 top-0 h-px"
+        style={{
+          background: `linear-gradient(90deg, transparent 0%, ${color}80 48%, rgba(255,255,255,0.18) 62%, transparent 100%)`,
+        }}
+      />
+      <span
+        className="pointer-events-none absolute left-0 right-0 bottom-0 h-px"
+        style={{ background: `linear-gradient(90deg, transparent 0%, ${color}2e 48%, transparent 100%)` }}
+      />
+      {/* ambient orb */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute -top-16 -right-12 w-40 h-40 rounded-full"
+        style={{
+          background: `radial-gradient(circle, ${color}28, transparent 62%)`,
+          filter: 'blur(44px)',
+        }}
+      />
+      <p
+        className="relative inline-flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.14em] uppercase mb-2"
+        style={{ color }}
+      >
+        <span
+          className="w-1.5 h-1.5 rounded-full"
+          style={{ background: color, boxShadow: `0 0 8px ${color}` }}
+        />
         {label}
       </p>
-      <div className="flex items-baseline gap-1 mb-4">
+      <div className="relative flex items-baseline gap-1 mb-4">
         <span
           className="font-[family-name:var(--font-display)] text-[44px] font-extrabold leading-none tabular-nums tracking-[-0.04em]"
-          style={{ color: 'var(--color-obs-text)' }}
+          style={{
+            background: `linear-gradient(180deg, #ffffff 0%, #e7e5ea 44%, ${color} 160%)`,
+            WebkitBackgroundClip: 'text',
+            backgroundClip: 'text',
+            color: 'transparent',
+            WebkitTextFillColor: 'transparent',
+          }}
         >
           {value}
         </span>
-        <span className="text-[12px] font-medium" style={{ color: 'var(--color-obs-text-muted)' }}>社</span>
+        <span className="text-[12px] font-medium" style={{ color: '#c7c5c9' }}>社</span>
       </div>
-      <p className="text-[9px] font-medium tracking-[0.08em] uppercase mb-1" style={{ color: 'var(--color-obs-text-subtle)' }}>
+      <p className="relative text-[9px] font-semibold tracking-[0.14em] uppercase mb-1" style={{ color: '#7e7c83' }}>
         認定条件
       </p>
-      <p className="text-[11px] leading-[1.6] whitespace-pre-line flex-1" style={{ color: 'var(--color-obs-text-muted)' }}>
+      <p className="relative text-[11px] leading-[1.6] whitespace-pre-line flex-1" style={{ color: '#c7c5c9' }}>
         {condition}
       </p>
 
@@ -1354,19 +1497,28 @@ function FunnelCard({
           rateLabel/rate が指定された時のみ表示（商談数カードでは非表示） */}
       {rateLabel !== undefined && rate !== undefined && (
         <div
-          className="relative flex items-center justify-between mt-4 pt-3 -mx-2 px-2 rounded-[var(--radius-obs-sm)] cursor-help transition-colors duration-150"
+          className="relative flex items-center justify-between mt-4 pt-3 -mx-2 px-2 rounded-lg cursor-help transition-colors duration-150"
           style={{
-            boxShadow: 'inset 0 1px 0 0 var(--color-obs-outline-variant)',
-            backgroundColor: hover === 'rate' ? 'rgba(0,113,227,0.06)' : 'transparent',
+            boxShadow: 'inset 0 1px 0 0 rgba(171,199,255,0.14)',
+            background:
+              hover === 'rate'
+                ? `linear-gradient(90deg, ${color}10 0%, rgba(171,199,255,0.045) 100%)`
+                : 'transparent',
           }}
           onMouseEnter={() => setHover('rate')}
           onMouseLeave={() => setHover('card')}
         >
-          <span className="text-[10px] font-medium tracking-[0.05em] uppercase inline-flex items-center gap-1" style={{ color: 'var(--color-obs-text-subtle)' }}>
+          <span
+            className="text-[10px] font-semibold tracking-[0.14em] uppercase inline-flex items-center gap-1"
+            style={{ color: '#9b99a0' }}
+          >
             {rateLabel}
             <HelpCircle size={9} style={{ opacity: 0.6 }} />
           </span>
-          <span className="font-[family-name:var(--font-display)] text-[15px] font-bold tabular-nums" style={{ color: rateColor }}>
+          <span
+            className="font-mono text-[15px] font-bold tabular-nums"
+            style={{ color: rateColor, textShadow: `0 0 10px ${rateColor}55` }}
+          >
             {rate}%
           </span>
         </div>
@@ -1405,86 +1557,87 @@ function RateHoverDetail({
 }) {
   return (
     <div
-      className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[min(340px,calc(100vw-48px))] z-30 rounded-[var(--radius-obs-lg)] overflow-hidden animate-[fadeIn_0.18s_ease-out]"
+      className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[min(340px,calc(100vw-48px))] z-30 rounded-2xl overflow-hidden animate-[fadeIn_0.18s_ease-out] bg-pitch fo-glass-strong fo-glass-rim"
       style={{
-        backgroundColor: 'var(--color-obs-surface-highest)',
-        boxShadow: '0 12px 40px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(65,71,83,0.4)',
+        boxShadow: '0 18px 50px rgba(0,0,0,0.55)',
       }}
     >
       <span
-        className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rotate-45"
+        className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rotate-45 bg-pitch"
         style={{
-          backgroundColor: 'var(--color-obs-surface-highest)',
-          boxShadow: 'inset 0 0 0 1px rgba(65,71,83,0.4)',
+          boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.18)',
         }}
       />
       {/* ── 計算式ヘッダー ── */}
-      <div className="px-4 py-3" style={{ backgroundColor: 'var(--color-obs-surface-low)' }}>
+      <div className="px-4 py-3 bg-dusk">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-[10.5px] font-bold tracking-[0.1em] uppercase" style={{ color: rateColor }}>
+          <span className="text-[10.5px] font-semibold tracking-[0.14em] uppercase" style={{ color: rateColor }}>
             累計ベースの移行率
           </span>
-          <span className="font-[family-name:var(--font-display)] text-[18px] font-bold tabular-nums" style={{ color: rateColor }}>
+          <span
+            className="font-mono text-[18px] font-bold tabular-nums"
+            style={{ color: rateColor, textShadow: `0 0 12px ${rateColor}66` }}
+          >
             {rate}%
           </span>
         </div>
-        <div className="flex items-baseline gap-3 text-[11px] tabular-nums" style={{ color: 'var(--color-obs-text-muted)' }}>
+        <div className="flex items-baseline gap-3 text-[11px] tabular-nums" style={{ color: '#c7c5c9' }}>
           <span>
-            <span style={{ color: 'var(--color-obs-text-subtle)' }}>{numeratorLabel}：</span>
-            <span className="font-semibold" style={{ color: 'var(--color-obs-text)' }}>{numerator}</span>
-            <span className="ml-0.5" style={{ color: 'var(--color-obs-text-subtle)' }}>社</span>
+            <span style={{ color: '#7e7c83' }}>{numeratorLabel}：</span>
+            <span className="font-semibold" style={{ color: '#e7e5ea' }}>{numerator}</span>
+            <span className="ml-0.5" style={{ color: '#7e7c83' }}>社</span>
           </span>
-          <span style={{ color: 'var(--color-obs-text-subtle)' }}>/</span>
+          <span style={{ color: '#7e7c83' }}>/</span>
           <span>
-            <span style={{ color: 'var(--color-obs-text-subtle)' }}>{denominatorLabel}：</span>
-            <span className="font-semibold" style={{ color: 'var(--color-obs-text)' }}>{denominator}</span>
-            <span className="ml-0.5" style={{ color: 'var(--color-obs-text-subtle)' }}>社</span>
+            <span style={{ color: '#7e7c83' }}>{denominatorLabel}：</span>
+            <span className="font-semibold" style={{ color: '#e7e5ea' }}>{denominator}</span>
+            <span className="ml-0.5" style={{ color: '#7e7c83' }}>社</span>
           </span>
         </div>
       </div>
 
       {/* ── 過去案件一覧 ── */}
       <div className="px-4 py-2.5 flex items-center justify-between">
-        <span className="text-[10.5px] font-bold tracking-[0.1em] uppercase" style={{ color: 'var(--color-obs-text-muted)' }}>
+        <span className="text-[10.5px] font-semibold tracking-[0.14em] uppercase" style={{ color: '#abc7ff' }}>
           過去案件（失注・契約）
         </span>
-        <span className="text-[10.5px] font-medium tabular-nums" style={{ color: 'var(--color-obs-text-subtle)' }}>
+        <span className="text-[10.5px] font-medium tabular-nums" style={{ color: '#7e7c83' }}>
           {pastDeals.length} 件
         </span>
       </div>
       {pastDeals.length === 0 ? (
-        <div className="px-4 py-5 text-center text-[11.5px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
+        <div className="px-4 py-5 text-center text-[11.5px]" style={{ color: '#7e7c83' }}>
           過去案件はありません
         </div>
       ) : (
-        <div className="max-h-[240px] overflow-y-auto stitch-scroll">
+        <div className="max-h-[240px] overflow-y-auto fo-thin-scroll">
           {pastDeals.map((d, i) => {
             const b = bucketOf(d.stage)
             const isLost = b === '失注'
-            const tone = isLost ? 'var(--color-obs-hot)' : '#6ee7a1'
+            const tone = isLost ? '#ff6b6b' : '#6ee7a1'
             const toneBg = isLost ? 'rgba(255,107,107,0.14)' : 'rgba(110,231,161,0.14)'
             return (
               <div
                 key={d.id}
                 className="px-4 py-2.5 flex items-start gap-3"
-                style={{ borderTop: i === 0 ? '1px solid rgba(65,71,83,0.15)' : '1px solid rgba(65,71,83,0.08)' }}
+                style={{ borderTop: i === 0 ? '1px solid rgba(171,199,255,0.12)' : '1px solid rgba(171,199,255,0.06)' }}
               >
-                <span className="text-[10.5px] tabular-nums mt-0.5 shrink-0" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                <span className="font-mono text-[10.5px] tabular-nums mt-0.5 shrink-0" style={{ color: '#7e7c83' }}>
                   {String(i + 1).padStart(2, '0')}
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-[12px] font-semibold truncate" style={{ color: 'var(--color-obs-text)' }}>
+                    <span className="text-[12px] font-semibold truncate" style={{ color: '#e7e5ea' }}>
                       {d.company}
                     </span>
                     <span
-                      className="inline-flex items-center shrink-0 text-[9.5px] font-medium h-[18px] px-1.5 rounded-full"
-                      style={{ backgroundColor: toneBg, color: tone }}
+                      className="inline-flex items-center shrink-0 text-[9.5px] font-semibold h-[18px] px-1.5 rounded-full"
+                      style={{ backgroundColor: toneBg, color: tone, boxShadow: `inset 0 0 0 1px ${tone}33` }}
                     >
                       {isLost ? '失注' : '契約'}
                     </span>
                   </div>
-                  <div className="text-[10.5px] mt-0.5" style={{ color: 'var(--color-obs-text-muted)' }}>
+                  <div className="text-[10.5px] mt-0.5" style={{ color: '#c7c5c9' }}>
                     {d.owner}
                   </div>
                 </div>
@@ -1500,10 +1653,14 @@ function RateHoverDetail({
 function ArrowStep({ label }: { label: string }) {
   return (
     <div className="hidden lg:flex flex-col items-center justify-center gap-1.5 px-1">
-      <span className="text-[10px] font-medium tracking-[0.1em] uppercase" style={{ color: 'var(--color-obs-text-subtle)' }}>
+      <span className="text-[10px] font-semibold tracking-[0.14em] uppercase" style={{ color: '#9b99a0' }}>
         {label}
       </span>
-      <ArrowRight size={18} strokeWidth={1.5} style={{ color: 'var(--color-obs-primary-dim)' }} />
+      <ArrowRight
+        size={18}
+        strokeWidth={1.5}
+        style={{ color: '#abc7ff', filter: 'drop-shadow(0 0 6px rgba(171,199,255,0.5))' }}
+      />
     </div>
   )
 }
@@ -1522,16 +1679,20 @@ function OutcomeCard({
 }) {
   const [hover, setHover] = useState(false)
   const TONE_STYLE: Record<typeof tone, { color: string; bg: string }> = {
-    hot:     { color: 'var(--color-obs-hot)',         bg: 'rgba(255,107,107,0.14)' },
-    success: { color: '#6ee7a1',                      bg: 'rgba(110,231,161,0.14)' },
-    warning: { color: '#c9a94b',                      bg: 'rgba(201,169,75,0.16)' },
-    muted:   { color: 'var(--color-obs-text-muted)',  bg: 'rgba(143,140,144,0.16)' },
+    hot:     { color: '#ff6b6b', bg: 'rgba(255,107,107,0.14)' },
+    success: { color: '#6ee7a1', bg: 'rgba(110,231,161,0.14)' },
+    warning: { color: '#ffb86b', bg: 'rgba(255,184,107,0.14)' },
+    muted:   { color: '#abc7ff', bg: 'rgba(171,199,255,0.13)' },
   }
   const { color, bg } = TONE_STYLE[tone]
   return (
     <div
-      className="relative stitch-glass stitch-glow-border rounded-[var(--radius-obs-xl)] p-5 flex items-center gap-5 transition-all duration-200"
+      className="relative rounded-3xl p-5 flex items-center gap-5 transition-all duration-200 overflow-hidden"
       style={{
+        background: `linear-gradient(145deg, ${color}10 0%, rgba(36,37,42,0.82) 42%, rgba(17,18,22,0.96) 100%)`,
+        backdropFilter: 'blur(18px) saturate(135%)',
+        WebkitBackdropFilter: 'blur(18px) saturate(135%)',
+        boxShadow: `inset 2px 0 0 ${color}b8, inset 0 0 0 1px rgba(171,199,255,0.10), inset 1px 1px 0 rgba(255,255,255,0.055), inset -1px -1px 0 rgba(0,0,0,0.26), 0 14px 38px rgba(0,0,0,0.25), 0 0 22px ${color}0f`,
         transform: hover ? 'translateY(-2px)' : 'translateY(0)',
         transitionTimingFunction: 'var(--ease-liquid)',
         cursor: 'default',
@@ -1539,40 +1700,69 @@ function OutcomeCard({
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
     >
+      <span
+        className="pointer-events-none absolute left-5 right-5 top-0 h-px"
+        style={{
+          background: `linear-gradient(90deg, transparent 0%, ${color}48 50%, transparent 100%)`,
+        }}
+      />
+      {/* ambient orb */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute -top-12 -right-10 w-32 h-32 rounded-full"
+        style={{
+          background: `radial-gradient(circle, ${color}1c, transparent 62%)`,
+          filter: 'blur(40px)',
+        }}
+      />
       <div
-        className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-        style={{ backgroundColor: bg, color }}
+        className="relative w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+        style={{
+          backgroundColor: bg,
+          color,
+          boxShadow: `inset 0 0 0 1px ${color}33, 0 0 14px ${color}33`,
+        }}
       >
         {icon}
       </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-[11px] font-bold tracking-[0.1em] uppercase mb-1" style={{ color }}>
+      <div className="relative flex-1 min-w-0">
+        <p
+          className="inline-flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.14em] uppercase mb-1"
+          style={{ color }}
+        >
+          <span
+            className="w-1.5 h-1.5 rounded-full"
+            style={{ background: color, boxShadow: `0 0 8px ${color}` }}
+          />
           {label}
         </p>
         <div className="flex items-baseline gap-1">
           <span
             className="font-[family-name:var(--font-display)] text-[32px] font-extrabold leading-none tabular-nums tracking-[-0.04em]"
-            style={{ color: 'var(--color-obs-text)' }}
+            style={{ color: '#e7e5ea' }}
           >
             {value}
           </span>
-          <span className="text-[11px]" style={{ color: 'var(--color-obs-text-muted)' }}>社</span>
+          <span className="text-[11px]" style={{ color: '#c7c5c9' }}>社</span>
         </div>
         {desc && (
           <p
             className="text-[10.5px] mt-1.5 leading-snug"
-            style={{ color: 'var(--color-obs-text-muted)' }}
+            style={{ color: '#9b99a0' }}
           >
             {desc}
           </p>
         )}
       </div>
       {typeof rate === 'number' && (
-        <div className="text-right">
-          <p className="text-[10px] font-medium tracking-[0.08em] uppercase mb-0.5" style={{ color: 'var(--color-obs-text-subtle)' }}>
+        <div className="relative text-right">
+          <p className="text-[10px] font-semibold tracking-[0.14em] uppercase mb-0.5" style={{ color: '#7e7c83' }}>
             PJ進行中比
           </p>
-          <span className="font-[family-name:var(--font-display)] text-[15px] font-bold tabular-nums" style={{ color }}>
+          <span
+            className="font-mono text-[15px] font-bold tabular-nums"
+            style={{ color, textShadow: `0 0 10px ${color}55` }}
+          >
             {rate}%
           </span>
         </div>
@@ -1588,53 +1778,51 @@ function OutcomeCard({
 function DealHoverList({ deals, title, accent }: { deals: Deal[]; title: string; accent: string }) {
   return (
     <div
-      className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[min(320px,calc(100vw-48px))] z-50 rounded-[var(--radius-obs-lg)] overflow-hidden animate-[fadeIn_0.18s_ease-out]"
+      className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[min(320px,calc(100vw-48px))] z-50 rounded-2xl overflow-hidden animate-[fadeIn_0.18s_ease-out] bg-pitch fo-glass-strong fo-glass-rim"
       style={{
-        backgroundColor: 'rgba(20,20,26,0.98)',
-        backdropFilter: 'blur(12px) saturate(140%)',
-        WebkitBackdropFilter: 'blur(12px) saturate(140%)',
-        boxShadow:
-          '0 24px 64px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.1), inset 0 0 0 1px rgba(255,255,255,0.04)',
+        boxShadow: '0 24px 64px rgba(0,0,0,0.7)',
       }}
       onClick={(e) => e.stopPropagation()}
     >
       {/* 矢印 */}
       <span
-        className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rotate-45"
+        className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rotate-45 bg-pitch"
         style={{
-          backgroundColor: 'rgba(20,20,26,0.98)',
-          boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.1)',
+          boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.18)',
         }}
       />
-      <div className="px-4 py-2.5 flex items-center justify-between" style={{ backgroundColor: 'rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <span className="text-[10.5px] font-bold tracking-[0.1em] uppercase" style={{ color: accent }}>
+      <div
+        className="px-4 py-2.5 flex items-center justify-between bg-dusk"
+        style={{ borderBottom: '1px solid rgba(171,199,255,0.10)' }}
+      >
+        <span className="text-[10.5px] font-semibold tracking-[0.14em] uppercase" style={{ color: accent }}>
           {title}
         </span>
-        <span className="text-[10.5px] font-medium tabular-nums" style={{ color: 'var(--color-obs-text-subtle)' }}>
+        <span className="text-[10.5px] font-medium tabular-nums" style={{ color: '#7e7c83' }}>
           {deals.length} 件
         </span>
       </div>
       {deals.length === 0 ? (
-        <div className="px-4 py-6 text-center text-[11.5px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
+        <div className="px-4 py-6 text-center text-[11.5px]" style={{ color: '#7e7c83' }}>
           該当する案件はありません
         </div>
       ) : (
-        <div className="max-h-[280px] overflow-y-auto stitch-scroll">
+        <div className="max-h-[280px] overflow-y-auto fo-thin-scroll">
           {deals.map((d, i) => (
             <div
               key={d.id}
               className="px-4 py-2 flex items-center gap-3"
-              style={{ borderTop: i === 0 ? 'none' : '1px solid rgba(255,255,255,0.06)' }}
+              style={{ borderTop: i === 0 ? 'none' : '1px solid rgba(171,199,255,0.06)' }}
             >
               <span
-                className="text-[10.5px] tabular-nums shrink-0"
-                style={{ color: 'var(--color-obs-text-subtle)' }}
+                className="font-mono text-[10.5px] tabular-nums shrink-0"
+                style={{ color: '#7e7c83' }}
               >
                 {String(i + 1).padStart(2, '0')}
               </span>
               <div
                 className="text-[12.5px] font-semibold truncate flex-1 min-w-0"
-                style={{ color: 'var(--color-obs-text)' }}
+                style={{ color: '#e7e5ea' }}
               >
                 {d.company}
               </div>
@@ -1669,8 +1857,6 @@ function meetingLevel(n: number): GaugeLevel {
   return 5
 }
 
-// RPG風 5段階レアリティ（Common → Mythic）
-// 両ゲージ共通。グラデーション（暗い端→明るい中央）＋レイアウト別発光
 type Tier = {
   name: string
   core: string         // 基本色（ラベル・ベース）
@@ -1679,40 +1865,35 @@ type Tier = {
 }
 
 const TIERS: Tier[] = [
-  // Lv1: Common（シルバーブルー）
   {
     name: 'COMMON',
-    core: '#7e90b0',
-    grad: 'linear-gradient(180deg, #5d6d89 0%, #9fb0cc 50%, #6b7c99 100%)',
-    glow: 'rgba(150, 170, 200, 0.4)',
+    core: '#7aa7ff',
+    grad: 'linear-gradient(180deg, #dce7ff 0%, #7aa7ff 36%, #315bd8 100%)',
+    glow: 'rgba(122,167,255,0.38)',
   },
-  // Lv2: Rare（エメラルドグリーン）
   {
     name: 'RARE',
-    core: '#4ad98a',
-    grad: 'linear-gradient(180deg, #0c8a4a 0%, #6ef7a5 45%, #1fb868 100%)',
-    glow: 'rgba(74, 217, 138, 0.55)',
+    core: '#26d9ff',
+    grad: 'linear-gradient(180deg, #c9f7ff 0%, #26d9ff 38%, #0071e3 100%)',
+    glow: 'rgba(38,217,255,0.42)',
   },
-  // Lv3: Epic（ブリリアントブルー）
   {
     name: 'EPIC',
-    core: '#4a9eff',
-    grad: 'linear-gradient(180deg, #0054c2 0%, #8dc0ff 40%, #1a7aff 100%)',
-    glow: 'rgba(74, 158, 255, 0.65)',
+    core: '#38f5a5',
+    grad: 'linear-gradient(180deg, #c8ffe6 0%, #38f5a5 38%, #07995f 100%)',
+    glow: 'rgba(56,245,165,0.40)',
   },
-  // Lv4: Legendary（ネオンパープル）
   {
     name: 'LEGENDARY',
-    core: '#c07cff',
-    grad: 'linear-gradient(180deg, #6a1eb8 0%, #e0b0ff 40%, #8e3bff 100%)',
-    glow: 'rgba(192, 124, 255, 0.7)',
+    core: '#ff9a3d',
+    grad: 'linear-gradient(180deg, #ffe0ad 0%, #ff9a3d 36%, #d94a16 100%)',
+    glow: 'rgba(255,154,61,0.46)',
   },
-  // Lv5: Mythic（フレイムゴールド／赤）
   {
     name: 'MYTHIC',
-    core: '#ffb347',
-    grad: 'linear-gradient(180deg, #c2410c 0%, #ffeaa0 35%, #ff7a00 70%, #ff4e1a 100%)',
-    glow: 'rgba(255, 140, 60, 0.85)',
+    core: '#ff4d3d',
+    grad: 'linear-gradient(180deg, #ffd1aa 0%, #ff6a2f 34%, #ff2d55 72%, #9f1029 100%)',
+    glow: 'rgba(255,77,61,0.54)',
   },
 ]
 
@@ -1725,50 +1906,37 @@ function SegmentedGauge({
 }) {
   return (
     <div className="flex-1 min-w-0">
-      {/* バー */}
       <div className="flex gap-[3px]">
         {[0, 1, 2, 3, 4].map((i) => {
           const filled = i < level
           const tier = TIERS[i] ?? TIERS[0]!
-          // 満たされた部分は、そのセグメントの tier 色で描画
           return (
             <div
               key={i}
               className="relative h-[8px] flex-1 rounded-[2px] overflow-hidden transition-all duration-300"
               style={{
-                background: filled ? tier.grad : 'linear-gradient(180deg, #0a0a0c 0%, #1c1c1f 50%, #0a0a0c 100%)',
+                background: filled
+                  ? tier.grad
+                  : 'linear-gradient(180deg, rgba(18,19,23,0.94) 0%, rgba(11,12,15,0.98) 100%)',
                 boxShadow: filled
-                  ? `0 0 10px ${tier.glow}, inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -1px 0 rgba(0,0,0,0.35)`
-                  : 'inset 0 0 0 1px rgba(65,71,83,0.3)',
+                  ? `0 0 10px ${tier.glow}, 0 0 2px ${tier.core}, inset 0 1px 0 rgba(255,255,255,0.38), inset 0 -1px 0 rgba(0,0,0,0.34)`
+                  : 'inset 0 0 0 1px rgba(171,199,255,0.10)',
                 transitionTimingFunction: 'var(--ease-liquid)',
               }}
-            >
-              {/* Lv5 だけシマー効果 */}
-              {filled && i === 4 && (
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    background:
-                      'linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.55) 50%, transparent 70%)',
-                    animation: 'gauge-shimmer 2.2s ease-in-out infinite',
-                  }}
-                />
-              )}
-            </div>
+            />
           )
         })}
       </div>
-      {/* 目安の数字 */}
       <div className="flex items-center gap-[3px] mt-1">
         {labels.map((lab, i) => {
           const tier = TIERS[i] ?? TIERS[0]!
           return (
             <span
               key={i}
-              className="flex-1 text-[8.5px] font-bold text-center tabular-nums"
+              className="flex-1 font-mono text-[8.5px] font-bold text-center tabular-nums"
               style={{
-                color: i < level ? tier.core : 'rgba(93,90,95,0.5)',
-                textShadow: i < level ? `0 0 6px ${tier.glow}` : 'none',
+                color: i < level ? tier.core : 'rgba(126,136,154,0.38)',
+                textShadow: 'none',
               }}
             >
               {lab}
@@ -1816,33 +1984,34 @@ function DealCard({
   onDragStart: (e: DragEvent<HTMLDivElement>) => void
   onDragEnd: (e: DragEvent<HTMLDivElement>) => void
 }) {
-  const isPOC = deal.stage === 'POC'
-  const isPriority = deal.stage === 'PROJECT_PLANNED'
   const eLv = emailLevel(deal.emailCount)
   const mLv = meetingLevel(deal.meetingCount)
   const emailTier = eLv > 0 ? TIERS[eLv - 1] ?? null : null
   const meetingTier = mLv > 0 ? TIERS[mLv - 1] ?? null : null
+  const stageTone = STAGES.find((stage) => stage.key === deal.stage)?.color
+  const accentColor = stageTone?.accent ?? '#abc7ff'
+  // §13 Recipe A (Standard Glass Card) + §18 翻訳ガイドで Service 強度 -1 段
+  // - bg-dusk (#242426) ベースに stage 色は左 edge アクセントのみ
+  // - 多重 shadow を fo-glass-rim + 軽量 inset accent に圧縮
+  // - hover は §16 Motion で translateY のみ、ambient glow は廃止
 
   return (
     <div
       draggable
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
-      className="stitch-glass stitch-glow-border rounded-[var(--radius-obs-xl)] p-4 cursor-grab active:cursor-grabbing transition-colors duration-200 group"
+      className="relative overflow-hidden rounded-2xl bg-dusk fo-glass-rim p-4 cursor-grab active:cursor-grabbing transition-all duration-200 group"
       style={{
+        boxShadow: `inset 2px 0 0 ${accentColor}, inset 0 0 0 1px rgba(171,199,255,0.10), inset -1px -1px 0 rgba(0,0,0,0.22)`,
         transitionTimingFunction: 'var(--ease-liquid)',
-        ...(isPriority
-          ? { borderLeft: '4px solid var(--color-obs-primary)' }
-          : {}),
-        ...(isPOC
-          ? { boxShadow: '0 0 15px rgba(0,113,227,0.15), inset 0 0 0 1.5px rgba(171,199,255,0.3)' }
-          : {}),
       }}
       onMouseOver={(e) => {
-        ;(e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(67, 66, 71, 0.65)'
+        ;(e.currentTarget as HTMLDivElement).style.boxShadow = `inset 2px 0 0 ${accentColor}, inset 0 0 0 1px ${accentColor}38, inset -1px -1px 0 rgba(0,0,0,0.22)`
+        ;(e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)'
       }}
       onMouseOut={(e) => {
-        ;(e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(53, 52, 55, 0.6)'
+        ;(e.currentTarget as HTMLDivElement).style.boxShadow = `inset 2px 0 0 ${accentColor}, inset 0 0 0 1px rgba(171,199,255,0.10), inset -1px -1px 0 rgba(0,0,0,0.22)`
+        ;(e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)'
       }}
     >
       {/* Header: 1stパーティ シグナル + createdAt */}
@@ -1850,7 +2019,7 @@ function DealCard({
         <SignalBadge signal={deal.intent} />
         <span
           className="inline-flex items-center gap-1 text-[9.5px] tabular-nums"
-          style={{ color: 'rgba(143,140,144,0.65)' }}
+          style={{ color: '#7e7c83' }}
         >
           <Calendar size={10} />
           {formatCreatedAt(deal.createdAt)}
@@ -1860,7 +2029,7 @@ function DealCard({
       {/* Title (取引先名 = 企業名) — クリックで取引詳細へ。drag は親カードに任せる */}
       <h4
         className="text-sm font-semibold mb-1 leading-snug tracking-[-0.01em]"
-        style={{ color: 'var(--color-obs-text)' }}
+        style={{ color: '#e7e5ea' }}
       >
         <Link
           href={`/deals/${deal.id}`}
@@ -1874,21 +2043,21 @@ function DealCard({
         </Link>
       </h4>
 
-      {/* Activity Gauges — メール + 商談（RPGレアリティ風） */}
+      {/* Activity Gauges — メール + 商談 */}
       <div className="mt-4 space-y-3">
         <div className="flex items-start gap-2.5">
           <span
-            className="w-10 shrink-0 text-[9px] font-bold tracking-[0.08em] uppercase leading-[8px]"
+            className="w-10 shrink-0 text-[9px] font-semibold tracking-[0.14em] uppercase leading-[8px]"
             style={{ color: 'var(--color-obs-text-subtle)' }}
           >
             メール
           </span>
           <SegmentedGauge level={eLv} labels={EMAIL_THRESHOLDS} />
           <span
-            className="text-[11px] font-black tabular-nums w-8 text-right shrink-0 leading-[8px]"
+            className="font-mono text-[11px] font-black tabular-nums w-8 text-right shrink-0 leading-[8px]"
             style={{
-              color: emailTier ? emailTier.core : 'var(--color-obs-text-subtle)',
-              textShadow: emailTier ? `0 0 6px ${emailTier.glow}` : 'none',
+              color: emailTier ? emailTier.core : '#7e7c83',
+              textShadow: 'none',
             }}
           >
             {deal.emailCount}
@@ -1896,17 +2065,17 @@ function DealCard({
         </div>
         <div className="flex items-start gap-2.5">
           <span
-            className="w-10 shrink-0 text-[9px] font-bold tracking-[0.08em] uppercase leading-[8px]"
+            className="w-10 shrink-0 text-[9px] font-semibold tracking-[0.14em] uppercase leading-[8px]"
             style={{ color: 'var(--color-obs-text-subtle)' }}
           >
             商談
           </span>
           <SegmentedGauge level={mLv} labels={MEETING_THRESHOLDS} />
           <span
-            className="text-[11px] font-black tabular-nums w-8 text-right shrink-0 leading-[8px]"
+            className="font-mono text-[11px] font-black tabular-nums w-8 text-right shrink-0 leading-[8px]"
             style={{
-              color: meetingTier ? meetingTier.core : 'var(--color-obs-text-subtle)',
-              textShadow: meetingTier ? `0 0 6px ${meetingTier.glow}` : 'none',
+              color: meetingTier ? meetingTier.core : '#7e7c83',
+              textShadow: 'none',
             }}
           >
             {deal.meetingCount}
@@ -1918,22 +2087,23 @@ function DealCard({
       {(deal.status || deal.nextAction) && (
         <div
           className="mt-4 pt-3 flex flex-col gap-1.5"
-          style={{ boxShadow: 'inset 0 1px 0 0 rgba(65,71,83,0.25)' }}
+          style={{ borderTop: '1px solid rgba(171,199,255,0.10)' }}
         >
           {deal.status && (
             <div className="flex items-center gap-2 min-w-0">
               <span
-                className="px-1.5 h-4 rounded-sm text-[9px] font-bold tracking-[0.08em] uppercase inline-flex items-center shrink-0"
+                className="px-1.5 h-4 rounded-sm text-[9px] font-semibold tracking-[0.14em] uppercase inline-flex items-center shrink-0"
                 style={{
-                  backgroundColor: 'rgba(109,106,111,0.22)',
+                  backgroundColor: 'rgba(255,255,255,0.065)',
                   color: 'var(--color-obs-text-muted)',
+                  boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.055)',
                 }}
               >
                 Status
               </span>
               <span
                 className="text-[11px] font-medium truncate flex-1"
-                style={{ color: 'var(--color-obs-text-muted)' }}
+                style={{ color: '#c7c5c9' }}
                 title={deal.status}
               >
                 {deal.status}
@@ -1943,25 +2113,26 @@ function DealCard({
           {deal.nextAction && (
             <div className="flex items-center gap-2 min-w-0">
               <span
-                className="px-1.5 h-4 rounded-sm text-[9px] font-bold tracking-[0.08em] uppercase inline-flex items-center shrink-0"
+                className="px-1.5 h-4 rounded-sm text-[9px] font-semibold tracking-[0.14em] uppercase inline-flex items-center shrink-0"
                 style={{
-                  backgroundColor: 'rgba(0,113,227,0.18)',
-                  color: 'var(--color-obs-primary)',
+                  backgroundColor: 'rgba(171,199,255,0.13)',
+                  color: '#abc7ff',
+                  boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.16)',
                 }}
               >
                 Next
               </span>
               <span
                 className="text-[11px] font-medium truncate flex-1"
-                style={{ color: 'var(--color-obs-text)' }}
+                style={{ color: '#e7e5ea' }}
                 title={deal.nextAction}
               >
                 {deal.nextAction}
               </span>
               {deal.nextActionDate && (
                 <span
-                  className="text-[10px] tabular-nums shrink-0"
-                  style={{ color: 'var(--color-obs-text-muted)' }}
+                  className="font-mono text-[10px] tabular-nums shrink-0"
+                  style={{ color: '#abc7ff' }}
                 >
                   {deal.nextActionDate}
                 </span>
@@ -1972,33 +2143,38 @@ function DealCard({
       )}
 
       {/* Footer: owner + amount */}
-      <div className="flex items-center justify-between mt-3 pt-3" style={{ boxShadow: 'inset 0 1px 0 0 rgba(65,71,83,0.25)' }}>
+      <div
+        className="flex items-center justify-between mt-3 pt-3"
+        style={{ borderTop: '1px solid rgba(171,199,255,0.10)' }}
+      >
         <div className="flex items-center gap-1.5 min-w-0">
-          <div
+          {/* Owner Orb (Photon Drift) */}
+          <span
             className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
             style={{
               background:
-                'linear-gradient(140deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
+                'radial-gradient(circle at 30% 30%, #ffffff 0%, #abc7ff 35%, rgba(171,199,255,0.50) 80%)',
+              boxShadow: '0 0 10px rgba(171,199,255,0.55), 0 0 22px rgba(171,199,255,0.30)',
             }}
           >
             <span
               className="text-[9px] font-bold leading-none"
-              style={{ color: 'var(--color-obs-on-primary)' }}
+              style={{ color: '#0a0a0c' }}
             >
               {deal.owner[0]}
             </span>
-          </div>
+          </span>
           <span
             className="text-[11px] font-medium truncate"
-            style={{ color: 'var(--color-obs-text-muted)' }}
+            style={{ color: '#c7c5c9' }}
           >
             {deal.owner}
           </span>
         </div>
         {deal.amount > 0 && (
           <span
-            className="text-[12px] font-bold tabular-nums shrink-0"
-            style={{ color: 'var(--color-obs-text)' }}
+            className="font-mono text-[12px] font-bold tabular-nums shrink-0"
+            style={{ color: '#e7e5ea' }}
           >
             {formatJpy(deal.amount)}
           </span>

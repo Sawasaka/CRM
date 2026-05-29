@@ -35,4 +35,7 @@ pnpm-debug.log*
 .vercel
 
 # Next.js build retry snapshots (huge, never commit)
+.next.broken-*
 .next.broken-*/
+apps/web/.next.broken-*
+apps/web/.next.broken-*/

@@ -36,6 +36,7 @@ model Organization {
   billingAccount       BillingAccount?
   billingSubscriptions BillingSubscription[]
   billingPayments      BillingPayment[]
+  aiCreditUsages       AiCreditUsage[]
 }
 
 enum Plan {
@@ -91,23 +92,25 @@ model BillingSubscription {
 }
 
 model BillingPayment {
-  id                    String               @id @default(cuid())
-  orgId                 String
-  billingAccountId      String?
-  kind                  BillingPaymentKind
-  status                BillingPaymentStatus
-  title                 String
-  description           String?
-  amount                Int
-  refundedAmount        Int                  @default(0)
-  currency              String               @default("jpy")
-  paidAt                DateTime?
-  refundedAt            DateTime?
-  stripeInvoiceId       String?              @unique
-  stripePaymentIntentId String?              @unique
-  stripeReceiptUrl      String?
-  createdAt             DateTime             @default(now())
-  updatedAt             DateTime             @updatedAt
+  id                      String               @id @default(cuid())
+  orgId                   String
+  billingAccountId        String?
+  kind                    BillingPaymentKind
+  status                  BillingPaymentStatus
+  title                   String
+  description             String?
+  amount                  Int
+  credits                 Int?
+  refundedAmount          Int                  @default(0)
+  currency                String               @default("jpy")
+  paidAt                  DateTime?
+  refundedAt              DateTime?
+  stripeInvoiceId         String?              @unique
+  stripePaymentIntentId   String?              @unique
+  stripeCheckoutSessionId String?              @unique
+  stripeReceiptUrl        String?
+  createdAt               DateTime             @default(now())
+  updatedAt               DateTime             @updatedAt
 
   org            Organization    @relation(fields: [orgId], references: [id], onDelete: Cascade)
   billingAccount BillingAccount? @relation(fields: [billingAccountId], references: [id], onDelete: SetNull)
@@ -179,6 +182,7 @@ model User {
   meetingEvents   MeetingEvent[]
   approvedFaqs    FaqEntry[]         @relation("FaqApprover")
   assignedTickets Ticket[]           @relation("TicketAssignee")
+  aiCreditUsages  AiCreditUsage[]
 
   @@unique([orgId, email])
   @@index([orgId])
@@ -188,6 +192,32 @@ enum UserRole {
   ADMIN
   MANAGER
   REP
+}
+
+// ============================
+// AI CREDIT USAGE
+// ============================
+model AiCreditUsage {
+  id        String              @id @default(cuid())
+  orgId     String
+  userId    String
+  source    AiCreditUsageSource @default(RESEARCH_CHAT)
+  credits   Int
+  model     String?
+  metadata  Json?
+  monthKey  String
+  createdAt DateTime            @default(now())
+
+  org  Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, monthKey, createdAt(sort: Desc)])
+  @@index([userId, monthKey])
+  @@index([source])
+}
+
+enum AiCreditUsageSource {
+  RESEARCH_CHAT
 }
 
 // ============================

@@ -30,9 +30,9 @@ const others: Row[] = [
 ]
 
 const inhouse: Row[] = [
-  { t: 'インフラ・API', s: 'AWS S3 ／ 企業DB ／ LLM (Gemini / GPT)', v: '300,000円' },
-  { t: '開発費',        s: '開発者 1 名 × 1 人月',                  v: '500,000円' },
-  { t: '合計',          s: '',                                    v: '800,000円', isTotal: true },
+  { t: 'インフラ・API', s: 'AWS S3 ／ 企業DB (+200,000) ／ LLM (Gemini / GPT)', v: '500,000円' },
+  { t: '開発費',        s: '開発者 1 名 × 1 人月',                              v: '500,000円' },
+  { t: '合計',          s: '',                                                v: '1,000,000円', isTotal: true },
 ]
 
 const ComparisonCard = ({
@@ -153,10 +153,10 @@ export const ROISection = () => {
           </h2>
         </div>
 
-        {/* Two comparison cards */}
+        {/* 2 comparison cards */}
         <div className="grid md:grid-cols-2 gap-6 mt-12 items-stretch">
           <ComparisonCard
-            eyebrow="VS 他社 CRM"
+            eyebrow="VS 他社サービス"
             rows={others}
             pitch="使うクレジット分だけ。"
           />
@@ -166,6 +166,7 @@ export const ROISection = () => {
             pitch="使うクレジット分だけ。"
           />
         </div>
+
       </div>
 
       {/* bottom divider */}

@@ -17,6 +17,11 @@ import {
 } from '@/lib/research-models'
 import { buildWebContext, buildWebContextFromPrompt } from '@/lib/research-web-search'
 import { generateGeminiChat } from '@/lib/gemini-chat'
+import {
+  AI_CHAT_CREDITS_PER_REQUEST,
+  assertMonthlyAiChatCreditAvailable,
+  recordAiChatCreditUsage,
+} from '@/lib/credit-usage'
 import type { ChatPolicyState } from '@/lib/chat-policy-presets'
 
 export const dynamic = 'force-dynamic'
@@ -91,6 +96,25 @@ export async function POST(req: NextRequest) {
     )
   }
 
+  const creditGate =
+    user && userId
+      ? await assertMonthlyAiChatCreditAvailable({
+          orgId: user.orgId,
+          userId,
+          credits: AI_CHAT_CREDITS_PER_REQUEST,
+        })
+      : null
+
+  if (creditGate && !creditGate.ok) {
+    return NextResponse.json(
+      {
+        error: `今月のクレジットを使い切りました。翌月1日に ${creditGate.limitCredits.toLocaleString()} cr へリセットされます。`,
+        credits: creditGate,
+      },
+      { status: 402 }
+    )
+  }
+
   // モデル決定
   const resolved = resolveResearchModel(plan, { model: reqModel, thinking: reqThinking })
 
@@ -149,6 +173,17 @@ export async function POST(req: NextRequest) {
         temperature,
       })
       const elapsedMs = Date.now() - t0
+      const credits =
+        user && userId
+          ? await recordAiChatCreditUsage({
+              orgId: user.orgId,
+              userId,
+              model: completion.model,
+              elapsedMs,
+              contextSize: systemPrompt.length,
+              credits: AI_CHAT_CREDITS_PER_REQUEST,
+            })
+          : null
       return NextResponse.json({
         content: completion.content,
         model: completion.model,
@@ -156,6 +191,7 @@ export async function POST(req: NextRequest) {
         elapsedMs,
         usage: completion.usageMetadata,
         contextSize: systemPrompt.length,
+        credits,
       })
     }
 
@@ -167,6 +203,17 @@ export async function POST(req: NextRequest) {
     const content = completion.choices[0]?.message?.content?.trim()
     if (!content) throw new Error('OpenAI API から空の回答が返りました')
     const elapsedMs = Date.now() - t0
+    const credits =
+      user && userId
+        ? await recordAiChatCreditUsage({
+            orgId: user.orgId,
+            userId,
+            model: completion.model,
+            elapsedMs,
+            contextSize: systemPrompt.length,
+            credits: AI_CHAT_CREDITS_PER_REQUEST,
+          })
+        : null
 
     return NextResponse.json({
       content,
@@ -175,6 +222,7 @@ export async function POST(req: NextRequest) {
       elapsedMs,
       usage: completion.usage,
       contextSize: systemPrompt.length,
+      credits,
     })
   } catch (e) {
     return NextResponse.json(

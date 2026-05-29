@@ -556,7 +556,7 @@ const AgentOrbCluster = () => {
             </span>
           </div>
           <div
-            className="text-[11px] mt-3 text-center uppercase tracking-[0.14em]"
+            className="text-[8.5px] md:text-[11px] mt-2 md:mt-3 text-center uppercase tracking-[0.04em] md:tracking-[0.14em] whitespace-nowrap"
             style={{ color: AGENTS[o.agent].color }}
           >
             {AGENTS[o.agent].name.replace(' Agent', '')}

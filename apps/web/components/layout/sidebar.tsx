@@ -64,12 +64,14 @@ function TopNavItem({
       className="w-full mx-2 flex items-center gap-2.5 px-3 py-[7px] rounded-[var(--radius-obs-md)] transition-colors duration-150 text-left"
       style={{
         width: 'calc(100% - 16px)',
-        backgroundColor: active
-          ? 'rgba(171,199,255,0.12)'
+        background: active
+          ? 'linear-gradient(135deg, rgba(171,199,255,0.16) 0%, rgba(0,113,227,0.16) 100%)'
           : hover
-            ? 'rgba(171,199,255,0.05)'
+            ? 'rgba(171,199,255,0.055)'
             : 'transparent',
-        boxShadow: active ? 'inset 0 0 0 1px rgba(171,199,255,0.22)' : undefined,
+        boxShadow: active
+          ? 'inset 1px 1px 0 rgba(255,255,255,0.08), inset 0 0 0 1px rgba(171,199,255,0.24), 0 0 16px rgba(171,199,255,0.10)'
+          : undefined,
         transitionTimingFunction: 'var(--ease-liquid)',
       }}
     >
@@ -117,12 +119,14 @@ function WorkspaceNavItem({
         onMouseLeave={() => setHover(false)}
         className="mx-2 flex items-center gap-2.5 px-3 py-[7px] rounded-[var(--radius-obs-md)] transition-colors duration-150"
         style={{
-          backgroundColor: active
-            ? `${color}1f`
+          background: active
+            ? 'linear-gradient(135deg, rgba(171,199,255,0.16) 0%, rgba(0,113,227,0.16) 100%)'
             : hover
-              ? `${color}10`
+              ? 'rgba(171,199,255,0.055)'
               : 'transparent',
-          boxShadow: active ? `inset 0 0 0 1px ${color}38` : undefined,
+          boxShadow: active
+            ? 'inset 1px 1px 0 rgba(255,255,255,0.08), inset 0 0 0 1px rgba(171,199,255,0.24), 0 0 16px rgba(171,199,255,0.10)'
+            : undefined,
           transitionTimingFunction: 'var(--ease-liquid)',
         }}
       >
@@ -254,11 +258,14 @@ function ChatItem({
         }}
         className="flex items-center gap-2 px-3 py-[5px] rounded-[var(--radius-obs-md)] transition-colors duration-150 text-left cursor-pointer"
         style={{
-          backgroundColor: active
-            ? 'var(--color-obs-surface-high)'
+          background: active
+            ? 'linear-gradient(135deg, rgba(171,199,255,0.15) 0%, rgba(0,113,227,0.14) 100%)'
             : hover || menuOpen
-              ? 'var(--color-obs-surface-low)'
+              ? 'rgba(171,199,255,0.052)'
               : 'transparent',
+          boxShadow: active
+            ? 'inset 0 0 0 1px rgba(171,199,255,0.22), 0 0 14px rgba(171,199,255,0.08)'
+            : undefined,
           transitionTimingFunction: 'var(--ease-liquid)',
         }}
       >
@@ -724,10 +731,12 @@ export function Sidebar() {
       <aside
         className="fixed left-0 top-0 bottom-0 w-[244px] flex flex-col z-30 select-none transition-transform duration-200"
         style={{
-          backgroundColor: 'rgba(11,11,12,0.78)',
+          backgroundColor: 'rgba(10,10,12,0.86)',
+          backgroundImage:
+            'radial-gradient(circle at 24% 8%, rgba(171,199,255,0.055) 0%, transparent 34%), linear-gradient(180deg, rgba(255,255,255,0.014) 0%, transparent 18%)',
           backdropFilter: 'blur(24px) saturate(140%)',
           WebkitBackdropFilter: 'blur(24px) saturate(140%)',
-          boxShadow: 'inset -1px 0 0 rgba(171,199,255,0.08)',
+          boxShadow: 'inset -1px 0 0 rgba(171,199,255,0.10)',
           transform: collapsed ? 'translateX(-100%)' : 'translateX(0)',
           transitionTimingFunction: 'var(--ease-liquid)',
         }}
@@ -762,7 +771,10 @@ export function Sidebar() {
         {/* ── Divider (workspace ↔ chat) ── */}
         <div
           className="mx-4 my-1 h-px"
-          style={{ backgroundColor: 'var(--color-obs-surface-low)' }}
+          style={{
+            background:
+              'linear-gradient(90deg, transparent 0%, rgba(171,199,255,0.12) 50%, transparent 100%)',
+          }}
         />
 
         {/* ── Chat zone (新しいチャット / 検索 + 履歴) ── */}

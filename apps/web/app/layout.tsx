@@ -9,7 +9,6 @@ import {
   publicSiteTitle,
   publicSiteUrl,
   serviceName,
-  shortServiceName,
 } from '@/lib/public-site'
 import { TRPCProvider } from '@/lib/trpc/provider'
 import './globals.css'
@@ -50,7 +49,7 @@ export const metadata: Metadata = {
     title: publicSiteTitle,
     description: publicSiteDescription,
     url: '/',
-    siteName: `${serviceName}（${shortServiceName}）`,
+    siteName: serviceName,
     type: 'website',
     locale: 'ja_JP',
   },

@@ -31,9 +31,7 @@ import {
 } from 'lucide-react'
 import {
   ObsButton,
-  ObsCard,
   ObsChip,
-  ObsHero,
   ObsInput,
   ObsPageShell,
 } from '@/components/obsidian'
@@ -80,11 +78,29 @@ const LIST_MEMBERS = [
   'CS 四郎',
 ] as const
 
-const INTENT_TONE: Record<IntentLevel, { fg: string; bg: string; ring: string }> = {
-  HOT:  { fg: 'var(--color-obs-hot)',    bg: 'rgba(255,107,107,0.14)', ring: 'rgba(255,107,107,0.32)' },
-  MID:  { fg: 'var(--color-obs-middle)', bg: 'rgba(255,184,107,0.14)', ring: 'rgba(255,184,107,0.32)' },
-  LOW:  { fg: 'var(--color-obs-low)',    bg: 'rgba(126,198,255,0.14)', ring: 'rgba(126,198,255,0.32)' },
-  NONE: { fg: 'var(--color-obs-text-subtle)', bg: 'transparent', ring: 'transparent' },
+const INTENT_TONE: Record<IntentLevel, { fg: string; bg: string; bgStrong: string; ring: string; glow: string }> = {
+  HOT: {
+    fg: '#ff6b7a',
+    bg: 'rgba(255,107,122,0.075)',
+    bgStrong: 'linear-gradient(145deg, rgba(255,107,122,0.12) 0%, rgba(36,36,38,0.78) 34%, rgba(24,25,29,0.88) 100%)',
+    ring: 'rgba(255,107,122,0.26)',
+    glow: 'rgba(255,107,122,0.10)',
+  },
+  MID: {
+    fg: '#6ee7a1',
+    bg: 'rgba(110,231,161,0.07)',
+    bgStrong: 'linear-gradient(145deg, rgba(110,231,161,0.11) 0%, rgba(36,36,38,0.78) 34%, rgba(24,25,29,0.88) 100%)',
+    ring: 'rgba(110,231,161,0.24)',
+    glow: 'rgba(110,231,161,0.09)',
+  },
+  LOW: {
+    fg: 'var(--color-obs-primary)',
+    bg: 'rgba(171,199,255,0.075)',
+    bgStrong: 'linear-gradient(145deg, rgba(171,199,255,0.12) 0%, rgba(36,36,38,0.78) 34%, rgba(24,25,29,0.88) 100%)',
+    ring: 'rgba(171,199,255,0.24)',
+    glow: 'rgba(171,199,255,0.06)',
+  },
+  NONE: { fg: 'var(--color-obs-text-subtle)', bg: 'transparent', bgStrong: 'transparent', ring: 'transparent', glow: 'transparent' },
 }
 
 function IntentChip({ companyName }: { companyName: string }) {
@@ -95,12 +111,16 @@ function IntentChip({ companyName }: { companyName: string }) {
   const c = INTENT_TONE[intent.level]
   return (
     <span
-      className="inline-flex items-center gap-1 h-6 px-2 rounded-full text-[10.5px] font-bold whitespace-nowrap"
-      style={{ backgroundColor: c.bg, color: c.fg, boxShadow: `inset 0 0 0 1px ${c.ring}` }}
+      className="inline-flex items-center gap-1 h-7 px-2.5 rounded-[var(--radius-obs-md)] text-[10.5px] font-bold whitespace-nowrap"
+      style={{
+        background: c.bgStrong,
+        color: c.fg,
+        boxShadow: `inset 2px 0 0 ${c.fg}, inset 0 0 0 1px ${c.ring}, inset 1px 1px 0 rgba(255,255,255,0.055), 0 0 12px ${c.glow}`,
+      }}
     >
-      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: c.fg }} />
+      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: c.fg, boxShadow: `0 0 6px ${c.fg}` }} />
       {intent.level}
-      <span className="ml-0.5 opacity-80 font-semibold">{intent.deptCount}部門</span>
+      <span className="ml-0.5 font-semibold" style={{ color: 'var(--color-obs-text-muted)' }}>{intent.deptCount}部門</span>
     </span>
   )
 }
@@ -128,25 +148,27 @@ function ContactsIntentFilterChip({
   onClick: () => void
 }) {
   const palette = {
-    hot:    { fg: 'var(--color-obs-hot)',    bg: 'rgba(255,107,107,0.14)',  ring: 'rgba(255,107,107,0.32)' },
-    middle: { fg: 'var(--color-obs-middle)', bg: 'rgba(255,184,107,0.14)',  ring: 'rgba(255,184,107,0.32)' },
-    low:    { fg: 'var(--color-obs-low)',    bg: 'rgba(126,198,255,0.14)',  ring: 'rgba(126,198,255,0.32)' },
+    hot:    INTENT_TONE.HOT,
+    middle: INTENT_TONE.MID,
+    low:    INTENT_TONE.LOW,
   }[tone]
+  const idleBg = `linear-gradient(145deg, ${palette.bg} 0%, rgba(36,36,38,0.68) 38%, rgba(24,25,29,0.78) 100%)`
   return (
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex items-center gap-1.5 h-6 px-2 rounded-full text-[10.5px] font-bold transition-all"
+      className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-[var(--radius-obs-md)] text-[10.5px] font-bold transition-all"
       style={{
-        backgroundColor: active ? palette.bg : 'transparent',
-        color: active ? palette.fg : 'var(--color-obs-text-muted)',
-        boxShadow: active ? `inset 0 0 0 1px ${palette.ring}` : 'inset 0 0 0 1px rgba(109,106,111,0.18)',
-        opacity: active ? 1 : 0.7,
+        background: active ? palette.bgStrong : idleBg,
+        color: palette.fg,
+        boxShadow: active
+          ? `inset 2px 0 0 ${palette.fg}, inset 0 0 0 1px ${palette.ring}, inset 1px 1px 0 rgba(255,255,255,0.055), 0 0 12px ${palette.glow}`
+          : `inset 2px 0 0 ${palette.fg}, inset 0 0 0 1px rgba(255,255,255,0.055)`,
       }}
     >
-      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: palette.fg }} />
+      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: palette.fg, boxShadow: `0 0 6px ${palette.fg}` }} />
       {label}
-      <span className="tabular-nums opacity-90">{count}</span>
+      <span className="tabular-nums" style={{ color: active ? 'var(--color-obs-text)' : 'var(--color-obs-text-muted)' }}>{count}</span>
     </button>
   )
 }
@@ -220,6 +242,55 @@ function personRoleToTone(r: PersonRole): ChipTone {
   return 'neutral' // 推進者・一般 は neutral
 }
 
+const MINI_TONE: Record<ChipTone, { fg: string; bg: string; ring: string; accent: string }> = {
+  neutral: {
+    fg: 'var(--color-obs-text-muted)',
+    bg: 'rgba(255,255,255,0.035)',
+    ring: 'rgba(255,255,255,0.065)',
+    accent: 'rgba(171,199,255,0.26)',
+  },
+  primary: {
+    fg: '#abc7ff',
+    bg: 'rgba(171,199,255,0.075)',
+    ring: 'rgba(171,199,255,0.22)',
+    accent: '#abc7ff',
+  },
+  hot: {
+    fg: '#ff7f8b',
+    bg: 'rgba(255,107,122,0.075)',
+    ring: 'rgba(255,107,122,0.20)',
+    accent: '#ff6b7a',
+  },
+  middle: {
+    fg: '#d8bc86',
+    bg: 'rgba(255,184,107,0.065)',
+    ring: 'rgba(255,184,107,0.16)',
+    accent: '#d8bc86',
+  },
+  low: {
+    fg: '#8fc6ee',
+    bg: 'rgba(126,198,255,0.07)',
+    ring: 'rgba(126,198,255,0.18)',
+    accent: '#8fc6ee',
+  },
+}
+
+function MiniChip({ tone, children }: { tone: ChipTone; children: React.ReactNode }) {
+  const t = MINI_TONE[tone]
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 h-6 px-2 rounded-[var(--radius-obs-md)] text-[11px] font-medium whitespace-nowrap"
+      style={{
+        color: t.fg,
+        background: `linear-gradient(145deg, ${t.bg} 0%, rgba(36,36,38,0.62) 100%)`,
+        boxShadow: `inset 2px 0 0 ${t.accent}, inset 0 0 0 1px ${t.ring}`,
+      }}
+    >
+      {children}
+    </span>
+  )
+}
+
 const ALL_NEXT_ACTIONS: Exclude<NextAction, null>[] = ['メールアプローチ', 'コール', '連絡待ち']
 const ALL_PERSON_ROLES: PersonRole[] = ['決裁者', '推進者', '一般']
 
@@ -252,9 +323,9 @@ const SIGNAL_LABEL: Record<'Hot' | 'Middle' | 'Low', string> = {
 
 // 担当者ごとのアバター色 (タスク一覧の REPS と整合)
 const OWNER_COLORS: Record<string, string> = {
-  '田中太郎': 'var(--color-obs-primary)',
-  '鈴木花子': 'var(--color-obs-middle)',
-  '佐藤次郎': 'var(--color-obs-low)',
+  '田中太郎': '#abc7ff',
+  '鈴木花子': '#c8b9ff',
+  '佐藤次郎': '#8fc6ee',
 }
 
 function OwnerCell({ name }: { name: string }) {
@@ -264,7 +335,11 @@ function OwnerCell({ name }: { name: string }) {
     <div className="min-w-0 flex items-center gap-1.5" title={name}>
       <span
         className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold shrink-0"
-        style={{ backgroundColor: color, color: 'var(--color-obs-on-primary)' }}
+        style={{
+          background: `linear-gradient(145deg, color-mix(in srgb, ${color} 18%, var(--color-obs-surface-high)) 0%, var(--color-obs-surface-low) 100%)`,
+          color: 'var(--color-obs-text)',
+          boxShadow: `inset 1px 1px 0 rgba(255,255,255,0.08), inset -1px -1px 0 rgba(0,0,0,0.22), inset 0 0 0 1px color-mix(in srgb, ${color} 28%, transparent)`,
+        }}
       >
         {initial}
       </span>
@@ -281,10 +356,11 @@ function LeadSourceCell({ source }: { source: LeadSource }) {
   return (
     <div className="min-w-0 flex items-center">
       <span
-        className="inline-flex items-center gap-1.5 px-2 h-5 rounded-full text-[11px] font-medium tracking-[-0.005em] whitespace-nowrap w-fit"
+        className="inline-flex items-center gap-1.5 px-2 h-6 rounded-[var(--radius-obs-md)] text-[11px] font-medium tracking-[-0.005em] whitespace-nowrap w-fit"
         style={{
-          backgroundColor: 'rgba(143,140,144,0.10)',
+          background: 'linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(36,36,38,0.58) 100%)',
           color: 'var(--color-obs-text-muted)',
+          boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.06)',
         }}
         title={source.detail}
       >
@@ -355,7 +431,7 @@ function NextActionSelect({ value, onChange }: { value: NextAction; onChange: (v
         onClick={() => setOpen(v => !v)}
         className="inline-flex"
       >
-        <ObsChip tone={nextActionToTone(value)}>{value}</ObsChip>
+        <MiniChip tone={nextActionToTone(value)}>{value}</MiniChip>
       </button>
       {open && (
         <>
@@ -574,32 +650,62 @@ export default function ContactsPage() {
   return (
     <ObsPageShell>
       <div
-        className="w-full px-8 xl:px-12 2xl:px-16 pb-16"
+        className="w-full min-h-[calc(100vh-56px)] px-8 xl:px-12 2xl:px-16 pb-16 pt-10"
+        style={{
+          backgroundImage:
+            'radial-gradient(circle at 50% 0%, rgba(171,199,255,0.045) 0%, transparent 36%), radial-gradient(circle at 18% 72%, rgba(0,113,227,0.028) 0%, transparent 42%)',
+        }}
         onClick={() => { setShowStatusFilter(false); setShowRankFilter(false); setShowContactStatusFilter(false) }}
       >
         {/* ── Hero ── */}
-        <ObsHero
-          eyebrow="Contacts"
-          title="コンタクト"
-          caption={
-            <>
+        <div className="mb-7 flex items-end justify-between gap-8">
+          <div className="max-w-3xl">
+            <span
+              className="inline-block text-[11px] font-medium tracking-[0.16em] uppercase mb-3"
+              style={{ color: 'var(--color-obs-text-subtle)' }}
+            >
+              Contacts
+            </span>
+            <h1
+              className="font-[family-name:var(--font-display)] text-[clamp(2rem,4vw,3.25rem)] font-bold leading-[1.05] tracking-[-0.028em] mb-3 whitespace-nowrap"
+              style={{
+                background: 'linear-gradient(120deg, #ffffff 0%, #abc7ff 45%, #0071e3 100%)',
+                WebkitBackgroundClip: 'text',
+                backgroundClip: 'text',
+                color: 'transparent',
+                WebkitTextFillColor: 'transparent',
+              }}
+            >
+              コンタクト
+            </h1>
+            <p className="text-[15px] leading-relaxed max-w-2xl" style={{ color: 'var(--color-obs-text-muted)' }}>
               全 {contacts.length.toLocaleString()} 件 ／ アプローチ状況とネクストアクションで優先度を可視化
               <br />
               取得項目: 求人インテント ・ 1stシグナル ・ 部門 ・ 役職 ・ ステータス ・ Next Action ・ コール / メール履歴
-            </>
-          }
-          action={
+            </p>
+          </div>
+          <div className="shrink-0">
             <div className="flex items-center gap-3">
               {/* HOT/MID/LOW インテントフィルタ — 290万社DBと同じ */}
               <div
-                className="inline-flex items-center gap-1.5 px-2 py-1.5 rounded-full"
+                className="inline-flex items-center gap-1.5 px-2 py-1.5 rounded-[var(--radius-obs-lg)] fo-glass-rim"
                 style={{
-                  background: 'var(--color-obs-surface-high)',
-                  boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.18)',
+                  background:
+                    'linear-gradient(140deg, rgba(36,36,38,0.74) 0%, rgba(28,29,34,0.82) 100%)',
+                  backdropFilter: 'blur(14px) saturate(130%)',
+                  WebkitBackdropFilter: 'blur(14px) saturate(130%)',
+                  boxShadow:
+                    'inset 1px 1px 0 rgba(255,255,255,0.055), inset -1px -1px 0 rgba(0,0,0,0.24), 0 10px 26px rgba(0,0,0,0.18)',
                 }}
                 title="クリックでインテント別に絞り込み"
               >
-                <Filter size={11} strokeWidth={2.2} style={{ color: 'var(--color-obs-text-subtle)' }} className="ml-1" />
+                <span
+                  className="hidden xl:inline-flex items-center gap-1.5 pl-1 pr-1.5 text-[10px] font-semibold tracking-[0.08em] uppercase"
+                  style={{ color: 'var(--color-obs-text-subtle)' }}
+                >
+                  <Filter size={11} strokeWidth={2.2} />
+                  Intent
+                </span>
                 <ContactsIntentFilterChip
                   active={intentFilter.includes('hot')}
                   tone="hot"
@@ -646,20 +752,22 @@ export default function ContactsPage() {
                 }
                 className="h-9 px-4 text-sm rounded-[var(--radius-obs-md)] font-medium tracking-[-0.01em] inline-flex items-center transition-all duration-200 disabled:cursor-not-allowed"
                 style={{
-                  backgroundColor: selectedIds.size === 0 ? 'rgba(143,140,144,0.08)' : 'rgba(255,184,107,0.12)',
-                  color: selectedIds.size === 0 ? 'var(--color-obs-text-subtle)' : 'var(--color-obs-middle)',
+                  background: selectedIds.size === 0
+                    ? 'rgba(143,140,144,0.08)'
+                    : 'linear-gradient(140deg, rgba(171,199,255,0.16) 0%, rgba(0,113,227,0.24) 100%)',
+                  color: selectedIds.size === 0 ? 'var(--color-obs-text-subtle)' : 'var(--color-obs-on-primary)',
                   boxShadow: selectedIds.size === 0
                     ? 'inset 0 0 0 1px rgba(109,106,111,0.18)'
-                    : 'inset 0 0 0 1px rgba(255,184,107,0.42)',
+                    : 'inset 1px 1px 0 rgba(255,255,255,0.12), 0 0 14px rgba(171,199,255,0.12)',
                 }}
                 onMouseOver={(e) => {
                   if (selectedIds.size > 0) {
-                    ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(255,184,107,0.20)'
+                    ;(e.currentTarget as HTMLButtonElement).style.filter = 'brightness(1.08)'
                   }
                 }}
                 onMouseOut={(e) => {
                   if (selectedIds.size > 0) {
-                    ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(255,184,107,0.12)'
+                    ;(e.currentTarget as HTMLButtonElement).style.filter = 'none'
                   }
                 }}
               >
@@ -669,8 +777,8 @@ export default function ContactsPage() {
                   <span
                     className="ml-1.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full text-[10.5px] font-bold tabular-nums"
                     style={{
-                      backgroundColor: 'rgba(255,184,107,0.22)',
-                      color: 'var(--color-obs-middle)',
+                      backgroundColor: 'rgba(255,255,255,0.16)',
+                      color: 'var(--color-obs-on-primary)',
                     }}
                   >
                     {selectedIds.size}
@@ -683,8 +791,8 @@ export default function ContactsPage() {
                 コンタクトを追加
               </ObsButton>
             </div>
-          }
-        />
+          </div>
+        </div>
 
         {/* ── Toolbar ── */}
         <div className="flex items-center gap-2 mb-6 flex-wrap" onClick={e => e.stopPropagation()}>
@@ -1161,13 +1269,25 @@ export default function ContactsPage() {
         </div>
 
         {/* ── Table ── */}
-        <ObsCard depth="low" padding="none" radius="xl">
+        <div
+          className="rounded-[var(--radius-obs-xl)] overflow-hidden"
+          style={{
+            backgroundColor: 'rgba(36,36,38,0.58)',
+            backdropFilter: 'blur(22px) saturate(130%)',
+            WebkitBackdropFilter: 'blur(22px) saturate(130%)',
+            boxShadow: 'inset 1px 1px 0 rgba(255,255,255,0.055), inset -1px -1px 0 rgba(0,0,0,0.24)',
+          }}
+        >
           <div className="w-full overflow-x-auto">
             <div className="min-w-[1400px]">
               {/* Header */}
               <div
-                className="grid grid-cols-[32px_240px_minmax(160px,1fr)_110px_80px_90px_100px_120px_120px_110px_56px_56px] gap-x-3 px-5 py-3 text-[11px] font-medium tracking-[0.08em] uppercase"
-                style={{ color: 'var(--color-obs-text-subtle)' }}
+                className="grid grid-cols-[32px_240px_minmax(160px,1fr)_110px_84px_96px_104px_124px_124px_112px_56px_56px] gap-x-3 px-5 py-3 text-[11px] font-medium tracking-[0.08em] uppercase"
+                style={{
+                  color: 'var(--color-obs-text-subtle)',
+                  backgroundColor: 'rgba(27,27,29,0.52)',
+                  boxShadow: 'inset 0 -1px 0 rgba(255,255,255,0.055)',
+                }}
               >
                 {/* 全選択チェックボックス */}
                 <button
@@ -1254,14 +1374,14 @@ export default function ContactsPage() {
                           visible: { opacity: 1, y: 0, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } },
                         }}
                         onClick={() => router.push(`/contacts/${contact.id}`)}
-                        className={`grid grid-cols-[32px_240px_minmax(160px,1fr)_110px_80px_90px_100px_120px_120px_110px_56px_56px] gap-x-3 items-center px-5 py-3.5 transition-colors duration-150 group cursor-pointer ${dnc ? 'opacity-35' : ''}`}
+                        className={`grid grid-cols-[32px_240px_minmax(160px,1fr)_110px_84px_96px_104px_124px_124px_112px_56px_56px] gap-x-3 items-center px-5 py-3.5 transition-colors duration-150 group cursor-pointer ${dnc ? 'opacity-35' : ''}`}
                         style={{
                           transitionTimingFunction: 'var(--ease-liquid)',
-                          boxShadow: 'inset 0 -1px 0 0 var(--color-obs-surface)',
-                          backgroundColor: isSelected ? 'rgba(171,199,255,0.06)' : undefined,
+                          boxShadow: 'inset 0 -1px 0 0 rgba(255,255,255,0.035)',
+                          backgroundColor: isSelected ? 'rgba(171,199,255,0.055)' : 'transparent',
                         }}
                         onMouseOver={(e) => {
-                          if (!dnc) (e.currentTarget as HTMLDivElement).style.backgroundColor = 'var(--color-obs-surface-high)'
+                          if (!dnc) (e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(255,255,255,0.035)'
                         }}
                         onMouseOut={(e) => {
                           ;(e.currentTarget as HTMLDivElement).style.backgroundColor = isSelected
@@ -1332,16 +1452,16 @@ export default function ContactsPage() {
 
                         {/* 役職 */}
                         <div>
-                          <ObsChip tone={personRoleToTone(contact.personRole)}>
+                          <MiniChip tone={personRoleToTone(contact.personRole)}>
                             {contact.personRole}
-                          </ObsChip>
+                          </MiniChip>
                         </div>
 
                         {/* アプローチ */}
                         <div>
-                          <ObsChip tone={statusToTone(contact.status)}>
+                          <MiniChip tone={statusToTone(contact.status)}>
                             {contact.status}
-                          </ObsChip>
+                          </MiniChip>
                         </div>
 
                         {/* Next Action */}
@@ -1383,7 +1503,7 @@ export default function ContactsPage() {
               </motion.div>
             </div>
           </div>
-        </ObsCard>
+        </div>
 
         {/* ── Create Contact Modal ── */}
         <AnimatePresence>

@@ -16,22 +16,19 @@ export const publicSiteUrl =
   PUBLIC_SITE_FALLBACK_URL
 
 export const companyName = '株式会社ルーキースマートジャパン'
-export const serviceName = 'ルーキースマートCRM'
-export const shortServiceName = 'ルキスマCRM'
+export const serviceName = 'ルキスマCRM'
 export const operatorName = '沢坂弘樹'
 
-export const publicSiteTitle = `${shortServiceName}｜${companyName}のAI CRM｜${operatorName}`
+export const publicSiteTitle = `【公式】${serviceName}｜${companyName}`
 
 export const publicSiteDescription =
-  `${companyName}が提供し、${operatorName}が運営に関わる${serviceName}（${shortServiceName}）は、` +
-  '営業データ・商談・メール・議事録・求人インテント・企業DBを横断し、次の営業アクションをチャットで引き出すAI CRMです。'
+  'CRMも部署番号も無償。営業実行とCRM構築を同時に。'
 
 export const publicSiteKeywords = [
   companyName,
   operatorName,
   'ルーキースマートジャパン',
   serviceName,
-  shortServiceName,
   'RookieSmart Japan',
   'RookieSmart',
   'CRM',
@@ -61,12 +58,12 @@ export const publicSiteFaqItems = [
   {
     question: '株式会社ルーキースマートジャパンはどのサービスを提供していますか？',
     answer:
-      `${companyName}は、営業データから次の営業アクションを引き出す${serviceName}（${shortServiceName}）を提供しています。`,
+      `${companyName}は、営業データから次の営業アクションを引き出す${serviceName}を提供しています。`,
   },
   {
     question: '沢坂弘樹とルキスマCRMの関係は何ですか？',
     answer:
-      `${operatorName}は、${companyName}の${serviceName}（${shortServiceName}）の運営に関わっています。`,
+      `${operatorName}は、${companyName}の${serviceName}の運営に関わっています。`,
   },
   {
     question: 'ルキスマCRMはどのような検索キーワードに関係するサービスですか？',
@@ -104,7 +101,7 @@ export const publicSiteStructuredData = [
     '@type': 'SoftwareApplication',
     '@id': `${publicSiteUrl}/#software`,
     name: serviceName,
-    alternateName: [shortServiceName, 'RookieSmart CRM'],
+    alternateName: ['RookieSmart CRM'],
     applicationCategory: 'BusinessApplication',
     applicationSubCategory: 'CRM',
     operatingSystem: 'Web',
@@ -124,7 +121,7 @@ export const publicSiteStructuredData = [
     '@type': 'WebSite',
     '@id': `${publicSiteUrl}/#website`,
     name: publicSiteTitle,
-    alternateName: [serviceName, shortServiceName],
+    alternateName: ['RookieSmart CRM'],
     url: publicSiteUrl,
     inLanguage: 'ja-JP',
     publisher: {
@@ -159,7 +156,7 @@ export const publicSiteStructuredData = [
       {
         '@type': 'ListItem',
         position: 1,
-        name: shortServiceName,
+        name: serviceName,
         item: publicSiteUrl,
       },
     ],

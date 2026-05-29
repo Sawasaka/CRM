@@ -18,8 +18,6 @@ import {
 } from 'lucide-react'
 import {
   ObsButton,
-  ObsCard,
-  ObsHero,
   ObsInput,
   ObsPageShell,
 } from '@/components/obsidian'
@@ -222,6 +220,46 @@ function formatRevenue(raw: string | null): string {
 
 const INTENT_PRIORITY: Record<string, number> = { HOT: 4, MIDDLE: 3, LOW: 2, NONE: 1 }
 
+const SERVICE_TONE = {
+  primary: 'var(--color-aurora)',
+  enriched: 'var(--color-mint)',
+  hot: '#ff6b7a',
+  middle: '#6ee7a1',
+  low: 'var(--color-obs-primary)',
+} as const
+
+const GLASS_CARD_BG =
+  'linear-gradient(145deg, rgba(36,36,38,0.70) 0%, rgba(25,26,31,0.86) 46%, rgba(13,14,18,0.94) 100%)'
+const GLASS_CARD_SHADOW =
+  'inset 0 0 0 1px rgba(171,199,255,0.12), inset 1px 1px 0 rgba(255,255,255,0.055), inset -1px -1px 0 rgba(0,0,0,0.26), 0 20px 52px rgba(0,0,0,0.30)'
+const PRIMARY_BUTTON_BG = 'linear-gradient(135deg, #abc7ff 0%, #5aa0ff 45%, #0071e3 100%)'
+const SERVICE_PAGE_BACKGROUND =
+  'radial-gradient(circle at 50% 20%, rgba(171,199,255,0.06) 0%, transparent 45%), radial-gradient(circle at 20% 80%, rgba(0,113,227,0.04) 0%, transparent 50%)'
+
+const INTENT_TONE = {
+  hot: {
+    color: SERVICE_TONE.hot,
+    bg: 'rgba(255,107,122,0.075)',
+    bgStrong: 'linear-gradient(145deg, rgba(255,107,122,0.12) 0%, rgba(36,36,38,0.78) 34%, rgba(24,25,29,0.88) 100%)',
+    border: 'rgba(255,107,122,0.26)',
+    glow: '0 0 14px rgba(255,107,122,0.10)',
+  },
+  middle: {
+    color: SERVICE_TONE.middle,
+    bg: 'rgba(110,231,161,0.07)',
+    bgStrong: 'linear-gradient(145deg, rgba(110,231,161,0.11) 0%, rgba(36,36,38,0.78) 34%, rgba(24,25,29,0.88) 100%)',
+    border: 'rgba(110,231,161,0.24)',
+    glow: '0 0 14px rgba(110,231,161,0.09)',
+  },
+  low: {
+    color: SERVICE_TONE.low,
+    bg: 'rgba(171,199,255,0.075)',
+    bgStrong: 'linear-gradient(145deg, rgba(171,199,255,0.12) 0%, rgba(36,36,38,0.78) 34%, rgba(24,25,29,0.88) 100%)',
+    border: 'rgba(171,199,255,0.24)',
+    glow: '0 0 14px rgba(171,199,255,0.09)',
+  },
+} as const
+
 type SortKey = 'name' | 'intent' | 'employee' | 'revenue' | 'office'
 type SortDir = 'asc' | 'desc'
 
@@ -239,21 +277,21 @@ const LEVEL_STYLE: Record<
 > = {
   Hot: {
     label: 'HOT',
-    color: 'var(--color-obs-hot)',
-    bg: 'rgba(255,107,107,0.14)',
-    border: 'rgba(255,107,107,0.40)',
+    color: INTENT_TONE.hot.color,
+    bg: INTENT_TONE.hot.bg,
+    border: INTENT_TONE.hot.border,
   },
   Middle: {
     label: 'MID',
-    color: '#4ad98a',
-    bg: 'rgba(74,217,138,0.14)',
-    border: 'rgba(74,217,138,0.40)',
+    color: INTENT_TONE.middle.color,
+    bg: INTENT_TONE.middle.bg,
+    border: INTENT_TONE.middle.border,
   },
   Low: {
     label: 'LOW',
-    color: 'var(--color-obs-low)',
-    bg: 'rgba(126,198,255,0.14)',
-    border: 'rgba(126,198,255,0.40)',
+    color: INTENT_TONE.low.color,
+    bg: INTENT_TONE.low.bg,
+    border: INTENT_TONE.low.border,
   },
   None: {
     label: '—',
@@ -380,11 +418,24 @@ function getInitial(name: string): string {
   return clean.slice(0, 1)
 }
 
-function getAvatarColor(name: string): string {
+function getAvatarHue(name: string): number {
   let h = 0
   for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0
-  const hue = h % 360
-  return `hsl(${hue}, 35%, 22%)`
+  return h % 360
+}
+
+function getAvatarColor(name: string): string {
+  return `hsl(${getAvatarHue(name)}, 18%, 34%)`
+}
+
+function getAvatarBackground(name: string): string {
+  const color = getAvatarColor(name)
+  return `linear-gradient(145deg, color-mix(in srgb, ${color} 18%, #353437) 0%, rgba(27,27,29,0.96) 100%)`
+}
+
+function getAvatarGlow(name: string): string {
+  const color = getAvatarColor(name)
+  return `inset 0 0 0 1px color-mix(in srgb, ${color} 18%, rgba(171,199,255,0.12)), inset 1px 1px 0 rgba(255,255,255,0.055), inset -1px -1px 0 rgba(0,0,0,0.24), 0 8px 18px rgba(0,0,0,0.22)`
 }
 
 // グリッドテンプレート — チェックボックス / 企業 / 求人インテント / 1stシグナル / 都道府県 / 業種 / 従業員数 / 売上 / 拠点
@@ -716,33 +767,61 @@ export default function CompaniesPage() {
 
   return (
     <ObsPageShell>
-      <div className="w-full px-8 xl:px-12 2xl:px-16 pb-16">
-        <ObsHero
-          eyebrow="Company Master"
-          title="290万社DB"
-          caption={
-            scopeMode === 'enriched' ? (
-              <>
-                エンリッチ済 {total.toLocaleString()} 社 ／ 対象条件: 従業員30人以上
-                <br />
-                取得項目: 求人インテント(25部門) ・ 業種 ・ 売上 ・ 拠点
-              </>
-            ) : (
-              <>
-                登記台帳 290万社全件 ／ 対象条件: 国税庁法人番号DB + 経産省 gBizINFO
-                <br />
-                取得項目: 社名 ・ 所在地 ・ 法人番号 ・ 設立日 ・ 資本金
-              </>
-            )
-          }
-          action={
-            <div className="flex items-center gap-3">
+      <div
+        className="w-full min-h-[calc(100vh-56px)] px-8 xl:px-12 2xl:px-16 pb-16 pt-10 relative overflow-hidden"
+        style={{
+          backgroundColor: 'var(--color-obs-surface)',
+          backgroundImage: SERVICE_PAGE_BACKGROUND,
+        }}
+      >
+        <div className="mb-7 flex flex-col 2xl:flex-row 2xl:items-end 2xl:justify-between gap-6">
+          <div className="max-w-3xl">
+            <span
+              className="inline-flex items-center gap-2 text-[11px] font-semibold tracking-[0.16em] uppercase mb-3"
+              style={{ color: 'var(--color-aurora)' }}
+            >
+              <span
+                className="block w-1.5 h-1.5 rounded-full"
+                style={{ background: 'var(--color-aurora)', boxShadow: '0 0 10px var(--color-aurora)' }}
+              />
+              Company Master
+            </span>
+            <h1
+              className="fo-gradient-text font-[family-name:var(--font-display)] text-[clamp(2rem,4vw,3.25rem)] font-bold leading-[1.05] tracking-[-0.028em] mb-3 whitespace-nowrap"
+              style={{
+                WebkitTextFillColor: 'transparent',
+              }}
+            >
+              290万社DB
+            </h1>
+            <p className="text-[15px] leading-relaxed max-w-2xl" style={{ color: '#9b99a0' }}>
+              {scopeMode === 'enriched' ? (
+                <>
+                  エンリッチ済 {total.toLocaleString()} 社 ／ 対象条件: 従業員30人以上
+                  <br />
+                  取得項目: 求人インテント(25部門) ・ 業種 ・ 売上 ・ 拠点
+                </>
+              ) : (
+                <>
+                  登記台帳 290万社全件 ／ 対象条件: 国税庁法人番号DB + 経産省 gBizINFO
+                  <br />
+                  取得項目: 社名 ・ 所在地 ・ 法人番号 ・ 設立日 ・ 資本金
+                </>
+              )}
+            </p>
+          </div>
+          <div className="2xl:shrink-0">
+            <div className="flex items-center gap-3 flex-wrap 2xl:justify-end">
               {/* 表示スコープ トグル */}
               <div
-                className="inline-flex items-center rounded-full p-0.5 fo-glass-rim"
+                className="inline-flex items-center rounded-full p-0.5"
                 style={{
-                  backgroundColor: 'rgba(36,36,38,0.6)',
-                  backdropFilter: 'blur(8px)',
+                  background:
+                    'linear-gradient(145deg, rgba(36,36,38,0.62) 0%, rgba(20,21,25,0.82) 100%)',
+                  backdropFilter: 'blur(18px) saturate(130%)',
+                  WebkitBackdropFilter: 'blur(18px) saturate(130%)',
+                  boxShadow:
+                    'inset 0 0 0 1px rgba(171,199,255,0.12), inset 1px 1px 0 rgba(255,255,255,0.045), 0 12px 30px rgba(0,0,0,0.22)',
                 }}
               >
                 <button
@@ -750,8 +829,13 @@ export default function CompaniesPage() {
                   onClick={() => setScopeMode('enriched')}
                   className="px-3 h-7 rounded-full text-[11.5px] font-semibold transition-all"
                   style={{
-                    background: scopeMode === 'enriched' ? 'var(--color-obs-primary-container)' : 'transparent',
+                    background: scopeMode === 'enriched'
+                      ? 'linear-gradient(140deg, rgba(171,199,255,0.22) 0%, rgba(0,113,227,0.36) 100%)'
+                      : 'transparent',
                     color: scopeMode === 'enriched' ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
+                    boxShadow: scopeMode === 'enriched'
+                      ? 'inset 1px 1px 0 rgba(255,255,255,0.14), inset 0 0 0 1px rgba(171,199,255,0.22), 0 0 18px rgba(171,199,255,0.16)'
+                      : undefined,
                   }}
                 >
                   エンリッチ済
@@ -761,8 +845,13 @@ export default function CompaniesPage() {
                   onClick={() => setScopeMode('all')}
                   className="px-3 h-7 rounded-full text-[11.5px] font-semibold transition-all"
                   style={{
-                    background: scopeMode === 'all' ? 'var(--color-obs-primary-container)' : 'transparent',
+                    background: scopeMode === 'all'
+                      ? 'linear-gradient(140deg, rgba(171,199,255,0.22) 0%, rgba(0,113,227,0.36) 100%)'
+                      : 'transparent',
                     color: scopeMode === 'all' ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
+                    boxShadow: scopeMode === 'all'
+                      ? 'inset 1px 1px 0 rgba(255,255,255,0.14), inset 0 0 0 1px rgba(171,199,255,0.22), 0 0 18px rgba(171,199,255,0.16)'
+                      : undefined,
                   }}
                   title="290万社の登記台帳全件 (未エンリッチ含む)"
                 >
@@ -770,19 +859,24 @@ export default function CompaniesPage() {
                 </button>
               </div>
               <div
-                className="inline-flex items-center gap-1.5 px-2 py-1.5 rounded-full fo-glass-rim"
+                className="inline-flex items-center gap-1.5 px-2 py-1.5 rounded-[var(--radius-obs-lg)]"
                 style={{
-                  backgroundColor: 'rgba(36,36,38,0.6)',
-                  backdropFilter: 'blur(8px)',
+                  background:
+                    'linear-gradient(145deg, rgba(36,36,38,0.74) 0%, rgba(21,22,26,0.90) 100%)',
+                  backdropFilter: 'blur(14px) saturate(130%)',
+                  WebkitBackdropFilter: 'blur(14px) saturate(130%)',
+                  boxShadow:
+                    'inset 0 0 0 1px rgba(171,199,255,0.11), inset 1px 1px 0 rgba(255,255,255,0.055), inset -1px -1px 0 rgba(0,0,0,0.24), 0 10px 26px rgba(0,0,0,0.18)',
                 }}
                 title="クリックでインテント別に絞り込み"
               >
-                <Filter
-                  size={11}
-                  strokeWidth={2.2}
+                <span
+                  className="hidden xl:inline-flex items-center gap-1.5 pl-1 pr-1.5 text-[10px] font-semibold tracking-[0.08em] uppercase"
                   style={{ color: 'var(--color-obs-text-subtle)' }}
-                  className="ml-1"
-                />
+                >
+                  <Filter size={11} strokeWidth={2.2} />
+                  Intent
+                </span>
                 <IntentFilterChip
                   active={intentFilter.includes('hot')}
                   tone="hot"
@@ -816,17 +910,33 @@ export default function CompaniesPage() {
                   </button>
                 )}
               </div>
-              <ObsButton variant="primary" size="md" onClick={() => setAddOpen(true)}>
+              <button
+                type="button"
+                onClick={() => setAddOpen(true)}
+                className="h-9 px-4 rounded-[var(--radius-obs-md)] text-sm font-medium inline-flex items-center transition-colors duration-200"
+                style={{
+                  background: PRIMARY_BUTTON_BG,
+                  color: '#05070a',
+                  boxShadow:
+                    'inset 0 1px 0 rgba(255,255,255,0.34), 0 0 0 1px rgba(171,199,255,0.22), 0 10px 26px -10px rgba(0,113,227,0.70), 0 0 28px rgba(171,199,255,0.18)',
+                  transitionTimingFunction: 'var(--ease-liquid)',
+                }}
+              >
                 <Plus size={14} className="mr-1.5 inline" strokeWidth={2.5} />
                 企業を追加
-              </ObsButton>
+              </button>
             </div>
-          }
-        />
+          </div>
+        </div>
 
         {/* ── Toolbar ── */}
         <div className="flex items-center gap-2 mb-4 flex-wrap">
-          <div className="relative flex-1 min-w-[260px] max-w-md">
+          <div
+            className="relative flex-1 min-w-[260px] max-w-md rounded-[var(--radius-obs-md)]"
+            style={{
+              boxShadow: '0 12px 28px rgba(0,0,0,0.12)',
+            }}
+          >
             <Search
               size={14}
               className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
@@ -967,7 +1077,10 @@ export default function CompaniesPage() {
             <button
               onClick={clearFilters}
               className="inline-flex items-center gap-1.5 h-8 px-3 rounded-[var(--radius-obs-md)] text-xs font-medium transition-colors"
-              style={{ color: 'var(--color-obs-text-muted)' }}
+              style={{
+                color: 'var(--color-obs-text-muted)',
+                boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.08)',
+              }}
               onMouseOver={(e) => {
                 ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
                   'var(--color-obs-surface-high)'
@@ -1069,24 +1182,38 @@ export default function CompaniesPage() {
               )}
             </span>
 
-            <span className="opacity-60">
-              ・インテント=求人(部門別): <span style={{ color: LEVEL_STYLE.Hot.color }}>●</span>3ヶ月以内{' '}
-              <span style={{ color: LEVEL_STYLE.Middle.color }}>●</span>6ヶ月以内{' '}
-              <span style={{ color: LEVEL_STYLE.Low.color }}>●</span>1年以内
-            </span>
+            <IntentLegend />
           </div>
         )}
 
-        <ObsCard depth="low" padding="none" radius="xl">
+        <div
+          className="rounded-[var(--radius-obs-xl)] overflow-hidden relative"
+          style={{
+            background: GLASS_CARD_BG,
+            backdropFilter: 'blur(22px) saturate(135%)',
+            WebkitBackdropFilter: 'blur(22px) saturate(135%)',
+            boxShadow: GLASS_CARD_SHADOW,
+          }}
+        >
+          <span
+            aria-hidden
+            className="pointer-events-none absolute left-6 right-6 top-0 h-px z-[2]"
+            style={{
+              background:
+                'linear-gradient(90deg, transparent 0%, rgba(171,199,255,0.30) 50%, transparent 100%)',
+            }}
+          />
           <div className="stitch-scroll overflow-x-auto">
             <div className="min-w-[1400px]">
               <div
                 className={`grid ${GRID_TEMPLATE} gap-4 px-6 py-4 text-[11px] font-medium tracking-[0.1em] uppercase sticky top-0 z-[1]`}
                 style={{
-                  color: 'var(--color-obs-text-subtle)',
-                  backgroundColor: 'rgba(27,27,29,0.72)',
-                  backdropFilter: 'blur(16px) saturate(140%)',
-                  boxShadow: 'inset 0 -1px 0 rgba(171,199,255,0.10)',
+                  color: 'rgba(217,226,255,0.44)',
+                  background:
+                    'linear-gradient(90deg, rgba(171,199,255,0.055) 0%, rgba(171,199,255,0.014) 100%), rgba(14,15,19,0.88)',
+                  backdropFilter: 'blur(18px) saturate(130%)',
+                  WebkitBackdropFilter: 'blur(18px) saturate(130%)',
+                  boxShadow: 'inset 0 -1px 0 rgba(171,199,255,0.08)',
                 }}
               >
                 {/* 全選択 (現ページ100件) ヘッダ */}
@@ -1147,7 +1274,7 @@ export default function CompaniesPage() {
               )}
             </div>
           </div>
-        </ObsCard>
+        </div>
 
         {!isLoading && filtered.length > PAGE_SIZE && (
           <div className="flex items-center justify-between mt-6 px-2">
@@ -1193,6 +1320,47 @@ function levelKey(s: Signal): string {
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
+function IntentLegend({ compact = false }: { compact?: boolean }) {
+  const items: Array<{ level: Signal; label: string }> = [
+    { level: 'Hot', label: '3ヶ月以内' },
+    { level: 'Middle', label: '6ヶ月以内' },
+    { level: 'Low', label: '1年以内' },
+  ]
+
+  return (
+    <span className="inline-flex items-center gap-1.5 min-w-0 whitespace-nowrap">
+      {!compact && (
+        <span className="text-[11px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
+          ・求人インテント
+        </span>
+      )}
+      {items.map(({ level, label }) => {
+        const s = LEVEL_STYLE[level]
+        return (
+          <span
+            key={level}
+            className="inline-flex items-center gap-1 px-1.5 h-5 rounded-full text-[10.5px] tabular-nums shrink-0"
+            style={{
+              color: 'var(--color-obs-text-muted)',
+              backgroundColor: s.bg,
+              boxShadow: `inset 0 0 0 1px ${s.border}`,
+            }}
+          >
+            <span
+              className="w-1.5 h-1.5 rounded-full shrink-0"
+              style={{
+                backgroundColor: s.color,
+                boxShadow: `0 0 8px ${s.color}`,
+              }}
+            />
+            {label}
+          </span>
+        )
+      })}
+    </span>
+  )
+}
+
 function IntentFilterChip({
   active,
   tone,
@@ -1206,57 +1374,51 @@ function IntentFilterChip({
   count: number
   onClick: () => void
 }) {
-  const toneColor =
-    tone === 'hot' ? 'var(--color-obs-hot)' : tone === 'middle' ? 'var(--color-obs-middle)' : 'var(--color-obs-low)'
-  const toneBgActive =
-    tone === 'hot'
-      ? 'rgba(255,107,107,0.22)'
-      : tone === 'middle'
-        ? 'rgba(255,184,107,0.22)'
-        : 'rgba(126,198,255,0.22)'
-  // 未選択時はグレーアウト（HOT/MID/LOWの色は active 時のみ点灯）
-  const idleBg = 'rgba(143,140,144,0.08)'
-  const idleBgHover = 'rgba(143,140,144,0.16)'
-  const idleColor = 'var(--color-obs-text-muted)'
-
+  const toneStyle = INTENT_TONE[tone]
+  const toneColor = toneStyle.color
+  const toneBgActive = toneStyle.bgStrong
+  const toneBgIdle = `linear-gradient(145deg, ${toneStyle.bg} 0%, rgba(36,36,38,0.68) 38%, rgba(24,25,29,0.78) 100%)`
   return (
     <button
       type="button"
       onClick={onClick}
       onMouseEnter={(e) => {
-        if (!active) (e.currentTarget as HTMLButtonElement).style.backgroundColor = idleBgHover
+        if (!active) (e.currentTarget as HTMLButtonElement).style.background = toneBgActive
       }}
       onMouseLeave={(e) => {
-        if (!active) (e.currentTarget as HTMLButtonElement).style.backgroundColor = idleBg
+        if (!active) (e.currentTarget as HTMLButtonElement).style.background = toneBgIdle
       }}
-      className="inline-flex items-center gap-1.5 px-2.5 h-7 rounded-full text-[11px] font-medium tracking-[-0.005em] transition-all duration-150 cursor-pointer"
+      className="inline-flex items-center gap-1.5 px-2.5 h-7 rounded-[var(--radius-obs-md)] text-[11px] font-medium tracking-[-0.005em] transition-all duration-150 cursor-pointer"
       style={{
-        backgroundColor: active ? toneBgActive : idleBg,
-        color: active ? toneColor : idleColor,
+        background: active ? toneBgActive : toneBgIdle,
+        color: toneColor,
         boxShadow: active
-          ? `inset 0 0 0 1.5px ${toneColor}, 0 0 0 2px ${toneColor}26`
-          : 'inset 0 0 0 1px rgba(143,140,144,0.22)',
+          ? `inset 2px 0 0 ${toneColor}, inset 0 0 0 1px ${toneStyle.border}, inset 1px 1px 0 rgba(255,255,255,0.055), ${toneStyle.glow}`
+          : `inset 2px 0 0 ${toneColor}, inset 0 0 0 1px rgba(255,255,255,0.055)`,
       }}
       title={active ? `${label} フィルタを解除` : `${label} で絞り込む`}
       aria-pressed={active}
     >
       <span
         className="w-1.5 h-1.5 rounded-full"
-        style={{ backgroundColor: active ? toneColor : 'rgba(143,140,144,0.5)' }}
+        style={{
+          backgroundColor: toneColor,
+          boxShadow: active ? `0 0 8px ${toneColor}` : `0 0 5px ${toneColor}`,
+        }}
       />
       <span className="font-semibold">{label}</span>
       <span
-        className="tabular-nums px-1 rounded-full text-[10px]"
+        className="tabular-nums px-1.5 rounded-full text-[10px]"
         style={{
-          color: active ? toneColor : idleColor,
-          backgroundColor: active ? `${toneColor}26` : 'transparent',
+          color: active ? 'var(--color-obs-text)' : 'var(--color-obs-text-muted)',
+          backgroundColor: active ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.045)',
         }}
       >
         {count.toLocaleString()}
       </span>
       {active && (
         <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full ml-0.5"
-          style={{ backgroundColor: toneColor, color: 'white' }}>
+          style={{ backgroundColor: 'color-mix(in srgb, var(--color-obs-surface-highest) 82%, transparent)', color: toneColor }}>
           <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="20 6 9 17 4 12" />
           </svg>
@@ -1282,11 +1444,17 @@ function FilterTrigger({
   return (
     <button
       onClick={onClick}
-      className={`h-10 px-4 inline-flex items-center gap-2 rounded-[var(--radius-obs-md)] text-sm font-medium transition-colors duration-150 ${active ? '' : 'fo-glass-rim'}`}
+      className="h-10 px-4 inline-flex items-center gap-2 rounded-[var(--radius-obs-md)] text-sm font-medium transition-all duration-150"
       style={{
-        backgroundColor: active ? 'var(--color-obs-primary-container)' : 'rgba(36,36,38,0.6)',
-        backdropFilter: active ? undefined : 'blur(8px)',
+        background: active
+          ? 'linear-gradient(140deg, rgba(171,199,255,0.18) 0%, rgba(0,113,227,0.24) 100%)'
+          : 'linear-gradient(145deg, rgba(36,36,38,0.58) 0%, rgba(20,21,25,0.76) 100%)',
+        backdropFilter: 'blur(10px) saturate(130%)',
+        WebkitBackdropFilter: 'blur(10px) saturate(130%)',
         color: active ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
+        boxShadow: active
+          ? 'inset 1px 1px 0 rgba(255,255,255,0.12), inset 0 0 0 1px rgba(171,199,255,0.26), 0 0 16px rgba(171,199,255,0.13)'
+          : 'inset 0 0 0 1px rgba(171,199,255,0.085), inset 1px 1px 0 rgba(255,255,255,0.035)',
       }}
     >
       {icon === 'intent' ? (
@@ -1304,7 +1472,7 @@ function FilterTrigger({
         <span
           className="text-[10px] font-semibold tabular-nums px-1.5 py-0.5 rounded-full shrink-0"
           style={{
-            backgroundColor: active ? 'rgba(255,255,255,0.2)' : 'var(--color-obs-surface-highest)',
+            backgroundColor: active ? 'rgba(255,255,255,0.18)' : 'var(--color-obs-surface-highest)',
             color: active ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text)',
           }}
         >
@@ -1331,9 +1499,14 @@ function MultiSelectDropdown<K extends string>({
   const selectedCount = selected.length
   return (
     <div
-      className="absolute z-20 mt-2 w-64 max-h-80 overflow-y-auto rounded-[var(--radius-obs-lg)] py-2 shadow-2xl fo-glass-strong fo-glass-rim fo-thin-scroll"
+      className="absolute z-20 mt-2 w-64 max-h-80 overflow-y-auto rounded-[var(--radius-obs-lg)] py-2 shadow-2xl fo-thin-scroll"
       style={{
-        boxShadow: '0 24px 60px rgba(0,0,0,0.5), inset 1px 1px 0 rgba(171,199,255,0.10), inset -1px -1px 0 rgba(0,0,0,0.25)',
+        background:
+          'linear-gradient(145deg, rgba(36,36,38,0.96) 0%, rgba(20,21,25,0.98) 100%)',
+        backdropFilter: 'blur(22px) saturate(135%)',
+        WebkitBackdropFilter: 'blur(22px) saturate(135%)',
+        boxShadow:
+          '0 24px 60px rgba(0,0,0,0.52), inset 0 0 0 1px rgba(171,199,255,0.12), inset 1px 1px 0 rgba(255,255,255,0.050), inset -1px -1px 0 rgba(0,0,0,0.25)',
       }}
     >
       <button
@@ -1353,7 +1526,7 @@ function MultiSelectDropdown<K extends string>({
           </span>
         )}
       </button>
-      <div className="h-px my-1" style={{ backgroundColor: 'var(--color-obs-surface-low)' }} />
+      <div className="h-px my-1" style={{ backgroundColor: 'rgba(171,199,255,0.08)' }} />
       {items.map((it) => {
         const isSelected = selected.includes(it.key)
         return (
@@ -1408,17 +1581,25 @@ function CompanyRowItem({
     <div
       onClick={onClick}
       onMouseEnter={onHover}
-      className={`grid ${GRID_TEMPLATE} gap-4 px-6 py-4 items-center cursor-pointer transition-colors duration-150 group`}
+      className={`grid ${GRID_TEMPLATE} gap-4 px-6 py-4 items-center cursor-pointer transition-all duration-150 group`}
       style={{
         transitionTimingFunction: 'var(--ease-liquid)',
         opacity: isEnriched ? 1 : 0.72,
-        boxShadow: 'inset 0 -1px 0 0 rgba(171,199,255,0.04)',
+        background: isSelected
+          ? 'linear-gradient(90deg, rgba(171,199,255,0.070) 0%, rgba(0,113,227,0.035) 100%)'
+          : 'transparent',
+        boxShadow: isSelected
+          ? 'inset 2px 0 0 rgba(171,199,255,0.82), inset 0 -1px 0 rgba(171,199,255,0.08)'
+          : 'inset 0 -1px 0 0 rgba(171,199,255,0.055)',
       }}
       onMouseOver={(e) => {
-        ;(e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(171,199,255,0.04)'
+        ;(e.currentTarget as HTMLDivElement).style.background =
+          'linear-gradient(90deg, rgba(171,199,255,0.050) 0%, rgba(255,255,255,0.012) 100%)'
       }}
       onMouseOut={(e) => {
-        ;(e.currentTarget as HTMLDivElement).style.backgroundColor = 'transparent'
+        ;(e.currentTarget as HTMLDivElement).style.background = isSelected
+          ? 'linear-gradient(90deg, rgba(171,199,255,0.070) 0%, rgba(0,113,227,0.035) 100%)'
+          : 'transparent'
       }}
     >
       {/* チェックボックス (行クリックで遷移しないよう stopPropagation) */}
@@ -1443,8 +1624,9 @@ function CompanyRowItem({
         <div
           className="shrink-0 w-9 h-9 rounded-[var(--radius-obs-md)] flex items-center justify-center text-[12px] font-semibold"
           style={{
-            backgroundColor: getAvatarColor(row.name),
-            color: 'var(--color-obs-text)',
+            background: getAvatarBackground(row.name),
+            color: '#e7e5ea',
+            boxShadow: getAvatarGlow(row.name),
           }}
         >
           {getInitial(row.name)}
@@ -1452,8 +1634,8 @@ function CompanyRowItem({
         <div className="flex flex-col gap-0.5 min-w-0">
           <div className="flex items-center gap-1.5 min-w-0">
             <span
-              className="font-medium text-[14.5px] tracking-[-0.01em] truncate"
-              style={{ color: 'var(--color-obs-text)' }}
+              className="font-semibold text-[14.5px] tracking-[-0.01em] truncate"
+              style={{ color: '#e7e5ea' }}
             >
               {row.name}
             </span>
@@ -1461,9 +1643,9 @@ function CompanyRowItem({
               <span
                 className="inline-flex items-center gap-0.5 px-1.5 h-[18px] rounded-full text-[9.5px] font-bold whitespace-nowrap shrink-0"
                 style={{
-                  background: 'rgba(143,140,144,0.14)',
+                  background: 'rgba(143,140,144,0.12)',
                   color: 'var(--color-obs-text-muted)',
-                  boxShadow: 'inset 0 0 0 1px rgba(143,140,144,0.32)',
+                  boxShadow: 'inset 0 0 0 1px rgba(143,140,144,0.24)',
                 }}
                 title="登記台帳データのみ。詳細項目は未取得"
               >
@@ -1474,14 +1656,14 @@ function CompanyRowItem({
           {row.domain ? (
             <span
               className="text-[12px] truncate"
-              style={{ color: 'var(--color-obs-text-subtle)' }}
+              style={{ color: '#7e7c83' }}
             >
               {row.domain}
             </span>
           ) : (
             <span
               className="text-[11px] tabular-nums"
-              style={{ color: 'var(--color-obs-text-subtle)', opacity: 0.7 }}
+              style={{ color: '#7e7c83', opacity: 0.7 }}
             >
               法人番号 {row.corporateNumber}
             </span>
@@ -1611,41 +1793,60 @@ function IntentCell({ intent }: { intent: ComputedIntent }) {
           e.stopPropagation()
           setOpen((v) => !v)
         }}
-        className="w-full flex items-center gap-1.5 text-left"
+        className="w-full flex items-center text-left group"
         title={`${topStyle.label} / ${totalDepts}部門で求人 — クリックで内訳`}
       >
         <span
-          className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full text-[11px] font-medium tracking-[-0.005em]"
+          className="inline-flex items-center gap-1.5 h-8 min-w-[108px] px-2.5 rounded-[var(--radius-obs-md)] text-[11px] font-medium tracking-[-0.005em] transition-all duration-150"
           style={{
-            backgroundColor: topStyle.bg,
+            background:
+              topLevel === 'Hot'
+                ? INTENT_TONE.hot.bgStrong
+                : topLevel === 'Middle'
+                  ? INTENT_TONE.middle.bgStrong
+                  : topLevel === 'Low'
+                    ? INTENT_TONE.low.bgStrong
+                    : topStyle.bg,
             color: topStyle.color,
-            boxShadow: `inset 0 0 0 1px ${topStyle.border}`,
+            boxShadow: `inset 2px 0 0 ${topStyle.color}, inset 0 0 0 1px ${topStyle.border}, inset 1px 1px 0 rgba(255,255,255,0.055), inset -1px -1px 0 rgba(0,0,0,0.22)`,
           }}
         >
           <span
             className="w-1.5 h-1.5 rounded-full shrink-0"
-            style={{ backgroundColor: topStyle.color }}
+            style={{
+              backgroundColor: topStyle.color,
+              boxShadow: `0 0 9px ${topStyle.color}`,
+            }}
           />
-          <span className="shrink-0 font-semibold">{topStyle.label}</span>
+          <span className="shrink-0 font-semibold tracking-[0.02em]">{topStyle.label}</span>
+          <span className="h-3 w-px opacity-45" style={{ backgroundColor: topStyle.border }} />
           <span
-            className="text-[10.5px] tabular-nums opacity-80"
-            style={{ color: topStyle.color }}
+            className="text-[10.5px] tabular-nums"
+            style={{ color: 'var(--color-obs-text-muted)' }}
           >
             {totalDepts}部門
           </span>
+          <ChevronDown
+            size={12}
+            className={`ml-auto shrink-0 opacity-60 transition-transform duration-150 ${open ? 'rotate-180' : ''}`}
+          />
         </span>
-        <ChevronDown size={12} className="shrink-0 opacity-60" />
       </button>
 
       {open && (
         <div
-          className="absolute z-30 left-0 top-[calc(100%+6px)] min-w-[240px] rounded-[var(--radius-obs-lg)] py-2 shadow-2xl fo-glass-strong fo-glass-rim"
+          className="absolute z-30 left-0 top-[calc(100%+6px)] min-w-[260px] rounded-[var(--radius-obs-lg)] py-2 shadow-2xl fo-glass-rim"
           style={{
-            boxShadow: '0 24px 60px rgba(0,0,0,0.5), inset 1px 1px 0 rgba(171,199,255,0.10), inset -1px -1px 0 rgba(0,0,0,0.25)',
+            background:
+              'linear-gradient(145deg, rgba(36,36,38,0.96) 0%, rgba(24,25,29,0.98) 100%)',
+            backdropFilter: 'blur(22px) saturate(130%)',
+            WebkitBackdropFilter: 'blur(22px) saturate(130%)',
+            boxShadow:
+              '0 24px 60px rgba(0,0,0,0.5), inset 1px 1px 0 rgba(171,199,255,0.10), inset -1px -1px 0 rgba(0,0,0,0.25)',
           }}
         >
           <div
-            className="px-3 pb-2 text-[10px] font-medium tracking-[0.1em] uppercase"
+            className="px-3 pb-2 text-[10px] font-semibold tracking-[0.1em] uppercase"
             style={{ color: 'var(--color-obs-text-subtle)' }}
           >
             求人を出している部門
@@ -1672,8 +1873,12 @@ function IntentCell({ intent }: { intent: ComputedIntent }) {
                   </span>
                   {b.level !== 'None' && (
                     <span
-                      className="text-[10px] font-medium px-1.5 py-0.5 rounded-full tabular-nums"
-                      style={{ color: s.color, backgroundColor: s.bg }}
+                      className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full tabular-nums"
+                      style={{
+                        color: s.color,
+                        backgroundColor: s.bg,
+                        boxShadow: `inset 0 0 0 1px ${s.border}`,
+                      }}
                     >
                       {s.label}
                     </span>
@@ -1689,15 +1894,16 @@ function IntentCell({ intent }: { intent: ComputedIntent }) {
             })}
           </div>
           <div
-            className="mt-2 pt-2 px-3 text-[10px] leading-relaxed"
+            className="mt-2 pt-2 px-3"
             style={{
               color: 'var(--color-obs-text-subtle)',
               borderTop: '1px solid var(--color-obs-surface-low)',
             }}
           >
-            色分け: <span style={{ color: LEVEL_STYLE.Hot.color }}>●</span>3ヶ月以内 /{' '}
-            <span style={{ color: LEVEL_STYLE.Middle.color }}>●</span>6ヶ月以内 /{' '}
-            <span style={{ color: LEVEL_STYLE.Low.color }}>●</span>1年以内
+            <div className="mb-1 text-[10px] font-medium tracking-[0.08em] uppercase">
+              求人インテント
+            </div>
+            <IntentLegend compact />
           </div>
         </div>
       )}
@@ -1761,7 +1967,7 @@ function AddCompanyModal({
         <div className="px-5 py-4 space-y-3">
           <label className="block">
             <span className="text-[11px] font-bold uppercase tracking-[0.06em]" style={{ color: 'var(--color-obs-text-subtle)' }}>
-              企業名 <span style={{ color: 'var(--color-obs-hot)' }}>*</span>
+              企業名 <span style={{ color: 'var(--color-coral)' }}>*</span>
             </span>
             <input
               autoFocus

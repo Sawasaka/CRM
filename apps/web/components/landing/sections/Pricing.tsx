@@ -46,8 +46,8 @@ const partnershipTiers: PartnershipTier[] = [
     ],
     crm: [
       'CRM 構築',
-      'CRM 全機能',
-      '月30,000クレジット 込み',
+      '部署番号含む 企業DB',
+      '月50,000クレジット 込み',
     ],
     cadenceItems: [
       '1日2商談',
@@ -58,7 +58,7 @@ const partnershipTiers: PartnershipTier[] = [
   {
     id: 'sales-director',
     name: '営業責任者',
-    price: 300000,
+    price: 350000,
     slotsTotal: 1,
     slotsRemaining: 1,
     icon: Star,
@@ -66,14 +66,14 @@ const partnershipTiers: PartnershipTier[] = [
     accentHex: '#FFC107',
     accentRgb: '255, 193, 7',
     scope: [
+      '事業設計',
       'IS 設計',
       'FS / CS の営業実装',
-      '分析レポーティング',
     ],
     crm: [
       'CRM 構築',
-      'CRM 全機能',
-      '月20,000クレジット 込み',
+      '部署番号含む 企業DB',
+      '月50,000クレジット 込み',
     ],
     cadenceItems: [
       '1日1商談',
@@ -97,8 +97,8 @@ const partnershipTiers: PartnershipTier[] = [
     ],
     crm: [
       'CRM 構築',
-      'CRM 全機能',
-      '月10,000クレジット 込み',
+      '部署番号含む 企業DB',
+      '月50,000クレジット 込み',
     ],
     cadenceItems: [
       '週1回の社内MTG',
@@ -141,23 +141,26 @@ interface SelfServePlan {
   monthly: number // 月額プラン: 月額
   annualMonthly: number // 年間プラン: 月額換算 (= monthly × 0.7)
   featured?: boolean
+  perks: string[] // 戦略MTG / サポート など
 }
 
 const selfServePlans: SelfServePlan[] = [
   {
     id: 'standard',
     name: 'Standard',
-    credits: 5000,
-    monthly: 42000,
+    credits: 10000,
+    monthly: 41000,
     annualMonthly: 29000,
+    perks: ['Slack チャットサポート'],
   },
   {
     id: 'pro',
     name: 'Pro',
-    credits: 30000,
+    credits: 50000,
     monthly: 140000,
     annualMonthly: 98000,
     featured: true,
+    perks: ['Slack チャットサポート'],
   },
 ]
 
@@ -190,9 +193,9 @@ export const Pricing = () => {
             <Eyebrow color="#FFC107">SALES × CRM</Eyebrow>
           </div>
           <h2 className="font-display font-bold tracking-[-0.025em] text-[2.2rem] md:text-[3rem] leading-[1.06] mt-5">
-            <span className="fo-gradient-text">CRMは、無償。</span>
+            <span className="fo-gradient-text">CRMと部署番号が、無償。</span>
             <br />
-            <span className="fo-gradient-text-soft">営業実行とCRM構築。</span>
+            <span className="fo-gradient-text-soft">営業実行 × CRM構築</span>
           </h2>
         </div>
 
@@ -557,6 +560,24 @@ function SelfServeBlock() {
                   </span>
                 </div>
 
+                {/* Perks (戦略 MTG / サポート) */}
+                <ul className="mt-4 space-y-1.5">
+                  {p.perks.map((perk) => (
+                    <li
+                      key={perk}
+                      className="flex items-center gap-2 text-[12px] leading-snug"
+                      style={{ color: p.featured ? '#cfdcff' : '#c7c5c9' }}
+                    >
+                      <Check
+                        size={12}
+                        strokeWidth={2.6}
+                        style={{ color: p.featured ? '#abc7ff' : '#9b99a0' }}
+                      />
+                      {perk}
+                    </li>
+                  ))}
+                </ul>
+
                 {/* CTA */}
                 <a
                   href={SPIR_BOOKING_URL}
@@ -711,8 +732,8 @@ function SelfServeBlock() {
           {/* LEFT: プラン別 月間取得目安 */}
           <div className="space-y-2">
             {[
-              { name: 'Standard', cr: '5,000', count: '250', accent: '#abc7ff' },
-              { name: 'Pro', cr: '30,000', count: '1,500', accent: '#FFC107' },
+              { name: 'Standard', cr: '10,000', count: '500', accent: '#abc7ff' },
+              { name: 'Pro', cr: '50,000', count: '2,500', accent: '#FFC107' },
             ].map((p) => (
               <div
                 key={p.name}

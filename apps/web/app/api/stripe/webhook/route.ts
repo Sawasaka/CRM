@@ -7,7 +7,11 @@ import {
   type StripeSubscription,
   type StripeWebhookEvent,
 } from '@/lib/stripe/config'
-import { syncStripeInvoice, syncStripeSubscription } from '@/lib/stripe/billing'
+import {
+  syncStripeCreditCheckoutSession,
+  syncStripeInvoice,
+  syncStripeSubscription,
+} from '@/lib/stripe/billing'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -45,6 +49,8 @@ export async function POST(req: NextRequest) {
             `/v1/subscriptions/${subscriptionId}`,
           )
           await syncStripeSubscription(subscription)
+        } else if (session.metadata?.kind === 'credit_purchase') {
+          await syncStripeCreditCheckoutSession(session)
         }
         break
       }

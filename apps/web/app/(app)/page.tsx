@@ -280,6 +280,7 @@ function HomePageContent() {
       <div
         className={`min-h-[calc(100vh-56px)] flex flex-col items-center px-8 ${hasConversation ? 'justify-between py-8' : 'justify-center'}`}
         style={{
+          backgroundColor: 'var(--color-obs-surface)',
           backgroundImage:
             'radial-gradient(circle at 50% 20%, rgba(171,199,255,0.06) 0%, transparent 45%), radial-gradient(circle at 20% 80%, rgba(0,113,227,0.04) 0%, transparent 50%)',
         }}

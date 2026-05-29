@@ -12,8 +12,10 @@ import {
   toBillingInterval,
   type BillingCycle,
   type BillingPlanId,
+  type StripeCheckoutSession,
   type StripeIdObject,
   type StripeInvoice,
+  type StripePaymentIntent,
   type StripeSubscription,
 } from './config'
 
@@ -199,6 +201,7 @@ export async function syncStripeInvoice(invoice: StripeInvoice) {
       title,
       description: invoice.description,
       amount: invoice.amount_paid || invoice.amount_due,
+      credits: null,
       currency: invoice.currency,
       paidAt: status === 'SUCCEEDED' ? paidAt : null,
       stripeInvoiceId: invoice.id,
@@ -211,10 +214,71 @@ export async function syncStripeInvoice(invoice: StripeInvoice) {
       title,
       description: invoice.description,
       amount: invoice.amount_paid || invoice.amount_due,
+      credits: null,
       currency: invoice.currency,
       paidAt: status === 'SUCCEEDED' ? paidAt : null,
       stripePaymentIntentId: paymentIntentId,
       stripeReceiptUrl: invoice.hosted_invoice_url,
+    },
+  })
+}
+
+export async function syncStripeCreditCheckoutSession(session: StripeCheckoutSession) {
+  const orgId = session.metadata?.orgId
+  const credits = Number.parseInt(session.metadata?.credits ?? '', 10)
+  const customerId = stripeObjectId(session.customer)
+  const paymentIntentId = stripeObjectId(session.payment_intent)
+
+  if (!orgId || !Number.isFinite(credits) || credits <= 0) {
+    throw new Error(`Cannot sync credit checkout session ${session.id}: missing org/credits metadata`)
+  }
+
+  const account = customerId
+    ? await prisma.billingAccount.upsert({
+        where: { orgId },
+        create: { orgId, stripeCustomerId: customerId },
+        update: { stripeCustomerId: customerId },
+      })
+    : await prisma.billingAccount.findUnique({ where: { orgId } })
+
+  const paymentIntent = paymentIntentId
+    ? await stripeRequest<StripePaymentIntent>(
+        `/v1/payment_intents/${paymentIntentId}?expand[]=latest_charge`,
+      )
+    : null
+  const receiptUrl =
+    paymentIntent && typeof paymentIntent.latest_charge !== 'string'
+      ? paymentIntent.latest_charge?.receipt_url ?? null
+      : null
+  const amount = session.amount_total ?? credits * 5
+  const paidAt = fromUnix(session.created) ?? new Date()
+
+  await prisma.billingPayment.upsert({
+    where: { stripeCheckoutSessionId: session.id },
+    create: {
+      orgId,
+      billingAccountId: account?.id,
+      kind: 'CREDIT_PURCHASE',
+      status: session.payment_status === 'paid' ? 'SUCCEEDED' : 'PENDING',
+      title: `追加クレジット ${credits.toLocaleString()}cr`,
+      description: 'Stripe Checkoutによる追加クレジット購入',
+      amount,
+      credits,
+      currency: session.currency ?? 'jpy',
+      paidAt: session.payment_status === 'paid' ? paidAt : null,
+      stripeCheckoutSessionId: session.id,
+      stripePaymentIntentId: paymentIntentId,
+      stripeReceiptUrl: receiptUrl,
+    },
+    update: {
+      billingAccountId: account?.id,
+      status: session.payment_status === 'paid' ? 'SUCCEEDED' : 'PENDING',
+      amount,
+      credits,
+      currency: session.currency ?? 'jpy',
+      paidAt: session.payment_status === 'paid' ? paidAt : null,
+      stripePaymentIntentId: paymentIntentId,
+      stripeReceiptUrl: receiptUrl,
     },
   })
 }

@@ -1,5 +1,14 @@
 # Design System Document: Liquid Obsidian & Cinematic Depth
 
+> Source-of-truth note:
+> This document is the highest-level design authority for the public website and
+> the brand world. For logged-in product screens, use
+> `SERVICE_DESIGN_SYSTEM.md` as the practical application layer, but keep this
+> document and the actual homepage implementation as the final reference for
+> tone, color, depth, and motion. If the service guide conflicts with the HP
+> design direction, the HP direction wins and the service guide should be
+> updated.
+
 ## 1. Overview & Creative North Star
 ### The Creative North Star: "Liquid Obsidian"
 This design system is built upon the concept of **Liquid Obsidian**. It treats the digital interface not as a flat grid of boxes, but as a deep, cinematic space where light and shadow define form. We move beyond the "template" look by embracing extreme visual hierarchy, intentional asymmetry, and tonal depth that feels both heavy and fluid.

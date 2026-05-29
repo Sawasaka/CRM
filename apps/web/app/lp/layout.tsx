@@ -7,7 +7,6 @@ import {
   publicSiteTitle,
   publicSiteUrl,
   serviceName,
-  shortServiceName,
 } from '@/lib/public-site'
 
 export const metadata: Metadata = {
@@ -19,7 +18,7 @@ export const metadata: Metadata = {
     title: publicSiteTitle,
     description: publicSiteDescription,
     url: '/',
-    siteName: `${serviceName}（${shortServiceName}）`,
+    siteName: serviceName,
     type: 'website',
     locale: 'ja_JP',
   },
