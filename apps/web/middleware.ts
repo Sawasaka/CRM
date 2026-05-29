@@ -27,15 +27,6 @@ export function middleware(req: NextRequest) {
       })
     }
 
-    if (pathname === '/' || pathname === '/lp') {
-      const url = req.nextUrl.clone()
-      url.protocol = 'https'
-      url.host = 'www.rookiesmart-jp.com'
-      url.pathname = '/'
-      url.search = ''
-      return NextResponse.redirect(url, 301)
-    }
-
     const response = NextResponse.next()
     response.headers.set('x-robots-tag', 'noindex, nofollow, noarchive')
     return response
