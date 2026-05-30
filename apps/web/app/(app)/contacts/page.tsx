@@ -32,6 +32,7 @@ import {
 import {
   ObsButton,
   ObsChip,
+  ObsHero,
   ObsInput,
   ObsPageShell,
 } from '@/components/obsidian'
@@ -109,7 +110,6 @@ const GLASS_TABLE_BG =
   'linear-gradient(145deg, rgba(36,36,38,0.70) 0%, rgba(25,26,31,0.86) 46%, rgba(13,14,18,0.94) 100%)'
 const GLASS_TABLE_SHADOW =
   'inset 0 0 0 1px rgba(171,199,255,0.12), inset 1px 1px 0 rgba(255,255,255,0.055), inset -1px -1px 0 rgba(0,0,0,0.26), 0 20px 52px rgba(0,0,0,0.30)'
-const PRIMARY_BUTTON_BG = 'linear-gradient(135deg, #abc7ff 0%, #5aa0ff 45%, #0071e3 100%)'
 const FILTER_IDLE_BG =
   'linear-gradient(145deg, rgba(36,36,38,0.58) 0%, rgba(20,21,25,0.76) 100%)'
 const FILTER_ACTIVE_BG =
@@ -124,6 +124,12 @@ const MENU_SHADOW =
   '0 24px 60px rgba(0,0,0,0.52), inset 0 0 0 1px rgba(171,199,255,0.12), inset 1px 1px 0 rgba(255,255,255,0.050), inset -1px -1px 0 rgba(0,0,0,0.25)'
 const TABLE_HEADER_TEXT_COLOR = 'rgba(217,226,255,0.44)'
 const TABLE_HEADER_TEXT_HOVER = 'rgba(217,226,255,0.62)'
+const TABLE_ROW_HOVER_BG =
+  'linear-gradient(90deg, rgba(171,199,255,0.050) 0%, rgba(255,255,255,0.012) 100%)'
+const TABLE_ROW_SELECTED_BG =
+  'linear-gradient(90deg, rgba(171,199,255,0.070) 0%, rgba(0,113,227,0.035) 100%)'
+const TABLE_ROW_DIVIDER = 'inset 0 -1px 0 0 rgba(171,199,255,0.055)'
+const TABLE_ROW_SELECTED_RIM = 'inset 2px 0 0 rgba(171,199,255,0.82), inset 0 -1px 0 rgba(171,199,255,0.08)'
 
 function filterControlStyle(active: boolean): React.CSSProperties {
   return {
@@ -657,7 +663,7 @@ export default function ContactsPage() {
   return (
     <ObsPageShell>
       <div
-        className="w-full min-h-[calc(100vh-56px)] px-8 xl:px-12 2xl:px-16 pb-16 pt-10"
+        className="w-full min-h-[calc(100vh-56px)] px-8 xl:px-12 2xl:px-16 pb-16"
         style={{
           backgroundColor: 'var(--color-obs-surface)',
           backgroundImage: SERVICE_PAGE_BACKGROUND,
@@ -665,29 +671,12 @@ export default function ContactsPage() {
         onClick={() => { setShowStatusFilter(false); setShowRankFilter(false); setShowContactStatusFilter(false) }}
       >
         {/* ── Hero ── */}
-        <div className="mb-7 flex items-end justify-between gap-8">
-          <div className="max-w-3xl">
-            <span
-              className="inline-flex items-center gap-2 text-[11px] font-semibold tracking-[0.16em] uppercase mb-3"
-              style={{ color: 'var(--color-aurora)' }}
-            >
-              <span
-                className="block w-1.5 h-1.5 rounded-full"
-                style={{ background: 'var(--color-aurora)', boxShadow: '0 0 10px var(--color-aurora)' }}
-              />
-              Contacts
-            </span>
-            <h1
-              className="font-[family-name:var(--font-display)] text-[2rem] sm:text-[2.75rem] md:text-[3.55rem] font-bold leading-[1.08] tracking-[-0.025em] mb-3 whitespace-nowrap"
-            >
-              <span style={{ color: '#e7e5ea' }}>コンタ</span>
-              <span className="fo-gradient-text" style={{ WebkitTextFillColor: 'transparent' }}>クト</span>
-            </h1>
-            <p className="text-[14px] leading-relaxed max-w-none md:whitespace-nowrap" style={{ color: 'var(--color-obs-text-muted)' }}>
-              {contacts.length.toLocaleString()}件のコンタクトを、求人インテント・1stシグナル・ステータス・次アクションで優先管理。
-            </p>
-          </div>
-          <div className="shrink-0">
+        <ObsHero
+          eyebrow="Contacts"
+          title="コンタクト"
+          titleAccent="クト"
+          caption={`${contacts.length.toLocaleString()}件のコンタクトを、求人インテント・1stシグナル・ステータス・次アクションで優先管理。`}
+          action={
             <div className="flex items-center gap-3">
               {/* HOT/MID/LOW インテントフィルタ — 290万社DBと同じ */}
               <div
@@ -791,24 +780,13 @@ export default function ContactsPage() {
                 )}
               </button>
 
-              <button
-                type="button"
-                onClick={() => setShowCreateModal(true)}
-                className="h-9 px-4 rounded-[var(--radius-obs-md)] text-sm font-medium inline-flex items-center transition-colors duration-200"
-                style={{
-                  background: PRIMARY_BUTTON_BG,
-                  color: '#05070a',
-                  boxShadow:
-                    'inset 0 1px 0 rgba(255,255,255,0.34), 0 0 0 1px rgba(171,199,255,0.22), 0 10px 26px -10px rgba(0,113,227,0.70), 0 0 28px rgba(171,199,255,0.18)',
-                  transitionTimingFunction: 'var(--ease-liquid)',
-                }}
-              >
+              <ObsButton variant="primary" size="md" onClick={() => setShowCreateModal(true)}>
                 <Plus size={14} className="mr-1.5 inline" strokeWidth={2.5} />
                 コンタクトを追加
-              </button>
+              </ObsButton>
             </div>
-          </div>
-        </div>
+          }
+        />
 
         {/* ── Toolbar ── */}
         <div className="flex items-center gap-2 mb-6 flex-wrap" onClick={e => e.stopPropagation()}>
@@ -1146,12 +1124,12 @@ export default function ContactsPage() {
                   setFilterOwner('')
                 }}
                 className="inline-flex items-center gap-1 h-8 px-3 rounded-[var(--radius-obs-md)] text-xs font-medium transition-colors whitespace-nowrap overflow-hidden"
-                style={{ color: 'var(--color-obs-text-muted)' }}
+                style={filterControlStyle(false)}
                 onMouseOver={(e) => {
-                  ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--color-obs-surface-high)'
+                  ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-obs-text)'
                 }}
                 onMouseOut={(e) => {
-                  ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
+                  ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-obs-text-muted)'
                 }}
               >
                 <X size={12} />
@@ -1363,21 +1341,14 @@ export default function ContactsPage() {
                         className={`grid grid-cols-[32px_240px_minmax(160px,1fr)_110px_84px_96px_104px_124px_124px_112px_56px_56px] gap-x-3 items-center px-5 py-3.5 transition-colors duration-150 group cursor-pointer ${dnc ? 'opacity-35' : ''}`}
                         style={{
                           transitionTimingFunction: 'var(--ease-liquid)',
-                          boxShadow: isSelected
-                            ? 'inset 2px 0 0 rgba(171,199,255,0.82), inset 0 -1px 0 rgba(171,199,255,0.08)'
-                            : 'inset 0 -1px 0 0 rgba(171,199,255,0.055)',
-                          background: isSelected
-                            ? 'linear-gradient(90deg, rgba(171,199,255,0.070) 0%, rgba(0,113,227,0.035) 100%)'
-                            : 'transparent',
+                          boxShadow: isSelected ? TABLE_ROW_SELECTED_RIM : TABLE_ROW_DIVIDER,
+                          background: isSelected ? TABLE_ROW_SELECTED_BG : 'transparent',
                         }}
                         onMouseOver={(e) => {
-                          if (!dnc) (e.currentTarget as HTMLDivElement).style.background =
-                            'linear-gradient(90deg, rgba(171,199,255,0.050) 0%, rgba(255,255,255,0.012) 100%)'
+                          if (!dnc) (e.currentTarget as HTMLDivElement).style.background = TABLE_ROW_HOVER_BG
                         }}
                         onMouseOut={(e) => {
-                          ;(e.currentTarget as HTMLDivElement).style.background = isSelected
-                            ? 'linear-gradient(90deg, rgba(171,199,255,0.070) 0%, rgba(0,113,227,0.035) 100%)'
-                            : 'transparent'
+                          ;(e.currentTarget as HTMLDivElement).style.background = isSelected ? TABLE_ROW_SELECTED_BG : 'transparent'
                         }}
                       >
                         {/* 行選択チェックボックス */}
