@@ -5,18 +5,19 @@
  */
 
 import { ContactForm } from './ContactForm'
+import Image from 'next/image'
 import Link from 'next/link'
 
 export const Footer = () => (
   <footer id="contact" className="relative bg-[#0e0e10] scroll-mt-24">
     <div className="mx-auto max-w-6xl px-6 py-16">
       <div className="grid md:grid-cols-12 gap-10 md:gap-12 items-start">
-        {/* 左: ブランド + 代表プロフィール */}
+        {/* 左: ブランド + プロフィール */}
         <div className="md:col-span-5 md:sticky md:top-24 space-y-6">
           {/* ブランド */}
           <div>
-            <div className="font-display font-bold text-[1.5rem] fo-gradient-text leading-none">
-              ルキスマCRM
+            <div className="font-display font-bold text-[1.5rem] leading-none text-[#e7e5ea]">
+              ルキスマ<span className="text-aurora">CRM</span>
             </div>
             <p className="text-[12px] text-[#9b99a0] mt-3 leading-relaxed">
               営業データから何でも答えるチャットCRM。
@@ -74,10 +75,10 @@ export const Footer = () => (
             </div>
           </div>
 
-          {/* 代表プロフィール (会社情報と同じトーン) */}
-          <div className="space-y-3 pt-5" style={{ borderTop: '1px solid rgba(171,199,255,0.08)' }}>
+          {/* プロフィール (会社情報と同じトーン) */}
+          <div className="relative space-y-3 pt-5 pr-20 sm:pr-28" style={{ borderTop: '1px solid rgba(171,199,255,0.08)' }}>
             <div className="text-[10px] uppercase tracking-[0.14em] text-[#7e7c83]">
-              代表プロフィール
+              プロフィール
             </div>
 
             <div className="space-y-1">
@@ -85,22 +86,32 @@ export const Footer = () => (
                 沢坂弘樹
               </div>
               <p className="text-[11.5px] text-[#9b99a0] leading-relaxed">
-                株式会社ルーキースマートジャパン代表。営業実行とCRM構築を同時に支援します。
+                株式会社ルーキースマートジャパン代表。<br />
+                営業実行とCRM構築を同時に支援します。
               </p>
             </div>
+
+            <Image
+              src="/founder-icon.png"
+              alt="沢坂弘樹"
+              width={88}
+              height={88}
+              sizes="88px"
+              className="absolute right-8 top-5 h-[76px] w-[76px] rounded-full border border-white/10 object-cover shadow-[0_12px_28px_rgba(0,0,0,0.26)] sm:right-9 md:h-[88px] md:w-[88px]"
+            />
 
             <ul className="space-y-2 text-[11.5px]">
               <li className="flex items-baseline gap-3">
                 <span className="text-[10px] uppercase tracking-[0.08em] text-[#7e7c83] w-[110px] shrink-0">
                   Sales Executive
                 </span>
-                <span className="text-[#c7c5c9]">外資 SaaS 日本法人 立ち上げ (正社員 1 人目)</span>
+                <span className="text-[#c7c5c9] whitespace-nowrap">外資 SaaS 日本法人 立ち上げ (正社員 1 人目)</span>
               </li>
               <li className="flex items-baseline gap-3">
                 <span className="text-[10px] uppercase tracking-[0.08em] text-[#7e7c83] w-[110px] shrink-0">
                   執行役員 CRO
                 </span>
-                <span className="text-[#c7c5c9]">IT スタートアップ 立ち上げ (正社員 1 人目)</span>
+                <span className="text-[#c7c5c9] whitespace-nowrap">IT スタートアップ 立ち上げ (正社員 1 人目)</span>
               </li>
               <li className="flex items-baseline gap-3">
                 <span className="text-[10px] uppercase tracking-[0.08em] text-[#7e7c83] w-[110px] shrink-0">

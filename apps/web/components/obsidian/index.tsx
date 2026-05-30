@@ -43,14 +43,19 @@ export function ObsPageShell({ children, className }: { children: React.ReactNod
 export function ObsHero({
   eyebrow,
   title,
+  titleAccent,
   caption,
   action,
 }: {
   eyebrow?: string
   title: string
+  titleAccent?: string
   caption?: React.ReactNode
   action?: React.ReactNode
 }) {
+  const hasTitleAccent = Boolean(titleAccent && title.endsWith(titleAccent))
+  const titleBase = hasTitleAccent ? title.slice(0, title.length - titleAccent!.length) : title
+
   return (
     <div className="flex items-end justify-between gap-8 py-10">
       <div className="flex flex-col gap-3 max-w-3xl">
@@ -71,12 +76,17 @@ export function ObsHero({
           </span>
         )}
         <h1
-          className="fo-gradient-text font-[family-name:var(--font-display)] text-[clamp(2rem,4vw,3.25rem)] font-bold leading-[1.05] tracking-[-0.028em]"
+          className="font-[family-name:var(--font-display)] text-[2rem] sm:text-[2.75rem] md:text-[3.55rem] font-bold leading-[1.08] tracking-[-0.025em]"
         >
-          {title}
+          <span style={{ color: '#e7e5ea' }}>{titleBase}</span>
+          {hasTitleAccent && (
+            <span className="fo-gradient-text" style={{ WebkitTextFillColor: 'transparent' }}>
+              {titleAccent}
+            </span>
+          )}
         </h1>
         {caption && (
-          <p className="text-base font-normal leading-relaxed max-w-2xl" style={{ color: 'var(--color-obs-text-muted)' }}>
+          <p className="text-[14px] font-normal leading-relaxed max-w-none md:whitespace-nowrap" style={{ color: 'var(--color-obs-text-muted)' }}>
             {caption}
           </p>
         )}

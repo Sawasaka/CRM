@@ -1044,6 +1044,8 @@ export default function TasksPage() {
         <ObsHero
           eyebrow="Tasks"
           title="タスク一覧"
+          titleAccent="一覧"
+          caption="担当者別の取引・コンタクトタスクを、期日と完了状況で管理。"
         />
 
         {/* ── Owner Filter ── */}

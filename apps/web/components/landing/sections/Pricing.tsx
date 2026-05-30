@@ -47,7 +47,7 @@ const partnershipTiers: PartnershipTier[] = [
     crm: [
       'CRM 構築',
       '部署番号含む 企業DB',
-      '月50,000クレジット 込み',
+      '月30,000クレジット 込み',
     ],
     cadenceItems: [
       '1日2商談',
@@ -73,7 +73,7 @@ const partnershipTiers: PartnershipTier[] = [
     crm: [
       'CRM 構築',
       '部署番号含む 企業DB',
-      '月50,000クレジット 込み',
+      '月30,000クレジット 込み',
     ],
     cadenceItems: [
       '1日1商談',
@@ -98,7 +98,7 @@ const partnershipTiers: PartnershipTier[] = [
     crm: [
       'CRM 構築',
       '部署番号含む 企業DB',
-      '月50,000クレジット 込み',
+      '月30,000クレジット 込み',
     ],
     cadenceItems: [
       '週1回の社内MTG',
@@ -135,7 +135,7 @@ const agentFeats: { key: AgentKey; items: string[] }[] = [
 // セルフサーブ CRM 単独プラン
 // 年間プランは月額から30%OFF。表示は月額換算。
 interface SelfServePlan {
-  id: 'standard' | 'pro'
+  id: 'standard' | 'plus'
   name: string
   credits: number // 月間クレジット (チーム合計)
   monthly: number // 月額プラン: 月額
@@ -154,11 +154,11 @@ const selfServePlans: SelfServePlan[] = [
     perks: ['Slack チャットサポート'],
   },
   {
-    id: 'pro',
-    name: 'Pro',
-    credits: 50000,
-    monthly: 140000,
-    annualMonthly: 98000,
+    id: 'plus',
+    name: 'Plus',
+    credits: 30000,
+    monthly: 78000, // 55,000 / 0.7 ≈ 78,571 → 78,000 に丸め
+    annualMonthly: 55000,
     featured: true,
     perks: ['Slack チャットサポート'],
   },
@@ -733,7 +733,7 @@ function SelfServeBlock() {
           <div className="space-y-2">
             {[
               { name: 'Standard', cr: '10,000', count: '500', accent: '#abc7ff' },
-              { name: 'Pro', cr: '50,000', count: '2,500', accent: '#FFC107' },
+              { name: 'Plus', cr: '30,000', count: '1,500', accent: '#FFC107' },
             ].map((p) => (
               <div
                 key={p.name}

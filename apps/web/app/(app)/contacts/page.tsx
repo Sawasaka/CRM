@@ -103,6 +103,47 @@ const INTENT_TONE: Record<IntentLevel, { fg: string; bg: string; bgStrong: strin
   NONE: { fg: 'var(--color-obs-text-subtle)', bg: 'transparent', bgStrong: 'transparent', ring: 'transparent', glow: 'transparent' },
 }
 
+const SERVICE_PAGE_BACKGROUND =
+  'radial-gradient(circle at 50% 20%, rgba(171,199,255,0.06) 0%, transparent 45%), radial-gradient(circle at 20% 80%, rgba(0,113,227,0.04) 0%, transparent 50%)'
+const GLASS_TABLE_BG =
+  'linear-gradient(145deg, rgba(36,36,38,0.70) 0%, rgba(25,26,31,0.86) 46%, rgba(13,14,18,0.94) 100%)'
+const GLASS_TABLE_SHADOW =
+  'inset 0 0 0 1px rgba(171,199,255,0.12), inset 1px 1px 0 rgba(255,255,255,0.055), inset -1px -1px 0 rgba(0,0,0,0.26), 0 20px 52px rgba(0,0,0,0.30)'
+const PRIMARY_BUTTON_BG = 'linear-gradient(135deg, #abc7ff 0%, #5aa0ff 45%, #0071e3 100%)'
+const FILTER_IDLE_BG =
+  'linear-gradient(145deg, rgba(36,36,38,0.58) 0%, rgba(20,21,25,0.76) 100%)'
+const FILTER_ACTIVE_BG =
+  'linear-gradient(140deg, rgba(171,199,255,0.18) 0%, rgba(0,113,227,0.24) 100%)'
+const FILTER_IDLE_SHADOW =
+  'inset 0 0 0 1px rgba(171,199,255,0.085), inset 1px 1px 0 rgba(255,255,255,0.035)'
+const FILTER_ACTIVE_SHADOW =
+  'inset 1px 1px 0 rgba(255,255,255,0.12), inset 0 0 0 1px rgba(171,199,255,0.26), 0 0 16px rgba(171,199,255,0.13)'
+const MENU_SURFACE =
+  'linear-gradient(145deg, rgba(36,36,38,0.96) 0%, rgba(20,21,25,0.98) 100%)'
+const MENU_SHADOW =
+  '0 24px 60px rgba(0,0,0,0.52), inset 0 0 0 1px rgba(171,199,255,0.12), inset 1px 1px 0 rgba(255,255,255,0.050), inset -1px -1px 0 rgba(0,0,0,0.25)'
+const TABLE_HEADER_TEXT_COLOR = 'rgba(217,226,255,0.44)'
+const TABLE_HEADER_TEXT_HOVER = 'rgba(217,226,255,0.62)'
+
+function filterControlStyle(active: boolean): React.CSSProperties {
+  return {
+    background: active ? FILTER_ACTIVE_BG : FILTER_IDLE_BG,
+    color: active ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
+    boxShadow: active ? FILTER_ACTIVE_SHADOW : FILTER_IDLE_SHADOW,
+    backdropFilter: 'blur(10px) saturate(130%)',
+    WebkitBackdropFilter: 'blur(10px) saturate(130%)',
+  }
+}
+
+function menuSurfaceStyle(): React.CSSProperties {
+  return {
+    background: MENU_SURFACE,
+    boxShadow: MENU_SHADOW,
+    backdropFilter: 'blur(22px) saturate(135%)',
+    WebkitBackdropFilter: 'blur(22px) saturate(135%)',
+  }
+}
+
 function IntentChip({ companyName }: { companyName: string }) {
   const intent = getCompanyIntent(companyName)
   if (intent.level === 'NONE') {
@@ -231,64 +272,35 @@ function contactStatusToTone(s: ContactStatus): ChipTone {
   return 'hot' // 失注
 }
 
-function nextActionToTone(a: Exclude<NextAction, null>): ChipTone {
-  if (a === 'メールアプローチ') return 'primary'
-  if (a === 'コール') return 'low'
-  return 'middle' // 連絡待ち
-}
-
-function personRoleToTone(r: PersonRole): ChipTone {
-  if (r === '決裁者') return 'primary' // ゴールド枠 → primary で強調
-  return 'neutral' // 推進者・一般 は neutral
-}
-
-const MINI_TONE: Record<ChipTone, { fg: string; bg: string; ring: string; accent: string }> = {
-  neutral: {
-    fg: 'var(--color-obs-text-muted)',
-    bg: 'rgba(255,255,255,0.035)',
-    ring: 'rgba(255,255,255,0.065)',
-    accent: 'rgba(171,199,255,0.26)',
-  },
-  primary: {
-    fg: '#abc7ff',
-    bg: 'rgba(171,199,255,0.075)',
-    ring: 'rgba(171,199,255,0.22)',
-    accent: '#abc7ff',
-  },
-  hot: {
-    fg: '#ff7f8b',
-    bg: 'rgba(255,107,122,0.075)',
-    ring: 'rgba(255,107,122,0.20)',
-    accent: '#ff6b7a',
-  },
-  middle: {
-    fg: '#d8bc86',
-    bg: 'rgba(255,184,107,0.065)',
-    ring: 'rgba(255,184,107,0.16)',
-    accent: '#d8bc86',
-  },
-  low: {
-    fg: '#8fc6ee',
-    bg: 'rgba(126,198,255,0.07)',
-    ring: 'rgba(126,198,255,0.18)',
-    accent: '#8fc6ee',
-  },
-}
-
-function MiniChip({ tone, children }: { tone: ChipTone; children: React.ReactNode }) {
-  const t = MINI_TONE[tone]
+function MetaText({ children }: { children: React.ReactNode }) {
   return (
     <span
-      className="inline-flex items-center gap-1.5 h-6 px-2 rounded-[var(--radius-obs-md)] text-[11px] font-medium whitespace-nowrap"
-      style={{
-        color: t.fg,
-        background: `linear-gradient(145deg, ${t.bg} 0%, rgba(36,36,38,0.62) 100%)`,
-        boxShadow: `inset 2px 0 0 ${t.accent}, inset 0 0 0 1px ${t.ring}`,
-      }}
+      className="text-[12px] font-medium tracking-[-0.005em] whitespace-nowrap"
+      style={{ color: 'var(--color-obs-text-muted)' }}
     >
       {children}
     </span>
   )
+}
+
+function getContactAvatarHue(name: string): number {
+  let h = 0
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0
+  return h % 360
+}
+
+function getContactAvatarColor(name: string): string {
+  return `hsl(${getContactAvatarHue(name)}, 18%, 34%)`
+}
+
+function getContactAvatarBackground(name: string): string {
+  const color = getContactAvatarColor(name)
+  return `linear-gradient(145deg, color-mix(in srgb, ${color} 18%, #353437) 0%, rgba(27,27,29,0.96) 100%)`
+}
+
+function getContactAvatarGlow(name: string): string {
+  const color = getContactAvatarColor(name)
+  return `inset 0 0 0 1px color-mix(in srgb, ${color} 18%, rgba(171,199,255,0.12)), inset 1px 1px 0 rgba(255,255,255,0.055), inset -1px -1px 0 rgba(0,0,0,0.24), 0 8px 18px rgba(0,0,0,0.22)`
 }
 
 const ALL_NEXT_ACTIONS: Exclude<NextAction, null>[] = ['メールアプローチ', 'コール', '連絡待ち']
@@ -356,15 +368,11 @@ function LeadSourceCell({ source }: { source: LeadSource }) {
   return (
     <div className="min-w-0 flex items-center">
       <span
-        className="inline-flex items-center gap-1.5 px-2 h-6 rounded-[var(--radius-obs-md)] text-[11px] font-medium tracking-[-0.005em] whitespace-nowrap w-fit"
-        style={{
-          background: 'linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(36,36,38,0.58) 100%)',
-          color: 'var(--color-obs-text-muted)',
-          boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.06)',
-        }}
+        className="inline-flex items-center gap-1.5 text-[12px] font-medium tracking-[-0.005em] whitespace-nowrap w-fit"
+        style={{ color: 'var(--color-obs-text-muted)' }}
         title={source.detail}
       >
-        <Icon size={11} strokeWidth={2.2} style={{ color: s.iconFg }} />
+        <Icon size={11} strokeWidth={2.2} style={{ color: 'var(--color-obs-text-subtle)' }} />
         {s.label}
       </span>
     </div>
@@ -379,14 +387,12 @@ function NextActionSelect({ value, onChange }: { value: NextAction; onChange: (v
       <div className="relative">
         <button
           onClick={() => setOpen(v => !v)}
-          className="text-[11px] px-2 py-0.5 rounded-[var(--radius-obs-sm)] transition-colors"
+          className="text-[12px] font-medium tracking-[-0.005em] transition-colors"
           style={{ color: 'var(--color-obs-text-muted)' }}
           onMouseOver={(e) => {
-            ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--color-obs-surface-high)'
             ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-obs-text)'
           }}
           onMouseOut={(e) => {
-            ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
             ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-obs-text-muted)'
           }}
         >
@@ -397,10 +403,7 @@ function NextActionSelect({ value, onChange }: { value: NextAction; onChange: (v
             <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
             <div
               className="absolute top-full left-0 mt-1 z-40 py-1 min-w-[140px] rounded-[var(--radius-obs-md)]"
-              style={{
-                backgroundColor: 'var(--color-obs-surface-highest)',
-                boxShadow: '0 12px 32px rgba(0,0,0,0.4)',
-              }}
+              style={menuSurfaceStyle()}
             >
               {ALL_NEXT_ACTIONS.map(a => (
                 <button
@@ -429,19 +432,23 @@ function NextActionSelect({ value, onChange }: { value: NextAction; onChange: (v
     <div className="relative">
       <button
         onClick={() => setOpen(v => !v)}
-        className="inline-flex"
+        className="inline-flex items-center text-[12px] font-medium tracking-[-0.005em] transition-colors"
+        style={{ color: 'var(--color-obs-text-muted)' }}
+        onMouseOver={(e) => {
+          ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-obs-text)'
+        }}
+        onMouseOut={(e) => {
+          ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-obs-text-muted)'
+        }}
       >
-        <MiniChip tone={nextActionToTone(value)}>{value}</MiniChip>
+        {value}
       </button>
       {open && (
         <>
           <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
           <div
             className="absolute top-full left-0 mt-1 z-40 py-1 min-w-[140px] rounded-[var(--radius-obs-md)]"
-            style={{
-              backgroundColor: 'var(--color-obs-surface-highest)',
-              boxShadow: '0 12px 32px rgba(0,0,0,0.4)',
-            }}
+            style={menuSurfaceStyle()}
           >
             {ALL_NEXT_ACTIONS.map(a => {
               const selected = a === value
@@ -652,8 +659,8 @@ export default function ContactsPage() {
       <div
         className="w-full min-h-[calc(100vh-56px)] px-8 xl:px-12 2xl:px-16 pb-16 pt-10"
         style={{
-          backgroundImage:
-            'radial-gradient(circle at 50% 0%, rgba(171,199,255,0.045) 0%, transparent 36%), radial-gradient(circle at 18% 72%, rgba(0,113,227,0.028) 0%, transparent 42%)',
+          backgroundColor: 'var(--color-obs-surface)',
+          backgroundImage: SERVICE_PAGE_BACKGROUND,
         }}
         onClick={() => { setShowStatusFilter(false); setShowRankFilter(false); setShowContactStatusFilter(false) }}
       >
@@ -661,27 +668,23 @@ export default function ContactsPage() {
         <div className="mb-7 flex items-end justify-between gap-8">
           <div className="max-w-3xl">
             <span
-              className="inline-block text-[11px] font-medium tracking-[0.16em] uppercase mb-3"
-              style={{ color: 'var(--color-obs-text-subtle)' }}
+              className="inline-flex items-center gap-2 text-[11px] font-semibold tracking-[0.16em] uppercase mb-3"
+              style={{ color: 'var(--color-aurora)' }}
             >
+              <span
+                className="block w-1.5 h-1.5 rounded-full"
+                style={{ background: 'var(--color-aurora)', boxShadow: '0 0 10px var(--color-aurora)' }}
+              />
               Contacts
             </span>
             <h1
-              className="font-[family-name:var(--font-display)] text-[clamp(2rem,4vw,3.25rem)] font-bold leading-[1.05] tracking-[-0.028em] mb-3 whitespace-nowrap"
-              style={{
-                background: 'linear-gradient(120deg, #ffffff 0%, #abc7ff 45%, #0071e3 100%)',
-                WebkitBackgroundClip: 'text',
-                backgroundClip: 'text',
-                color: 'transparent',
-                WebkitTextFillColor: 'transparent',
-              }}
+              className="font-[family-name:var(--font-display)] text-[2rem] sm:text-[2.75rem] md:text-[3.55rem] font-bold leading-[1.08] tracking-[-0.025em] mb-3 whitespace-nowrap"
             >
-              コンタクト
+              <span style={{ color: '#e7e5ea' }}>コンタ</span>
+              <span className="fo-gradient-text" style={{ WebkitTextFillColor: 'transparent' }}>クト</span>
             </h1>
-            <p className="text-[15px] leading-relaxed max-w-2xl" style={{ color: 'var(--color-obs-text-muted)' }}>
-              全 {contacts.length.toLocaleString()} 件 ／ アプローチ状況とネクストアクションで優先度を可視化
-              <br />
-              取得項目: 求人インテント ・ 1stシグナル ・ 部門 ・ 役職 ・ ステータス ・ Next Action ・ コール / メール履歴
+            <p className="text-[14px] leading-relaxed max-w-none md:whitespace-nowrap" style={{ color: 'var(--color-obs-text-muted)' }}>
+              {contacts.length.toLocaleString()}件のコンタクトを、求人インテント・1stシグナル・ステータス・次アクションで優先管理。
             </p>
           </div>
           <div className="shrink-0">
@@ -753,12 +756,14 @@ export default function ContactsPage() {
                 className="h-9 px-4 text-sm rounded-[var(--radius-obs-md)] font-medium tracking-[-0.01em] inline-flex items-center transition-all duration-200 disabled:cursor-not-allowed"
                 style={{
                   background: selectedIds.size === 0
-                    ? 'rgba(143,140,144,0.08)'
-                    : 'linear-gradient(140deg, rgba(171,199,255,0.16) 0%, rgba(0,113,227,0.24) 100%)',
+                    ? FILTER_IDLE_BG
+                    : FILTER_ACTIVE_BG,
                   color: selectedIds.size === 0 ? 'var(--color-obs-text-subtle)' : 'var(--color-obs-on-primary)',
                   boxShadow: selectedIds.size === 0
-                    ? 'inset 0 0 0 1px rgba(109,106,111,0.18)'
-                    : 'inset 1px 1px 0 rgba(255,255,255,0.12), 0 0 14px rgba(171,199,255,0.12)',
+                    ? FILTER_IDLE_SHADOW
+                    : FILTER_ACTIVE_SHADOW,
+                  backdropFilter: 'blur(10px) saturate(130%)',
+                  WebkitBackdropFilter: 'blur(10px) saturate(130%)',
                 }}
                 onMouseOver={(e) => {
                   if (selectedIds.size > 0) {
@@ -786,10 +791,21 @@ export default function ContactsPage() {
                 )}
               </button>
 
-              <ObsButton variant="primary" size="md" onClick={() => setShowCreateModal(true)}>
+              <button
+                type="button"
+                onClick={() => setShowCreateModal(true)}
+                className="h-9 px-4 rounded-[var(--radius-obs-md)] text-sm font-medium inline-flex items-center transition-colors duration-200"
+                style={{
+                  background: PRIMARY_BUTTON_BG,
+                  color: '#05070a',
+                  boxShadow:
+                    'inset 0 1px 0 rgba(255,255,255,0.34), 0 0 0 1px rgba(171,199,255,0.22), 0 10px 26px -10px rgba(0,113,227,0.70), 0 0 28px rgba(171,199,255,0.18)',
+                  transitionTimingFunction: 'var(--ease-liquid)',
+                }}
+              >
                 <Plus size={14} className="mr-1.5 inline" strokeWidth={2.5} />
                 コンタクトを追加
-              </ObsButton>
+              </button>
             </div>
           </div>
         </div>
@@ -818,10 +834,7 @@ export default function ContactsPage() {
               type="button"
               onClick={() => { setShowStatusFilter(v => !v); setShowRankFilter(false); setShowContactStatusFilter(false) }}
               className="h-8 pl-3 pr-7 text-xs font-medium rounded-[var(--radius-obs-md)] inline-flex items-center transition-colors outline-none relative"
-              style={{
-                backgroundColor: filterStatuses.length > 0 ? 'var(--color-obs-primary-container)' : 'var(--color-obs-surface-high)',
-                color: filterStatuses.length > 0 ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
-              }}
+              style={filterControlStyle(filterStatuses.length > 0)}
             >
               ステータス
               {filterStatuses.length > 0 && (
@@ -843,10 +856,7 @@ export default function ContactsPage() {
                   exit={{ opacity: 0, y: -6, scale: 0.97 }}
                   transition={{ duration: 0.12 }}
                   className="absolute top-full mt-1.5 left-0 z-20 p-2 min-w-[160px] flex flex-col gap-0.5 rounded-[var(--radius-obs-md)]"
-                  style={{
-                    backgroundColor: 'var(--color-obs-surface-highest)',
-                    boxShadow: '0 12px 32px rgba(0,0,0,0.4)',
-                  }}
+                  style={menuSurfaceStyle()}
                 >
                   {ALL_STATUSES.map(s => {
                     const active = filterStatuses.includes(s)
@@ -881,10 +891,7 @@ export default function ContactsPage() {
               type="button"
               onClick={() => { setShowRankFilter(v => !v); setShowStatusFilter(false); setShowContactStatusFilter(false) }}
               className="h-8 pl-3 pr-7 text-xs font-medium rounded-[var(--radius-obs-md)] inline-flex items-center transition-colors outline-none relative"
-              style={{
-                backgroundColor: filterRanks.length > 0 ? 'var(--color-obs-primary-container)' : 'var(--color-obs-surface-high)',
-                color: filterRanks.length > 0 ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
-              }}
+              style={filterControlStyle(filterRanks.length > 0)}
             >
               角度
               {filterRanks.length > 0 && (
@@ -906,10 +913,7 @@ export default function ContactsPage() {
                   exit={{ opacity: 0, y: -6, scale: 0.97 }}
                   transition={{ duration: 0.12 }}
                   className="absolute top-full mt-1.5 left-0 z-20 p-2 flex gap-1 rounded-[var(--radius-obs-md)]"
-                  style={{
-                    backgroundColor: 'var(--color-obs-surface-highest)',
-                    boxShadow: '0 12px 32px rgba(0,0,0,0.4)',
-                  }}
+                  style={menuSurfaceStyle()}
                 >
                   {ALL_RANKS.map(r => {
                     const active = filterRanks.includes(r)
@@ -936,10 +940,7 @@ export default function ContactsPage() {
               type="button"
               onClick={() => { setShowContactStatusFilter(v => !v); setShowStatusFilter(false); setShowRankFilter(false) }}
               className="h-8 pl-3 pr-7 text-xs font-medium rounded-[var(--radius-obs-md)] inline-flex items-center transition-colors outline-none relative"
-              style={{
-                backgroundColor: filterContactStatuses.length > 0 ? 'var(--color-obs-primary-container)' : 'var(--color-obs-surface-high)',
-                color: filterContactStatuses.length > 0 ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
-              }}
+              style={filterControlStyle(filterContactStatuses.length > 0)}
             >
               フェーズ
               {filterContactStatuses.length > 0 && (
@@ -961,10 +962,7 @@ export default function ContactsPage() {
                   exit={{ opacity: 0, y: -6, scale: 0.97 }}
                   transition={{ duration: 0.12 }}
                   className="absolute top-full mt-1.5 left-0 z-20 p-2 min-w-[140px] flex flex-col gap-0.5 rounded-[var(--radius-obs-md)]"
-                  style={{
-                    backgroundColor: 'var(--color-obs-surface-highest)',
-                    boxShadow: '0 12px 32px rgba(0,0,0,0.4)',
-                  }}
+                  style={menuSurfaceStyle()}
                 >
                   {ALL_CONTACT_STATUSES.map(s => {
                     const active = filterContactStatuses.includes(s)
@@ -999,10 +997,7 @@ export default function ContactsPage() {
             onChange={e => setFilterDepartment(e.target.value)}
             onClick={e => e.stopPropagation()}
             className="h-8 pl-3 pr-7 text-xs font-medium rounded-[var(--radius-obs-md)] appearance-none cursor-pointer transition-colors outline-none"
-            style={{
-              backgroundColor: filterDepartment ? 'var(--color-obs-primary-container)' : 'var(--color-obs-surface-high)',
-              color: filterDepartment ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
-            }}
+            style={filterControlStyle(Boolean(filterDepartment))}
           >
             <option value="">部門</option>
             {ALL_DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
@@ -1017,10 +1012,7 @@ export default function ContactsPage() {
             onChange={e => setFilterPersonRole(e.target.value as PersonRole | '')}
             onClick={e => e.stopPropagation()}
             className="h-8 pl-3 pr-7 text-xs font-medium rounded-[var(--radius-obs-md)] appearance-none cursor-pointer transition-colors outline-none"
-            style={{
-              backgroundColor: filterPersonRole ? 'var(--color-obs-primary-container)' : 'var(--color-obs-surface-high)',
-              color: filterPersonRole ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
-            }}
+            style={filterControlStyle(Boolean(filterPersonRole))}
           >
             <option value="">役職</option>
             {ALL_PERSON_ROLES.map(r => <option key={r} value={r}>{r}</option>)}
@@ -1035,10 +1027,7 @@ export default function ContactsPage() {
             onChange={e => setFilterCallRange(e.target.value as '' | '0' | '1' | '3' | '5')}
             onClick={e => e.stopPropagation()}
             className="h-8 pl-3 pr-7 text-xs font-medium rounded-[var(--radius-obs-md)] appearance-none cursor-pointer transition-colors outline-none"
-            style={{
-              backgroundColor: filterCallRange ? 'var(--color-obs-primary-container)' : 'var(--color-obs-surface-high)',
-              color: filterCallRange ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
-            }}
+            style={filterControlStyle(Boolean(filterCallRange))}
           >
             <option value="">コール数</option>
             <option value="0">0件のみ</option>
@@ -1056,10 +1045,7 @@ export default function ContactsPage() {
             onChange={e => setFilterEmailRange(e.target.value as '' | '0' | '1' | '3' | '5')}
             onClick={e => e.stopPropagation()}
             className="h-8 pl-3 pr-7 text-xs font-medium rounded-[var(--radius-obs-md)] appearance-none cursor-pointer transition-colors outline-none"
-            style={{
-              backgroundColor: filterEmailRange ? 'var(--color-obs-primary-container)' : 'var(--color-obs-surface-high)',
-              color: filterEmailRange ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
-            }}
+            style={filterControlStyle(Boolean(filterEmailRange))}
           >
             <option value="">メール数</option>
             <option value="0">0件のみ</option>
@@ -1077,10 +1063,7 @@ export default function ContactsPage() {
             onChange={e => setFilterLeadSource(e.target.value as LeadSourceType | '')}
             onClick={e => e.stopPropagation()}
             className="h-8 pl-3 pr-7 text-xs font-medium rounded-[var(--radius-obs-md)] appearance-none cursor-pointer transition-colors outline-none"
-            style={{
-              backgroundColor: filterLeadSource ? 'var(--color-obs-primary-container)' : 'var(--color-obs-surface-high)',
-              color: filterLeadSource ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
-            }}
+            style={filterControlStyle(Boolean(filterLeadSource))}
           >
             <option value="">リード経由</option>
             {ALL_LEAD_SOURCE_TYPES.map(t => (
@@ -1097,10 +1080,7 @@ export default function ContactsPage() {
             onChange={e => setFilterSignal(e.target.value as 'Hot' | 'Middle' | 'Low' | '')}
             onClick={e => e.stopPropagation()}
             className="h-8 pl-3 pr-7 text-xs font-medium rounded-[var(--radius-obs-md)] appearance-none cursor-pointer transition-colors outline-none"
-            style={{
-              backgroundColor: filterSignal ? 'var(--color-obs-primary-container)' : 'var(--color-obs-surface-high)',
-              color: filterSignal ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
-            }}
+            style={filterControlStyle(Boolean(filterSignal))}
           >
             <option value="">1stシグナル</option>
             {ALL_SIGNALS.map(s => (
@@ -1117,10 +1097,7 @@ export default function ContactsPage() {
             onChange={e => setFilterNextAction(e.target.value as Exclude<NextAction, null> | '')}
             onClick={e => e.stopPropagation()}
             className="h-8 pl-3 pr-7 text-xs font-medium rounded-[var(--radius-obs-md)] appearance-none cursor-pointer transition-colors outline-none"
-            style={{
-              backgroundColor: filterNextAction ? 'var(--color-obs-primary-container)' : 'var(--color-obs-surface-high)',
-              color: filterNextAction ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
-            }}
+            style={filterControlStyle(Boolean(filterNextAction))}
           >
             <option value="">ネクスト</option>
             {ALL_NEXT_ACTIONS.map(a => (
@@ -1137,10 +1114,7 @@ export default function ContactsPage() {
             onChange={e => setFilterOwner(e.target.value)}
             onClick={e => e.stopPropagation()}
             className="h-8 pl-3 pr-7 text-xs font-medium rounded-[var(--radius-obs-md)] appearance-none cursor-pointer transition-colors outline-none"
-            style={{
-              backgroundColor: filterOwner ? 'var(--color-obs-primary-container)' : 'var(--color-obs-surface-high)',
-              color: filterOwner ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
-            }}
+            style={filterControlStyle(Boolean(filterOwner))}
           >
             <option value="">担当者</option>
             {ALL_OWNERS.map(o => (
@@ -1270,23 +1244,34 @@ export default function ContactsPage() {
 
         {/* ── Table ── */}
         <div
-          className="rounded-[var(--radius-obs-xl)] overflow-hidden"
+          className="rounded-[var(--radius-obs-xl)] overflow-hidden relative"
           style={{
-            backgroundColor: 'rgba(36,36,38,0.58)',
-            backdropFilter: 'blur(22px) saturate(130%)',
-            WebkitBackdropFilter: 'blur(22px) saturate(130%)',
-            boxShadow: 'inset 1px 1px 0 rgba(255,255,255,0.055), inset -1px -1px 0 rgba(0,0,0,0.24)',
+            background: GLASS_TABLE_BG,
+            backdropFilter: 'blur(22px) saturate(135%)',
+            WebkitBackdropFilter: 'blur(22px) saturate(135%)',
+            boxShadow: GLASS_TABLE_SHADOW,
           }}
         >
+          <span
+            aria-hidden
+            className="pointer-events-none absolute left-6 right-6 top-0 h-px z-[2]"
+            style={{
+              background:
+                'linear-gradient(90deg, transparent 0%, rgba(171,199,255,0.30) 50%, transparent 100%)',
+            }}
+          />
           <div className="w-full overflow-x-auto">
             <div className="min-w-[1400px]">
               {/* Header */}
               <div
-                className="grid grid-cols-[32px_240px_minmax(160px,1fr)_110px_84px_96px_104px_124px_124px_112px_56px_56px] gap-x-3 px-5 py-3 text-[11px] font-medium tracking-[0.08em] uppercase"
+                className="grid grid-cols-[32px_240px_minmax(160px,1fr)_110px_84px_96px_104px_124px_124px_112px_56px_56px] gap-x-3 px-5 py-3 text-[11px] font-medium tracking-[0.1em] uppercase"
                 style={{
-                  color: 'var(--color-obs-text-subtle)',
-                  backgroundColor: 'rgba(27,27,29,0.52)',
-                  boxShadow: 'inset 0 -1px 0 rgba(255,255,255,0.055)',
+                  color: TABLE_HEADER_TEXT_COLOR,
+                  background:
+                    'linear-gradient(90deg, rgba(171,199,255,0.055) 0%, rgba(171,199,255,0.014) 100%), rgba(14,15,19,0.88)',
+                  backdropFilter: 'blur(18px) saturate(130%)',
+                  WebkitBackdropFilter: 'blur(18px) saturate(130%)',
+                  boxShadow: 'inset 0 -1px 0 rgba(171,199,255,0.08)',
                 }}
               >
                 {/* 全選択チェックボックス */}
@@ -1329,12 +1314,13 @@ export default function ContactsPage() {
                     className={`leading-none flex items-center ${
                       col.sortable ? 'cursor-pointer select-none transition-colors' : ''
                     }`}
+                    style={{ color: TABLE_HEADER_TEXT_COLOR }}
                     onClick={col.key ? () => toggleSort(col.key as SortKey) : undefined}
                     onMouseOver={col.sortable ? (e) => {
-                      ;(e.currentTarget as HTMLDivElement).style.color = 'var(--color-obs-text-muted)'
+                      ;(e.currentTarget as HTMLDivElement).style.color = TABLE_HEADER_TEXT_HOVER
                     } : undefined}
                     onMouseOut={col.sortable ? (e) => {
-                      ;(e.currentTarget as HTMLDivElement).style.color = 'var(--color-obs-text-subtle)'
+                      ;(e.currentTarget as HTMLDivElement).style.color = TABLE_HEADER_TEXT_COLOR
                     } : undefined}
                   >
                     {col.label}
@@ -1377,15 +1363,20 @@ export default function ContactsPage() {
                         className={`grid grid-cols-[32px_240px_minmax(160px,1fr)_110px_84px_96px_104px_124px_124px_112px_56px_56px] gap-x-3 items-center px-5 py-3.5 transition-colors duration-150 group cursor-pointer ${dnc ? 'opacity-35' : ''}`}
                         style={{
                           transitionTimingFunction: 'var(--ease-liquid)',
-                          boxShadow: 'inset 0 -1px 0 0 rgba(255,255,255,0.035)',
-                          backgroundColor: isSelected ? 'rgba(171,199,255,0.055)' : 'transparent',
+                          boxShadow: isSelected
+                            ? 'inset 2px 0 0 rgba(171,199,255,0.82), inset 0 -1px 0 rgba(171,199,255,0.08)'
+                            : 'inset 0 -1px 0 0 rgba(171,199,255,0.055)',
+                          background: isSelected
+                            ? 'linear-gradient(90deg, rgba(171,199,255,0.070) 0%, rgba(0,113,227,0.035) 100%)'
+                            : 'transparent',
                         }}
                         onMouseOver={(e) => {
-                          if (!dnc) (e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(255,255,255,0.035)'
+                          if (!dnc) (e.currentTarget as HTMLDivElement).style.background =
+                            'linear-gradient(90deg, rgba(171,199,255,0.050) 0%, rgba(255,255,255,0.012) 100%)'
                         }}
                         onMouseOut={(e) => {
-                          ;(e.currentTarget as HTMLDivElement).style.backgroundColor = isSelected
-                            ? 'rgba(171,199,255,0.06)'
+                          ;(e.currentTarget as HTMLDivElement).style.background = isSelected
+                            ? 'linear-gradient(90deg, rgba(171,199,255,0.070) 0%, rgba(0,113,227,0.035) 100%)'
                             : 'transparent'
                         }}
                       >
@@ -1414,10 +1405,11 @@ export default function ContactsPage() {
                         {/* 氏名 + 会社名(下) */}
                         <div className="flex items-center gap-2.5 min-w-0">
                           <div
-                            className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-[11px] font-semibold"
+                            className="w-7 h-7 rounded-[var(--radius-obs-md)] flex items-center justify-center shrink-0 text-[11px] font-semibold"
                             style={{
-                              backgroundColor: 'var(--color-obs-surface-highest)',
-                              color: 'var(--color-obs-text)',
+                              background: getContactAvatarBackground(contact.name),
+                              color: '#e7e5ea',
+                              boxShadow: getContactAvatarGlow(contact.name),
                             }}
                           >
                             {contact.name[0]}
@@ -1452,16 +1444,12 @@ export default function ContactsPage() {
 
                         {/* 役職 */}
                         <div>
-                          <MiniChip tone={personRoleToTone(contact.personRole)}>
-                            {contact.personRole}
-                          </MiniChip>
+                          <MetaText>{contact.personRole}</MetaText>
                         </div>
 
                         {/* アプローチ */}
                         <div>
-                          <MiniChip tone={statusToTone(contact.status)}>
-                            {contact.status}
-                          </MiniChip>
+                          <MetaText>{contact.status}</MetaText>
                         </div>
 
                         {/* Next Action */}
@@ -1477,10 +1465,10 @@ export default function ContactsPage() {
 
                         {/* コール数 */}
                         <div className="flex items-center gap-1">
-                          <Phone size={11} className="shrink-0" style={{ color: 'var(--color-obs-low)' }} />
+                          <Phone size={11} className="shrink-0" style={{ color: 'var(--color-obs-text-subtle)' }} />
                           <span
                             className="text-[13px] font-semibold tabular-nums"
-                            style={{ color: 'var(--color-obs-text)' }}
+                            style={{ color: 'rgba(231,229,234,0.70)' }}
                           >
                             {contact.callAttempts}
                           </span>
@@ -1488,10 +1476,10 @@ export default function ContactsPage() {
 
                         {/* メール送信数 */}
                         <div className="flex items-center gap-1">
-                          <Mail size={11} className="shrink-0" style={{ color: 'var(--color-obs-primary)' }} />
+                          <Mail size={11} className="shrink-0" style={{ color: 'var(--color-obs-text-subtle)' }} />
                           <span
                             className="text-[13px] font-semibold tabular-nums"
-                            style={{ color: 'var(--color-obs-text)' }}
+                            style={{ color: 'rgba(231,229,234,0.70)' }}
                           >
                             {contact.emailsSent}
                           </span>
@@ -1523,8 +1511,10 @@ export default function ContactsPage() {
                   transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
                   className="w-full max-w-[480px] rounded-[var(--radius-obs-xl)] overflow-hidden pointer-events-auto"
                   style={{
-                    backgroundColor: 'var(--color-obs-surface-highest)',
-                    boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
+                    background: MENU_SURFACE,
+                    backdropFilter: 'blur(22px) saturate(135%)',
+                    WebkitBackdropFilter: 'blur(22px) saturate(135%)',
+                    boxShadow: MENU_SHADOW,
                   }}
                 >
                   {/* Header */}
@@ -1696,8 +1686,10 @@ export default function ContactsPage() {
             <div
               className="relative w-full max-w-[460px] rounded-[var(--radius-obs-xl)] overflow-hidden"
               style={{
-                background: 'var(--color-obs-surface-highest)',
-                boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
+                background: MENU_SURFACE,
+                backdropFilter: 'blur(22px) saturate(135%)',
+                WebkitBackdropFilter: 'blur(22px) saturate(135%)',
+                boxShadow: MENU_SHADOW,
               }}
               onClick={(e) => e.stopPropagation()}
             >

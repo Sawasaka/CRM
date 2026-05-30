@@ -114,7 +114,8 @@ export default function DashboardPage() {
         <ObsHero
           eyebrow="Action Board"
           title="アクションボード"
-          caption="チーム・担当者・マーケ施策のパフォーマンスを一望"
+          titleAccent="ボード"
+          caption="チーム・担当者・マーケ施策の実績を、期間別に一望。"
           action={
             <div
               className="inline-flex items-center gap-1 p-1 rounded-[var(--radius-obs-md)] fo-glass-rim"

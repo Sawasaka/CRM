@@ -33,15 +33,34 @@ export async function GET() {
     where: { orgId: billingOrg.org.id },
     orderBy: { updatedAt: 'desc' },
   })
-  const credits = await getMonthlyAiCreditStatus({ orgId: billingOrg.org.id })
+  const [credits, members] = await Promise.all([
+    getMonthlyAiCreditStatus({ orgId: billingOrg.org.id }),
+    prisma.user.findMany({
+      where: { orgId: billingOrg.org.id },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+      },
+    }),
+  ])
 
   return NextResponse.json({
+    userEmail: billingOrg.userEmail,
     planId: subscription ? toPlanId(subscription.plan) : toPlanId(billingOrg.org.plan),
     billingCycle: subscription ? toBillingCycle(subscription.interval) : 'annual',
-    seats: subscription?.seats ?? 1,
+    seats: Math.max(subscription?.seats ?? 1, members.length),
     status: subscription?.status ?? null,
     currentPeriodEnd: subscription?.currentPeriodEnd?.toISOString() ?? null,
     cancelAtPeriodEnd: subscription?.cancelAtPeriodEnd ?? false,
     credits,
+    members: members.map((member) => ({
+      id: member.id,
+      email: member.email,
+      name: member.name,
+      role: member.role,
+    })),
   })
 }

@@ -317,7 +317,8 @@ export default function ListsPage() {
         <ObsHero
           eyebrow="LISTS"
           title="ISリスト"
-          caption="コール対象リストを管理・アプローチの進捗を可視化。"
+          titleAccent="リスト"
+          caption="コール対象リストを、担当者・件数・アポ状況で優先管理。"
           action={
             <ObsButton
               variant="primary"

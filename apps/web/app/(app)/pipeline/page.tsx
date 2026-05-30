@@ -189,15 +189,16 @@ export default function PipelinePage() {
               />
               Pipeline
             </div>
-            {/* Page Title — fo-gradient-text 相当を inline で展開 (§12 サービス用大見出し) */}
+            {/* Page Title */}
             <h1
-              className="fo-gradient-text font-[family-name:var(--font-display)] font-bold tracking-[-0.025em] text-[1.8rem] md:text-[2.4rem] leading-[1.06]"
-              style={{
-                WebkitTextFillColor: 'transparent',
-              }}
+              className="font-[family-name:var(--font-display)] text-[2rem] sm:text-[2.75rem] md:text-[3.55rem] font-bold leading-[1.08] tracking-[-0.025em] mb-3 whitespace-nowrap"
             >
-              パイプライン
+              <span style={{ color: '#e7e5ea' }}>パイプ</span>
+              <span className="fo-gradient-text" style={{ WebkitTextFillColor: 'transparent' }}>ライン</span>
             </h1>
+            <p className="text-[14px] leading-relaxed max-w-none md:whitespace-nowrap" style={{ color: 'var(--color-obs-text-muted)' }}>
+              商談フェーズごとの案件を、金額・シグナル・次アクションで管理。
+            </p>
           </div>
 
           {/* ── View Tabs（Segmented Control） ── */}

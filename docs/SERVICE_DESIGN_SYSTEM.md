@@ -164,21 +164,36 @@ background-image:
 
 ### Page Title
 
-ページタイトルはHP/ロゴと同じグラデーションを基本にする。
+ページタイトルはHP Heroの大見出しをサービス側へ翻訳したものを基本にする。サービス画面では、タスク一覧の見出しと同じく、本文を白、意味のある語尾だけを淡青からブランド青のグラデーションにする。
+
+短い日本語タイトルでは全面グラデーションだと差が見えにくいため、`titleAccent` でアクセント語尾を指定する。
+
+```css
+color: #e7e5ea;
+font-family: var(--font-display);
+font-weight: 700;
+letter-spacing: -0.025em;
+line-height: 1.08;
+```
+
+Accent:
 
 ```css
 background: linear-gradient(120deg, #ffffff 0%, #abc7ff 45%, #0071e3 100%);
 -webkit-background-clip: text;
 background-clip: text;
-color: transparent;
+-webkit-text-fill-color: transparent;
 ```
 
 ルール:
 
 - 大見出しのみ使用する
 - テーブル内やカード内の小見出しには使わない
-- サービス画面では装飾しすぎず、タイトルの品位を保つ
+- サービス画面でもページタイトルはHP Hero / Home / タスク一覧のトーンに揃える
+- サイズはサービス共通で統一する: `text-[2rem] sm:text-[2.75rem] md:text-[3.55rem]`
+- ただしHPの余白や演出はそのまま持ち込まず、ページ上部の業務導線は維持する
 - 共通ページは `ObsPageShell` と `ObsHero` を使い、ページごとに見出し色を変えない
+- タイトル下の説明文は1行で要点をまとめる。データ件数、対象、管理軸、得られる価値を短く書く
 
 ### Eyebrow
 
@@ -289,9 +304,14 @@ border-top: 1px solid rgba(171,199,255,0.08);
 
 ```css
 background: linear-gradient(90deg, rgba(171,199,255,0.060) 0%, rgba(171,199,255,0.020) 100%);
-color: #9b99a0;
-letter-spacing: 0.14em;
+color: rgba(217,226,255,0.44);
+font-size: 11px;
+font-weight: 500;
+letter-spacing: 0.10em;
+text-transform: uppercase;
 ```
+
+テーブルヘッダーは全列でこの指定をデフォルトにする。特定列だけ色・サイズ・太さを変えない。ソート可能列はアイコンとhover時の明度だけで状態を表現する。
 
 ### Badge
 
@@ -390,7 +410,7 @@ box-shadow:
 
 主役:
 
-- タイトルグラデーション
+- 白ベース + 青アクセントのページタイトル
 - Blue primary button
 - Dark glass table
 - Hot/Mid/Low signal badge
@@ -415,7 +435,7 @@ box-shadow:
 
 ### タスク一覧
 
-タイトルはHPグラデーション。完了ボタンはPrimary Buttonを小さく適用する。
+タイトルは白ベース + 青アクセントの基準例。完了ボタンはPrimary Buttonを小さく適用する。
 
 タスクの優先度や担当者はBadgeルールに従う。
 
@@ -423,7 +443,7 @@ box-shadow:
 
 ### Do
 
-- HPのタイトルグラデーションをページタイトルへ使う
+- HP由来の青アクセントをページタイトルの語尾へ使う
 - 青を主要操作・選択状態・知性の表現に使う
 - 色は小さなシグナルとして使う
 - カードはglass + rim + subtle glowにする
@@ -444,7 +464,7 @@ box-shadow:
 ページを更新するときは、以下の順で判断する。
 
 1. HPの `Liquid Obsidian` の世界観から外れていないか
-2. タイトルはHPグラデーションになっているか
+2. タイトルは白ベース + 青アクセントの共通型になっているか
 3. PrimaryボタンはHPの青いCTAと同じ方向になっているか
 4. 背景は `#131315` ベースで、淡い青の光だけが入っているか
 5. カード/テーブルはglass surfaceになっているか
@@ -489,7 +509,7 @@ HP / サービス両方から参照可能。新規ユーティリティを追加
 
 | クラス | 内容 | 推奨用途 |
 | --- | --- | --- |
-| `.fo-gradient-text` | 白 → `#abc7ff` → `#0071e3` の 120deg 線形グラデで text-fill | ページタイトル / Hero 大見出しの第一選択 |
+| `.fo-gradient-text` | 白 → `#abc7ff` → `#0071e3` の 120deg 線形グラデで text-fill | サービスページタイトルのアクセント語尾 / HP Hero 大見出し |
 | `.fo-gradient-text-soft` | 白 → `#c8b9ff` → `#abc7ff` の柔らかいグラデ | 見出し2行目、副題、控えめな強調 |
 
 ルール:
@@ -549,13 +569,13 @@ LP で頻出する組み合わせ。同じ目的なら同じ組み合わせを�
 
 | 用途 | サイズ (mobile / desktop) | weight | letter-spacing | LP 該当例 |
 | --- | --- | --- | --- | --- |
-| Hero タイトル (最大) | `text-[2.6rem] md:text-[3.4rem]` | `font-bold` | `tracking-[-0.025em]` | Hero, SixPillars |
+| Hero タイトル (HP基準) | `text-[2.1rem] sm:text-[2.9rem] md:text-[3.8rem]` | `font-bold` | `tracking-[-0.025em]` | HP Hero |
 | セクション H2 | `text-[2.2rem] md:text-[3rem]` | `font-bold` | `tracking-[-0.025em]` | Pricing, ROI |
 | セクション H2 (中) | `text-[1.8rem] md:text-[2.6rem]` | `font-bold` | `tracking-[-0.025em]` | MetricsBand |
 | カード内見出し (Featured) | `text-[2rem] md:text-[2.6rem]` | `font-bold` | `tracking-[-0.01em]` | SixPillars featured |
 | カード内見出し (通常) | `text-[1.35rem]` | `font-bold` | `tracking-[-0.01em]` | SixPillars |
 | 主要数値 | `text-[2.6rem] md:text-[3.4rem]` | `font-bold` | `tracking-normal` | MetricsBand stats |
-| ページタイトル (サービス) | `text-[1.5rem] md:text-[1.75rem]` | `font-bold` | `tracking-[-0.02em]` | サービス画面共通 |
+| ページタイトル (サービス) | `text-[2rem] sm:text-[2.75rem] md:text-[3.55rem]` | `font-bold` | `tracking-[-0.025em]` | サービス画面共通 |
 
 ### Body (Inter)
 
@@ -834,6 +854,24 @@ LP で頻出する「小さな型」。コピーで使える。
 
 ### Pill / Chip (ステータス・タグ・連携)
 
+原則として、補助メタ情報はChipで囲まず、テキストだけで表示する。色を持たせるのは、求人インテント、1stシグナル、進捗フェーズなど、意味の強さや状態判断に直結するものだけに限定する。
+
+対象例:
+
+- リード経由
+- 役職
+- ステータス
+- Next Action
+- コール数 / メール数
+
+補助メタ情報の推奨:
+
+```jsx
+<span className="text-[12px] font-medium text-[#8f8c90]">
+  アポ獲得
+</span>
+```
+
 ```jsx
 <span
   className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] text-[#c7c5c9]"
@@ -953,7 +991,7 @@ HP の装飾をそのままサービスに持ち込まない。以下のマッ�
 | HP (派手) | Service (抑制) | 理由 |
 | --- | --- | --- |
 | `py-20 md:py-28` (大きな縦余白) | `py-6 md:py-8` (圧縮) | 業務密度を確保する |
-| `text-[3rem]` Hero 見出し | `text-[1.5rem]` ページタイトル | 視線の占有を抑える |
+| HP Hero 見出し | 同じタイポグラフィを使い、サービスでは白本文 + 青アクセント語尾に圧縮 | 見出しのトンマナは統一しつつ、業務密度を保つ |
 | ambient radial を多重に重ねる | radial 1〜2 のみ、または無し | 業務ノイズを抑制 |
 | `fo-aurora-ribbon` (背景の流れる光) | 使用しない | 業務作業の妨げ |
 | `ParticleField` (浮遊する粒子) | 使用しない | 同上 |

@@ -194,7 +194,8 @@ export default function DevelopmentPriorityPage() {
         <ObsHero
           eyebrow="Voice of Customer"
           title="顧客の声"
-          caption={`議事録 ${overall.totalDocs} 件 / ${overall.totalCompanies} 社の発言から自動抽出。クリックで議事録の引用とリンクが見られます。`}
+          titleAccent="声"
+          caption={`議事録${overall.totalDocs}件・${overall.totalCompanies}社の発言から、ニーズと課題を自動抽出。`}
         />
 
         {/* ── 3カテゴリ並列セクション (タブ無し・全件まとめて閲覧) ──────── */}

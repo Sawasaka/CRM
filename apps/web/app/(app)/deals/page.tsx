@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, useMemo } from 'react'
+import { useEffect, useRef, useState, useMemo, type CSSProperties } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -21,8 +21,6 @@ import {
 } from 'lucide-react'
 import {
   ObsButton,
-  ObsCard,
-  ObsChip,
   ObsHero,
   ObsInput,
   ObsPageShell,
@@ -41,6 +39,37 @@ import { SignalBadge, type Signal } from '@/components/crm/SignalBadge'
 import { getCompanyFirstPartySignal } from '@/lib/mock-data/firstPartySignals'
 
 type ChipTone = 'neutral' | 'hot' | 'middle' | 'low' | 'primary'
+
+const SERVICE_PAGE_BACKGROUND =
+  'radial-gradient(circle at 50% 20%, rgba(171,199,255,0.06) 0%, transparent 45%), radial-gradient(circle at 20% 80%, rgba(0,113,227,0.04) 0%, transparent 50%)'
+const GLASS_TABLE_BG =
+  'linear-gradient(145deg, rgba(36,36,38,0.70) 0%, rgba(25,26,31,0.86) 46%, rgba(13,14,18,0.94) 100%)'
+const GLASS_TABLE_SHADOW =
+  'inset 0 0 0 1px rgba(171,199,255,0.12), inset 1px 1px 0 rgba(255,255,255,0.055), inset -1px -1px 0 rgba(0,0,0,0.26), 0 20px 52px rgba(0,0,0,0.30)'
+const FILTER_IDLE_BG =
+  'linear-gradient(145deg, rgba(36,36,38,0.58) 0%, rgba(20,21,25,0.76) 100%)'
+const FILTER_ACTIVE_BG =
+  'linear-gradient(140deg, rgba(171,199,255,0.18) 0%, rgba(0,113,227,0.24) 100%)'
+const FILTER_IDLE_SHADOW =
+  'inset 0 0 0 1px rgba(171,199,255,0.085), inset 1px 1px 0 rgba(255,255,255,0.035)'
+const FILTER_ACTIVE_SHADOW =
+  'inset 1px 1px 0 rgba(255,255,255,0.12), inset 0 0 0 1px rgba(171,199,255,0.26), 0 0 16px rgba(171,199,255,0.13)'
+const MENU_SURFACE =
+  'linear-gradient(145deg, rgba(36,36,38,0.96) 0%, rgba(20,21,25,0.98) 100%)'
+const MENU_SHADOW =
+  '0 24px 60px rgba(0,0,0,0.52), inset 0 0 0 1px rgba(171,199,255,0.12), inset 1px 1px 0 rgba(255,255,255,0.050), inset -1px -1px 0 rgba(0,0,0,0.25)'
+const TABLE_HEADER_TEXT_COLOR = 'rgba(217,226,255,0.44)'
+const TABLE_HEADER_TEXT_HOVER = 'rgba(217,226,255,0.62)'
+
+function filterControlStyle(active: boolean): CSSProperties {
+  return {
+    background: active ? FILTER_ACTIVE_BG : FILTER_IDLE_BG,
+    color: active ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
+    boxShadow: active ? FILTER_ACTIVE_SHADOW : FILTER_IDLE_SHADOW,
+    backdropFilter: 'blur(10px) saturate(130%)',
+    WebkitBackdropFilter: 'blur(10px) saturate(130%)',
+  }
+}
 
 // 取引詳細(deals/[id])のタスク種別と完全に連動
 type NextActionType = 'call' | 'email' | 'meeting' | 'proposal' | 'followup' | 'other' | null
@@ -213,9 +242,10 @@ function TruncatableCell({ text, label }: { text: string; label: string }) {
             transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
             className="absolute z-50 top-full right-0 mt-2 w-[360px] max-w-[80vw] p-3.5 rounded-[var(--radius-obs-md)]"
             style={{
-              background: 'var(--color-obs-surface-highest)',
-              boxShadow: '0 16px 36px rgba(0,0,0,0.45)',
-              border: '1px solid var(--color-obs-border)',
+              background: MENU_SURFACE,
+              boxShadow: MENU_SHADOW,
+              backdropFilter: 'blur(22px) saturate(135%)',
+              WebkitBackdropFilter: 'blur(22px) saturate(135%)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -313,13 +343,19 @@ export default function DealsPage() {
 
   return (
     <ObsPageShell>
-      <div className="w-full px-8 xl:px-12 2xl:px-16 pb-16">
+      <div
+        className="w-full min-h-[calc(100vh-56px)] px-8 xl:px-12 2xl:px-16 pb-16"
+        style={{
+          backgroundColor: 'var(--color-obs-surface)',
+          backgroundImage: SERVICE_PAGE_BACKGROUND,
+        }}
+      >
 
         {/* ── Hero ── */}
         <ObsHero
           eyebrow="Deals"
           title="取引"
-          caption={`全 ${deals.length.toLocaleString()} 件。ステージと担当者ごとに進捗を管理。`}
+          caption={`${deals.length.toLocaleString()}件の取引を、ステージ・担当者・次アクションで進捗管理。`}
           action={
             <ObsButton variant="primary" size="md" onClick={() => setShowCreateModal(true)}>
               <Plus size={14} className="mr-1.5 inline" strokeWidth={2.5} />
@@ -351,10 +387,7 @@ export default function DealsPage() {
             value={filterStage}
             onChange={e => setFilterStage(e.target.value as DealStage | '')}
             className="h-8 px-3 text-xs font-medium rounded-[var(--radius-obs-md)] appearance-none cursor-pointer transition-colors outline-none"
-            style={{
-              backgroundColor: filterStage ? 'var(--color-obs-primary-container)' : 'var(--color-obs-surface-high)',
-              color: filterStage ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
-            }}
+            style={filterControlStyle(Boolean(filterStage))}
           >
             <option value="">ステージ</option>
             {ALL_STAGES.map(s => (
@@ -367,10 +400,7 @@ export default function DealsPage() {
             value={filterOwner}
             onChange={e => setFilterOwner(e.target.value)}
             className="h-8 px-3 text-xs font-medium rounded-[var(--radius-obs-md)] appearance-none cursor-pointer transition-colors outline-none"
-            style={{
-              backgroundColor: filterOwner ? 'var(--color-obs-primary-container)' : 'var(--color-obs-surface-high)',
-              color: filterOwner ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
-            }}
+            style={filterControlStyle(Boolean(filterOwner))}
           >
             <option value="">担当者：全員</option>
             {ALL_OWNERS.map(o => <option key={o} value={o}>{o}</option>)}
@@ -385,12 +415,12 @@ export default function DealsPage() {
                 transition={{ duration: 0.15 }}
                 onClick={() => { setFilterStage(''); setFilterOwner('') }}
                 className="inline-flex items-center gap-1 h-8 px-3 rounded-[var(--radius-obs-md)] text-xs font-medium whitespace-nowrap overflow-hidden transition-colors"
-                style={{ color: 'var(--color-obs-text-muted)' }}
+                style={filterControlStyle(false)}
                 onMouseOver={(e) => {
-                  ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--color-obs-surface-high)'
+                  ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-obs-text)'
                 }}
                 onMouseOut={(e) => {
-                  ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
+                  ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-obs-text-muted)'
                 }}
               >
                 <X size={12} />クリア
@@ -407,11 +437,22 @@ export default function DealsPage() {
         </div>
 
         {/* ── Table ── */}
-        <ObsCard depth="low" padding="none" radius="xl">
+        <div
+          className="rounded-[var(--radius-obs-xl)] overflow-hidden"
+          style={{
+            background: GLASS_TABLE_BG,
+            boxShadow: GLASS_TABLE_SHADOW,
+            backdropFilter: 'blur(18px) saturate(130%)',
+            WebkitBackdropFilter: 'blur(18px) saturate(130%)',
+          }}
+        >
           {/* Header */}
           <div
-            className="grid grid-cols-[220px_72px_1fr_1fr_64px_64px_84px_104px_98px] gap-x-3 px-5 py-3 text-[11px] font-medium tracking-[0.08em] uppercase"
-            style={{ color: 'var(--color-obs-text-subtle)' }}
+            className="grid grid-cols-[220px_72px_1fr_1fr_64px_64px_84px_104px_98px] gap-x-3 px-5 py-3 text-[11px] font-medium tracking-[0.10em] uppercase"
+            style={{
+              color: TABLE_HEADER_TEXT_COLOR,
+              background: 'linear-gradient(90deg, rgba(171,199,255,0.045) 0%, rgba(171,199,255,0.015) 100%)',
+            }}
           >
             {[
               { label: '取引名',         key: 'name' as SortKey,       sortable: true,  signal: false },
@@ -419,7 +460,7 @@ export default function DealsPage() {
               { label: '進捗',           key: null,                    sortable: false, signal: false },
               { label: 'ネクスト',       key: null,                    sortable: false, signal: false },
               { label: 'メール',         key: null,                    sortable: false, signal: false },
-              { label: '商談',           key: null,                    sortable: false, signal: false },
+              { label: '商談数',         key: null,                    sortable: false, signal: false },
               { label: '作成日',         key: null,                    sortable: false, signal: false },
               { label: '担当者',         key: null,                    sortable: false, signal: false },
               { label: 'ステージ',       key: 'stage' as SortKey,      sortable: true,  signal: false },
@@ -431,10 +472,10 @@ export default function DealsPage() {
                 }`}
                 onClick={col.key ? () => toggleSort(col.key as SortKey) : undefined}
                 onMouseOver={col.sortable ? (e) => {
-                  ;(e.currentTarget as HTMLDivElement).style.color = 'var(--color-obs-text-muted)'
+                  ;(e.currentTarget as HTMLDivElement).style.color = TABLE_HEADER_TEXT_HOVER
                 } : undefined}
                 onMouseOut={col.sortable ? (e) => {
-                  ;(e.currentTarget as HTMLDivElement).style.color = 'var(--color-obs-text-subtle)'
+                  ;(e.currentTarget as HTMLDivElement).style.color = TABLE_HEADER_TEXT_COLOR
                 } : undefined}
               >
                 {col.signal ? (
@@ -482,20 +523,23 @@ export default function DealsPage() {
                     className="grid grid-cols-[220px_72px_1fr_1fr_64px_64px_84px_104px_98px] gap-x-3 items-center px-5 py-3.5 transition-colors duration-150 group cursor-pointer"
                     style={{
                       transitionTimingFunction: 'var(--ease-liquid)',
-                      boxShadow: 'inset 0 -1px 0 0 var(--color-obs-surface)',
+                      boxShadow: 'inset 0 -1px 0 0 rgba(171,199,255,0.055)',
                     }}
                     onMouseOver={(e) => {
-                      ;(e.currentTarget as HTMLDivElement).style.backgroundColor = 'var(--color-obs-surface-high)'
+                      ;(e.currentTarget as HTMLDivElement).style.background = 'linear-gradient(90deg, rgba(171,199,255,0.060) 0%, rgba(171,199,255,0.020) 100%)'
                     }}
                     onMouseOut={(e) => {
-                      ;(e.currentTarget as HTMLDivElement).style.backgroundColor = 'transparent'
+                      ;(e.currentTarget as HTMLDivElement).style.background = 'transparent'
                     }}
                   >
                     {/* 取引名 */}
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div
                         className="w-7 h-7 rounded-[var(--radius-obs-sm)] flex items-center justify-center shrink-0"
-                        style={{ backgroundColor: 'var(--color-obs-surface-highest)' }}
+                        style={{
+                          background: 'linear-gradient(145deg, rgba(53,52,55,0.86) 0%, rgba(27,27,29,0.96) 100%)',
+                          boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.10), inset 1px 1px 0 rgba(255,255,255,0.050), 0 8px 18px rgba(0,0,0,0.22)',
+                        }}
                       >
                         <Briefcase size={13} style={{ color: 'var(--color-obs-text-muted)' }} />
                       </div>
@@ -529,7 +573,7 @@ export default function DealsPage() {
                     <div
                       className="flex items-center gap-1 text-[12.5px] tabular-nums"
                       style={{ color: 'var(--color-obs-text-muted)' }}
-                      title={`商談 ${deal.meetingCount}件`}
+                      title={`商談数 ${deal.meetingCount}件`}
                     >
                       <Users size={11} strokeWidth={2} style={{ color: 'var(--color-obs-text-subtle)' }} />
                       {deal.meetingCount}
@@ -563,16 +607,19 @@ export default function DealsPage() {
 
                     {/* ステージ */}
                     <div>
-                      <ObsChip tone={stage.tone}>
+                      <span
+                        className="text-[12px] font-medium tracking-[-0.005em] whitespace-nowrap"
+                        style={{ color: 'var(--color-obs-text-muted)' }}
+                      >
                         {stage.label}
-                      </ObsChip>
+                      </span>
                     </div>
                   </motion.div>
                 )
               })
             )}
           </motion.div>
-        </ObsCard>
+        </div>
 
         {/* ── Create Deal Modal ── */}
         <AnimatePresence>
@@ -784,4 +831,3 @@ function SignalHeader({ label }: { label: string }) {
     </div>
   )
 }
-

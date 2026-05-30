@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, type FormEvent, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -14,12 +14,17 @@ import {
   ChevronRight,
   Users,
   Mail,
+  Calendar,
   Shield,
   UserPlus,
   Trash2,
   Star,
   Plug,
-  ExternalLink,
+  Link2,
+  Loader2,
+  KeyRound,
+  Hash,
+  Video,
 } from 'lucide-react'
 import { ObsButton, ObsCard, ObsHero, ObsPageShell, ObsSectionHeader } from '@/components/obsidian'
 
@@ -46,81 +51,40 @@ interface Plan {
   contractTerm?: string // 例: "3ヶ月契約・3ヶ月ごとに更新"
 }
 
-// SALES × CRM パートナーシッププラン (CxO / 営業責任者 / IS 設計)
+// セルフサーブ CRM 単独プラン。
 // HP の Pricing セクション (components/landing/sections/Pricing.tsx) と完全同期。
 // 変更時は両方を必ず揃える。
-// 戦略: 5社限定 (1 + 1 + 3 = 5枠) で、営業実行 + CRM 構築をセット提供。
 const PLANS: Plan[] = [
   {
-    id: 'cxo',
-    name: 'CxO',
-    tagline: '事業設計 / IS 設計 / FS・CS の営業実装',
-    priceMonthly: 500000,
-    priceAnnual: 500000,
-    credits: 5000,
+    id: 'standard',
+    name: 'Standard',
+    tagline: 'まず実運用を始めるための標準プラン',
+    priceMonthly: 41000,
+    priceAnnual: 29000,
+    credits: 10000,
     minSeats: 1,
-    isTenantPrice: true,
-    slotsTotal: 1,
-    slotsRemaining: 1,
-    contractTerm: '3ヶ月契約・3ヶ月ごとに更新',
     additions: [
-      '【営業範囲】事業設計',
-      '【営業範囲】IS 設計',
-      '【営業範囲】FS / CS の営業実装',
-      '【CRM 提供】CRM 構築',
-      '【CRM 提供】CRM 全機能',
-      '【CRM 提供】月5,000クレジット 込み (チーム合計)',
-      '【稼働条件】1日2商談まで',
-      '【稼働条件】平日 日中稼働',
-    ],
-    icon: Crown,
-  },
-  {
-    id: 'sales-director',
-    name: '営業責任者',
-    tagline: 'IS 設計 / FS・CS の営業実装 / 分析レポーティング',
-    priceMonthly: 300000,
-    priceAnnual: 300000,
-    credits: 5000,
-    minSeats: 1,
-    isTenantPrice: true,
-    slotsTotal: 1,
-    slotsRemaining: 1,
-    contractTerm: '3ヶ月契約・3ヶ月ごとに更新',
-    additions: [
-      '【営業範囲】IS 設計',
-      '【営業範囲】FS / CS の営業実装',
-      '【営業範囲】分析レポーティング',
-      '【CRM 提供】CRM 構築',
-      '【CRM 提供】CRM 全機能',
-      '【CRM 提供】月5,000クレジット 込み (チーム合計)',
-      '【稼働条件】1日1商談まで',
-      '【稼働条件】平日 日中稼働',
+      '月10,000クレジット込み (チーム合計)',
+      'Gmail / Google Meet / Notion 議事録連携',
+      '企業・コンタクト・取引・チケット管理',
+      'Slack チャットサポート',
     ],
     icon: Star,
     popular: true,
   },
   {
-    id: 'is-design',
-    name: 'IS 設計',
-    tagline: 'IS チーム組成 / IS 設計 / IS マネジメント',
-    priceMonthly: 200000,
-    priceAnnual: 200000,
-    credits: 5000,
+    id: 'pro',
+    name: 'Plus',
+    tagline: 'AI利用量が多いチーム向けの上位プラン',
+    priceMonthly: 78000,
+    priceAnnual: 55000,
+    credits: 30000,
     minSeats: 1,
-    isTenantPrice: true,
-    slotsTotal: 3,
-    slotsRemaining: 3,
-    contractTerm: '3ヶ月契約・3ヶ月ごとに更新',
+    baseLabel: 'Standard全機能',
     additions: [
-      '【営業範囲】IS チーム組成',
-      '【営業範囲】IS 設計',
-      '【営業範囲】IS マネジメント',
-      '【CRM 提供】CRM 構築',
-      '【CRM 提供】CRM 全機能',
-      '【CRM 提供】月5,000クレジット 込み (チーム合計)',
-      '【稼働条件】週1回の社内MTG',
-      '【稼働条件】平日 日中稼働',
+      '月30,000クレジット込み (チーム合計)',
+      '高頻度なAIリサーチ・議事録活用',
+      'Slack チャットサポート',
     ],
     icon: Zap,
   },
@@ -132,6 +96,7 @@ const PLANS: Plan[] = [
 // admin: お金回り以外の編集権限(メンバー管理等)
 // member: 通常権限(閲覧と利用)
 type MemberRole = 'super_admin' | 'admin' | 'member'
+type GoogleServiceKey = 'gmail' | 'calendar' | 'meet'
 
 interface Member {
   id: string
@@ -141,27 +106,262 @@ interface Member {
   initial: string
 }
 
-const SAMPLE_MEMBERS: Member[] = [
-  {
-    id: 'u1',
-    name: '開発 太郎',
-    email: 'h.sawasaka@rookiesmart.jp',
-    role: 'super_admin',
-    initial: 'N',
-  },
-  { id: 'u2', name: '田中 花子', email: 'tanaka@rookiesmart.jp', role: 'member', initial: '田' },
-  { id: 'u3', name: '鈴木 一郎', email: 'suzuki@rookiesmart.jp', role: 'member', initial: '鈴' },
-  { id: 'u4', name: '佐藤 次郎', email: 'sato@rookiesmart.jp', role: 'member', initial: '佐' },
-  { id: 'u5', name: '高橋 三郎', email: 'takahashi@rookiesmart.jp', role: 'member', initial: '高' },
-]
+interface IntegrationServiceState {
+  available: boolean
+  enabled: boolean
+  lastSyncAt: string | null
+}
 
-const MONTHLY_TEAM_CREDIT_LIMIT = 5000
+interface GoogleIntegrationStatus {
+  connected: boolean
+  configured?: boolean
+  email?: string
+  services?: Partial<Record<GoogleServiceKey | 'drive' | 'chat', IntegrationServiceState>>
+}
+
+interface NotionIntegrationStatus {
+  connected: boolean
+  configured: boolean
+  workspaceName: string | null
+  enabled: boolean
+  lastSyncAt: string | null
+}
+
+const MONTHLY_TEAM_CREDIT_LIMIT = 10000
+
+function toMemberRole(role: string): MemberRole {
+  if (role === 'ADMIN') return 'super_admin'
+  if (role === 'MANAGER') return 'admin'
+  return 'member'
+}
+
+function initialForMember(name: string, email: string) {
+  return (name || email || '?').trim().charAt(0) || '?'
+}
 
 export default function SubscriptionPage() {
   return (
     <Suspense fallback={null}>
       <SubscriptionPageContent />
     </Suspense>
+  )
+}
+
+function IntegrationServiceCard({
+  icon,
+  title,
+  status,
+  description,
+  connectHref,
+  connectLabel,
+  syncLabel,
+  busy,
+  onSync,
+}: {
+  icon: React.ReactNode
+  title: string
+  status?: IntegrationServiceState
+  description: string
+  connectHref: string
+  connectLabel: string
+  syncLabel: string
+  busy: boolean
+  onSync: () => void
+}) {
+  const connected = !!status?.available
+  return (
+    <ObsCard depth="high" padding="lg" radius="xl">
+      <div className="flex items-start gap-3">
+        <div
+          className="shrink-0 w-11 h-11 rounded-[var(--radius-obs-md)] flex items-center justify-center"
+          style={{
+            background:
+              'linear-gradient(135deg, rgba(171,199,255,0.18) 0%, rgba(0,113,227,0.18) 100%)',
+            color: 'var(--color-obs-primary)',
+          }}
+        >
+          {icon}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="text-[15px] font-semibold" style={{ color: 'var(--color-obs-text)' }}>
+              {title}
+            </h3>
+            <IntegrationStatusPill connected={connected} />
+          </div>
+          <p className="text-[12.5px] mt-1.5 leading-relaxed" style={{ color: 'var(--color-obs-text-muted)' }}>
+            {description}
+          </p>
+          {connected && (
+            <p className="text-[11.5px] mt-2" style={{ color: 'var(--color-obs-text-subtle)' }}>
+              最終同期: {status?.lastSyncAt ? new Date(status.lastSyncAt).toLocaleString('ja-JP') : '未同期'}
+            </p>
+          )}
+          <div className="mt-4 flex flex-wrap gap-2">
+            {!connected ? (
+              <a
+                href={connectHref}
+                className="inline-flex items-center gap-1.5 rounded-[var(--radius-obs-md)] px-3 py-2 text-[12px] font-semibold"
+                style={{
+                  backgroundColor: 'var(--color-obs-primary-container)',
+                  color: 'var(--color-obs-on-primary)',
+                }}
+              >
+                <Link2 size={12} />
+                {connectLabel}
+              </a>
+            ) : (
+              <ObsButton variant="primary" size="sm" onClick={onSync} disabled={busy}>
+                {busy ? (
+                  <span className="inline-flex items-center gap-1.5">
+                    <Loader2 size={13} className="animate-spin" />
+                    同期中
+                  </span>
+                ) : (
+                  syncLabel
+                )}
+              </ObsButton>
+            )}
+          </div>
+        </div>
+      </div>
+    </ObsCard>
+  )
+}
+
+function NotionIntegrationCard({
+  status,
+  busy,
+  showTokenForm,
+  token,
+  message,
+  onToggleForm,
+  onTokenChange,
+  onTokenSubmit,
+  onSync,
+  onCancel,
+}: {
+  status: NotionIntegrationStatus | null
+  busy: boolean
+  showTokenForm: boolean
+  token: string
+  message: string | null
+  onToggleForm: () => void
+  onTokenChange: (value: string) => void
+  onTokenSubmit: (event: FormEvent<HTMLFormElement>) => void
+  onSync: () => void
+  onCancel: () => void
+}) {
+  const connected = !!status?.connected
+  return (
+    <ObsCard depth="high" padding="lg" radius="xl">
+      <div className="flex items-start gap-3">
+        <div
+          className="shrink-0 w-11 h-11 rounded-[var(--radius-obs-md)] flex items-center justify-center"
+          style={{ backgroundColor: '#fff', color: '#111' }}
+        >
+          <Hash size={20} strokeWidth={2.6} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="text-[15px] font-semibold" style={{ color: 'var(--color-obs-text)' }}>
+              Notion 議事録
+            </h3>
+            <IntegrationStatusPill connected={connected} />
+          </div>
+          <p className="text-[12.5px] mt-1.5 leading-relaxed" style={{ color: 'var(--color-obs-text-muted)' }}>
+            Notionで共有された議事録ページを読み取り、取引・企業・コンタクトに紐付けます。
+          </p>
+          {connected && (
+            <p className="text-[11.5px] mt-2" style={{ color: 'var(--color-obs-text-subtle)' }}>
+              {status?.workspaceName ? `${status.workspaceName} / ` : ''}
+              最終同期: {status?.lastSyncAt ? new Date(status.lastSyncAt).toLocaleString('ja-JP') : '未同期'}
+            </p>
+          )}
+          {message && (
+            <p
+              className="text-[11.5px] mt-2"
+              style={{
+                color: message.includes('失敗') ? 'var(--color-obs-hot)' : 'var(--color-obs-text-subtle)',
+              }}
+            >
+              {message}
+            </p>
+          )}
+          <div className="mt-4 flex flex-wrap gap-2">
+            {!connected && status?.configured && (
+              <a
+                href="/api/notion/install"
+                className="inline-flex items-center gap-1.5 rounded-[var(--radius-obs-md)] px-3 py-2 text-[12px] font-semibold"
+                style={{
+                  backgroundColor: 'var(--color-obs-primary-container)',
+                  color: 'var(--color-obs-on-primary)',
+                }}
+              >
+                <Link2 size={12} />
+                Notion OAuthで連携
+              </a>
+            )}
+            {!connected && (
+              <ObsButton variant={status?.configured ? 'ghost' : 'primary'} size="sm" onClick={onToggleForm}>
+                <span className="inline-flex items-center gap-1.5">
+                  <KeyRound size={13} />
+                  APIトークンで連携
+                </span>
+              </ObsButton>
+            )}
+            {connected && (
+              <ObsButton
+                variant="primary"
+                size="sm"
+                onClick={onSync}
+                disabled={busy}
+              >
+                {busy ? '同期中' : 'Notion議事録を同期'}
+              </ObsButton>
+            )}
+          </div>
+          {showTokenForm && !connected && (
+            <form onSubmit={onTokenSubmit} className="mt-4 space-y-3">
+              <input
+                type="password"
+                value={token}
+                onChange={(e) => onTokenChange(e.target.value)}
+                placeholder="secret_... または ntn_..."
+                className="h-10 w-full rounded-[var(--radius-obs-md)] px-3 text-[13px] outline-none"
+                style={{
+                  backgroundColor: 'var(--color-obs-surface)',
+                  color: 'var(--color-obs-text)',
+                  boxShadow: 'inset 0 0 0 1px var(--color-obs-surface-highest)',
+                }}
+              />
+              <div className="flex gap-2">
+                <ObsButton type="submit" size="sm" variant="primary" disabled={busy || !token.trim()}>
+                  {busy ? '保存中' : '保存して連携'}
+                </ObsButton>
+                <ObsButton type="button" size="sm" variant="ghost" onClick={onCancel} disabled={busy}>
+                  キャンセル
+                </ObsButton>
+              </div>
+            </form>
+          )}
+        </div>
+      </div>
+    </ObsCard>
+  )
+}
+
+function IntegrationStatusPill({ connected }: { connected: boolean }) {
+  return (
+    <span
+      className="text-[10px] font-semibold uppercase tracking-[0.08em] px-1.5 py-0.5 rounded-full"
+      style={{
+        color: connected ? '#4ad98a' : 'var(--color-obs-text-subtle)',
+        backgroundColor: connected ? 'rgba(74,217,138,0.14)' : 'var(--color-obs-surface-high)',
+      }}
+    >
+      {connected ? '連携済み' : '未連携'}
+    </span>
   )
 }
 
@@ -179,7 +379,13 @@ function SubscriptionPageContent() {
     if (next === 'integrations') setTab('integrations')
     else setTab('team')
   }, [searchParams])
-  const [currentPlan, setCurrentPlan] = useState('sales-director')
+
+  useEffect(() => {
+    if (tab !== 'integrations') return
+    void refreshIntegrations()
+  }, [tab])
+
+  const [currentPlan, setCurrentPlan] = useState('standard')
   const [confirmDialog, setConfirmDialog] = useState<{
     title: string
     message: string
@@ -187,14 +393,14 @@ function SubscriptionPageContent() {
     variant: 'primary' | 'danger'
     onConfirm: () => void | Promise<void>
   } | null>(null)
-  const [seats, setSeats] = useState(5)
+  const [seats, setSeats] = useState(1)
   // テナント単位の1プール構成。サブスク分(月次失効)と購入分(永久有効・解約時失効)を別管理
   const [subscriptionCredit, setSubscriptionCredit] = useState({
     limitCredits: MONTHLY_TEAM_CREDIT_LIMIT,
     usedCredits: 0,
     remainingCredits: MONTHLY_TEAM_CREDIT_LIMIT,
   })
-  const [purchasedRemaining, setPurchasedRemaining] = useState(1500) // 購入残(永久有効)
+  const [purchasedRemaining, setPurchasedRemaining] = useState(0) // 購入残(永久有効)
   // 個人クレジットは「今月の自分の消費量」可視化のみ。実際の消費はテナントプールから引かれる
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('annual')
   const [showBuyCredits, setShowBuyCredits] = useState(false)
@@ -204,9 +410,88 @@ function SubscriptionPageContent() {
   const [pendingSeats, setPendingSeats] = useState(seats)
   const [creditsTab, setCreditsTab] = useState<'team' | 'purchased'>('team')
   const [purchaseAmount, setPurchaseAmount] = useState(1000) // 1,000単位
-  const [members, setMembers] = useState<Member[]>(SAMPLE_MEMBERS)
+  const [members, setMembers] = useState<Member[]>([])
   const [openRoleMenuId, setOpenRoleMenuId] = useState<string | null>(null)
   const [inviteRole, setInviteRole] = useState<MemberRole>('member')
+  const [currentUserEmail, setCurrentUserEmail] = useState('h.sawasaka@rookiesmart.jp')
+  const [googleStatus, setGoogleStatus] = useState<GoogleIntegrationStatus | null>(null)
+  const [notionStatus, setNotionStatus] = useState<NotionIntegrationStatus | null>(null)
+  const [integrationBusy, setIntegrationBusy] = useState<'gmail' | 'meet' | 'notion' | null>(null)
+  const [showNotionTokenForm, setShowNotionTokenForm] = useState(false)
+  const [notionToken, setNotionToken] = useState('')
+  const [notionMessage, setNotionMessage] = useState<string | null>(null)
+
+  const refreshIntegrations = async () => {
+    const [google, notion] = await Promise.all([
+      fetch('/api/google/status'),
+      fetch('/api/notion/status'),
+    ])
+    if (google.ok) setGoogleStatus(await google.json())
+    if (notion.ok) setNotionStatus(await notion.json())
+  }
+
+  const syncGoogle = async (scope: 'gmail' | 'calendar' | 'meet') => {
+    await fetch(`/api/google/sync?scope=${scope}`, { method: 'POST' })
+  }
+
+  const syncMeetBundle = async () => {
+    setIntegrationBusy('meet')
+    try {
+      await syncGoogle('calendar')
+      await syncGoogle('meet')
+      await refreshIntegrations()
+    } finally {
+      setIntegrationBusy(null)
+    }
+  }
+
+  const syncGmail = async () => {
+    setIntegrationBusy('gmail')
+    try {
+      await syncGoogle('gmail')
+      await refreshIntegrations()
+    } finally {
+      setIntegrationBusy(null)
+    }
+  }
+
+  const syncNotion = async () => {
+    setIntegrationBusy('notion')
+    try {
+      await fetch('/api/notion/sync', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ query: '議事録', maxPages: 20 }),
+      })
+      await refreshIntegrations()
+    } finally {
+      setIntegrationBusy(null)
+    }
+  }
+
+  const connectNotionToken = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setIntegrationBusy('notion')
+    setNotionMessage(null)
+    try {
+      const res = await fetch('/api/notion/connect-token', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ token: notionToken }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setNotionMessage(json.message ?? 'Notion APIトークンの保存に失敗しました。')
+        return
+      }
+      setNotionToken('')
+      setShowNotionTokenForm(false)
+      setNotionMessage('Notion連携を保存しました。')
+      await refreshIntegrations()
+    } finally {
+      setIntegrationBusy(null)
+    }
+  }
 
   const updateRole = (id: string, newRole: MemberRole) => {
     setMembers((prev) => prev.map((m) => (m.id === id ? { ...m, role: newRole } : m)))
@@ -239,11 +524,30 @@ function SubscriptionPageContent() {
             subscriptionRemainingCredits?: number
             purchasedRemainingCredits?: number
           }
+          userEmail?: string
+          members?: Array<{
+            id: string
+            email: string
+            name: string
+            role: string
+          }>
         }
         if (cancelled) return
+        if (data.userEmail) setCurrentUserEmail(data.userEmail)
         if (data.planId && PLANS.some((p) => p.id === data.planId)) setCurrentPlan(data.planId)
         if (data.billingCycle) setBillingCycle(data.billingCycle)
         if (typeof data.seats === 'number') setSeats(data.seats)
+        if (data.members) {
+          setMembers(
+            data.members.map((m) => ({
+              id: m.id,
+              name: m.name,
+              email: m.email,
+              role: toMemberRole(m.role),
+              initial: initialForMember(m.name, m.email),
+            })),
+          )
+        }
         if (data.credits) {
           setSubscriptionCredit({
             limitCredits: data.credits.limitCredits ?? MONTHLY_TEAM_CREDIT_LIMIT,
@@ -258,7 +562,7 @@ function SubscriptionPageContent() {
           }
         }
       } catch {
-        // モック表示を維持する
+        // APIが失敗した場合も、本番画面ではダミーメンバーを出さない。
       }
     }
     void loadSubscription()
@@ -718,7 +1022,7 @@ function SubscriptionPageContent() {
               <div className="space-y-2">
                 {members.map((m) => {
                   // 自分自身は削除不可。特権管理者(オーナー)も削除/権限変更不可
-                  const isSelf = m.email === 'h.sawasaka@rookiesmart.jp'
+                  const isSelf = m.email === currentUserEmail
                   const isOwner = m.role === 'super_admin'
                   // 削除可能: 管理操作権限あり かつ 自分自身でない かつ オーナーでない
                   const canDelete = isAdmin && !isSelf && !isOwner
@@ -1048,47 +1352,100 @@ function SubscriptionPageContent() {
           <div className="mt-12">
             <ObsSectionHeader
               title="連携設定"
-              caption="Google Workspace / Microsoft 365 / Slack 等の外部サービスとの連携を管理します"
+              caption="CRMで実際に使う Gmail・Meet議事録・Notion議事録だけを連携します"
             />
-            <div className="mt-6">
+            <div className="mt-6 space-y-4">
               <ObsCard depth="high" padding="lg" radius="xl">
-                <div className="flex items-start gap-4">
-                  <div
-                    className="shrink-0 w-11 h-11 rounded-[var(--radius-obs-md)] flex items-center justify-center"
-                    style={{
-                      background:
-                        'linear-gradient(135deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
-                    }}
-                  >
-                    <Plug size={18} style={{ color: 'var(--color-obs-on-primary)' }} />
-                  </div>
-                  <div className="flex-1">
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                  <div>
                     <h3
                       className="font-[family-name:var(--font-display)] text-lg font-semibold tracking-[-0.02em]"
                       style={{ color: 'var(--color-obs-text)' }}
                     >
-                      外部サービス連携
+                      推奨セット
                     </h3>
                     <p
                       className="text-[13px] mt-1.5 leading-relaxed"
                       style={{ color: 'var(--color-obs-text-muted)' }}
                     >
-                      Google Workspace (Gmail / カレンダー / Drive / Meet)・Microsoft 365・Slack・gBizINFO
-                      など、外部サービスとの接続・OAuth 認証・同期設定は連携設定画面で管理します。
+                      Gmail と Meet議事録をまとめて連携します。Meet議事録にはカレンダー予定と議事録Docの読み取り権限が含まれます。
                     </p>
-                    <a
-                      href="/settings/integrations"
-                      className="mt-5 inline-flex items-center gap-2 rounded-[var(--radius-obs-md)] px-4 py-2.5 text-[13px] font-semibold transition-colors"
-                      style={{
-                        background:
-                          'linear-gradient(135deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
-                        color: 'var(--color-obs-on-primary)',
-                      }}
-                    >
-                      連携設定を開く
-                      <ExternalLink size={14} />
-                    </a>
+                    {googleStatus?.email && (
+                      <p className="text-[12px] mt-2" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                        Google連携中: {googleStatus.email}
+                      </p>
+                    )}
                   </div>
+                  <a
+                    href="/api/google/install?service=gmail,calendar,meet"
+                    className="inline-flex min-w-[168px] items-center justify-center gap-2 whitespace-nowrap rounded-[var(--radius-obs-md)] px-4 py-2.5 text-[13px] font-semibold transition-colors"
+                    style={{
+                      background:
+                        'linear-gradient(135deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
+                      color: 'var(--color-obs-on-primary)',
+                    }}
+                  >
+                    <Plug size={14} />
+                    推奨セットで連携
+                  </a>
+                </div>
+              </ObsCard>
+
+              <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+                <IntegrationServiceCard
+                  icon={<Mail size={20} />}
+                  title="Gmail"
+                  status={googleStatus?.services?.gmail}
+                  description="送受信メールを企業・コンタクト・取引のアクティビティに取り込みます。"
+                  connectHref="/api/google/install?service=gmail"
+                  connectLabel="Gmailを連携"
+                  syncLabel="Gmailを同期"
+                  busy={integrationBusy === 'gmail'}
+                  onSync={syncGmail}
+                />
+                <IntegrationServiceCard
+                  icon={<Video size={20} />}
+                  title="Google Meet 議事録"
+                  status={{
+                    available:
+                      !!googleStatus?.services?.calendar?.available &&
+                      !!googleStatus?.services?.meet?.available,
+                    enabled:
+                      googleStatus?.services?.calendar?.enabled !== false &&
+                      googleStatus?.services?.meet?.enabled !== false,
+                    lastSyncAt:
+                      googleStatus?.services?.meet?.lastSyncAt ??
+                      googleStatus?.services?.calendar?.lastSyncAt ??
+                      null,
+                  }}
+                  description="カレンダー予定・Meet文字起こし・議事録Docを使って、商談と議事録を自動紐付けします。"
+                  connectHref="/api/google/install?service=calendar,meet"
+                  connectLabel="Meet議事録を連携"
+                  syncLabel="議事録を同期"
+                  busy={integrationBusy === 'meet'}
+                  onSync={syncMeetBundle}
+                />
+                <NotionIntegrationCard
+                  status={notionStatus}
+                  busy={integrationBusy === 'notion'}
+                  showTokenForm={showNotionTokenForm}
+                  token={notionToken}
+                  message={notionMessage}
+                  onToggleForm={() => setShowNotionTokenForm((v) => !v)}
+                  onTokenChange={setNotionToken}
+                  onTokenSubmit={connectNotionToken}
+                  onSync={syncNotion}
+                  onCancel={() => setShowNotionTokenForm(false)}
+                />
+              </div>
+
+              <ObsCard depth="low" padding="md" radius="xl">
+                <div className="flex items-start gap-3">
+                  <Calendar size={16} className="mt-0.5" style={{ color: 'var(--color-obs-primary)' }} />
+                  <p className="text-[12.5px] leading-relaxed" style={{ color: 'var(--color-obs-text-muted)' }}>
+                    Googleカレンダーは単独機能として前面に出さず、Meet議事録連携の中に含めています。
+                    商談日時・参加者メール・Meet URLを取得し、議事録を取引やコンタクトへ紐付けるために必要です。
+                  </p>
                 </div>
               </ObsCard>
             </div>

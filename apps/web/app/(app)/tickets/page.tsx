@@ -149,7 +149,8 @@ export default function TicketsPage() {
       <ObsHero
         eyebrow="TICKETS"
         title="問い合わせチケット"
-        caption="取引(Deal)に紐づくチケットを管理します。"
+        titleAccent="チケット"
+        caption="取引に紐づく問い合わせを、ステータス・期限・対応者で管理。"
       />
 
       {/* タブ */}

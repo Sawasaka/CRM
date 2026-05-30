@@ -10,7 +10,8 @@ export default function KnowledgePage() {
         <ObsHero
           eyebrow="Knowledge"
           title="ナレッジ"
-          caption="商談議事録（Google Meet / Zoom）から、営業ナレッジを自動でQ&A化。"
+          titleAccent="ッジ"
+          caption="商談議事録から、営業FAQと回答ナレッジを自動生成。"
         />
 
         <SourcesView />

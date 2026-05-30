@@ -1,9 +1,16 @@
 import { prisma } from '@bgm/db'
+import type { Plan } from '@bgm/db'
 
 export const AI_CHAT_CREDITS_PER_REQUEST = 1
 
-const DEFAULT_MONTHLY_AI_CHAT_CREDIT_LIMIT = 5000
+const DEFAULT_MONTHLY_AI_CHAT_CREDIT_LIMIT = 10000
 const JST_OFFSET_MS = 9 * 60 * 60 * 1000
+const PLAN_MONTHLY_CREDIT_LIMITS: Record<Plan, number> = {
+  FREE: 0,
+  STARTER: 5000,
+  GROWTH: 10000,
+  ENTERPRISE: 30000,
+}
 
 type CreditGateOk = {
   ok: true
@@ -64,7 +71,7 @@ export async function recordAiChatCreditUsage(opts: {
 
 export async function getMonthlyAiCreditStatus(opts: { orgId: string }) {
   const monthKey = getCurrentJstMonthKey()
-  const limitCredits = resolveMonthlyLimit()
+  const limitCredits = await resolveMonthlyLimit(opts.orgId)
   const aggregate = await prisma.aiCreditUsage.aggregate({
     where: { orgId: opts.orgId, monthKey },
     _sum: { credits: true },
@@ -100,10 +107,20 @@ export async function getMonthlyAiCreditStatus(opts: { orgId: string }) {
   }
 }
 
-function resolveMonthlyLimit() {
+async function resolveMonthlyLimit(orgId?: string) {
   const raw = process.env.AI_CHAT_MONTHLY_CREDIT_LIMIT
-  const parsed = raw ? Number.parseInt(raw, 10) : DEFAULT_MONTHLY_AI_CHAT_CREDIT_LIMIT
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_MONTHLY_AI_CHAT_CREDIT_LIMIT
+  if (raw) {
+    const parsed = Number.parseInt(raw, 10)
+    if (Number.isFinite(parsed) && parsed >= 0) return parsed
+  }
+  if (orgId) {
+    const org = await prisma.organization.findUnique({
+      where: { id: orgId },
+      select: { plan: true },
+    })
+    if (org) return PLAN_MONTHLY_CREDIT_LIMITS[org.plan]
+  }
+  return DEFAULT_MONTHLY_AI_CHAT_CREDIT_LIMIT
 }
 
 function getCurrentJstMonthKey() {
@@ -141,7 +158,7 @@ export async function assertMonthlyAiChatCreditAvailable(opts: {
 }
 
 export function getMonthlyAiChatCreditLimit() {
-  return resolveMonthlyLimit()
+  return DEFAULT_MONTHLY_AI_CHAT_CREDIT_LIMIT
 }
 
 export function getDailyAiChatCreditReset() {

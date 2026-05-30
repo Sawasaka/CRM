@@ -24,7 +24,7 @@ export const operatorRomanName = 'Hiroki Sawasaka'
 export const publicSiteTitle = `【公式】${serviceName}｜${companyName}`
 
 export const publicSiteDescription =
-  'CRMも部署番号も無償。営業実行とCRM構築を同時に。'
+  'CRMも部署番号も無償。ルキスマCRMの営業実行とCRM構築を、株式会社ルーキースマートジャパン代表・沢坂弘樹が支援します。'
 
 export const publicSiteKeywords = [
   companyName,

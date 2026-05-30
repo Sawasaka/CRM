@@ -787,27 +787,15 @@ export default function CompaniesPage() {
               Company Master
             </span>
             <h1
-              className="fo-gradient-text font-[family-name:var(--font-display)] text-[clamp(2rem,4vw,3.25rem)] font-bold leading-[1.05] tracking-[-0.028em] mb-3 whitespace-nowrap"
-              style={{
-                WebkitTextFillColor: 'transparent',
-              }}
+              className="font-[family-name:var(--font-display)] text-[2rem] sm:text-[2.75rem] md:text-[3.55rem] font-bold leading-[1.08] tracking-[-0.025em] mb-3 whitespace-nowrap"
             >
-              290万社DB
+              <span style={{ color: '#e7e5ea' }}>290万社</span>
+              <span className="fo-gradient-text" style={{ WebkitTextFillColor: 'transparent' }}>DB</span>
             </h1>
-            <p className="text-[15px] leading-relaxed max-w-2xl" style={{ color: '#9b99a0' }}>
-              {scopeMode === 'enriched' ? (
-                <>
-                  エンリッチ済 {total.toLocaleString()} 社 ／ 対象条件: 従業員30人以上
-                  <br />
-                  取得項目: 求人インテント(25部門) ・ 業種 ・ 売上 ・ 拠点
-                </>
-              ) : (
-                <>
-                  登記台帳 290万社全件 ／ 対象条件: 国税庁法人番号DB + 経産省 gBizINFO
-                  <br />
-                  取得項目: 社名 ・ 所在地 ・ 法人番号 ・ 設立日 ・ 資本金
-                </>
-              )}
+            <p className="text-[14px] leading-relaxed max-w-none md:whitespace-nowrap" style={{ color: 'var(--color-obs-text-muted)' }}>
+              {scopeMode === 'enriched'
+                ? `エンリッチ済${total.toLocaleString()}社を、求人インテント・業種・売上・拠点で検索。`
+                : '登記台帳290万社を、求人インテント・1stシグナル・業種・地域条件で検索。'}
             </p>
           </div>
           <div className="2xl:shrink-0">

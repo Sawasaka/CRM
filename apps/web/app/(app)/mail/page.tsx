@@ -25,7 +25,8 @@ export default function MailPage() {
         <ObsHero
           eyebrow="Marketing"
           title="メール配信"
-          caption="リスト一斉配信からファーストパーティ計測、資料リンク配布までを1画面で。"
+          titleAccent="配信"
+          caption="ISリスト配信から資料クリック・返信計測までを1画面で管理。"
         />
 
         {/* Tab nav */}
