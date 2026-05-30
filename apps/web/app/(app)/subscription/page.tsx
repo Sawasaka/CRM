@@ -1,6 +1,7 @@
 'use client'
 
 import { Suspense, type FormEvent, useEffect, useState } from 'react'
+import Image from 'next/image'
 import { useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -24,7 +25,6 @@ import {
   Loader2,
   KeyRound,
   Hash,
-  Video,
 } from 'lucide-react'
 import { ObsButton, ObsCard, ObsHero, ObsPageShell, ObsSectionHeader } from '@/components/obsidian'
 
@@ -128,6 +128,13 @@ interface NotionIntegrationStatus {
 }
 
 const MONTHLY_TEAM_CREDIT_LIMIT = 10000
+const INTEGRATION_ACTION_CLASS =
+  'inline-flex h-9 min-w-[154px] items-center justify-center gap-1.5 whitespace-nowrap rounded-[var(--radius-obs-md)] px-3 text-[12px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60'
+const INTEGRATION_ACTION_STYLE = {
+  background:
+    'linear-gradient(135deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
+  color: 'var(--color-obs-on-primary)',
+}
 
 function toMemberRole(role: string): MemberRole {
   if (role === 'ADMIN') return 'super_admin'
@@ -170,19 +177,10 @@ function IntegrationServiceCard({
 }) {
   const connected = !!status?.available
   return (
-    <ObsCard depth="high" padding="lg" radius="xl">
-      <div className="flex items-start gap-3">
-        <div
-          className="shrink-0 w-11 h-11 rounded-[var(--radius-obs-md)] flex items-center justify-center"
-          style={{
-            background:
-              'linear-gradient(135deg, rgba(171,199,255,0.18) 0%, rgba(0,113,227,0.18) 100%)',
-            color: 'var(--color-obs-primary)',
-          }}
-        >
+    <ObsCard depth="high" padding="lg" radius="xl" className="h-full">
+      <div className="flex h-full items-start gap-3">
           {icon}
-        </div>
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 self-stretch flex flex-col">
           <div className="flex items-center gap-2 flex-wrap">
             <h3 className="text-[15px] font-semibold" style={{ color: 'var(--color-obs-text)' }}>
               {title}
@@ -197,21 +195,24 @@ function IntegrationServiceCard({
               最終同期: {status?.lastSyncAt ? new Date(status.lastSyncAt).toLocaleString('ja-JP') : '未同期'}
             </p>
           )}
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-auto pt-4 flex flex-wrap gap-2">
             {!connected ? (
               <a
                 href={connectHref}
-                className="inline-flex items-center gap-1.5 rounded-[var(--radius-obs-md)] px-3 py-2 text-[12px] font-semibold"
-                style={{
-                  backgroundColor: 'var(--color-obs-primary-container)',
-                  color: 'var(--color-obs-on-primary)',
-                }}
+                className={INTEGRATION_ACTION_CLASS}
+                style={INTEGRATION_ACTION_STYLE}
               >
                 <Link2 size={12} />
                 {connectLabel}
               </a>
             ) : (
-              <ObsButton variant="primary" size="sm" onClick={onSync} disabled={busy}>
+              <button
+                type="button"
+                className={INTEGRATION_ACTION_CLASS}
+                style={INTEGRATION_ACTION_STYLE}
+                onClick={onSync}
+                disabled={busy}
+              >
                 {busy ? (
                   <span className="inline-flex items-center gap-1.5">
                     <Loader2 size={13} className="animate-spin" />
@@ -220,12 +221,26 @@ function IntegrationServiceCard({
                 ) : (
                   syncLabel
                 )}
-              </ObsButton>
+              </button>
             )}
           </div>
         </div>
       </div>
     </ObsCard>
+  )
+}
+
+function OfficialIntegrationIcon({ src, alt }: { src: string; alt: string }) {
+  return (
+    <div
+      className="shrink-0 w-11 h-11 rounded-[var(--radius-obs-md)] flex items-center justify-center"
+      style={{
+        backgroundColor: '#fff',
+        boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.08)',
+      }}
+    >
+      <Image src={src} alt={alt} width={26} height={26} className="h-[26px] w-[26px] object-contain" />
+    </div>
   )
 }
 
@@ -254,15 +269,15 @@ function NotionIntegrationCard({
 }) {
   const connected = !!status?.connected
   return (
-    <ObsCard depth="high" padding="lg" radius="xl">
-      <div className="flex items-start gap-3">
+    <ObsCard depth="high" padding="lg" radius="xl" className="h-full">
+      <div className="flex h-full items-start gap-3">
         <div
           className="shrink-0 w-11 h-11 rounded-[var(--radius-obs-md)] flex items-center justify-center"
           style={{ backgroundColor: '#fff', color: '#111' }}
         >
           <Hash size={20} strokeWidth={2.6} />
         </div>
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 self-stretch flex flex-col">
           <div className="flex items-center gap-2 flex-wrap">
             <h3 className="text-[15px] font-semibold" style={{ color: 'var(--color-obs-text)' }}>
               Notion 議事録
@@ -288,37 +303,30 @@ function NotionIntegrationCard({
               {message}
             </p>
           )}
-          <div className="mt-4 flex flex-wrap gap-2">
-            {!connected && status?.configured && (
-              <a
-                href="/api/notion/install"
-                className="inline-flex items-center gap-1.5 rounded-[var(--radius-obs-md)] px-3 py-2 text-[12px] font-semibold"
-                style={{
-                  backgroundColor: 'var(--color-obs-primary-container)',
-                  color: 'var(--color-obs-on-primary)',
-                }}
-              >
-                <Link2 size={12} />
-                Notion OAuthで連携
-              </a>
-            )}
+          <div className="mt-auto pt-4 flex flex-wrap gap-2">
             {!connected && (
-              <ObsButton variant={status?.configured ? 'ghost' : 'primary'} size="sm" onClick={onToggleForm}>
-                <span className="inline-flex items-center gap-1.5">
-                  <KeyRound size={13} />
-                  APIトークンで連携
-                </span>
-              </ObsButton>
+              <button type="button" className={INTEGRATION_ACTION_CLASS} style={INTEGRATION_ACTION_STYLE} onClick={onToggleForm}>
+                <KeyRound size={13} />
+                APIトークンで連携
+              </button>
             )}
             {connected && (
-              <ObsButton
-                variant="primary"
-                size="sm"
+              <button
+                type="button"
+                className={INTEGRATION_ACTION_CLASS}
+                style={INTEGRATION_ACTION_STYLE}
                 onClick={onSync}
                 disabled={busy}
               >
-                {busy ? '同期中' : 'Notion議事録を同期'}
-              </ObsButton>
+                {busy ? (
+                  <span className="inline-flex items-center gap-1.5">
+                    <Loader2 size={13} className="animate-spin" />
+                    同期中
+                  </span>
+                ) : (
+                  'Notion議事録を同期'
+                )}
+              </button>
             )}
           </div>
           {showTokenForm && !connected && (
@@ -1355,45 +1363,56 @@ function SubscriptionPageContent() {
               caption="CRMで実際に使う Gmail・Meet議事録・Notion議事録だけを連携します"
             />
             <div className="mt-6 space-y-4">
-              <ObsCard depth="high" padding="lg" radius="xl">
+              <ObsCard depth="low" padding="lg" radius="xl">
                 <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                  <div>
-                    <h3
-                      className="font-[family-name:var(--font-display)] text-lg font-semibold tracking-[-0.02em]"
-                      style={{ color: 'var(--color-obs-text)' }}
+                  <div className="flex items-start gap-3">
+                    <div
+                      className="shrink-0 w-10 h-10 rounded-[var(--radius-obs-md)] flex items-center justify-center"
+                      style={{
+                        background:
+                          'linear-gradient(135deg, rgba(171,199,255,0.18) 0%, rgba(0,113,227,0.18) 100%)',
+                        color: 'var(--color-obs-primary)',
+                      }}
                     >
-                      推奨セット
-                    </h3>
-                    <p
-                      className="text-[13px] mt-1.5 leading-relaxed"
-                      style={{ color: 'var(--color-obs-text-muted)' }}
-                    >
-                      Gmail と Meet議事録をまとめて連携します。Meet議事録にはカレンダー予定と議事録Docの読み取り権限が含まれます。
-                    </p>
-                    {googleStatus?.email && (
-                      <p className="text-[12px] mt-2" style={{ color: 'var(--color-obs-text-subtle)' }}>
-                        Google連携中: {googleStatus.email}
+                      <Users size={18} />
+                    </div>
+                    <div>
+                      <h3
+                        className="font-[family-name:var(--font-display)] text-lg font-semibold tracking-[-0.02em]"
+                        style={{ color: 'var(--color-obs-text)' }}
+                      >
+                        メンバー連携状況
+                      </h3>
+                      <p
+                        className="text-[13px] mt-1.5 leading-relaxed"
+                        style={{ color: 'var(--color-obs-text-muted)' }}
+                      >
+                        メンバーごとの Gmail・Google Meet 議事録・Notion 議事録の連携状態を確認できます。
                       </p>
-                    )}
+                      {googleStatus?.email && (
+                        <p className="text-[12px] mt-2" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                          Google連携中: {googleStatus.email}
+                        </p>
+                      )}
+                    </div>
                   </div>
                   <a
-                    href="/api/google/install?service=gmail,calendar,meet"
+                    href="/settings/integrations?tab=review"
                     className="inline-flex min-w-[168px] items-center justify-center gap-2 whitespace-nowrap rounded-[var(--radius-obs-md)] px-4 py-2.5 text-[13px] font-semibold transition-colors"
                     style={{
-                      background:
-                        'linear-gradient(135deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
-                      color: 'var(--color-obs-on-primary)',
+                      backgroundColor: 'var(--color-obs-surface-high)',
+                      color: 'var(--color-obs-text)',
                     }}
                   >
-                    <Plug size={14} />
-                    推奨セットで連携
+                    <ChevronRight size={14} />
+                    連携状況を確認
                   </a>
                 </div>
               </ObsCard>
 
               <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
                 <IntegrationServiceCard
-                  icon={<Mail size={20} />}
+                  icon={<OfficialIntegrationIcon src="/icons/gmail.png" alt="Gmail" />}
                   title="Gmail"
                   status={googleStatus?.services?.gmail}
                   description="送受信メールを企業・コンタクト・取引のアクティビティに取り込みます。"
@@ -1404,7 +1423,7 @@ function SubscriptionPageContent() {
                   onSync={syncGmail}
                 />
                 <IntegrationServiceCard
-                  icon={<Video size={20} />}
+                  icon={<OfficialIntegrationIcon src="/icons/google-meet.png" alt="Google Meet" />}
                   title="Google Meet 議事録"
                   status={{
                     available:
@@ -1421,7 +1440,7 @@ function SubscriptionPageContent() {
                   description="カレンダー予定・Meet文字起こし・議事録Docを使って、商談と議事録を自動紐付けします。"
                   connectHref="/api/google/install?service=calendar,meet"
                   connectLabel="Meet議事録を連携"
-                  syncLabel="議事録を同期"
+                  syncLabel="Meet議事録を同期"
                   busy={integrationBusy === 'meet'}
                   onSync={syncMeetBundle}
                 />

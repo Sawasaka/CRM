@@ -147,6 +147,10 @@ export default function IntegrationsPage() {
   useEffect(() => {
     refresh()
     const params = new URLSearchParams(window.location.search)
+    const requestedTab = params.get('tab')
+    if (requestedTab === 'setup' || requestedTab === 'review') {
+      setTab(requestedTab)
+    }
     if (params.get('google_error') === 'not_configured') {
       setTab('setup')
       setShowGoogleSetup(true)
