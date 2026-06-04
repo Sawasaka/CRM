@@ -8,7 +8,7 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
 import { Sparkles, Send, Check, Copy, Paperclip, ChevronDown, Mic, Layers, User, Globe } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from 'recharts'
-import { AGENTS, type AgentKey, Eyebrow, NebulaBG, Orb, ParticleField, Section } from './atoms'
+import { AGENTS, type AgentKey, Eyebrow, Orb, ParticleField, Section } from './atoms'
 import { HeroSidebar } from './HeroSidebar'
 import { HeroDemoView, type HeroDemoKey } from './hero-demos'
 
@@ -641,7 +641,6 @@ export const Hero = () => {
 
   return (
     <Section id="hero" tone="obsidian" screenLabel="01 Hero">
-      <NebulaBG intensity={1.2} />
       <ParticleField count={48} seed={11} />
 
       {orbs.map((o, i) => (
@@ -650,7 +649,7 @@ export const Hero = () => {
         </div>
       ))}
 
-      <div className="relative mx-auto max-w-6xl px-6 pt-32 md:pt-40 pb-24 md:pb-32 min-h-screen flex flex-col justify-center">
+      <div className="relative mx-auto max-w-6xl px-6 pt-10 md:pt-16 pb-24 md:pb-32 min-h-[calc(100vh-72px)] flex flex-col justify-center">
         <div className="text-center">
           <div className="flex justify-center mb-6">
             <Eyebrow color="#abc7ff">次世代型チャットCRM ／ 株式会社ルーキースマートジャパン</Eyebrow>

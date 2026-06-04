@@ -11,13 +11,11 @@ const INITIAL_WEIGHTS = [
   { label: '提案採用率', key: 'proposal', value: 20, color: '#FF8888' },
 ]
 
-const MOCK_MEMBERS = [
-  { name: '鈴木花子', scores: { contact: 95, knowledge: 80, badge: 90, training: 85, proposal: 92 } },
-  { name: '田中太郎', scores: { contact: 85, knowledge: 60, badge: 90, training: 70, proposal: 75 } },
-  { name: '佐藤次郎', scores: { contact: 70, knowledge: 75, badge: 60, training: 60, proposal: 65 } },
-  { name: '山本佳子', scores: { contact: 55, knowledge: 65, badge: 50, training: 80, proposal: 55 } },
-  { name: '小林健太', scores: { contact: 40, knowledge: 50, badge: 45, training: 40, proposal: 40 } },
-]
+interface Web3Member {
+  name: string
+  scores: Record<string, number>
+}
+const MOCK_MEMBERS: Web3Member[] = []
 
 const cardStyle = {
   background: 'linear-gradient(180deg, #101838 0%, #0c1028 100%)',
@@ -30,9 +28,9 @@ const buttonStyle = {
   border: '1px solid #3355CC',
 }
 
-function calcScore(member: typeof MOCK_MEMBERS[0], weights: typeof INITIAL_WEIGHTS) {
+function calcScore(member: Web3Member, weights: typeof INITIAL_WEIGHTS) {
   return weights.reduce((sum, w) => {
-    return sum + (member.scores[w.key as keyof typeof member.scores] * w.value) / 100
+    return sum + ((member.scores[w.key] ?? 0) * w.value) / 100
   }, 0)
 }
 

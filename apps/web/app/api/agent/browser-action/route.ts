@@ -53,21 +53,18 @@ export async function POST(req: NextRequest) {
       scope: true,
       email: true,
       calendarEnabled: true,
-      driveEnabled: true,
       meetEnabled: true,
     },
   })
 
   const availability = availabilityFromScope(account?.scope)
-  const readyForMeetMinutes = Boolean(
-    account && availability.calendar && availability.drive && availability.meet
-  )
+  const readyForMeetMinutes = Boolean(account && availability.calendar && availability.meet)
 
   if (!readyForMeetMinutes) {
     return NextResponse.json({
       handled: true,
       content:
-        'Google Meet と議事録の連携を開始します。Google の認可画面を開くので、Calendar / Meet / Drive の権限を許可してください。認可後にもう一度「Meet議事録を同期して」と送ると取り込みまで実行します。',
+        'Google Meet と議事録の連携を開始します。Google の認可画面を開くので、Calendar / Meet の権限を許可してください。認可後にもう一度「Meet議事録を同期して」と送ると取り込みまで実行します。',
       action: {
         type: 'open_url',
         url: '/api/google/install?service=calendar,meet',
@@ -82,7 +79,6 @@ export async function POST(req: NextRequest) {
       where: { userId },
       data: {
         calendarEnabled: true,
-        driveEnabled: true,
         meetEnabled: true,
       },
     })

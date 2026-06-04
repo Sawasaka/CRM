@@ -8,35 +8,11 @@ import type { ManagedDocument, DocumentShareLink, DocumentViewEvent } from '@/ty
 
 // ─── Mock Data ───────────────────────────────────────────────────────────────
 
-const MOCK_DOCS: Record<string, ManagedDocument> = {
-  'doc-1': { id: 'doc-1', name: 'ルキスマCRM サービス紹介資料 v2.1', type: 'service_intro', trackingUrl: 'https://track.bgm.app/d/abc123', totalPages: 12, createdAt: '2026-03-15', createdBy: '田中太郎', totalViews: 45, uniqueViewers: 28, fileSize: 2400000, mimeType: 'application/pdf', isPublished: true, password: null, expiresAt: null, tags: ['サービス紹介', 'v2'] },
-  'doc-2': { id: 'doc-2', name: '株式会社テクノリード向け提案書', type: 'proposal', trackingUrl: 'https://track.bgm.app/d/def456', totalPages: 18, createdAt: '2026-03-20', createdBy: '鈴木花子', totalViews: 12, uniqueViewers: 3, fileSize: 5100000, mimeType: 'application/pdf', isPublished: true, password: 'tech2026', expiresAt: '2026-04-20', tags: ['提案書', 'テクノリード'] },
-  'doc-3': { id: 'doc-3', name: '導入事例集 2026年版', type: 'case_study', trackingUrl: 'https://track.bgm.app/d/ghi789', totalPages: 24, createdAt: '2026-03-10', createdBy: '田中太郎', totalViews: 67, uniqueViewers: 41, fileSize: 8200000, mimeType: 'application/pdf', isPublished: true, password: null, expiresAt: null, tags: ['事例集', '2026'] },
-  'doc-4': { id: 'doc-4', name: '料金プラン比較表', type: 'pricing', trackingUrl: 'https://track.bgm.app/d/jkl012', totalPages: 4, createdAt: '2026-03-22', createdBy: '佐藤次郎', totalViews: 23, uniqueViewers: 18, fileSize: 980000, mimeType: 'application/pdf', isPublished: true, password: null, expiresAt: null, tags: ['料金'] },
-}
+const MOCK_DOCS: Record<string, ManagedDocument> = {}
 
-const MOCK_LINKS: Record<string, DocumentShareLink[]> = {
-  'doc-1': [
-    { id: 'link-1', documentId: 'doc-1', url: 'https://track.bgm.app/d/abc123?c=1', contactId: '1', contactName: '田中 誠', companyName: '株式会社テクノリード', createdAt: '2026-03-18', viewCount: 8, lastViewedAt: '2026-03-26' },
-    { id: 'link-2', documentId: 'doc-1', url: 'https://track.bgm.app/d/abc123?c=2', contactId: '2', contactName: '山本 佳子', companyName: '合同会社フューチャー', createdAt: '2026-03-20', viewCount: 3, lastViewedAt: '2026-03-25' },
-    { id: 'link-3', documentId: 'doc-1', url: 'https://track.bgm.app/d/abc123', contactId: null, contactName: null, companyName: null, createdAt: '2026-03-15', viewCount: 34, lastViewedAt: '2026-03-26' },
-  ],
-  'doc-2': [
-    { id: 'link-4', documentId: 'doc-2', url: 'https://track.bgm.app/d/def456?c=1', contactId: '1', contactName: '田中 誠', companyName: '株式会社テクノリード', createdAt: '2026-03-21', viewCount: 12, lastViewedAt: '2026-03-26' },
-  ],
-}
+const MOCK_LINKS: Record<string, DocumentShareLink[]> = {}
 
-const MOCK_VIEWS: Record<string, DocumentViewEvent[]> = {
-  'doc-1': [
-    { id: 'ev-1', documentId: 'doc-1', viewedAt: '2026-03-26 14:30', resolvedCompany: '株式会社テクノリード', companyId: '1', totalDurationSec: 340, pagesViewed: 10, maxScrollDepth: 85 },
-    { id: 'ev-2', documentId: 'doc-1', viewedAt: '2026-03-25 10:15', resolvedCompany: '合同会社フューチャー', companyId: '2', totalDurationSec: 180, pagesViewed: 6, maxScrollDepth: 50 },
-    { id: 'ev-3', documentId: 'doc-1', viewedAt: '2026-03-24 16:45', resolvedCompany: null, companyId: null, totalDurationSec: 45, pagesViewed: 3, maxScrollDepth: 25 },
-  ],
-  'doc-2': [
-    { id: 'ev-4', documentId: 'doc-2', viewedAt: '2026-03-26 09:20', resolvedCompany: '株式会社テクノリード', companyId: '1', totalDurationSec: 520, pagesViewed: 18, maxScrollDepth: 100 },
-    { id: 'ev-5', documentId: 'doc-2', viewedAt: '2026-03-25 15:00', resolvedCompany: '株式会社テクノリード', companyId: '1', totalDurationSec: 280, pagesViewed: 12, maxScrollDepth: 67 },
-  ],
-}
+const MOCK_VIEWS: Record<string, DocumentViewEvent[]> = {}
 
 const TYPE_LABELS: Record<string, string> = { proposal: '提案書', service_intro: 'サービス紹介', case_study: '事例集', pricing: '料金表', other: 'その他' }
 const CARD_SHADOW = '0 0 0 1px rgba(0,0,0,0.05), 0 2px 8px rgba(0,0,0,0.07), 0 8px 28px rgba(0,0,0,0.05)'

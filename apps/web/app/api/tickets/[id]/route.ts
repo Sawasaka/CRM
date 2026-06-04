@@ -64,7 +64,6 @@ const ticketDetailSelectWithoutEstimate = {
   resolution: true,
   memo: true,
   status: true,
-  dealId: true,
   companyId: true,
   contactId: true,
   assigneeUserId: true,
@@ -72,7 +71,9 @@ const ticketDetailSelectWithoutEstimate = {
   closedAt: true,
   createdAt: true,
   updatedAt: true,
-  ...ticketInclude,
+  company: ticketInclude.company,
+  contact: ticketInclude.contact,
+  assignee: ticketInclude.assignee,
 } as const
 
 function isMissingColumn(error: unknown) {
@@ -109,7 +110,7 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string
         where: { id, orgId: me.orgId },
         select: ticketDetailSelectWithoutEstimate,
       })
-      ticket = fallbackTicket ? { ...fallbackTicket, estimatedCompletionAt: null } : null
+      ticket = fallbackTicket ? { ...fallbackTicket, dealId: null, deal: null, estimatedCompletionAt: null } : null
     } catch (fallbackError) {
       if (canUseDevSchemaFallback(fallbackError)) {
         return NextResponse.json({ error: 'not found' }, { status: 404 })

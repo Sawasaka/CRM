@@ -132,8 +132,12 @@ export function HeaderSearch() {
       <div
         className="flex items-center gap-2 h-9 px-3 rounded-[var(--radius-obs-md)] transition-colors duration-150 fo-glass-rim"
         style={{
-          backgroundColor: 'rgba(36,36,38,0.6)',
-          backdropFilter: 'blur(8px)',
+          background:
+            'linear-gradient(145deg, rgba(24,25,29,0.58) 0%, rgba(14,15,18,0.70) 100%)',
+          backdropFilter: 'blur(10px) saturate(118%)',
+          WebkitBackdropFilter: 'blur(10px) saturate(118%)',
+          boxShadow:
+            'inset 0 0 0 1px rgba(171,199,255,0.070), inset 1px 1px 0 rgba(255,255,255,0.030)',
         }}
       >
         <Search size={14} strokeWidth={1.9} style={{ color: 'var(--color-obs-text-subtle)' }} />

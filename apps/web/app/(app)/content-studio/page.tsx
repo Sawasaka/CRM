@@ -25,11 +25,7 @@ interface Template {
 
 const FILE_TYPE_LABELS: Record<string, string> = { pptx: 'PowerPoint', pdf: 'PDF', doc: 'Word' }
 
-const MOCK_TEMPLATES: Template[] = [
-  { id: 't1', name: '会社紹介資料', description: 'コーポレートカラーを基調としたフォーマルな会社紹介テンプレート', fileType: 'pptx', colors: ['#0071E3', '#1D1D1F', '#FFFFFF'], createdAt: '2026-03-10', usageCount: 24 },
-  { id: 't2', name: '製品提案書', description: '製品の強みとROIを訴求するセールス向け提案テンプレート', fileType: 'pptx', colors: ['#FF9F0A', '#1D1D1F', '#F5F5F7'], createdAt: '2026-03-15', usageCount: 18 },
-  { id: 't3', name: '事例紹介レポート', description: '導入事例のBefore/Afterを視覚的に伝えるレポート形式', fileType: 'pdf', colors: ['#34C759', '#1D1D1F', '#FFFFFF'], createdAt: '2026-03-20', usageCount: 12 },
-]
+const MOCK_TEMPLATES: Template[] = []
 
 export default function ContentStudioPage() {
   const [templates] = useState(MOCK_TEMPLATES)

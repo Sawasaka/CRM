@@ -34,30 +34,10 @@ type OwnerRow = {
 }
 
 const MOCK_OWNER_ROWS: Record<Period, OwnerRow[]> = {
-  this_month: [
-    { name: '田中 太郎', callCount: 142, mailSent: 318, appointments: 18, deals: 6, callTrend: 12,  mailTrend:  8 },
-    { name: '鈴木 花子', callCount: 124, mailSent: 286, appointments: 15, deals: 4, callTrend:  4,  mailTrend: 16 },
-    { name: '佐藤 次郎', callCount:  98, mailSent: 211, appointments: 11, deals: 3, callTrend: -6,  mailTrend: -3 },
-    { name: '開発 太郎', callCount:  76, mailSent: 168, appointments:  8, deals: 2, callTrend: 22,  mailTrend: 18 },
-  ],
-  last_month: [
-    { name: '田中 太郎', callCount: 127, mailSent: 295, appointments: 14, deals: 5, callTrend:  3, mailTrend: -2 },
-    { name: '鈴木 花子', callCount: 119, mailSent: 247, appointments: 12, deals: 4, callTrend: -8, mailTrend:  4 },
-    { name: '佐藤 次郎', callCount: 104, mailSent: 218, appointments: 10, deals: 3, callTrend:  1, mailTrend:  6 },
-    { name: '開発 太郎', callCount:  62, mailSent: 142, appointments:  6, deals: 2, callTrend:  0, mailTrend:  9 },
-  ],
-  this_quarter: [
-    { name: '田中 太郎', callCount: 412, mailSent: 921, appointments: 47, deals: 17, callTrend:  9, mailTrend: 11 },
-    { name: '鈴木 花子', callCount: 358, mailSent: 802, appointments: 41, deals: 12, callTrend:  2, mailTrend:  8 },
-    { name: '佐藤 次郎', callCount: 296, mailSent: 644, appointments: 32, deals:  9, callTrend: -2, mailTrend:  3 },
-    { name: '開発 太郎', callCount: 196, mailSent: 422, appointments: 21, deals:  7, callTrend: 18, mailTrend: 14 },
-  ],
-  last_quarter: [
-    { name: '田中 太郎', callCount: 378, mailSent: 829, appointments: 42, deals: 14, callTrend: 4, mailTrend:  3 },
-    { name: '鈴木 花子', callCount: 351, mailSent: 742, appointments: 39, deals: 11, callTrend: 6, mailTrend:  5 },
-    { name: '佐藤 次郎', callCount: 302, mailSent: 626, appointments: 31, deals: 10, callTrend: -4, mailTrend: -1 },
-    { name: '開発 太郎', callCount: 166, mailSent: 371, appointments: 18, deals:  5, callTrend: 11, mailTrend:  8 },
-  ],
+  this_month: [],
+  last_month: [],
+  this_quarter: [],
+  last_quarter: [],
 }
 
 // ─── Mock data: マーケティング指標 ───────────────────────────────────────────
@@ -70,12 +50,32 @@ type MarketingStats = {
   docDownloaded: number
 }
 
-const MOCK_MARKETING: Record<Period, MarketingStats> = {
-  this_month:   { mailSent: 12480, mailDelivered: 12206, mailOpened: 4682, mailClicked:  712, docOpened: 1820, docDownloaded:  264 },
-  last_month:   { mailSent: 11630, mailDelivered: 11402, mailOpened: 4150, mailClicked:  611, docOpened: 1612, docDownloaded:  238 },
-  this_quarter: { mailSent: 35780, mailDelivered: 34988, mailOpened: 13260, mailClicked: 1948, docOpened: 5210, docDownloaded:  742 },
-  last_quarter: { mailSent: 31220, mailDelivered: 30620, mailOpened: 11104, mailClicked: 1612, docOpened: 4380, docDownloaded:  610 },
+const EMPTY_MARKETING: MarketingStats = {
+  mailSent: 0,
+  mailDelivered: 0,
+  mailOpened: 0,
+  mailClicked: 0,
+  docOpened: 0,
+  docDownloaded: 0,
 }
+const MOCK_MARKETING: Record<Period, MarketingStats> = {
+  this_month: EMPTY_MARKETING,
+  last_month: EMPTY_MARKETING,
+  this_quarter: EMPTY_MARKETING,
+  last_quarter: EMPTY_MARKETING,
+}
+
+const DASH_PANEL_SURFACE =
+  'linear-gradient(145deg, rgba(27,28,32,0.66) 0%, rgba(19,20,24,0.84) 50%, rgba(12,13,16,0.94) 100%)'
+const DASH_PANEL_RING =
+  'inset 0 0 0 1px rgba(171,199,255,0.105), inset 1px 1px 0 rgba(255,255,255,0.035), 0 18px 48px rgba(0,0,0,0.30)'
+const DASH_HEADER_SURFACE =
+  'linear-gradient(90deg, rgba(171,199,255,0.050), rgba(255,255,255,0.018), rgba(255,255,255,0.004))'
+const DASH_ROW_SURFACE =
+  'linear-gradient(90deg, rgba(255,255,255,0.010), rgba(171,199,255,0.012), rgba(255,255,255,0))'
+const DASH_ROW_ALT_SURFACE =
+  'linear-gradient(90deg, rgba(171,199,255,0.020), rgba(255,255,255,0.010), rgba(255,255,255,0))'
+const DASH_DIVIDER = 'rgba(171,199,255,0.075)'
 
 function pct(part: number, total: number): number {
   if (!total) return 0
@@ -120,8 +120,11 @@ export default function DashboardPage() {
             <div
               className="inline-flex items-center gap-1 p-1 rounded-[var(--radius-obs-md)] fo-glass-rim"
               style={{
-                backgroundColor: 'rgba(36,36,38,0.6)',
-                backdropFilter: 'blur(8px)',
+                background:
+                  'linear-gradient(145deg, rgba(41,43,50,0.78), rgba(18,19,23,0.70))',
+                backdropFilter: 'blur(10px)',
+                boxShadow:
+                  'inset 0 0 0 1px rgba(171,199,255,0.12), inset 0 1px 0 rgba(255,255,255,0.055), 0 14px 34px rgba(0,0,0,0.22)',
               }}
             >
               {PERIOD_OPTIONS.map((opt) => {
@@ -133,8 +136,13 @@ export default function DashboardPage() {
                     onClick={() => setPeriod(opt.value)}
                     className="h-7 px-3 rounded-[var(--radius-obs-sm)] text-[12px] font-medium transition-colors"
                     style={{
-                      backgroundColor: active ? 'var(--color-obs-surface-highest)' : 'transparent',
-                      color: active ? 'var(--color-obs-text)' : 'var(--color-obs-text-muted)',
+                      background: active
+                        ? 'linear-gradient(140deg, rgba(171,199,255,0.28), rgba(0,113,227,0.44))'
+                        : 'transparent',
+                      color: active ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
+                      boxShadow: active
+                        ? 'inset 0 1px 0 rgba(255,255,255,0.24), 0 0 18px rgba(0,113,227,0.22)'
+                        : 'none',
                     }}
                   >
                     {opt.label}
@@ -151,13 +159,23 @@ export default function DashboardPage() {
             title="担当者別パフォーマンス"
             caption={`期間合計: コール ${totals.callCount.toLocaleString()}件 / メール ${totals.mailSent.toLocaleString()}通`}
           />
-          <ObsCard depth="high" padding="none" radius="xl" className="mt-3 overflow-hidden">
+          <ObsCard
+            depth="high"
+            padding="none"
+            radius="xl"
+            className="mt-3 overflow-hidden"
+            style={{
+              background: DASH_PANEL_SURFACE,
+              boxShadow: DASH_PANEL_RING,
+            }}
+          >
             <div
               className="grid items-center px-5 py-3 text-[10.5px] font-medium tracking-[0.1em] uppercase"
               style={{
                 gridTemplateColumns: '1.3fr 1.4fr 1.4fr 0.8fr',
-                color: 'var(--color-obs-text-subtle)',
-                backgroundColor: 'var(--color-obs-surface-low)',
+                color: 'rgba(216,224,240,0.62)',
+                background: DASH_HEADER_SURFACE,
+                boxShadow: `inset 0 -1px 0 0 ${DASH_DIVIDER}`,
               }}
             >
               <span>担当者</span>
@@ -172,7 +190,8 @@ export default function DashboardPage() {
                 className="grid items-center px-5 py-3.5"
                 style={{
                   gridTemplateColumns: '1.3fr 1.4fr 1.4fr 0.8fr',
-                  borderTop: i === 0 ? 'none' : '1px solid rgba(65,71,83,0.12)',
+                  borderTop: i === 0 ? 'none' : `1px solid ${DASH_DIVIDER}`,
+                  background: i % 2 === 0 ? DASH_ROW_SURFACE : DASH_ROW_ALT_SURFACE,
                 }}
               >
                 {/* 担当者 */}
@@ -180,8 +199,11 @@ export default function DashboardPage() {
                   <div
                     className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0"
                     style={{
-                      background: 'linear-gradient(140deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
-                      color: 'var(--color-obs-on-primary)',
+                      background:
+                        'radial-gradient(circle at 32% 28%, rgba(255,255,255,0.95), var(--color-obs-primary) 44%, rgba(171,199,255,0.24) 100%)',
+                      color: '#07111f',
+                      boxShadow:
+                        'inset 0 0 0 1px rgba(255,255,255,0.24), 0 0 18px rgba(0,113,227,0.22)',
                     }}
                   >
                     {row.name[0]}
@@ -220,7 +242,9 @@ export default function DashboardPage() {
               style={{
                 gridTemplateColumns: '1.3fr 1.4fr 1.4fr 0.8fr',
                 borderTop: '1px solid rgba(171,199,255,0.18)',
-                background: 'rgba(171,199,255,0.04)',
+                background:
+                  'linear-gradient(90deg, rgba(171,199,255,0.12), rgba(0,113,227,0.055), rgba(255,255,255,0.016))',
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.035)',
               }}
             >
               {/* 担当者欄: "全体" ラベル */}
@@ -275,7 +299,16 @@ export default function DashboardPage() {
           <ObsSectionHeader title="メール配信" caption="マーケ施策のパフォーマンス" />
           <div className="mt-3 grid grid-cols-1 lg:grid-cols-3 gap-3">
           {/* メール配信全体 */}
-          <ObsCard depth="high" padding="lg" radius="xl" className="fo-glass-rim fo-lift">
+          <ObsCard
+            depth="high"
+            padding="lg"
+            radius="xl"
+            className="fo-glass-rim fo-lift"
+            style={{
+              background: DASH_PANEL_SURFACE,
+              boxShadow: DASH_PANEL_RING,
+            }}
+          >
             <ObsSectionHeader title="メール送信" caption="送信通数" />
             <div className="mt-3 flex items-baseline gap-2">
               <span
@@ -289,7 +322,18 @@ export default function DashboardPage() {
           </ObsCard>
 
           {/* メール開封率 */}
-          <ObsCard depth="high" padding="lg" radius="xl" className="fo-glass-rim fo-lift">
+          <ObsCard
+            depth="high"
+            padding="lg"
+            radius="xl"
+            className="fo-glass-rim fo-lift"
+            style={{
+              background:
+                'linear-gradient(145deg, rgba(30,39,52,0.80), rgba(23,25,30,0.92))',
+              boxShadow:
+                'inset 0 0 0 1px rgba(171,199,255,0.14), inset 0 1px 0 rgba(255,255,255,0.055), 0 20px 44px rgba(0,113,227,0.10)',
+            }}
+          >
             <ObsSectionHeader title="メール開封率" caption={`開封 ${marketing.mailOpened.toLocaleString()}`} />
             <div className="mt-3 flex items-baseline gap-2">
               <span
@@ -312,7 +356,18 @@ export default function DashboardPage() {
           </ObsCard>
 
           {/* 資料開封率 */}
-          <ObsCard depth="high" padding="lg" radius="xl" className="fo-glass-rim fo-lift">
+          <ObsCard
+            depth="high"
+            padding="lg"
+            radius="xl"
+            className="fo-glass-rim fo-lift"
+            style={{
+              background:
+                'linear-gradient(145deg, rgba(48,41,31,0.70), rgba(24,25,29,0.92))',
+              boxShadow:
+                'inset 0 0 0 1px rgba(255,190,96,0.14), inset 0 1px 0 rgba(255,255,255,0.055), 0 20px 44px rgba(255,177,72,0.08)',
+            }}
+          >
             <ObsSectionHeader title="資料開封率" caption={`開封 ${marketing.docOpened.toLocaleString()}`} />
             <div className="mt-3 flex items-baseline gap-2">
               <span

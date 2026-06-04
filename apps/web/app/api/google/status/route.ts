@@ -38,11 +38,6 @@ export async function GET() {
       enabled: true,
       lastSyncAt: null,
     },
-    drive: {
-      available: has('drive.readonly'),
-      enabled: true,
-      lastSyncAt: null,
-    },
     calendar: {
       available: has('calendar'),
       enabled: true,

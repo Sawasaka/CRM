@@ -8,28 +8,9 @@ import type { Sequence, SequenceStep, SequenceEnrollment, StepType } from '@/typ
 
 // ─── Mock Data ───────────────────────────────────────────────────────────────
 
-const MOCK_SEQUENCES: Record<string, Sequence> = {
-  'seq-1': { id: 'seq-1', name: '未着手 → 初回接触', description: '未着手のコンタクトに3日後自動メール＋コールタスク', status: 'active', triggerLabel: 'アプローチ = 未着手', steps: [{ type: 'wait', label: '3日待機', detail: '3日後に次ステップ' }, { type: 'email', label: 'ご挨拶メール', detail: '件名: {{company_name}}様 — ご紹介のご挨拶' }, { type: 'wait', label: '2日待機', detail: '2日後にコールタスク' }, { type: 'task', label: 'コールタスク作成', detail: '初回フォローコール' }], enrolledCount: 12, completedCount: 5, emailsSent: 18, openRate: 42, clickRate: 12, replyRate: 8, createdAt: '2026-03-10', updatedAt: '2026-03-26', createdBy: '田中太郎' },
-  'seq-2': { id: 'seq-2', name: '不通/不在 → フォロー', description: '不通・不在のコンタクトへの段階的フォローアップ', status: 'active', triggerLabel: 'アプローチ = 不通 / 不在', steps: [{ type: 'wait', label: '1日待機', detail: '' }, { type: 'email', label: 'フォローメール①', detail: '件名: ご不在でしたので改めて...' }, { type: 'wait', label: '3日待機', detail: '' }, { type: 'email', label: 'フォローメール②', detail: '件名: その後いかがでしょうか' }, { type: 'wait', label: '5日待機', detail: '' }, { type: 'task', label: 'コールタスク', detail: '最終フォローコール' }], enrolledCount: 8, completedCount: 3, emailsSent: 22, openRate: 35, clickRate: 8, replyRate: 5, createdAt: '2026-03-12', updatedAt: '2026-03-25', createdBy: '田中太郎' },
-  'seq-5': { id: 'seq-5', name: '失注ナーチャリング', description: '失注コンタクトへの長期ナーチャリングシーケンス', status: 'active', triggerLabel: 'フェーズ = 失注', steps: [{ type: 'wait', label: '7日待機', detail: '' }, { type: 'email', label: 'お役立ちコンテンツ', detail: '件名: {{industry}}業界の最新トレンドをお届け' }, { type: 'wait', label: '30日待機', detail: '' }, { type: 'email', label: '事例紹介', detail: '件名: 同業他社の成功事例のご紹介' }, { type: 'wait', label: '60日待機', detail: '' }, { type: 'email', label: '新機能案内', detail: '件名: 新機能リリースのお知らせ' }, { type: 'wait', label: '90日待機', detail: '' }, { type: 'task', label: 'コールタスク', detail: '再アプローチコール' }], enrolledCount: 15, completedCount: 2, emailsSent: 35, openRate: 28, clickRate: 6, replyRate: 3, createdAt: '2026-03-05', updatedAt: '2026-03-26', createdBy: '田中太郎' },
-}
+const MOCK_SEQUENCES: Record<string, Sequence> = {}
 
-const MOCK_ENROLLMENTS: Record<string, SequenceEnrollment[]> = {
-  'seq-1': [
-    { id: 'enr-1', sequenceId: 'seq-1', contactName: '鈴木 美香', companyName: '株式会社ネクスト', currentStepIndex: 0, status: 'active', enrolledAt: '2026-03-24', lastActionAt: null },
-    { id: 'enr-2', sequenceId: 'seq-1', contactName: '加藤 雄介', companyName: '合同会社ビジョン', currentStepIndex: 1, status: 'active', enrolledAt: '2026-03-22', lastActionAt: '2026-03-25' },
-    { id: 'enr-3', sequenceId: 'seq-1', contactName: '高橋 健一', companyName: '株式会社デジタルフォース', currentStepIndex: 3, status: 'completed', enrolledAt: '2026-03-18', lastActionAt: '2026-03-25' },
-  ],
-  'seq-2': [
-    { id: 'enr-4', sequenceId: 'seq-2', contactName: '中村 理恵', companyName: '株式会社グロース', currentStepIndex: 2, status: 'active', enrolledAt: '2026-03-20', lastActionAt: '2026-03-24' },
-    { id: 'enr-5', sequenceId: 'seq-2', contactName: '小林 健太', companyName: '有限会社サクセス', currentStepIndex: 4, status: 'active', enrolledAt: '2026-03-18', lastActionAt: '2026-03-26' },
-  ],
-  'seq-5': [
-    { id: 'enr-6', sequenceId: 'seq-5', contactName: '吉田 千春', companyName: '株式会社スタート', currentStepIndex: 1, status: 'active', enrolledAt: '2026-03-10', lastActionAt: '2026-03-17' },
-    { id: 'enr-7', sequenceId: 'seq-5', contactName: '渡辺 健二', companyName: '株式会社アルファ', currentStepIndex: 3, status: 'active', enrolledAt: '2026-03-01', lastActionAt: '2026-03-20' },
-    { id: 'enr-8', sequenceId: 'seq-5', contactName: '佐藤 良子', companyName: '合同会社ベータ', currentStepIndex: 7, status: 'completed', enrolledAt: '2026-01-15', lastActionAt: '2026-03-15' },
-  ],
-}
+const MOCK_ENROLLMENTS: Record<string, SequenceEnrollment[]> = {}
 
 const STEP_ICONS: Record<string, React.ElementType> = { wait: Clock, email: Mail, condition: GitBranch, task: CheckSquare }
 const STEP_COLORS: Record<string, { bg: string; color: string }> = {

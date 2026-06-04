@@ -7,7 +7,14 @@ export const dynamic = 'force-dynamic'
 
 async function getOrgId() {
   const session = await auth()
-  const userId = (session as unknown as { userId?: string })?.userId
+  let userId = (session as unknown as { userId?: string })?.userId ?? null
+  if (!userId && process.env.NEXT_PUBLIC_DEV_MODE === 'true') {
+    const firstUser = await prisma.user.findFirst({
+      orderBy: { createdAt: 'asc' },
+      select: { id: true },
+    })
+    userId = firstUser?.id ?? null
+  }
   if (!userId) return null
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -39,7 +46,23 @@ export async function GET(req: NextRequest) {
       id: true,
       name: true,
       stage: true,
+      amount: true,
+      probability: true,
+      expectedCloseAt: true,
+      createdAt: true,
+      updatedAt: true,
+      nextActionUs: true,
+      desiredService: true,
+      timeline: true,
       company: { select: { id: true, name: true } },
+      contact: { select: { id: true, name: true } },
+      owner: { select: { id: true, name: true } },
+      _count: {
+        select: {
+          emailMessages: true,
+          meetingEvents: true,
+        },
+      },
     },
   })
 

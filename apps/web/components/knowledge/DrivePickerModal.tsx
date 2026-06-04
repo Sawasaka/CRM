@@ -333,7 +333,7 @@ function DriveAccessError({ message }: { message: string }) {
           {message}
         </p>
         <a
-          href="/settings/integrations"
+          href="/subscription?tab=integrations"
           className="inline-flex items-center gap-1 mt-3 text-[12px] font-medium"
           style={{ color: 'var(--color-obs-primary)' }}
         >

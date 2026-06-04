@@ -62,7 +62,6 @@ export default function TicketDetailPage({
   useEffect(() => {
     let abort = false
     async function load() {
-      // モックID(mock-X)はAPIを叩かずダミーから直接取得
       if (id.startsWith('mock-')) {
         const mock = getMockTicketDetail(id)
         if (abort) return

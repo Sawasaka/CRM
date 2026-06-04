@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { Phone, Mail, Briefcase, ChevronRight, User, Building2, Pencil, X, Check, RotateCcw, AlertCircle, Calendar, CalendarClock, CheckSquare } from 'lucide-react'
@@ -13,7 +13,7 @@ import {
   ObsInput,
 } from '@/components/obsidian'
 
-// ─── Mock Data ───────────────────────────────────────────────────────────────
+// ─── Data ───────────────────────────────────────────────────────────────────
 
 const REPS = [
   { id: 'u1', name: '田中太郎', color: 'var(--color-obs-primary)' },
@@ -25,16 +25,11 @@ type TaskCategory = 'contact' | 'deal'
 
 interface Task {
   id: string; type: string; company: string; person: string; rank: string
-  urgent: boolean; owner: string; category: TaskCategory; linkTo: string
+  urgent: boolean; owner: string; ownerName: string; category: TaskCategory; linkTo: string
   memo: string; dueAt: string; remindAt: string; completed: boolean
 }
 
-const INITIAL_OVERDUE: Task[] = [
-  { id: 'o1', type: 'call',  company: '株式会社アルファ',    person: '渡辺 健二',  rank: 'A', urgent: true,  owner: 'u1', category: 'contact', linkTo: '/contacts/9', memo: '', dueAt: '2026-03-25', remindAt: '', completed: false },
-  { id: 'o2', type: 'email', company: '合同会社ベータ',      person: '佐藤 良子',  rank: 'B', urgent: false, owner: 'u2', category: 'contact', linkTo: '/contacts/10', memo: 'フォローメール未送信', dueAt: '2026-03-24', remindAt: '', completed: false },
-  { id: 'o3', type: 'call',  company: '株式会社デルタ',      person: '木村 隆',    rank: 'A', urgent: true,  owner: 'u3', category: 'contact', linkTo: '/contacts/11', memo: '', dueAt: '2026-03-26', remindAt: '', completed: false },
-  { id: 'o4', type: 'other', company: '株式会社テクノリード', person: '',           rank: 'A', urgent: true,  owner: 'u1', category: 'deal', linkTo: '/deals/d1', memo: '契約書送付漏れ', dueAt: '2026-03-23', remindAt: '', completed: false },
-]
+const INITIAL_OVERDUE: Task[] = []
 
 // ランク → ObsChip tone (A=hot, B=middle, C=low)
 function rankToTone(rank: string): 'hot' | 'middle' | 'low' | 'neutral' {
@@ -77,7 +72,7 @@ function TaskRow({ task, isLast, onComplete, onRestore, onEdit }: {
 }) {
   const router = useRouter()
   const TypeIcon = TASK_TYPE_ICON[task.type] ?? Briefcase
-  const daysOverdue = Math.max(0, Math.floor((new Date('2026-03-28').getTime() - new Date(task.dueAt).getTime()) / 86400000))
+  const daysOverdue = Math.max(0, Math.floor((Date.now() - new Date(task.dueAt).getTime()) / 86400000))
 
   return (
     <div
@@ -472,10 +467,43 @@ function RepSection({ rep, tasks, completedTasks, index, onComplete, onRestore, 
 
 export default function OverduePage() {
   const [tasks, setTasks] = useState(INITIAL_OVERDUE)
+  const [loading, setLoading] = useState(true)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
 
   const activeTasks = tasks.filter(t => !t.completed)
   const completedTasks = tasks.filter(t => t.completed)
+  const reps = useMemo(() => {
+    const seen = new Map<string, { id: string; name: string; color: string }>()
+    for (const task of tasks) {
+      if (!seen.has(task.owner)) {
+        seen.set(task.owner, {
+          id: task.owner,
+          name: task.ownerName,
+          color: REPS[seen.size % REPS.length]?.color ?? 'var(--color-obs-primary)',
+        })
+      }
+    }
+    return Array.from(seen.values())
+  }, [tasks])
+
+  useEffect(() => {
+    let aborted = false
+    setLoading(true)
+    fetch('/api/tasks?scope=overdue', { cache: 'no-store' })
+      .then((res) => (res.ok ? res.json() : { tasks: [] }))
+      .then((data: { tasks?: Task[] }) => {
+        if (!aborted) setTasks(data.tasks ?? [])
+      })
+      .catch(() => {
+        if (!aborted) setTasks([])
+      })
+      .finally(() => {
+        if (!aborted) setLoading(false)
+      })
+    return () => {
+      aborted = true
+    }
+  }, [])
 
   function handleComplete(id: string) { setTasks(prev => prev.map(t => t.id === id ? { ...t, completed: true } : t)) }
   function handleRestore(id: string) { setTasks(prev => prev.map(t => t.id === id ? { ...t, completed: false } : t)) }
@@ -497,7 +525,7 @@ export default function OverduePage() {
         />
 
         <div className="space-y-4">
-          {REPS.map((rep, i) => {
+          {reps.map((rep, i) => {
             const repActive = activeTasks.filter(t => t.owner === rep.id)
             const repCompleted = completedTasks.filter(t => t.owner === rep.id)
             if (repActive.length === 0 && repCompleted.length === 0) return null
@@ -515,7 +543,7 @@ export default function OverduePage() {
             )
           })}
 
-          {activeTasks.length === 0 && completedTasks.length === 0 && (
+          {!loading && activeTasks.length === 0 && completedTasks.length === 0 && (
             <ObsCard depth="low" padding="lg">
               <div className="flex flex-col items-center justify-center gap-2 py-8">
                 <Check size={28} style={{ color: 'var(--color-obs-low)' }} />

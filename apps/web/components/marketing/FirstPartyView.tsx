@@ -203,7 +203,7 @@ export function FirstPartyView() {
                   <span className="font-mono" style={{ color: 'var(--color-obs-text)' }}>sales@zooba.io</span>
                   <span style={{ color: 'var(--color-obs-text-subtle)' }}>最終同期 2分前</span>
                   <Link
-                    href="/settings/integrations"
+                    href="/subscription?tab=integrations"
                     className="ml-auto inline-flex items-center gap-1 text-[12px] font-medium hover:underline"
                     style={{ color: 'var(--color-obs-primary)' }}
                     title="Gmail連携の設定画面を開く"

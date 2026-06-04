@@ -110,7 +110,7 @@ export async function GET(req: Request) {
         expiresAt: tokenJson.expires_in ? new Date(Date.now() + tokenJson.expires_in * 1000) : null,
         scope: mergedScopes,
         gmailEnabled: services.includes('gmail'),
-        driveEnabled: services.includes('drive'),
+        driveEnabled: false,
         calendarEnabled: services.includes('calendar'),
         meetEnabled: services.includes('meet'),
         chatEnabled: services.includes('chat'),

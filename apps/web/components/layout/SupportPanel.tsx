@@ -34,14 +34,7 @@ type Conversation = {
 }
 
 // Phase 1: モック履歴。将来的には userId 単位で永続化。
-const MOCK_HISTORY: Conversation[] = [
-  { id: 'sc1', title: 'メール配信のステップ追加',  status: 'open' },
-  { id: 'sc2', title: 'Slack 連携の権限設定',      status: 'in_progress' },
-  { id: 'sc3', title: 'インテントスコアの上げ方',  status: 'resolved' },
-  { id: 'sc4', title: '議事録の自動要約について',  status: 'resolved' },
-  { id: 'sc5', title: 'アカウント追加方法',        status: 'open' },
-  { id: 'sc6', title: 'タスクの一括移動',          status: 'resolved' },
-]
+const MOCK_HISTORY: Conversation[] = []
 
 // チャットステータス表記 (open=未対応 / in_progress=連絡待ち / resolved=解決済み)
 const STATUS_LABEL: Record<Status, string> = {

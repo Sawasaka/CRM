@@ -84,32 +84,9 @@ const GA4_SOURCES: GA4SourceMedium[] = [
 
 // ─── Tracking Mock Data ─────────────────────────────────────────────────────
 
-const MOCK_DOCS: TrackedDocument[] = [
-  { id: 'doc-1', name: 'ルキスマCRM サービス紹介資料 v2.1', type: 'service_intro', trackingUrl: 'https://track.bgm.app/d/abc123', totalPages: 12, createdAt: '2026-03-15', createdBy: '田中太郎', totalViews: 45, uniqueViewers: 28 },
-  { id: 'doc-2', name: '株式会社テクノリード向け提案書', type: 'proposal', trackingUrl: 'https://track.bgm.app/d/def456', totalPages: 18, createdAt: '2026-03-20', createdBy: '鈴木花子', totalViews: 12, uniqueViewers: 3 },
-  { id: 'doc-3', name: '導入事例集 2026年版', type: 'case_study', trackingUrl: 'https://track.bgm.app/d/ghi789', totalPages: 24, createdAt: '2026-03-10', createdBy: '田中太郎', totalViews: 67, uniqueViewers: 41 },
-  { id: 'doc-4', name: '料金プラン比較表', type: 'pricing', trackingUrl: 'https://track.bgm.app/d/jkl012', totalPages: 4, createdAt: '2026-03-22', createdBy: '佐藤次郎', totalViews: 23, uniqueViewers: 18 },
-]
+const MOCK_DOCS: TrackedDocument[] = []
 
-const MOCK_VIEWS: Record<string, DocumentViewEvent[]> = {
-  'doc-1': [
-    { id: 'ev-1', documentId: 'doc-1', viewedAt: '2026-03-26 14:30', resolvedCompany: '株式会社テクノリード', companyId: '1', totalDurationSec: 340, pagesViewed: 10, maxScrollDepth: 85 },
-    { id: 'ev-2', documentId: 'doc-1', viewedAt: '2026-03-25 10:15', resolvedCompany: '合同会社フューチャー', companyId: '2', totalDurationSec: 180, pagesViewed: 6, maxScrollDepth: 50 },
-    { id: 'ev-3', documentId: 'doc-1', viewedAt: '2026-03-24 16:45', resolvedCompany: null, companyId: null, totalDurationSec: 45, pagesViewed: 3, maxScrollDepth: 25 },
-  ],
-  'doc-2': [
-    { id: 'ev-4', documentId: 'doc-2', viewedAt: '2026-03-26 09:20', resolvedCompany: '株式会社テクノリード', companyId: '1', totalDurationSec: 520, pagesViewed: 18, maxScrollDepth: 100 },
-    { id: 'ev-5', documentId: 'doc-2', viewedAt: '2026-03-25 15:00', resolvedCompany: '株式会社テクノリード', companyId: '1', totalDurationSec: 280, pagesViewed: 12, maxScrollDepth: 67 },
-  ],
-  'doc-3': [
-    { id: 'ev-6', documentId: 'doc-3', viewedAt: '2026-03-26 11:10', resolvedCompany: '株式会社イノベーション', companyId: '3', totalDurationSec: 420, pagesViewed: 20, maxScrollDepth: 83 },
-    { id: 'ev-7', documentId: 'doc-3', viewedAt: '2026-03-24 13:30', resolvedCompany: '株式会社グロース', companyId: '4', totalDurationSec: 150, pagesViewed: 8, maxScrollDepth: 33 },
-    { id: 'ev-8', documentId: 'doc-3', viewedAt: '2026-03-23 17:00', resolvedCompany: null, companyId: null, totalDurationSec: 60, pagesViewed: 4, maxScrollDepth: 17 },
-  ],
-  'doc-4': [
-    { id: 'ev-9', documentId: 'doc-4', viewedAt: '2026-03-26 16:00', resolvedCompany: '有限会社サクセス', companyId: '5', totalDurationSec: 90, pagesViewed: 4, maxScrollDepth: 100 },
-  ],
-}
+const MOCK_VIEWS: Record<string, DocumentViewEvent[]> = {}
 
 const DOC_TYPE_LABELS: Record<string, string> = {
   proposal: '提案書', service_intro: 'サービス紹介', case_study: '事例集', pricing: '料金表', other: 'その他',

@@ -13,10 +13,10 @@ import {
   Pencil,
   Trash2,
   PanelLeft,
-  Activity,
   ShieldAlert,
   Settings,
 } from 'lucide-react'
+import { OBS_PRIMARY_BUTTON } from '@/components/obsidian'
 import { deleteChatRecord, getChat, renameChatRecord } from '@/lib/chat-history/store'
 import { useChatHistory } from '@/lib/chat-history/use-chat-history'
 
@@ -29,7 +29,7 @@ import { useChatHistory } from '@/lib/chat-history/use-chat-history'
 //   P = PDM Agent       (mint)   — 開発優先度・要望集計
 type NavItemDef = { href: string; label: string; initial: string; color: string }
 const NAV_ITEMS: NavItemDef[] = [
-  { href: '/companies', label: '290万社DB',       initial: 'S', color: '#abc7ff' },
+  { href: '/companies', label: '企業DB',           initial: 'S', color: '#abc7ff' },
   { href: '/pipeline',  label: 'パイプライン',     initial: 'S', color: '#abc7ff' },
   { href: '/contacts',  label: 'コンタクト',       initial: 'S', color: '#abc7ff' },
   { href: '/deals',     label: '取引',             initial: 'S', color: '#abc7ff' },
@@ -46,17 +46,21 @@ const SIDEBAR_BG =
   'radial-gradient(circle at 18% 8%, rgba(171,199,255,0.070) 0%, transparent 30%), radial-gradient(circle at 70% 0%, rgba(0,113,227,0.045) 0%, transparent 32%), linear-gradient(180deg, rgba(255,255,255,0.018) 0%, transparent 18%)'
 const SIDEBAR_SURFACE =
   'linear-gradient(180deg, rgba(10,10,12,0.92) 0%, rgba(10,10,12,0.86) 45%, rgba(8,8,10,0.94) 100%)'
-const NAV_ITEM_ACTIVE_BG =
-  'linear-gradient(135deg, rgba(171,199,255,0.135) 0%, rgba(0,113,227,0.145) 100%)'
+const NAV_ITEM_ACTIVE_BG = OBS_PRIMARY_BUTTON.background
 const NAV_ITEM_HOVER_BG =
-  'linear-gradient(135deg, rgba(171,199,255,0.065) 0%, rgba(255,255,255,0.018) 100%)'
-const NAV_ITEM_ACTIVE_SHADOW =
-  'inset 2px 0 0 rgba(171,199,255,0.78), inset 1px 1px 0 rgba(255,255,255,0.075), inset 0 0 0 1px rgba(171,199,255,0.22), 0 0 18px rgba(171,199,255,0.10)'
+  'linear-gradient(135deg, rgba(171,199,255,0.045) 0%, rgba(255,255,255,0.012) 100%)'
+const NAV_ITEM_ACTIVE_SHADOW = OBS_PRIMARY_BUTTON.shadowStrong
 const NAV_ITEM_IDLE_SHADOW = 'inset 0 0 0 1px rgba(171,199,255,0)'
 const NAV_TEXT_STYLE = {
   color: 'rgba(231,229,234,0.92)',
   fontWeight: 500,
   opacity: 1,
+} as const
+const NAV_TEXT_ACTIVE_STYLE = {
+  color: OBS_PRIMARY_BUTTON.color,
+  fontWeight: 700,
+  opacity: 1,
+  textShadow: '0 1px 10px rgba(10,10,12,0.24)',
 } as const
 const MENU_SURFACE =
   'linear-gradient(145deg, rgba(36,36,38,0.96) 0%, rgba(18,19,23,0.98) 100%)'
@@ -98,14 +102,14 @@ function TopNavItem({
         size={15}
         strokeWidth={active ? 2.2 : 1.9}
         style={{
-          color: active ? 'var(--color-aurora)' : 'var(--color-obs-text-muted)',
+          color: active ? OBS_PRIMARY_BUTTON.color : 'var(--color-obs-text-muted)',
           flexShrink: 0,
-          filter: active ? 'drop-shadow(0 0 8px rgba(171,199,255,0.42))' : undefined,
+          filter: active ? 'drop-shadow(0 0 8px rgba(255,255,255,0.38))' : undefined,
         }}
       />
       <span
         className="text-[13px] tracking-[-0.01em] leading-none"
-        style={NAV_TEXT_STYLE}
+        style={active ? NAV_TEXT_ACTIVE_STYLE : NAV_TEXT_STYLE}
       >
         {label}
       </span>
@@ -153,16 +157,18 @@ function WorkspaceNavItem({
             style={{
               width: active ? 9 : 8,
               height: active ? 9 : 8,
-              background: `radial-gradient(circle at 30% 30%, #ffffff 0%, ${color} 38%, ${color}78 82%)`,
+              background: active
+                ? 'radial-gradient(circle at 30% 30%, #ffffff 0%, rgba(255,255,255,0.96) 38%, rgba(171,199,255,0.72) 82%)'
+                : `radial-gradient(circle at 30% 30%, #ffffff 0%, ${color} 38%, ${color}78 82%)`,
               boxShadow: active
-                ? `0 0 10px ${color}d0, 0 0 22px ${color}5c`
+                ? '0 0 10px rgba(255,255,255,0.78), 0 0 22px rgba(171,199,255,0.58)'
                 : `0 0 7px ${color}9c, 0 0 16px ${color}44`,
             }}
           />
         </span>
         <span
           className="text-[13px] tracking-[-0.01em] leading-none"
-          style={NAV_TEXT_STYLE}
+          style={active ? NAV_TEXT_ACTIVE_STYLE : NAV_TEXT_STYLE}
         >
           {label}
         </span>
@@ -317,8 +323,8 @@ function ChatItem({
           <span
             className="flex-1 text-[13px] leading-snug tracking-[-0.005em] truncate"
             style={{
-              ...NAV_TEXT_STYLE,
-              fontWeight: 450,
+              ...(active ? NAV_TEXT_ACTIVE_STYLE : NAV_TEXT_STYLE),
+              fontWeight: active ? NAV_TEXT_ACTIVE_STYLE.fontWeight : 450,
             }}
           >
             {title}
@@ -411,12 +417,6 @@ const USER_MENU_SECTIONS: MenuSection[] = [
       { href: '/subscription', icon: Settings, label: '設定' },
     ],
   },
-  {
-    title: 'コンプライアンス',
-    items: [
-      { href: '/settings/audit-log', icon: Activity, label: '監査ログ' },
-    ],
-  },
 ]
 
 // ルキスマCRM テナント (開発者) のみに表示する管理者メニュー
@@ -424,7 +424,7 @@ const USER_MENU_SECTIONS: MenuSection[] = [
 const ADMIN_MENU_SECTION: MenuSection = {
   title: '開発者専用',
   items: [
-    { href: '/admin/customer-ops', icon: ShieldAlert, label: 'Customer Operations' },
+    { href: '/admin/customer-ops', icon: ShieldAlert, label: '開発者ページ' },
   ],
 }
 

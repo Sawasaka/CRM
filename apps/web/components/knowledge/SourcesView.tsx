@@ -27,7 +27,7 @@ import {
 } from 'lucide-react'
 import { ObsButton, ObsCard } from '@/components/obsidian'
 import { trpc } from '@/lib/trpc/client'
-import { DUMMY_FAQS, type DummyFaq } from './_dummy-faqs'
+import { EMPTY_FAQS, type DummyFaq } from './empty-faqs'
 
 // `Slack` / `MessagesSquare` / `Database` は SOURCE_ICON で参照する（過去FAQの sourceType
 // が SLACK / GOOGLE_CHAT / DRIVE のまま残っていてもアイコンが落ちないよう保持）。
@@ -59,9 +59,22 @@ const SOURCE_ICON: Record<FaqSourceType, React.ElementType> = {
   PERSONAL_NOTE: StickyNote,
 }
 
-// ダミーFAQの編集 / 削除を localStorage に永続化するためのキー
 const LOCAL_EDIT_KEY = 'bgm:knowledge:faq-local-edits:v1'
 const LOCAL_DELETE_KEY = 'bgm:knowledge:faq-local-deletes:v1'
+
+const KNOWLEDGE_PANEL_SURFACE =
+  'linear-gradient(145deg, rgba(27,28,32,0.66) 0%, rgba(19,20,24,0.84) 48%, rgba(12,13,16,0.94) 100%)'
+const KNOWLEDGE_PANEL_RIM =
+  'inset 0 0 0 1px rgba(171,199,255,0.105), inset 1px 1px 0 rgba(255,255,255,0.035), 0 18px 48px rgba(0,0,0,0.30)'
+const KNOWLEDGE_ROW_SURFACE =
+  'linear-gradient(90deg, rgba(171,199,255,0.035) 0%, rgba(255,255,255,0.014) 46%, rgba(255,255,255,0.004) 100%)'
+const KNOWLEDGE_ROW_HOVER =
+  'linear-gradient(90deg, rgba(171,199,255,0.052) 0%, rgba(255,255,255,0.022) 46%, rgba(255,255,255,0.004) 100%)'
+const KNOWLEDGE_DETAIL_SURFACE =
+  'linear-gradient(145deg, rgba(13,14,17,0.78), rgba(20,21,25,0.58))'
+const KNOWLEDGE_ANSWER_SURFACE =
+  'linear-gradient(145deg, rgba(20,21,25,0.62), rgba(13,14,17,0.82))'
+const KNOWLEDGE_DIVIDER = 'rgba(171,199,255,0.075)'
 
 export function SourcesView() {
   return (
@@ -100,7 +113,6 @@ function FaqSection() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editTitle, setEditTitle] = useState('')
   const [editBody, setEditBody] = useState('')
-  // ダミー時の編集内容は localStorage に永続化（リロードしても残る）
   const [localEdits, setLocalEdits] = useState<
     Record<string, { title: string; body: string }>
   >({})
@@ -126,7 +138,6 @@ function FaqSection() {
   const [activeTag, setActiveTag] = useState<string>('ALL')
 
   // 再フェッチを抑制して体感速度を上げる。
-  // 初期値を空配列で持たせて isLoading 状態をスキップ → ダミーが即時表示される。
   const listQuery = trpc.faq.list.useQuery(
     { limit: 200 },
     {
@@ -152,15 +163,12 @@ function FaqSection() {
 
   const realItems = listQuery.data?.items ?? []
 
-  // 実データが1件もない/読み込み中/エラー時は、即時ダミーを表示してブロックさせない。
-  // 1件でも実データが返れば自動でダミーは消える。
   const useDummy = realItems.length === 0
 
   const baseItems: Array<DummyFaq | (typeof realItems)[number]> = useDummy
-    ? DUMMY_FAQS
+    ? EMPTY_FAQS
     : realItems
 
-  // ダミー時に削除した ID は localStorage に保持（リロード後も非表示）
   const [localDeletes, setLocalDeletes] = useState<string[]>([])
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -180,7 +188,6 @@ function FaqSection() {
     }
   }, [localDeletes])
 
-  // ダミー時のローカル編集 / 削除を反映
   const allItems = useMemo(
     () =>
       baseItems
@@ -226,7 +233,15 @@ function FaqSection() {
             className="text-[16px] font-semibold tracking-[-0.01em] inline-flex items-center gap-2"
             style={{ color: 'var(--color-obs-text)' }}
           >
-            <BookOpen size={15} style={{ color: 'var(--color-obs-primary)' }} />
+            <span
+              className="inline-flex items-center justify-center w-6 h-6 rounded-full"
+              style={{
+                background: 'radial-gradient(circle at 35% 30%, rgba(255,255,255,0.24), transparent 34%), rgba(171,199,255,0.12)',
+                boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.24), 0 0 18px rgba(171,199,255,0.22)',
+              }}
+            >
+              <BookOpen size={13} style={{ color: 'var(--color-obs-primary)' }} />
+            </span>
             チームFAQ（自動生成ドキュメント）
           </h3>
           <p
@@ -281,7 +296,16 @@ function FaqSection() {
 
       {/* リスト */}
       <div>
-        <ObsCard depth="low" padding="none" radius="xl">
+        <ObsCard
+          depth="low"
+          padding="none"
+          radius="xl"
+          style={{
+            background: KNOWLEDGE_PANEL_SURFACE,
+            boxShadow: KNOWLEDGE_PANEL_RIM,
+            overflow: 'hidden',
+          }}
+        >
           {items.length === 0 ? (
             <div className="text-center py-12">
               <HelpCircle
@@ -319,16 +343,27 @@ function FaqSection() {
                       }}
                       className="w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors duration-150 cursor-pointer"
                       style={{
-                        backgroundColor: open
-                          ? 'var(--color-obs-surface-high)'
-                          : 'transparent',
-                        boxShadow: 'inset 0 -1px 0 rgba(109,106,111,0.08)',
+                        background: open ? KNOWLEDGE_ROW_SURFACE : 'transparent',
+                        boxShadow: `inset 0 -1px 0 ${KNOWLEDGE_DIVIDER}`,
+                      }}
+                      onMouseOver={(e) => {
+                        ;(e.currentTarget as HTMLDivElement).style.background =
+                          KNOWLEDGE_ROW_HOVER
+                      }}
+                      onMouseOut={(e) => {
+                        ;(e.currentTarget as HTMLDivElement).style.background = open
+                          ? KNOWLEDGE_ROW_SURFACE
+                          : 'transparent'
                       }}
                     >
                       <HelpCircle
                         size={13}
                         strokeWidth={2.2}
-                        style={{ color: 'var(--color-obs-primary)', flexShrink: 0 }}
+                        style={{
+                          color: 'var(--color-obs-primary)',
+                          flexShrink: 0,
+                          filter: 'drop-shadow(0 0 8px rgba(171,199,255,0.35))',
+                        }}
                       />
                       <p
                         className="text-[13px] font-medium tracking-[-0.01em] truncate flex-1 min-w-0"
@@ -362,7 +397,10 @@ function FaqSection() {
                           exit={{ height: 0, opacity: 0 }}
                           transition={{ duration: 0.12, ease: [0.16, 1, 0.3, 1] }}
                           className="overflow-hidden"
-                          style={{ backgroundColor: 'var(--color-obs-surface-low)' }}
+                          style={{
+                            background: KNOWLEDGE_DETAIL_SURFACE,
+                            boxShadow: `inset 0 -1px 0 ${KNOWLEDGE_DIVIDER}`,
+                          }}
                         >
                           <div className="px-6 py-3 pl-[44px]">
                             {editingId === f.id ? (
@@ -379,9 +417,9 @@ function FaqSection() {
                                   onChange={(e) => setEditTitle(e.target.value)}
                                   className="w-full px-3 h-9 text-[13px] rounded-[var(--radius-obs-sm)] outline-none"
                                   style={{
-                                    backgroundColor: 'var(--color-obs-surface-lowest)',
+                                    background: 'linear-gradient(145deg, rgba(14,14,16,0.76), rgba(8,9,12,0.84))',
                                     color: 'var(--color-obs-text)',
-                                    boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.18)',
+                                    boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.12)',
                                   }}
                                 />
                                 <label
@@ -396,9 +434,9 @@ function FaqSection() {
                                   rows={6}
                                   className="w-full px-3 py-2 text-[13px] leading-[1.7] rounded-[var(--radius-obs-sm)] outline-none resize-y"
                                   style={{
-                                    backgroundColor: 'var(--color-obs-surface-lowest)',
+                                    background: 'linear-gradient(145deg, rgba(14,14,16,0.76), rgba(8,9,12,0.84))',
                                     color: 'var(--color-obs-text)',
-                                    boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.18)',
+                                    boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.12)',
                                   }}
                                 />
                                 {(() => {
@@ -497,7 +535,8 @@ function FaqSection() {
                                       className="flex-1 min-w-0 text-left flex items-start justify-between gap-2 px-3 py-2 rounded-[var(--radius-obs-md)] text-[13px] leading-relaxed transition-colors hover:bg-[var(--color-obs-surface-high)]"
                                       style={{
                                         color: 'var(--color-obs-text)',
-                                        boxShadow: 'inset 0 0 0 1px var(--color-obs-surface-high)',
+                                        background: KNOWLEDGE_ANSWER_SURFACE,
+                                        boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.12), inset 0 1px 0 rgba(255,255,255,0.045)',
                                       }}
                                       title="クリックで答えを隠す"
                                     >
@@ -523,21 +562,21 @@ function FaqSection() {
                                       }}
                                       className="inline-flex items-center gap-1.5 h-8 px-3 rounded-[var(--radius-obs-md)] text-[12.5px] font-semibold transition-colors"
                                       style={{
-                                        backgroundColor: 'rgba(110,231,161,0.10)',
+                                        background: 'linear-gradient(140deg, rgba(110,231,161,0.16), rgba(126,198,255,0.07))',
                                         color: '#6ee7a1',
-                                        boxShadow: 'inset 0 0 0 1px rgba(110,231,161,0.32)',
+                                        boxShadow: 'inset 0 0 0 1px rgba(110,231,161,0.32), 0 0 18px rgba(110,231,161,0.12)',
                                       }}
                                       onMouseOver={(e) => {
-                                        ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
-                                          'rgba(110,231,161,0.18)'
+                                        ;(e.currentTarget as HTMLButtonElement).style.background =
+                                          'linear-gradient(140deg, rgba(110,231,161,0.22), rgba(126,198,255,0.10))'
                                         ;(e.currentTarget as HTMLButtonElement).style.boxShadow =
-                                          'inset 0 0 0 1px rgba(110,231,161,0.55)'
+                                          'inset 0 0 0 1px rgba(110,231,161,0.55), 0 0 24px rgba(110,231,161,0.18)'
                                       }}
                                       onMouseOut={(e) => {
-                                        ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
-                                          'rgba(110,231,161,0.10)'
+                                        ;(e.currentTarget as HTMLButtonElement).style.background =
+                                          'linear-gradient(140deg, rgba(110,231,161,0.16), rgba(126,198,255,0.07))'
                                         ;(e.currentTarget as HTMLButtonElement).style.boxShadow =
-                                          'inset 0 0 0 1px rgba(110,231,161,0.32)'
+                                          'inset 0 0 0 1px rgba(110,231,161,0.32), 0 0 18px rgba(110,231,161,0.12)'
                                       }}
                                       title="クリックで答えを表示"
                                     >
@@ -779,9 +818,12 @@ function Tag({
     <span
       className="inline-flex items-center gap-1 pl-1.5 pr-2 h-5 rounded-full text-[10px] font-medium whitespace-nowrap"
       style={{
-        backgroundColor: config.bg,
+        background: `linear-gradient(145deg, ${config.bg}, rgba(255,255,255,0.020))`,
         color: config.color,
-        boxShadow: config.shadow,
+        boxShadow:
+          config.shadow === 'none'
+            ? 'inset 0 0 0 1px rgba(171,199,255,0.08)'
+            : `${config.shadow}, 0 0 16px rgba(0,0,0,0.12)`,
       }}
       title={config.label ? `${config.label}: ${children}` : undefined}
     >
@@ -831,10 +873,13 @@ function SelectFilter({
         onChange={(e) => onChange(e.target.value)}
         className="appearance-none pl-7 pr-7 h-8 rounded-[var(--radius-obs-md)] text-[12px] font-medium transition-colors cursor-pointer outline-none"
         style={{
-          backgroundColor: isActive
-            ? 'var(--color-obs-primary-container)'
-            : 'var(--color-obs-surface-high)',
+          background: isActive
+            ? 'linear-gradient(140deg, #9fc3ff 0%, #2f8cff 62%, #0071e3 100%)'
+            : 'linear-gradient(145deg, rgba(22,23,27,0.58), rgba(14,15,18,0.86))',
           color: isActive ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
+          boxShadow: isActive
+            ? 'inset 0 1px 0 rgba(255,255,255,0.25), 0 0 20px rgba(0,113,227,0.20)'
+            : 'inset 0 0 0 1px rgba(171,199,255,0.10), inset 0 1px 0 rgba(255,255,255,0.040)',
         }}
         aria-label={label}
         title={currentLabel}

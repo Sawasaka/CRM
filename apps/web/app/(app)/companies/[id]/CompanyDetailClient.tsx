@@ -212,40 +212,8 @@ const INTENT_LABEL: Record<string, { tone: 'hot' | 'middle' | 'low' | 'neutral';
   NONE: { tone: 'neutral', text: '—' },
 }
 
-// 紐付けデータがまだ無い企業向けのダミー（UI確認用）
-// 実データが入った段階で自動的に置き換わる
-const DUMMY_DEALS: NonNullable<Raw['deals']> = [
-  {
-    id: 'dummy-d1', name: 'CRM導入 - 2026/03 提案中',
-    stage: 'POC', amount: 4800000, probability: 80,
-    expectedCloseAt: '2026-04-30', createdAt: '2026-03-01', updatedAt: '2026-04-22', ownerName: '田中 太郎',
-  },
-  {
-    id: 'dummy-d2', name: '介護記録AI - 全社展開検討',
-    stage: 'MEETING_DONE', amount: 12000000, probability: 50,
-    expectedCloseAt: '2026-06-30', createdAt: '2026-03-15', updatedAt: '2026-04-15', ownerName: '佐藤 美咲',
-  },
-  {
-    id: 'dummy-d3', name: 'Slack連携トライアル',
-    stage: 'CLOSED_WON', amount: 600000, probability: 100,
-    expectedCloseAt: '2026-02-28', createdAt: '2026-01-20', updatedAt: '2026-02-25', ownerName: '田中 太郎',
-  },
-]
-
-const DUMMY_CONTACTS: NonNullable<Raw['contacts']> = [
-  {
-    id: 'dummy-c1', name: '鈴木 一郎', title: 'CTO', department: '技術本部',
-    email: 'suzuki@example.co.jp', phone: '03-1234-5678', isDecisionMaker: true,
-  },
-  {
-    id: 'dummy-c2', name: '田中 誠', title: '営業部長', department: '営業本部',
-    email: 'tanaka@example.co.jp', phone: '03-1234-5679', isDecisionMaker: false,
-  },
-  {
-    id: 'dummy-c3', name: '高橋 結衣', title: 'マネージャー', department: 'CS部',
-    email: 'takahashi@example.co.jp', phone: null, isDecisionMaker: false,
-  },
-]
+const EMPTY_DEALS: NonNullable<Raw['deals']> = []
+const EMPTY_CONTACTS: NonNullable<Raw['contacts']> = []
 
 export default function CompanyDetailClient({
   id,
@@ -552,13 +520,12 @@ export default function CompanyDetailClient({
             {/* 取引（紐づくDeal） — 最上部 */}
             {(() => {
               const realDeals = c.deals && c.deals.length > 0 ? c.deals : null
-              const dealsToShow = realDeals ?? DUMMY_DEALS
-              const isDummy = !realDeals
+              const dealsToShow = realDeals ?? EMPTY_DEALS
               return (
                 <ObsCard depth="high" padding="lg">
                   <ObsSectionHeader
                     title="取引"
-                    caption={isDummy ? `${dealsToShow.length}件 · ダミー表示` : `${dealsToShow.length}件`}
+                    caption={`${dealsToShow.length}件`}
                   />
                   <div className="flex flex-col gap-2">
                     {dealsToShow.map((d) => {
@@ -599,13 +566,12 @@ export default function CompanyDetailClient({
             {/* コンタクト（紐づくContact） — 取引の直下 */}
             {(() => {
               const realContacts = c.contacts && c.contacts.length > 0 ? c.contacts : null
-              const contactsToShow = realContacts ?? DUMMY_CONTACTS
-              const isDummy = !realContacts
+              const contactsToShow = realContacts ?? EMPTY_CONTACTS
               return (
                 <ObsCard depth="high" padding="lg">
                   <ObsSectionHeader
                     title="コンタクト"
-                    caption={isDummy ? `${contactsToShow.length}名 · ダミー表示` : `${contactsToShow.length}名`}
+                    caption={`${contactsToShow.length}名`}
                   />
                   <div className="flex flex-col gap-2">
                     {contactsToShow.map((p) => (

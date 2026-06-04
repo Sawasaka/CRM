@@ -20,11 +20,13 @@ export const serviceName = 'ルキスマCRM'
 export const operatorName = '沢坂弘樹'
 export const operatorNameWithSpace = '沢坂 弘樹'
 export const operatorRomanName = 'Hiroki Sawasaka'
+export const operatorProfilePath = '/hiroki-sawasaka'
+export const operatorProfileUrl = `${publicSiteUrl}${operatorProfilePath}`
 
 export const publicSiteTitle = `【公式】${serviceName}｜${companyName}`
 
 export const publicSiteDescription =
-  'CRMも部署番号も無償。ルキスマCRMの営業実行とCRM構築を、株式会社ルーキースマートジャパン代表・沢坂弘樹が支援します。'
+  'CRMも部署番号も無償。営業実行とCRM構築を同時に実行します。株式会社ルーキースマートジャパン代表：沢坂弘樹'
 
 export const publicSiteKeywords = [
   companyName,
@@ -101,7 +103,7 @@ export const publicSiteStructuredData = [
     alternateName: [operatorNameWithSpace, operatorRomanName],
     jobTitle: `代表 / ${serviceName} 営業実行・CRM構築支援`,
     description: `${operatorName}は、${companyName}の代表として、${serviceName}の営業実行とCRM構築を支援しています。`,
-    url: publicSiteUrl,
+    url: operatorProfileUrl,
     worksFor: {
       '@id': `${publicSiteUrl}/#organization`,
     },

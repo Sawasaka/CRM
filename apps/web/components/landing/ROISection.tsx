@@ -106,15 +106,15 @@ const ComparisonCard = ({
       className="rounded-2xl mt-6 p-[1px]"
       style={{ background: 'linear-gradient(135deg, rgba(171,199,255,0.6), rgba(0,113,227,0.32), transparent 70%)' }}
     >
-      <div className="rounded-2xl bg-pitch px-6 py-6 text-center fo-glass-rim relative overflow-hidden">
+      <div className="rounded-2xl bg-pitch px-6 py-7 fo-glass-rim relative overflow-hidden flex flex-col items-center justify-center text-center gap-2.5">
         <div
           className="absolute -top-16 -right-16 w-48 h-48 rounded-full pointer-events-none"
           style={{ background: 'radial-gradient(circle, rgba(171,199,255,0.18), transparent 60%)', filter: 'blur(40px)' }}
         />
-        <div className="relative text-[10px] uppercase tracking-[0.18em] text-aurora opacity-80">
+        <div className="relative text-[10px] uppercase tracking-[0.18em] text-aurora opacity-80 leading-none">
           対して、ルキスマCRM
         </div>
-        <div className="relative mt-3 font-display font-bold text-[1.6rem] md:text-[2rem] leading-[1.15] tracking-[-0.01em] fo-gradient-text">
+        <div className="relative font-display font-bold text-[1.6rem] md:text-[2rem] leading-[1.1] tracking-[-0.01em] fo-gradient-text">
           {pitch}
         </div>
       </div>
@@ -158,12 +158,12 @@ export const ROISection = () => {
           <ComparisonCard
             eyebrow="VS 他社サービス"
             rows={others}
-            pitch="使うクレジット分だけ。"
+            pitch="使う分だけ。"
           />
           <ComparisonCard
             eyebrow="VS 自社開発"
             rows={inhouse}
-            pitch="使うクレジット分だけ。"
+            pitch="使う分だけ。"
           />
         </div>
 

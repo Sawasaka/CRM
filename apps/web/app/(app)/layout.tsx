@@ -4,6 +4,7 @@ import { Sidebar } from '@/components/layout/sidebar'
 import { Header } from '@/components/layout/header'
 import { ActiveCallWidget } from '@/components/calls/ActiveCallWidget'
 import { CallResultModal } from '@/components/calls/CallResultModal'
+import { PRODUCT_BACKGROUND_COLOR, PRODUCT_BACKGROUND_IMAGE } from '@/lib/product-background'
 
 export const metadata: Metadata = {
   robots: {
@@ -12,11 +13,11 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: '/service-icon.svg', type: 'image/svg+xml' },
-      { url: '/service-favicon.ico', sizes: '32x32' },
+      { url: '/service-icon.svg?v=service-black-2-20260531-final', type: 'image/svg+xml' },
+      { url: '/service-favicon.ico?v=service-black-2-20260531-final', sizes: '32x32' },
     ],
-    shortcut: '/service-icon.svg',
-    apple: '/service-icon.svg',
+    shortcut: '/service-icon.svg?v=service-black-2-20260531-final',
+    apple: '/service-icon.svg?v=service-black-2-20260531-final',
   },
 }
 
@@ -46,7 +47,11 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   return (
     <div
       className="min-h-screen relative"
-      style={{ backgroundColor: 'var(--color-obs-surface)', color: 'var(--color-obs-text)' }}
+      style={{
+        backgroundColor: PRODUCT_BACKGROUND_COLOR,
+        backgroundImage: PRODUCT_BACKGROUND_IMAGE,
+        color: 'var(--color-obs-text)',
+      }}
     >
       <Suspense fallback={null}>
         <Sidebar />

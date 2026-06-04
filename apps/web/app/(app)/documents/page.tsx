@@ -16,14 +16,7 @@ import {
 
 // ─── Mock Data ───────────────────────────────────────────────────────────────
 
-const MOCK_DOCS: ManagedDocument[] = [
-  { id: 'doc-1', name: 'ルキスマCRM サービス紹介資料 v2.1', type: 'service_intro', trackingUrl: 'https://track.bgm.app/d/abc123', totalPages: 12, createdAt: '2026-03-15', createdBy: '田中太郎', totalViews: 45, uniqueViewers: 28, fileSize: 2400000, mimeType: 'application/pdf', isPublished: true, password: null, expiresAt: null, tags: ['サービス紹介', 'v2'] },
-  { id: 'doc-2', name: '株式会社テクノリード向け提案書', type: 'proposal', trackingUrl: 'https://track.bgm.app/d/def456', totalPages: 18, createdAt: '2026-03-20', createdBy: '鈴木花子', totalViews: 12, uniqueViewers: 3, fileSize: 5100000, mimeType: 'application/pdf', isPublished: true, password: 'tech2026', expiresAt: '2026-04-20', tags: ['提案書', 'テクノリード'] },
-  { id: 'doc-3', name: '導入事例集 2026年版', type: 'case_study', trackingUrl: 'https://track.bgm.app/d/ghi789', totalPages: 24, createdAt: '2026-03-10', createdBy: '田中太郎', totalViews: 67, uniqueViewers: 41, fileSize: 8200000, mimeType: 'application/pdf', isPublished: true, password: null, expiresAt: null, tags: ['事例集', '2026'] },
-  { id: 'doc-4', name: '料金プラン比較表', type: 'pricing', trackingUrl: 'https://track.bgm.app/d/jkl012', totalPages: 4, createdAt: '2026-03-22', createdBy: '佐藤次郎', totalViews: 23, uniqueViewers: 18, fileSize: 980000, mimeType: 'application/pdf', isPublished: true, password: null, expiresAt: null, tags: ['料金'] },
-  { id: 'doc-5', name: 'ROI試算シート', type: 'other', trackingUrl: 'https://track.bgm.app/d/mno345', totalPages: 6, createdAt: '2026-03-25', createdBy: '鈴木花子', totalViews: 8, uniqueViewers: 5, fileSize: 1200000, mimeType: 'application/pdf', isPublished: false, password: null, expiresAt: null, tags: ['ROI'] },
-  { id: 'doc-6', name: 'セキュリティチェックシート', type: 'other', trackingUrl: 'https://track.bgm.app/d/pqr678', totalPages: 3, createdAt: '2026-03-26', createdBy: '田中太郎', totalViews: 4, uniqueViewers: 2, fileSize: 450000, mimeType: 'application/pdf', isPublished: true, password: null, expiresAt: null, tags: ['セキュリティ'] },
-]
+const MOCK_DOCS: ManagedDocument[] = []
 
 const TYPE_LABELS: Record<string, string> = {
   proposal: '提案書', service_intro: 'サービス紹介', case_study: '事例集', pricing: '料金表', other: 'その他',

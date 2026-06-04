@@ -7,6 +7,7 @@
  */
 
 import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { createPortal } from 'react-dom'
 import { Loader2, Sparkles, X } from 'lucide-react'
 
 interface DemoModalProps {
@@ -48,6 +49,7 @@ export const DemoModal = ({ open, onClose }: DemoModalProps) => {
   }, [open])
 
   if (!open) return null
+  if (typeof document === 'undefined') return null
 
   const update =
     (key: keyof Fields) => (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -82,7 +84,7 @@ export const DemoModal = ({ open, onClose }: DemoModalProps) => {
     }
   }
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center p-4"
       role="dialog"
@@ -205,7 +207,8 @@ export const DemoModal = ({ open, onClose }: DemoModalProps) => {
           </button>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 

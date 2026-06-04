@@ -214,51 +214,29 @@ interface DealTask {
 // Mock Data
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const MOCK_DEALS: Record<string, DealDetail> = {
-  'd1': {
-    id: 'd1', name: '株式会社テクノリード - 2026/01/15',
-    company: '株式会社テクノリード', companyId: '1',
-    contact: '田中 誠', contactId: '1', contactPhone: '090-1234-5678',
-    owner: '田中太郎', stage: 'POC', status: 'アクティブ',
-    amount: 4800000, probability: 80, expectedCloseAt: '2026-03-31', updatedAt: '2026-03-22',
-    progressStatus: '提案フェーズ / 最終見積回答待ち',
-    nextAction: '決裁者(CTO鈴木氏)同席の最終デモ',
-    nextActionDate: '2026-04-25',
-    memo: 'CTO鈴木氏はSlack連携を最重視。初期サポートの厚みを強調すると刺さる傾向。社内稟議のタイミングに合わせて4/1までに最終見積回答予定。',
-  },
-  'd2': {
-    id: 'd2', name: '株式会社イノベーション - 大型案件',
-    company: '株式会社イノベーション', companyId: '3',
-    contact: '佐々木 拓也', contactId: '3', contactPhone: '090-3456-7890',
-    owner: '田中太郎', stage: 'POC', status: '優先対応',
-    amount: 6000000, probability: 90, expectedCloseAt: '2026-03-28', updatedAt: '2026-03-21',
-    progressStatus: '口頭合意済 / 契約書ドラフト確認中',
-    nextAction: '契約書の最終レビューと押印手配',
-    nextActionDate: '2026-04-26',
-    memo: '代表者直々の商談で即決型。契約書レビューは法務経由で通常3営業日。押印はクラウドサイン利用予定。',
-  },
-  'd3': {
-    id: 'd3', name: '合同会社フューチャー - 2026/02/01',
-    company: '合同会社フューチャー', companyId: '2',
-    contact: '山本 佳子', contactId: '2', contactPhone: '090-2345-6789',
-    owner: '鈴木花子', stage: 'MEETING_PLANNED', status: 'アクティブ',
-    amount: 2400000, probability: 40, expectedCloseAt: '2026-04-15', updatedAt: '2026-03-19',
-    progressStatus: 'ヒアリング継続 / 予算確認中',
-    nextAction: '2回目商談で要件整理',
-    nextActionDate: '2026-04-30',
-    memo: '山本氏は現場マネージャーで決裁権限なし。決裁者は別途特定が必要。Zoho CRM との比較軸をこちらから提示すると有利。',
-  },
-  'd4': {
-    id: 'd4', name: '株式会社グロース - HR導入',
-    company: '株式会社グロース', companyId: '4',
-    contact: '中村 理恵', contactId: '4', contactPhone: '090-4567-8901',
-    owner: '佐藤次郎', stage: 'MEETING_PLANNED', status: 'アクティブ',
-    amount: 900000, probability: 30, expectedCloseAt: '2026-04-30', updatedAt: '2026-03-10',
-    progressStatus: '初期ヒアリング完了 / 費用感共有待ち',
-    nextAction: '比較資料を送付後フォローコール',
-    nextActionDate: '2026-05-05',
-    memo: '予算と優先度の両面で社内調整が必要な状況。人事部長を巻き込むタイミングを見極めたい。',
-  },
+const MOCK_DEALS: Record<string, DealDetail> = {}
+
+function createEmptyDeal(id: string): DealDetail {
+  return {
+    id,
+    name: '読み込み中',
+    company: '—',
+    companyId: '',
+    contact: '未設定',
+    contactId: '',
+    contactPhone: '',
+    owner: '—',
+    stage: 'IS',
+    status: 'アクティブ',
+    amount: 0,
+    probability: 0,
+    expectedCloseAt: null,
+    updatedAt: '',
+    progressStatus: '',
+    nextAction: '',
+    nextActionDate: null,
+    memo: '',
+  }
 }
 
 // ─── 紐付け企業情報（取引に紐付く企業の基本プロファイル） ─────────────
@@ -271,40 +249,7 @@ interface LinkedCompanyInfo {
   representative?: string
 }
 
-const DEAL_LINKED_COMPANIES: Record<string, LinkedCompanyInfo> = {
-  'd1': {
-    industry: 'SaaS / 業務システム',
-    employees: '120名',
-    address: '東京都港区赤坂1-2-3',
-    phone: '03-1234-5600',
-    websiteUrl: 'https://techno-lead.co.jp',
-    representative: '高橋 正人',
-  },
-  'd2': {
-    industry: 'IT / コンサルティング',
-    employees: '350名',
-    address: '東京都千代田区丸の内2-3-4',
-    phone: '03-5678-9000',
-    websiteUrl: 'https://innovation.co.jp',
-    representative: '佐々木 拓也',
-  },
-  'd3': {
-    industry: '物流テック / 3PL',
-    employees: '60名',
-    address: '東京都新宿区西新宿3-4-5',
-    phone: '03-2345-6700',
-    websiteUrl: 'https://future-llc.jp',
-    representative: '山田 健一',
-  },
-  'd4': {
-    industry: 'HR Tech / 採用支援',
-    employees: '85名',
-    address: '東京都渋谷区恵比寿4-5-6',
-    phone: '03-3456-7800',
-    websiteUrl: 'https://growth-inc.jp',
-    representative: '小林 翔',
-  },
-}
+const DEAL_LINKED_COMPANIES: Record<string, LinkedCompanyInfo> = {}
 
 // ─── インテント（部門別の採用動向集約）──────────────────────────────
 interface DealIntentRow {
@@ -314,25 +259,7 @@ interface DealIntentRow {
   latestSignalAt: string | null
 }
 
-const DEAL_INTENTS: Record<string, DealIntentRow[]> = {
-  'd1': [
-    { intentLevel: 'HOT',    departmentType: 'it_engineer', signalCount: 8, latestSignalAt: '2026-04-23' },
-    { intentLevel: 'HOT',    departmentType: 'sales_is',    signalCount: 5, latestSignalAt: '2026-04-22' },
-    { intentLevel: 'MIDDLE', departmentType: 'cs_success',  signalCount: 3, latestSignalAt: '2026-04-12' },
-  ],
-  'd2': [
-    { intentLevel: 'HOT',    departmentType: 'it_dx',     signalCount: 6, latestSignalAt: '2026-04-25' },
-    { intentLevel: 'MIDDLE', departmentType: 'pdm',       signalCount: 2, latestSignalAt: '2026-04-10' },
-  ],
-  'd3': [
-    { intentLevel: 'MIDDLE', departmentType: 'operations',   signalCount: 4, latestSignalAt: '2026-04-20' },
-    { intentLevel: 'LOW',    departmentType: 'engineering',  signalCount: 1, latestSignalAt: '2026-03-30' },
-  ],
-  'd4': [
-    { intentLevel: 'HOT',    departmentType: 'hr_recruit',  signalCount: 7, latestSignalAt: '2026-04-24' },
-    { intentLevel: 'MIDDLE', departmentType: 'sales_fs',    signalCount: 3, latestSignalAt: '2026-04-15' },
-  ],
-}
+const DEAL_INTENTS: Record<string, DealIntentRow[]> = {}
 
 // ─── 採用シグナル履歴（求人ボックス等のクロール結果） ────────────────
 interface DealIntentSignal {
@@ -345,27 +272,7 @@ interface DealIntentSignal {
   departmentType: string | null
 }
 
-const DEAL_INTENT_SIGNALS: Record<string, DealIntentSignal[]> = {
-  'd1': [
-    { id: 's1-1', title: '【東京/赤坂】SaaSエンジニア / Go・TypeScript / 基盤強化フェーズ',           signalType: 'job_posting', source: '求人ボックス', sourceUrl: 'https://xn--pckua2a7gp15o89zb.com/?q=' + encodeURIComponent('株式会社テクノリード SaaSエンジニア'),  publishedAt: '2026-04-23', departmentType: 'it_engineer' },
-    { id: 's1-2', title: 'インサイドセールス（SDR/BDR） / アウトバウンド比率高め / リーダー候補',      signalType: 'job_posting', source: '求人ボックス', sourceUrl: 'https://xn--pckua2a7gp15o89zb.com/?q=' + encodeURIComponent('株式会社テクノリード インサイドセールス'),  publishedAt: '2026-04-22', departmentType: 'sales_is' },
-    { id: 's1-3', title: 'カスタマーサクセス（オンボーディング担当） / SaaS提案経験者歓迎',           signalType: 'job_posting', source: '求人ボックス', sourceUrl: 'https://xn--pckua2a7gp15o89zb.com/?q=' + encodeURIComponent('株式会社テクノリード カスタマーサクセス'),  publishedAt: '2026-04-12', departmentType: 'cs_success' },
-    { id: 's1-4', title: 'バックエンドエンジニア / マイクロサービス基盤刷新',                          signalType: 'job_posting', source: '求人ボックス', sourceUrl: 'https://xn--pckua2a7gp15o89zb.com/?q=' + encodeURIComponent('株式会社テクノリード バックエンドエンジニア'), publishedAt: '2026-04-09', departmentType: 'it_engineer' },
-    { id: 's1-5', title: 'SRE/プラットフォームエンジニア / Kubernetes・Terraform',                    signalType: 'job_posting', source: '求人ボックス', sourceUrl: 'https://xn--pckua2a7gp15o89zb.com/?q=' + encodeURIComponent('株式会社テクノリード SRE'),                publishedAt: '2026-04-05', departmentType: 'it_engineer' },
-  ],
-  'd2': [
-    { id: 's2-1', title: 'DXコンサルタント / 製造業向け / 大手案件リーダー候補',  signalType: 'job_posting', source: '求人ボックス', sourceUrl: 'https://xn--pckua2a7gp15o89zb.com/?q=' + encodeURIComponent('株式会社イノベーション DXコンサルタント'),  publishedAt: '2026-04-25', departmentType: 'it_dx' },
-    { id: 's2-2', title: 'プロダクトマネージャー / 自社SaaSプロダクト / 拡大フェーズ', signalType: 'job_posting', source: '求人ボックス', sourceUrl: 'https://xn--pckua2a7gp15o89zb.com/?q=' + encodeURIComponent('株式会社イノベーション プロダクトマネージャー'),  publishedAt: '2026-04-10', departmentType: 'pdm' },
-  ],
-  'd3': [
-    { id: 's3-1', title: '物流オペレーションマネージャー / 倉庫DX推進',  signalType: 'job_posting', source: '求人ボックス', sourceUrl: 'https://xn--pckua2a7gp15o89zb.com/?q=' + encodeURIComponent('合同会社フューチャー 物流オペレーション'), publishedAt: '2026-04-20', departmentType: 'operations' },
-    { id: 's3-2', title: 'システムエンジニア / 在庫管理SaaS連携',          signalType: 'job_posting', source: '求人ボックス', sourceUrl: 'https://xn--pckua2a7gp15o89zb.com/?q=' + encodeURIComponent('合同会社フューチャー システムエンジニア'), publishedAt: '2026-03-30', departmentType: 'engineering' },
-  ],
-  'd4': [
-    { id: 's4-1', title: '採用コンサルタント（SMB領域） / RPO経験者歓迎',  signalType: 'job_posting', source: '求人ボックス', sourceUrl: 'https://xn--pckua2a7gp15o89zb.com/?q=' + encodeURIComponent('株式会社グロース 採用コンサルタント'), publishedAt: '2026-04-24', departmentType: 'hr_recruit' },
-    { id: 's4-2', title: 'フィールドセールス / HR Tech / 中堅企業担当',     signalType: 'job_posting', source: '求人ボックス', sourceUrl: 'https://xn--pckua2a7gp15o89zb.com/?q=' + encodeURIComponent('株式会社グロース フィールドセールス'), publishedAt: '2026-04-15', departmentType: 'sales_fs' },
-  ],
-}
+const DEAL_INTENT_SIGNALS: Record<string, DealIntentSignal[]> = {}
 
 // 25部門細分化ラベル（CompanyDetailClient と同じ）
 const DEAL_DEPT_LABELS: Record<string, string> = {
@@ -418,75 +325,7 @@ interface Proposal {
   attachments: ProposalAttachment[]
 }
 
-const DEAL_PROPOSALS: Record<string, Proposal[]> = {
-  'd1': [
-    {
-      id: 'p-d1-1',
-      name: '本命プラン',
-      service: 'ルキスマCRM Pro / Slack連携アドオン',
-      amount: 4800000,
-      paymentCycle: '年額一括',
-      contractMonths: 12,
-      licenseCount: 30,
-      startAt: '2026-04-01',
-      initialFee: 300000,
-      notes: 'Slack連携+AI議事録要約をフルで含む構成。CTO同席デモ後に最終調整予定。',
-      customFields: [],
-      attachments: [
-        { id: 'a-d1-1-1', name: '提案書_ルキスマCRM_Pro_v3.pdf', type: '提案書', sizeKb: 1240, uploadedAt: '2026-03-15' },
-        { id: 'a-d1-1-2', name: 'NDA_締結済.pdf', type: 'NDA', sizeKb: 320, uploadedAt: '2026-02-20' },
-      ],
-    },
-  ],
-  'd2': [
-    {
-      id: 'p-d2-1',
-      name: 'Enterprise案',
-      service: 'ルキスマCRM Enterprise',
-      amount: 6000000,
-      paymentCycle: '年額一括',
-      contractMonths: 24,
-      licenseCount: 80,
-      startAt: '2026-04-15',
-      initialFee: 500000,
-      notes: '24ヶ月契約で20%値引き適用済み。契約書ドラフトを法務レビュー中。',
-      customFields: [],
-      attachments: [],
-    },
-  ],
-  'd3': [
-    {
-      id: 'p-d3-1',
-      name: 'Standard',
-      service: 'ルキスマCRM Standard',
-      amount: 2400000,
-      paymentCycle: '月額',
-      contractMonths: 12,
-      licenseCount: 15,
-      startAt: '2026-05-01',
-      initialFee: null,
-      notes: '初期費用なし・月額固定で提案。決裁者特定後に再見積り想定。',
-      customFields: [],
-      attachments: [],
-    },
-  ],
-  'd4': [
-    {
-      id: 'p-d4-1',
-      name: 'HR導入特化版',
-      service: 'ルキスマCRM Lite (HR導入特化)',
-      amount: 900000,
-      paymentCycle: '月額',
-      contractMonths: 6,
-      licenseCount: 10,
-      startAt: '2026-06-01',
-      initialFee: 100000,
-      notes: '小規模スタートで6ヶ月運用→拡張提案を想定。',
-      customFields: [],
-      attachments: [],
-    },
-  ],
-}
+const DEAL_PROPOSALS: Record<string, Proposal[]> = {}
 
 const ATTACHMENT_TYPE_TONE: Record<AttachmentType, { bg: string; color: string }> = {
   '契約書':   { bg: 'rgba(110,231,161,0.14)', color: '#6ee7a1' },
@@ -523,370 +362,21 @@ function createEmptyProposal(): Proposal {
   }
 }
 
-const DEAL_CONTACTS: Record<string, ISContact[]> = {
-  'd1': [
-    { id: '1', name: '田中 誠',   title: '営業部長', status: 'アポ獲得', callAttempts: 3, isDecisionMaker: false },
-    { id: '9', name: '鈴木 一郎', title: 'CTO',      status: '未着手',   callAttempts: 0, isDecisionMaker: true  },
-  ],
-  'd2': [
-    { id: '3', name: '佐々木 拓也', title: '代表取締役', status: '接続済み', callAttempts: 2, isDecisionMaker: true },
-  ],
-  'd3': [
-    { id: '2', name: '山本 佳子', title: 'マネージャー', status: '接続済み', callAttempts: 5, isDecisionMaker: false },
-  ],
-  'd4': [
-    { id: '4', name: '中村 理恵', title: '購買担当', status: '不在', callAttempts: 4, isDecisionMaker: false },
-  ],
-}
+const DEAL_CONTACTS: Record<string, ISContact[]> = {}
 
 // ─── ISフィールド（電話とメール文から事実に基づき抽出される項目） ─────────
 // IS段階のヒアリング情報。電話の文字起こし＋メール本文・件名から AI が事実ベースで抽出
-const MOCK_IS_FIELDS: Record<string, ISField[]> = {
-  'd1': [
-    { isDefault: true, key: '担当部署', label: '担当部署', value: '営業部' },
-    { isDefault: true, key: '役割', label: '役割', value: '部長（実務推進担当） / 決裁関与あり（最終決裁は社長）' },
-    { isDefault: true, key: '検討フェーズ', label: '検討フェーズ', value: '検討中', chipValue: '検討中' },
-    { isDefault: true, key: 'どこでサービスを知ったか', label: 'どこでサービスを知ったか', value: '展示会で初回接触 → 自社サイト経由で問い合わせ' },
-    { isDefault: true, key: '会社やサービスを知っているか', label: '会社やサービスを知っているか', value: '内容を理解', chipValue: '内容を理解' },
-    { isDefault: true, key: '興味やニーズ', label: '興味やニーズ', value: 'AI議事録要約 / Slackリアルタイム連携 / 営業マネージャ向けKPIダッシュボード' },
-    { isDefault: true, key: '背景', label: '背景', value: '社内でCRM未導入。週次の数字集約をマネージャが手作業で行っており、深夜労働が常態化。' },
-    { isDefault: true, key: '課題や問題', label: '課題や問題', value: '商談管理の属人化 / 議事録作成負荷が高い / 数字確定までのリードタイムが長い' },
-    {
-      isDefault: true,
-      key: '求めているもの', label: '求めているもの', value: 'デモ / お見積もり / 事例紹介',
-      chipList: ['デモ', 'お見積もり', '事例紹介'],
-    },
-    { isDefault: true, key: '解決したいことや達成したいこと', label: '解決したいことや達成したいこと', value: '商談プロセスを標準化し、週次数字を即時可視化することでマネージャ負担をゼロにしたい' },
-    { isDefault: true, key: '次の進めかた', label: '次の進めかた', value: '4/25にCTO同席で最終デモ → 4/末までに見積回答 → 5月導入判定' },
-    {
-      isDefault: true,
-      key: 'タスク', label: 'タスク', value: '資料請求 / デモ依頼 / 稟議用情報',
-      chipList: ['資料請求', 'デモ依頼', '稟議用情報'],
-    },
-    { isDefault: true, key: '希望連絡手段', label: '希望連絡手段', value: 'メール優先（緊急時は電話可・平日10-12時）', chipValue: 'メール' },
-  ],
-  'd2': [
-    { isDefault: true, key: '担当部署', label: '担当部署', value: '代表取締役室' },
-    { isDefault: true, key: '役割', label: '役割', value: '代表取締役 / 決裁権限あり（即決可）' },
-    { isDefault: true, key: '検討フェーズ', label: '検討フェーズ', value: '導入決定間近', chipValue: '導入決定間近' },
-    { isDefault: true, key: 'どこでサービスを知ったか', label: 'どこでサービスを知ったか', value: '既存顧客(株式会社グロース)からの紹介' },
-    { isDefault: true, key: '会社やサービスを知っているか', label: '会社やサービスを知っているか', value: '内容を理解', chipValue: '内容を理解' },
-    { isDefault: true, key: '興味やニーズ', label: '興味やニーズ', value: '契約管理機能 / 役員向けダッシュボード' },
-    { isDefault: true, key: '背景', label: '背景', value: '大型案件を立て続けに受注しており、契約管理と経営KPIの一元化が急務。' },
-    { isDefault: true, key: '課題や問題', label: '課題や問題', value: '契約書管理がスプレッドシート / 経営会議用のKPI集計が月次の手作業' },
-    { isDefault: true, key: '求めているもの', label: '求めているもの', value: 'お見積もり / 事例紹介', chipList: ['お見積もり', '事例紹介'] },
-    { isDefault: true, key: '解決したいことや達成したいこと', label: '解決したいことや達成したいこと', value: '契約と経営指標を一元管理し、役員会議の意思決定スピードを倍にしたい' },
-    { isDefault: true, key: '次の進めかた', label: '次の進めかた', value: '契約書ドラフトを4/26に確認 → 即押印 → 5月導入' },
-    { isDefault: true, key: 'タスク', label: 'タスク', value: '見積依頼 / 事例提供', chipList: ['見積依頼', '事例提供'] },
-    { isDefault: true, key: '希望連絡手段', label: '希望連絡手段', value: '電話（即決スタイル）', chipValue: '電話' },
-  ],
-  'd3': [
-    { isDefault: true, key: '担当部署', label: '担当部署', value: '購買部' },
-    { isDefault: true, key: '役割', label: '役割', value: '現場マネージャー / 決裁権限なし（決裁者は別途特定が必要）' },
-    { isDefault: true, key: '検討フェーズ', label: '検討フェーズ', value: '比較検討', chipValue: '比較検討' },
-    { isDefault: true, key: 'どこでサービスを知ったか', label: 'どこでサービスを知ったか', value: '展示会・イベントで名刺交換 → メールフォロー' },
-    { isDefault: true, key: '会社やサービスを知っているか', label: '会社やサービスを知っているか', value: '名前は知っている', chipValue: '名前は知っている' },
-    { isDefault: true, key: '興味やニーズ', label: '興味やニーズ', value: '問い合わせキュー機能 / SLAアラート' },
-    { isDefault: true, key: '背景', label: '背景', value: 'Zoho CRM を導入済みだが現場利用が定着せず、再選定中。' },
-    { isDefault: true, key: '課題や問題', label: '課題や問題', value: 'SLA遵守率の計測ができない / 既存ツールが現場で使われていない' },
-    { isDefault: true, key: '求めているもの', label: '求めているもの', value: '資料 / お見積もり', chipList: ['資料', 'お見積もり'] },
-    { isDefault: true, key: '解決したいことや達成したいこと', label: '解決したいことや達成したいこと', value: '現場が自然に使えるUIで、SLA遵守率を可視化したい' },
-    { isDefault: true, key: '次の進めかた', label: '次の進めかた', value: 'Zoho比較表を4/末に提示 → 上長同席で再ヒアリング' },
-    { isDefault: true, key: 'タスク', label: 'タスク', value: '資料請求 / 見積依頼', chipList: ['資料請求', '見積依頼'] },
-    { isDefault: true, key: '希望連絡手段', label: '希望連絡手段', value: 'Slack(社外ゲスト)もしくはメール（火・木のみ電話可）', chipValue: 'Slack' },
-  ],
-  'd4': [
-    { isDefault: true, key: '担当部署', label: '担当部署', value: '購買部' },
-    { isDefault: true, key: '役割', label: '役割', value: '購買担当 / 最終決裁は人事部長' },
-    { isDefault: true, key: '検討フェーズ', label: '検討フェーズ', value: '情報収集', chipValue: '情報収集' },
-    { isDefault: true, key: 'どこでサービスを知ったか', label: 'どこでサービスを知ったか', value: '検索広告（HRTech系キーワード）経由でWebフォーム流入' },
-    { isDefault: true, key: '会社やサービスを知っているか', label: '会社やサービスを知っているか', value: '名前は知っている', chipValue: '名前は知っている' },
-    { isDefault: true, key: '興味やニーズ', label: '興味やニーズ', value: '採用ファネル管理 / 部長向けKPIレポート' },
-    { isDefault: true, key: '背景', label: '背景', value: '採用人数が前年比2倍に増え、応募者管理がスプレッドシートで限界。' },
-    { isDefault: true, key: '課題や問題', label: '課題や問題', value: '応募者ステージ管理が不透明 / 部長報告用のレポート作成に毎週2hかかる' },
-    { isDefault: true, key: '求めているもの', label: '求めているもの', value: '資料 / 個別相談', chipList: ['資料', '個別相談'] },
-    { isDefault: true, key: '解決したいことや達成したいこと', label: '解決したいことや達成したいこと', value: '採用ファネルを自動可視化し、部長報告レポートをワンクリックで作りたい' },
-    { isDefault: true, key: '次の進めかた', label: '次の進めかた', value: '比較資料送付 → フォローコール → 人事部長を巻き込めるか打診' },
-    { isDefault: true, key: 'タスク', label: 'タスク', value: '資料請求', chipList: ['資料請求'] },
-    { isDefault: true, key: '希望連絡手段', label: '希望連絡手段', value: 'メール', chipValue: 'メール' },
-  ],
-}
+const MOCK_IS_FIELDS: Record<string, ISField[]> = {}
 
 // ─── 営業フィールド（議事録から自動抽出される既定項目 + ユーザーカスタム追加可） ─
 // 既定項目は議事録の文章からAI抽出。出席者はコンタクトと連動。
-const MOCK_SALES_FIELDS: Record<string, SalesField[]> = {
-  'd1': [
-    {
-      key: '出席者', label: '出席者', value: null, isDefault: true,
-      participants: [
-        { name: '鈴木 一郎', contactId: '9', department: '技術本部',    title: 'CTO',         role: '技術評価・基盤選定の最終承認者' },
-        { name: '田中 誠',   contactId: '1', department: '営業部',       title: '部長',        role: '商談プロセス改善の推進担当' },
-        { name: '佐藤 由香',                  department: '情シス',       title: 'マネージャー', role: 'セキュリティ・既存システム統合担当' },
-      ],
-    },
-    { key: '商談に至った背景',  label: '商談に至った背景',  value: '営業組織の急拡大でスプレッドシート運用が限界。展示会で当社サービスを認知 → 自社サイトから問い合わせに至る。', isDefault: true },
-    { key: '社内状況',          label: '社内状況',          value: 'CRM未導入。Slack + Google Sheets + Notion の組み合わせで運用。情シス部門がSlack中心の運用標準化を推進中。', isDefault: true },
-    { key: 'ニーズ',            label: 'ニーズ',            value: '商談進捗を即時可視化し、マネージャ負担ゼロで週次数字を確定したい。AIで議事録作成も自動化したい。',          isDefault: true },
-    { key: '課題',              label: '課題',              value: '商談管理の属人化。週次の数字集約に毎週4-5時間を要し、営業マネージャが深夜労働を強いられている。',                isDefault: true },
-    { key: '達成したい事',      label: '達成したい事',      value: '半期内に営業組織のデータ基盤を統合し、受注予測精度を経営に対して説明可能なレベルまで引き上げる。',          isDefault: true },
-    { key: '必要なこと',        label: '必要なこと',        value: 'Slack双方向連携 / AI議事録要約 / KPIダッシュボード / 既存スプレッドシートからの移行支援',                  isDefault: true },
-    { key: '現状',              label: '現状',              value: 'Google Sheets(商談管理) + Slack(連絡) + Notion(ナレッジ)で属人ツール乱立。',                              isDefault: true },
-    { key: '理想',              label: '理想',              value: 'CRM(商談管理) + Slack双方向連携 + AI議事録要約 + KPIダッシュボード(属人ツールを統合)',                    isDefault: true },
-    { key: 'タイムライン',      label: 'タイムライン',      value: '2026年4月導入 → 5月全社展開',                                                                            isDefault: true },
-    { key: '検討フェーズ',      label: '検討フェーズ',      value: 'POC実施中 / 4月末までに最終評価 → 5月契約締結を希望',                                                    isDefault: true },
-    { key: '予算',              label: '予算',              value: '初年度500万円以内 / 追加機能は段階的に検討',                                                              isDefault: true },
-    { key: '稟議プロセス',      label: '稟議プロセス',      value: '部門責任者 → CTO技術承認 → 経営会議 → 社長最終決裁。社内ワークフローはGaroon。3/27 起票 → 4/1 完了予定。', isDefault: true },
-    { key: '競合',              label: '競合',              value: 'Salesforce / HubSpot の2社を比較中。Salesforceは機能過多・コスト高で見送り傾向。',                       isDefault: true },
-    { key: '導入の選定基準',    label: '導入の選定基準',    value: '①Slack連携の深さ ②議事録AIの精度 ③初期サポートの厚み ④契約後の運用支援体制',                              isDefault: true },
-    { key: '期待すること',      label: '期待すること',      value: '導入3ヶ月で属人化を解消し、マネージャの数字集約工数を50%削減。AI議事録の活用で商談振り返り時間を半減。',  isDefault: true },
-    { key: '障壁',              label: '障壁',              value: '既存スプレッドシート運用からの移行コスト / 現場メンバーの新ツール習熟負担',                              isDefault: true },
-    { key: '今後の流れ',        label: '今後の流れ',        value: '4/25にCTO同席で最終デモ → 4/末までに見積回答 → 5月導入判定 → 5月中旬全社展開',                            isDefault: true },
-  ],
-  'd2': [
-    {
-      key: '出席者', label: '出席者', value: null, isDefault: true,
-      participants: [
-        { name: '佐々木 拓也', contactId: '3', department: '経営',     title: '代表取締役',  role: '最終決裁者' },
-      ],
-    },
-    { key: '商談に至った背景',  label: '商談に至った背景',  value: '既存顧客(株式会社グロース)からの紹介で問い合わせ。代表自らヒアリング担当。', isDefault: true },
-    { key: '社内状況',          label: '社内状況',          value: '大型案件を立て続けに受注しており、契約管理と経営KPIの一元化が急務。', isDefault: true },
-    { key: 'ニーズ',            label: 'ニーズ',            value: '契約状況を役員がリアルタイムに把握でき、レポート作業をゼロにしたい', isDefault: true },
-    { key: '課題',              label: '課題',              value: '契約管理がスプレッドシート / 経営会議用のKPI集計が月次の手作業', isDefault: true },
-    { key: '達成したい事',      label: '達成したい事',      value: '契約と経営指標を一元管理し、役員会議の意思決定スピードを倍にしたい', isDefault: true },
-    { key: '必要なこと',        label: '必要なこと',        value: '契約書バージョン管理 / 役員向けダッシュボード / 電子契約連携(クラウドサイン)', isDefault: true },
-    { key: '現状',              label: '現状',              value: '紙 + Excel での契約管理。役員レポート作成に毎月2日。', isDefault: true },
-    { key: '理想',              label: '理想',              value: 'CRM + 契約管理 + 電子契約の一元化。役員ダッシュボードはリアルタイム反映。', isDefault: true },
-    { key: 'タイムライン',      label: 'タイムライン',      value: '4月末までに契約締結 → 5月運用開始', isDefault: true },
-    { key: '検討フェーズ',      label: '検討フェーズ',      value: '導入決定間近 / 契約書ドラフト確認中', isDefault: true },
-    { key: '予算',              label: '予算',              value: '600万円程度を想定 / 即決可', isDefault: true },
-    { key: '稟議プロセス',      label: '稟議プロセス',      value: '代表取締役の即決 / 役員報告のみ', isDefault: true },
-    { key: '競合',              label: '競合',              value: '検討済 / 当社で決定方向', isDefault: true },
-    { key: '導入の選定基準',    label: '導入の選定基準',    value: '①事例の質 ②ROI試算 ③スピード導入の実績', isDefault: true },
-    { key: '期待すること',      label: '期待すること',      value: '導入後即効果。役員会議のレポート作業を完全に廃止。', isDefault: true },
-    { key: '障壁',              label: '障壁',              value: '特になし', isDefault: true },
-    { key: '今後の流れ',        label: '今後の流れ',        value: '4/26 契約書ドラフト確認 → 即押印 → 5月導入', isDefault: true },
-  ],
-  'd3': [
-    {
-      key: '出席者', label: '出席者', value: null, isDefault: true,
-      participants: [
-        { name: '山本 佳子', contactId: '2', department: '購買部', title: 'マネージャー', role: '現場推進・要件取りまとめ' },
-      ],
-    },
-    { key: '商談に至った背景',  label: '商談に至った背景',  value: '展示会で名刺交換 → メールフォロー経由で初回商談に至る。Zoho CRM導入済みだが定着せず再選定中。', isDefault: true },
-    { key: '社内状況',          label: '社内状況',          value: '購買部のSLA管理が課題。決裁者は不在で現場マネージャー起点の検討。', isDefault: true },
-    { key: 'ニーズ',            label: 'ニーズ',            value: '問い合わせごとの対応状況をチーム内で一元化し取りこぼしを防ぎたい', isDefault: true },
-    { key: '課題',              label: '課題',              value: '問い合わせ管理の抜け漏れ / 既存ツールが現場で使われていない / SLA遵守率の計測ができない', isDefault: true },
-    { key: '達成したい事',      label: '達成したい事',      value: '現場が自然に使えるUIで、SLA遵守率を可視化したい', isDefault: true },
-    { key: '必要なこと',        label: '必要なこと',        value: '問い合わせキュー / 担当アサイン自動化 / SLAアラート', isDefault: true },
-    { key: '現状',              label: '現状',              value: 'Zoho CRM + スプレッドシート併用 / 現場利用率が低い', isDefault: true },
-    { key: '理想',              label: '理想',              value: 'シンプルなUIで現場が自然に使えるCRM。SLAアラートが自動で飛ぶ。', isDefault: true },
-    { key: 'タイムライン',      label: 'タイムライン',      value: '4月中旬〜の比較検討、6月までに方向性決定', isDefault: true },
-    { key: '検討フェーズ',      label: '検討フェーズ',      value: '比較検討 / Zoho・当社の2択', isDefault: true },
-    { key: '予算',              label: '予算',              value: '200〜300万円', isDefault: true },
-    { key: '稟議プロセス',      label: '稟議プロセス',      value: '上長(購買部長)同席ヒアリング → 経営判断。決裁者特定が課題。', isDefault: true },
-    { key: '競合',              label: '競合',              value: 'Zoho CRM(既存) / 機能の現場フィット感で比較', isDefault: true },
-    { key: '導入の選定基準',    label: '導入の選定基準',    value: '①現場メンバーの定着率 ②SLA計測精度 ③コスト', isDefault: true },
-    { key: '期待すること',      label: '期待すること',      value: '現場が自然に使い始め、SLA遵守率を継続計測できること', isDefault: true },
-    { key: '障壁',              label: '障壁',              value: '決裁者の特定が未完了 / 上長の関与が必要', isDefault: true },
-    { key: '今後の流れ',        label: '今後の流れ',        value: 'Zoho比較表を4月末に提示 → 上長同席で再ヒアリング → 5月以降に決裁プロセス', isDefault: true },
-  ],
-  'd4': [
-    {
-      key: '出席者', label: '出席者', value: null, isDefault: true,
-      participants: [
-        { name: '中村 理恵', contactId: '4', department: '人事部', title: '購買担当', role: '比較検討の実務担当' },
-      ],
-    },
-    { key: '商談に至った背景',  label: '商談に至った背景',  value: '検索広告(HRTech系キーワード)経由でWebフォームから問い合わせ。', isDefault: true },
-    { key: '社内状況',          label: '社内状況',          value: '採用人数が前年比2倍に増え、応募者管理がスプレッドシートで限界。人事部長が最終決裁者。', isDefault: true },
-    { key: 'ニーズ',            label: 'ニーズ',            value: '採用ファネル全体を一元管理し、人事部長向けのKPI報告を自動化したい', isDefault: true },
-    { key: '課題',              label: '課題',              value: '採用ファネル管理がスプレッドシートで分散 / 部長報告レポート作成に毎週2h', isDefault: true },
-    { key: '達成したい事',      label: '達成したい事',      value: '採用ファネルを自動可視化し、部長報告レポートをワンクリックで作りたい', isDefault: true },
-    { key: '必要なこと',        label: '必要なこと',        value: '候補者ステージ管理 / 面接予約リマインド / 部長向けKPIレポート', isDefault: true },
-    { key: '現状',              label: '現状',              value: 'Excel + メールで採用管理。複数チームで分散運用。', isDefault: true },
-    { key: '理想',              label: '理想',              value: '採用ファネルの一元管理 + 部長レポート自動生成', isDefault: true },
-    { key: 'タイムライン',      label: 'タイムライン',      value: '検討継続 / 6月以降の判断', isDefault: true },
-    { key: '検討フェーズ',      label: '検討フェーズ',      value: '情報収集 / 比較資料を求めている', isDefault: true },
-    { key: '予算',              label: '予算',              value: '100万円以下を希望', isDefault: true },
-    { key: '稟議プロセス',      label: '稟議プロセス',      value: '購買担当ヒアリング → 人事部長確認 → 最終決裁', isDefault: true },
-    { key: '競合',              label: '競合',              value: '未検討 / 比較資料を要求', isDefault: true },
-    { key: '導入の選定基準',    label: '導入の選定基準',    value: '①予算内 ②シンプルさ ③人事部長への報告のしやすさ', isDefault: true },
-    { key: '期待すること',      label: '期待すること',      value: '小さく始めて効果検証 → 拡張提案を受けられること', isDefault: true },
-    { key: '障壁',              label: '障壁',              value: '予算と優先度の両面で社内調整が必要', isDefault: true },
-    { key: '今後の流れ',        label: '今後の流れ',        value: '比較資料送付 → フォローコール → 人事部長を巻き込めるか打診', isDefault: true },
-  ],
-}
+const MOCK_SALES_FIELDS: Record<string, SalesField[]> = {}
 
-const MOCK_MEETINGS: Record<string, MeetingRecord[]> = {
-  'd1': [
-    {
-      id: 'm-d1-1', date: '2026-02-03', sequence: 1, title: '初回商談',
-      participants: ['田中 誠(顧客)', '田中太郎(当社)'],
-      durationMin: 45,
-      summary: '課題ヒアリング中心。CRM未導入で属人化、週次数字集約に時間を要するとの共通認識形成。',
-      keyPoints: [
-        '営業10名規模、月間商談50件程度',
-        '現状: スプレッドシート + Slack で管理',
-        '競合としてSalesforce/HubSpotを想定',
-        'CTO鈴木氏の承認が必須との言及',
-      ],
-    },
-    {
-      id: 'm-d1-2', date: '2026-02-20', sequence: 2, title: '提案レビュー',
-      participants: ['田中 誠(顧客)', '鈴木 一郎(顧客/CTO)', '田中太郎(当社)'],
-      durationMin: 60,
-      summary: 'CTO鈴木氏初回参加。技術面の質問多数。既存Slackワークフローとの統合要件が具体化。',
-      keyPoints: [
-        'Slack連携は必須要件',
-        '初年度予算は500万円以内で確定',
-        'Salesforceとの機能比較資料を要請',
-        '4月導入 → 5月全社展開のスケジュール合意',
-      ],
-    },
-    {
-      id: 'm-d1-3', date: '2026-03-15', sequence: 3, title: '最終交渉',
-      participants: ['田中 誠(顧客)', '鈴木 一郎(顧客/CTO)', '田中太郎(当社)', '佐藤(当社/CS)'],
-      durationMin: 75,
-      summary: 'CTO鈴木氏が「技術的懸念は解消」と発言。導入時期・サポート体制を具体化。最終見積の承認待ち状態へ。',
-      keyPoints: [
-        'CTO鈴木氏の温度感が明確に前向きに変化',
-        '導入時期: 2026年4月15日で合意',
-        'サポート: 初期3ヶ月は週次定例でフォロー',
-        '最終見積は社内稟議を経て4/1に回答予定',
-      ],
-    },
-  ],
-  'd2': [
-    {
-      id: 'm-d2-1', date: '2026-02-10', sequence: 1, title: '初回アプローチ',
-      participants: ['佐々木 拓也(顧客/代表)', '田中太郎(当社)'],
-      durationMin: 30,
-      summary: '代表者との顔合わせ。契約管理のペイン(役員レポート2日)を共有。概算予算600万円の示唆。',
-      keyPoints: [
-        '契約管理の属人化が最大課題',
-        '役員レポート作業に2日かかる',
-        '予算感: 600万円前後',
-        '4月末までに締結したい意向',
-      ],
-    },
-    {
-      id: 'm-d2-2', date: '2026-03-10', sequence: 2, title: '代表者商談',
-      participants: ['佐々木 拓也(顧客/代表)', '田中太郎(当社)'],
-      durationMin: 60,
-      summary: '代表者直々の商談。契約管理の課題共有、当社ソリューションで決定方向との意向表明。',
-      keyPoints: [
-        '予算600万円即決',
-        '4月末までに契約締結希望',
-        '導入は段階的でOK',
-      ],
-    },
-    {
-      id: 'm-d2-3', date: '2026-04-05', sequence: 3, title: '契約条件最終確認',
-      participants: ['佐々木 拓也(顧客/代表)', '田中太郎(当社)', '法務担当(顧客)'],
-      durationMin: 45,
-      summary: '口頭合意後の最終詰め。契約書ドラフトのレビュー方針・押印スケジュールを確定。',
-      keyPoints: [
-        '契約書ドラフト: 4/15 までに法務レビュー完了',
-        '押印はクラウドサインで4/25実施予定',
-        'キックオフミーティングは5月第1週で調整',
-      ],
-    },
-  ],
-  'd3': [
-    {
-      id: 'm-d3-1', date: '2026-02-18', sequence: 1, title: '資料説明コール',
-      participants: ['山本 佳子(顧客)', '鈴木花子(当社)'],
-      durationMin: 20,
-      summary: '短時間の資料説明コール。問い合わせ管理の課題を共有、次回詳細ヒアリングに合意。',
-      keyPoints: [
-        '問い合わせ管理に課題感あり',
-        '「まず一度詳しく話を聞きたい」との発言',
-        '現状はスプレッドシートで管理',
-      ],
-    },
-    {
-      id: 'm-d3-2', date: '2026-03-05', sequence: 2, title: '初回ヒアリング',
-      participants: ['山本 佳子(顧客)', '鈴木花子(当社)'],
-      durationMin: 30,
-      summary: '問い合わせ管理の課題ヒアリング。ZohoCRMと比較検討中。',
-      keyPoints: [
-        '予算200〜300万円想定',
-        'Zoho CRMを比較',
-        '決裁者は別途確認必要',
-      ],
-    },
-    {
-      id: 'm-d3-3', date: '2026-04-02', sequence: 3, title: '要件整理ミーティング',
-      participants: ['山本 佳子(顧客)', '山本 佳子 上長(顧客)', '鈴木花子(当社)'],
-      durationMin: 45,
-      summary: '上長同席で要件整理。SLAアラート機能への関心が高まり、Zohoとの機能差分を具体的に質問された。',
-      keyPoints: [
-        'SLAアラート / 担当自動アサインが最優先要件',
-        '上長が登場、決裁者候補として浮上',
-        'Zohoとの比較表を5月上旬までに提示要請',
-      ],
-    },
-  ],
-  'd4': [
-    {
-      id: 'm-d4-1', date: '2026-02-10', sequence: 1, title: '資料請求対応コール',
-      participants: ['中村 理恵(顧客)', '佐藤次郎(当社)'],
-      durationMin: 20,
-      summary: '資料請求に対する初回コール。購買担当として情報収集段階であることを確認。',
-      keyPoints: [
-        '中村氏は購買担当、情報収集フェーズ',
-        '人事部長が最終決裁者',
-        '複数ツール比較を実施予定',
-      ],
-    },
-    {
-      id: 'm-d4-2', date: '2026-02-28', sequence: 2, title: '初回商談',
-      participants: ['中村 理恵(顧客)', '佐藤次郎(当社)'],
-      durationMin: 40,
-      summary: '採用管理の分散課題を共有。予算と優先度が課題。',
-      keyPoints: [
-        '予算100万円以下希望',
-        '最終決裁は人事部長',
-        '優先度は現状中程度',
-      ],
-    },
-    {
-      id: 'm-d4-3', date: '2026-03-22', sequence: 3, title: '費用感すり合わせ',
-      participants: ['中村 理恵(顧客)', '佐藤次郎(当社)'],
-      durationMin: 35,
-      summary: '比較資料を元に費用感のすり合わせ。現予算では機能絞り込みが必要と判明、人事部長巻き込みのタイミングを協議。',
-      keyPoints: [
-        '100万円予算だと候補者管理機能のみに絞る必要',
-        '人事部長巻き込みは4月後半を目処',
-        '他社比較は現時点では未着手',
-      ],
-    },
-  ],
-}
+const MOCK_MEETINGS: Record<string, MeetingRecord[]> = {}
 
-const MOCK_STAGE_HISTORY: StageHistoryItem[] = [
-  { stage: 'IS',               date: '2026-01-15', daysAgo: 67, isCurrent: false },
-  { stage: 'MEETING_PLANNED',  date: '2026-02-03', daysAgo: 48, isCurrent: false },
-  { stage: 'MEETING_DONE',     date: '2026-02-20', daysAgo: 31, isCurrent: false },
-  { stage: 'PROJECT_PLANNED',  date: '2026-03-05', daysAgo: 18, isCurrent: false },
-  { stage: 'POC',              date: '2026-03-15', daysAgo:  8, isCurrent: true  },
-]
+const MOCK_STAGE_HISTORY: StageHistoryItem[] = []
 
-// ─── タスク初期モックデータ ───────────────────────────────────────────────
-const INITIAL_DEAL_TASKS: Record<string, DealTask[]> = {
-  'd1': [
-    { id: 't-d1-1', type: 'meeting',  title: 'デモ商談実施',         dueAt: '2026-04-15', memo: '製品デモと質疑応答',          done: false },
-    { id: 't-d1-2', type: 'proposal', title: '提案書送付',           dueAt: '2026-04-18', memo: '比較表と見積書を含める',      done: false },
-    { id: 't-d1-3', type: 'followup', title: '導入後フォロー設計',   dueAt: '2026-04-25', memo: '初期サポート計画を準備',      done: false },
-  ],
-  'd2': [
-    { id: 't-d2-1', type: 'call', title: '最終確認コール', dueAt: '2026-04-14', memo: '契約書ドラフト確認', done: false },
-  ],
-  'd3': [],
-  'd4': [],
-}
+const INITIAL_DEAL_TASKS: Record<string, DealTask[]> = {}
 
 interface DealTaskTypeStyle {
   Icon: React.ElementType
@@ -1647,7 +1137,7 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
   const { id } = React.use(params)
   const router = useRouter()
 
-  const rawDeal = (MOCK_DEALS[id] ?? MOCK_DEALS['d1'])!
+  const rawDeal = MOCK_DEALS[id] ?? createEmptyDeal(id)
   const [dbDeal, setDbDeal] = useState<DealDetail | null>(null)
   const [dbActivities, setDbActivities] = useState<ActivityItem[]>([])
   const displayBaseDeal = dbDeal ?? rawDeal
@@ -1759,18 +1249,17 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
   }
 
   // 取引に紐づく IS / 営業 / プロダクト フィールド / 議事録 / 集約
-  // (フェーズ1はモック。id に紐づくデータが無い場合は d1 のダミーで埋める)
   // IS / 営業フィールドは編集可能 + カスタム追加に対応するため state で管理
   const [isFields, setIsFields] = useState<ISField[]>(
-    () => MOCK_IS_FIELDS[id] ?? MOCK_IS_FIELDS['d1'] ?? [],
+    () => MOCK_IS_FIELDS[id] ?? [],
   )
   const [salesFields, setSalesFields] = useState<SalesField[]>(
-    () => MOCK_SALES_FIELDS[id] ?? MOCK_SALES_FIELDS['d1'] ?? [],
+    () => MOCK_SALES_FIELDS[id] ?? [],
   )
   // 取引切替時にフィールドも初期化
   React.useEffect(() => {
-    setIsFields(MOCK_IS_FIELDS[id] ?? MOCK_IS_FIELDS['d1'] ?? [])
-    setSalesFields(MOCK_SALES_FIELDS[id] ?? MOCK_SALES_FIELDS['d1'] ?? [])
+    setIsFields(MOCK_IS_FIELDS[id] ?? [])
+    setSalesFields(MOCK_SALES_FIELDS[id] ?? [])
   }, [id])
 
   // IS フィールド操作
@@ -1797,18 +1286,18 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
     setSalesFields((prev) => prev.filter((f) => f.key !== key || f.isDefault))
   }
   // プロダクトフィールドは開発優先度ページのデータと連動するため、MOCK_PRODUCT_FIELDS は廃止
-  const meetings = MOCK_MEETINGS[id] ?? MOCK_MEETINGS['d1'] ?? []
+  const meetings = MOCK_MEETINGS[id] ?? []
 
   // 提案内容（複数提案を保持・編集・追加可能）
   const [proposals, setProposals] = useState<Proposal[]>(
-    () => DEAL_PROPOSALS[id] ?? DEAL_PROPOSALS['d1'] ?? [],
+    () => DEAL_PROPOSALS[id] ?? [],
   )
   const [activeProposalId, setActiveProposalId] = useState<string | null>(
-    () => (DEAL_PROPOSALS[id] ?? DEAL_PROPOSALS['d1'] ?? [])[0]?.id ?? null,
+    () => (DEAL_PROPOSALS[id] ?? [])[0]?.id ?? null,
   )
   const [editingProposal, setEditingProposal] = useState<Proposal | null>(null)
   React.useEffect(() => {
-    const list = DEAL_PROPOSALS[id] ?? DEAL_PROPOSALS['d1'] ?? []
+    const list = DEAL_PROPOSALS[id] ?? []
     setProposals(list)
     setActiveProposalId(list[0]?.id ?? null)
   }, [id])
@@ -3415,10 +2904,8 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
 
             {/* 紐付け情報（紐付け企業 + 担当コンタクト） */}
             {(() => {
-              // deal は MOCK_DEALS[id] ?? MOCK_DEALS['d1'] でフォールバックしているため
-              // 紐付け企業・コンタクトも同様にフォールバックして整合させる
-              const linkedCompany = DEAL_LINKED_COMPANIES[id] ?? DEAL_LINKED_COMPANIES['d1']
-              const linkedContacts = DEAL_CONTACTS[id] ?? DEAL_CONTACTS['d1'] ?? []
+              const linkedCompany = DEAL_LINKED_COMPANIES[id]
+              const linkedContacts = DEAL_CONTACTS[id] ?? []
               const primaryContact =
                 linkedContacts.find((c) => c.id === deal.contactId) ?? linkedContacts[0]
               const otherContacts = linkedContacts.filter((c) => c.id !== primaryContact?.id)

@@ -26,33 +26,7 @@ interface Payment {
   stripeReceiptUrl: string
 }
 
-const SAMPLE_PAYMENTS: Payment[] = [
-  {
-    id: 'pay_001',
-    title: 'PROプラン',
-    amount: 108000,
-    status: 'succeeded',
-    paidAt: '2026-05-01T00:00:05',
-    stripeReceiptUrl: 'https://pay.stripe.com/receipts/example/r_001',
-  },
-  {
-    id: 'pay_002',
-    title: '追加クレジット',
-    amount: 50000,
-    status: 'succeeded',
-    paidAt: '2026-04-12T16:20:00',
-    stripeReceiptUrl: 'https://pay.stripe.com/receipts/example/r_002',
-  },
-  {
-    id: 'pay_003',
-    title: '機能リクエスト',
-    amount: 80000,
-    refundedAmount: 80000,
-    status: 'refunded',
-    paidAt: '2026-03-15T14:00:00',
-    stripeReceiptUrl: 'https://pay.stripe.com/receipts/example/r_003',
-  },
-]
+const SAMPLE_PAYMENTS: Payment[] = []
 
 function useIsSuperAdmin(): boolean {
   return true

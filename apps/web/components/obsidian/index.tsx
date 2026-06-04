@@ -20,16 +20,71 @@ function cx(...parts: Array<string | false | null | undefined>): string {
   return parts.filter(Boolean).join(' ')
 }
 
-const SERVICE_PAGE_BACKGROUND =
-  'radial-gradient(circle at 50% 20%, rgba(171,199,255,0.06) 0%, transparent 45%), radial-gradient(circle at 20% 80%, rgba(0,113,227,0.04) 0%, transparent 50%)'
+export const OBS_PRODUCT_SURFACE = {
+  pageBackground:
+    'radial-gradient(circle at 42% 10%, rgba(171,199,255,0.045) 0%, transparent 34%), radial-gradient(circle at 82% 0%, rgba(0,113,227,0.026) 0%, transparent 34%), linear-gradient(180deg, rgba(18,19,22,0.96) 0%, rgba(13,14,17,0.985) 56%, rgba(10,10,12,1) 100%)',
+  panel:
+    'linear-gradient(145deg, rgba(27,28,32,0.66) 0%, rgba(19,20,24,0.84) 50%, rgba(12,13,16,0.94) 100%)',
+  panelStrong:
+    'linear-gradient(145deg, rgba(31,32,36,0.70) 0%, rgba(20,21,25,0.88) 54%, rgba(12,13,16,0.96) 100%)',
+  panelSoft:
+    'linear-gradient(145deg, rgba(22,23,27,0.58) 0%, rgba(14,15,18,0.86) 100%)',
+  header:
+    'linear-gradient(90deg, rgba(171,199,255,0.050), rgba(255,255,255,0.018), rgba(255,255,255,0.004))',
+  row:
+    'linear-gradient(90deg, rgba(255,255,255,0.010), rgba(171,199,255,0.012), rgba(255,255,255,0))',
+  rowAlt:
+    'linear-gradient(90deg, rgba(171,199,255,0.020), rgba(255,255,255,0.010), rgba(255,255,255,0))',
+  rowHover:
+    'linear-gradient(90deg, rgba(171,199,255,0.052), rgba(255,255,255,0.022), rgba(255,255,255,0.004))',
+  inset:
+    'linear-gradient(145deg, rgba(13,14,17,0.78), rgba(20,21,25,0.58))',
+  rim:
+    'inset 0 0 0 1px rgba(171,199,255,0.105), inset 1px 1px 0 rgba(255,255,255,0.035), 0 18px 48px rgba(0,0,0,0.30)',
+  rimSoft:
+    'inset 0 0 0 1px rgba(171,199,255,0.085), inset 1px 1px 0 rgba(255,255,255,0.025), 0 14px 36px rgba(0,0,0,0.24)',
+  divider: 'rgba(171,199,255,0.075)',
+} as const
+
+export const OBS_PRIMARY_BUTTON = {
+  background:
+    'linear-gradient(140deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
+  color: 'var(--color-obs-on-primary)',
+  shadow:
+    'inset 0 1px 0 rgba(255,255,255,0.22), 0 0 0 1px rgba(171,199,255,0.18), 0 0 24px rgba(171,199,255,0.32)',
+  shadowStrong:
+    'inset 0 1px 0 rgba(255,255,255,0.30), 0 0 0 1px rgba(171,199,255,0.24), 0 0 26px rgba(171,199,255,0.36), 0 12px 32px rgba(0,113,227,0.22)',
+} as const
+
+const SERVICE_PAGE_BACKGROUND = OBS_PRODUCT_SURFACE.pageBackground
+
+export const OBS_HERO_CLASS = {
+  shell: 'flex items-end justify-between gap-8 py-10',
+  body: 'flex min-w-0 max-w-3xl flex-col gap-3',
+  eyebrow:
+    'inline-flex items-center gap-2 font-[family-name:var(--font-body)] text-[11px] font-semibold uppercase',
+  title:
+    'font-[family-name:var(--font-display)] whitespace-nowrap text-[2rem] font-bold leading-[1.08] tracking-normal sm:text-[2.75rem] md:text-[3.55rem]',
+  caption: 'max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[14px] font-normal leading-[1.7]',
+} as const
+
+export const OBS_HERO_STYLE = {
+  eyebrow: { color: 'var(--color-aurora)' },
+  dot: {
+    background: 'var(--color-aurora)',
+    boxShadow: '0 0 10px var(--color-aurora)',
+  },
+  titleBase: { color: 'var(--color-obs-text)' },
+  caption: { color: 'var(--color-obs-text-muted)' },
+} satisfies Record<string, React.CSSProperties>
 
 // ─── Page Shell ────────────────────────────────────────────────────────────────
 export function ObsPageShell({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
     <div
-      className={cx('min-h-full font-[family-name:var(--font-body)]', className)}
+      className={cx('min-h-[calc(100vh-56px)] font-[family-name:var(--font-body)]', className)}
       style={{
-        backgroundColor: 'var(--color-obs-surface)',
+        backgroundColor: '#0f1013',
         backgroundImage: SERVICE_PAGE_BACKGROUND,
         color: 'var(--color-obs-text)',
       }}
@@ -57,28 +112,25 @@ export function ObsHero({
   const titleBase = hasTitleAccent ? title.slice(0, title.length - titleAccent!.length) : title
 
   return (
-    <div className="flex items-end justify-between gap-8 py-10">
-      <div className="flex flex-col gap-3 max-w-3xl">
+    <div className={OBS_HERO_CLASS.shell}>
+      <div className={OBS_HERO_CLASS.body}>
         {eyebrow && (
           <span
-            className="inline-flex items-center gap-2 font-[family-name:var(--font-body)] text-[11px] font-semibold tracking-[0.16em] uppercase"
-            style={{ color: 'var(--color-aurora)' }}
+            className={OBS_HERO_CLASS.eyebrow}
+            style={OBS_HERO_STYLE.eyebrow}
           >
             <span
               className="block w-1.5 h-1.5 rounded-full"
-              style={{
-                background: 'var(--color-aurora)',
-                boxShadow: '0 0 10px var(--color-aurora)',
-              }}
+              style={OBS_HERO_STYLE.dot}
               aria-hidden
             />
             {eyebrow}
           </span>
         )}
         <h1
-          className="font-[family-name:var(--font-display)] text-[2rem] sm:text-[2.75rem] md:text-[3.55rem] font-bold leading-[1.08] tracking-[-0.025em]"
+          className={OBS_HERO_CLASS.title}
         >
-          <span style={{ color: '#e7e5ea' }}>{titleBase}</span>
+          <span style={OBS_HERO_STYLE.titleBase}>{titleBase}</span>
           {hasTitleAccent && (
             <span className="fo-gradient-text" style={{ WebkitTextFillColor: 'transparent' }}>
               {titleAccent}
@@ -86,12 +138,12 @@ export function ObsHero({
           )}
         </h1>
         {caption && (
-          <p className="text-[14px] font-normal leading-relaxed max-w-none md:whitespace-nowrap" style={{ color: 'var(--color-obs-text-muted)' }}>
+          <p className={OBS_HERO_CLASS.caption} style={OBS_HERO_STYLE.caption}>
             {caption}
           </p>
         )}
       </div>
-      {action && <div className="shrink-0">{action}</div>}
+      {action && <div className="shrink-0 self-end">{action}</div>}
     </div>
   )
 }
@@ -104,6 +156,7 @@ export function ObsCard({
   children,
   className,
   onClick,
+  style,
 }: {
   depth?: 'low' | 'high' | 'highest'
   padding?: 'none' | 'sm' | 'md' | 'lg'
@@ -111,12 +164,13 @@ export function ObsCard({
   children: React.ReactNode
   className?: string
   onClick?: () => void
+  style?: React.CSSProperties
 }) {
   // Photon Drift: translucent surface + Aurora rim. ガラス感は backdrop-blur で表現。
   const bg =
-    depth === 'low' ? 'rgba(36,36,38,0.55)' :
-    depth === 'highest' ? 'rgba(27,27,29,0.72)' :
-    'rgba(53,52,55,0.55)'
+    depth === 'low' ? 'rgba(18,19,23,0.68)' :
+    depth === 'highest' ? 'rgba(14,15,18,0.84)' :
+    'rgba(24,25,29,0.62)'
   const pad =
     padding === 'none' ? '' :
     padding === 'sm' ? 'p-4' :
@@ -143,6 +197,7 @@ export function ObsCard({
         backdropFilter: 'blur(28px) saturate(140%)',
         WebkitBackdropFilter: 'blur(28px) saturate(140%)',
         transitionTimingFunction: 'var(--ease-liquid)',
+        ...style,
       }}
     >
       {children}
@@ -186,10 +241,10 @@ export function ObsButton({
           className,
         )}
         style={{
-          background: 'linear-gradient(140deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
-          color: 'var(--color-obs-on-primary)',
+          background: OBS_PRIMARY_BUTTON.background,
+          color: OBS_PRIMARY_BUTTON.color,
           transitionTimingFunction: 'var(--ease-liquid)',
-          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.22), 0 0 0 1px rgba(171,199,255,0.18), 0 0 24px rgba(171,199,255,0.32)',
+          boxShadow: OBS_PRIMARY_BUTTON.shadow,
         }}
       >
         {children}
@@ -242,7 +297,7 @@ export function ObsChip({
 }) {
   const toneStyle: Record<string, React.CSSProperties> = {
     neutral: {
-      backgroundColor: 'rgba(53,52,55,0.55)',
+      backgroundColor: 'rgba(24,25,29,0.58)',
       color: 'var(--color-obs-on-secondary)',
       boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.10)',
     },
@@ -349,7 +404,7 @@ export function ObsGlass({
     <div
       className={cx('rounded-[var(--radius-obs-xl)] fo-glass-rim', className)}
       style={{
-        backgroundColor: 'rgba(53,52,55,0.6)',
+        backgroundColor: 'rgba(20,21,25,0.68)',
         backdropFilter: 'blur(20px) saturate(180%)',
         WebkitBackdropFilter: 'blur(20px) saturate(180%)',
       }}
@@ -376,7 +431,7 @@ export const ObsInput = React.forwardRef<
         className,
       )}
       style={{
-        backgroundColor: 'rgba(36,36,38,0.6)',
+        backgroundColor: 'rgba(20,21,25,0.68)',
         backdropFilter: 'blur(8px)',
         color: 'var(--color-obs-text)',
       }}

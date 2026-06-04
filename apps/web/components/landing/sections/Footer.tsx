@@ -7,6 +7,7 @@
 import { ContactForm } from './ContactForm'
 import Image from 'next/image'
 import Link from 'next/link'
+import { operatorProfilePath } from '@/lib/public-site'
 
 export const Footer = () => (
   <footer id="contact" className="relative bg-[#0e0e10] scroll-mt-24">
@@ -82,9 +83,9 @@ export const Footer = () => (
             </div>
 
             <div className="space-y-1">
-              <div className="text-[#e7e5ea] text-sm font-semibold">
+              <Link href={operatorProfilePath} className="text-[#e7e5ea] text-sm font-semibold hover:text-aurora transition-colors">
                 沢坂弘樹
-              </div>
+              </Link>
               <p className="text-[11.5px] text-[#9b99a0] leading-relaxed">
                 株式会社ルーキースマートジャパン代表。<br />
                 営業実行とCRM構築を同時に支援します。

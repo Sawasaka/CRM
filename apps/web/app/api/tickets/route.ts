@@ -46,7 +46,6 @@ const ticketListSelectWithoutEstimate = {
   createdAt: true,
   updatedAt: true,
   resolvedAt: true,
-  deal: { select: { id: true, name: true } },
   company: { select: { id: true, name: true } },
   assignee: { select: { id: true, name: true } },
 } as const
@@ -107,7 +106,11 @@ export async function GET(req: NextRequest) {
         orderBy: { updatedAt: 'desc' },
         select: ticketListSelectWithoutEstimate,
       })
-      tickets = fallbackTickets.map((ticket) => ({ ...ticket, estimatedCompletionAt: null }))
+      tickets = fallbackTickets.map((ticket) => ({
+        ...ticket,
+        deal: null,
+        estimatedCompletionAt: null,
+      }))
     } catch (fallbackError) {
       if (canUseDevSchemaFallback(fallbackError)) {
         return NextResponse.json({ tickets: [] })

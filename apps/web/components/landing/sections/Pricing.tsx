@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Check, Sparkles, Crown, Star, Zap, FileSpreadsheet, ArrowRight } from 'lucide-react'
+import { Check, Sparkles, Crown, Zap, FileSpreadsheet, ArrowRight } from 'lucide-react'
 import { AGENTS, type AgentKey, Eyebrow, Orb, Section } from '../atoms'
 
 // サービス本体 (/subscription) の PLANS と完全同期する。
@@ -31,40 +31,16 @@ interface PartnershipTier {
 
 const partnershipTiers: PartnershipTier[] = [
   {
-    id: 'cxo',
-    name: 'CxO',
-    price: 500000,
-    slotsTotal: 1,
-    slotsRemaining: 1,
-    icon: Crown,
-    accentHex: '#E5E7EB',
-    accentRgb: '229, 231, 235',
-    scope: [
-      '事業設計',
-      'IS 設計',
-      'FS / CS の営業実装',
-    ],
-    crm: [
-      'CRM 構築',
-      '部署番号含む 企業DB',
-      '月30,000クレジット 込み',
-    ],
-    cadenceItems: [
-      '1日2商談',
-      '平日 日中稼働',
-      '3ヶ月契約・3ヶ月ごとに更新',
-    ],
-  },
-  {
-    id: 'sales-director',
-    name: '営業責任者',
+    id: 'business-director',
+    name: '事業責任者',
     price: 350000,
     slotsTotal: 1,
     slotsRemaining: 1,
-    icon: Star,
-    featured: true,
-    accentHex: '#FFC107',
-    accentRgb: '255, 193, 7',
+    icon: Crown,
+    // CxO の元カラー (silver / 中立) — featured は中央(IS設計)に譲り、ここは「別格の上位枠」を
+    // 落ち着いた銀で表現する
+    accentHex: '#E5E7EB',
+    accentRgb: '229, 231, 235',
     scope: [
       '事業設計',
       'IS 設計',
@@ -88,12 +64,42 @@ const partnershipTiers: PartnershipTier[] = [
     slotsTotal: 3,
     slotsRemaining: 3,
     icon: Zap,
-    accentHex: '#34D399',
-    accentRgb: '52, 211, 153',
+    featured: true,
+    // Vivid gold (#FFC107) — featured 注目枠。事業責任者(銀)から gold を引き継ぐ
+    accentHex: '#FFC107',
+    accentRgb: '255, 193, 7',
     scope: [
       'IS チーム組成',
       'IS 設計',
       'IS マネジメント',
+    ],
+    crm: [
+      'CRM 構築',
+      '部署番号含む 企業DB',
+      '月30,000クレジット 込み',
+    ],
+    cadenceItems: [
+      '週1回の社内MTG',
+      '平日 日中稼働',
+      '3ヶ月契約・3ヶ月ごとに更新',
+    ],
+  },
+  {
+    // IS 設計の "もう少し簡単・楽なバージョン" — 営業範囲のみ差分
+    // (戦略・設計・分析の knowledge layer 寄せ。組成 / マネジメントの実働は含まない)
+    // Vivid emerald (#10B981) — IS 設計から引き継いだ緑系
+    id: 'is-strategy',
+    name: 'IS 戦略',
+    price: 200000,
+    slotsTotal: 3,
+    slotsRemaining: 3,
+    icon: Sparkles,
+    accentHex: '#10B981',
+    accentRgb: '16, 185, 129',
+    scope: [
+      'IS 戦略',
+      'IS 設計',
+      'IS 分析',
     ],
     crm: [
       'CRM 構築',
@@ -140,6 +146,7 @@ interface SelfServePlan {
   credits: number // 月間クレジット (チーム合計)
   monthly: number // 月額プラン: 月額
   annualMonthly: number // 年間プラン: 月額換算 (= monthly × 0.7)
+  maxSeats: number // 最大シート数
   featured?: boolean
   perks: string[] // 戦略MTG / サポート など
 }
@@ -151,6 +158,7 @@ const selfServePlans: SelfServePlan[] = [
     credits: 10000,
     monthly: 41000,
     annualMonthly: 29000,
+    maxSeats: 30,
     perks: ['Slack チャットサポート'],
   },
   {
@@ -159,6 +167,7 @@ const selfServePlans: SelfServePlan[] = [
     credits: 30000,
     monthly: 78000, // 55,000 / 0.7 ≈ 78,571 → 78,000 に丸め
     annualMonthly: 55000,
+    maxSeats: 100,
     featured: true,
     perks: ['Slack チャットサポート'],
   },
@@ -211,22 +220,18 @@ export const Pricing = () => {
                 key={t.id}
                 className="rounded-3xl p-[1.5px] h-full flex transition-transform duration-300"
                 style={{
-                  background: t.featured
-                    ? `linear-gradient(135deg, rgba(${rgb},0.80), rgba(${rgb},0.30) 45%, rgba(${rgb},0.06) 75%, transparent 100%)`
-                    : `linear-gradient(135deg, rgba(${rgb},0.35), rgba(${rgb},0.06) 60%, transparent 100%)`,
-                  boxShadow: t.featured
-                    ? `0 24px 60px -20px rgba(${rgb},0.32), 0 0 0 1px rgba(${rgb},0.10)`
-                    : `0 10px 30px -15px rgba(0,0,0,0.5), 0 0 0 1px rgba(${rgb},0.04)`,
+                  // 3 プラン共通の "fade-to-transparent" グラデーション。
+                  // featured(gold)のトンマナを基準に、accent 色だけ差し替えて統一感を出す
+                  background: `linear-gradient(135deg, rgba(${rgb},0.80), rgba(${rgb},0.30) 45%, rgba(${rgb},0.06) 75%, transparent 100%)`,
+                  boxShadow: `0 24px 60px -20px rgba(${rgb},0.32), 0 0 0 1px rgba(${rgb},0.10)`,
                 }}
               >
                 <div className="rounded-[22px] p-7 fo-glass-rim flex flex-col w-full bg-dusk relative overflow-hidden">
-                  {/* ambient glow */}
+                  {/* ambient glow — 全カード共通の柔らかい diffuse glow */}
                   <div
                     className="absolute -top-24 -right-20 w-60 h-60 rounded-full pointer-events-none"
                     style={{
-                      background: t.featured
-                        ? `radial-gradient(circle, rgba(${rgb},0.24), transparent 60%)`
-                        : `radial-gradient(circle, rgba(${rgb},0.12), transparent 60%)`,
+                      background: `radial-gradient(circle, rgba(${rgb},0.24), transparent 60%)`,
                       filter: 'blur(50px)',
                     }}
                   />
@@ -319,15 +324,18 @@ export const Pricing = () => {
                     ))}
                   </div>
 
-                  {/* Price (CTA直前) */}
+                  {/* Price (CTA直前)
+                      薄いaccent(例: #abc7ff)のときtext-clipだと全体が淡すぎて読めないため、
+                      白→accentでコントラストを確保する。 */}
                   <div className="mt-5 flex items-baseline gap-1.5 relative">
                     <span
                       className="font-display font-bold tracking-[-0.03em] text-[2.3rem] leading-none"
                       style={{
-                        background: `linear-gradient(135deg, ${accent}, #f0eef2)`,
+                        background: `linear-gradient(135deg, #ffffff 0%, #f5f3f7 45%, ${accent} 100%)`,
                         WebkitBackgroundClip: 'text',
                         backgroundClip: 'text',
                         color: 'transparent',
+                        textShadow: `0 0 24px rgba(${rgb},0.20)`,
                       }}
                     >
                       {formatPrice(t.price)}
@@ -490,6 +498,7 @@ function SelfServeBlock() {
                     filter: 'blur(45px)',
                   }}
                 />
+
 
                 {/* Plan name */}
                 <div className="relative">

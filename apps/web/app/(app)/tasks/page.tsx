@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useRef } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -53,26 +53,13 @@ interface Task {
   completed: boolean
 }
 
-// ─── Mock Data ─────────────────────────────────────────────────────────────────
-
 const REPS = [
   { id: 'u1', name: '田中太郎', color: 'var(--color-obs-primary)' },
   { id: 'u2', name: '鈴木花子', color: 'var(--color-obs-middle)' },
   { id: 'u3', name: '佐藤次郎', color: 'var(--color-obs-low)' },
 ]
 
-const INITIAL_TASKS: Task[] = [
-  { id: 't1', type: 'call',  company: '株式会社テクノリード',    person: '田中 誠',    rank: 'A', owner: 'u1', ownerName: '田中太郎', category: 'contact', linkTo: '/contacts/1', title: '初回コールでアポ獲得', memo: '前回送付した会社紹介資料に対する反応を確認。次回商談の日程候補を3つ提示する。意思決定者(CTO)の同席可否も合わせてヒアリングしたい。',             dueAt: '2026-03-23', completed: false },
-  { id: 't2', type: 'call',  company: '合同会社ビジョン',        person: '加藤 雄介',  rank: 'C', owner: 'u1', ownerName: '田中太郎', category: 'contact', linkTo: '/contacts/7', title: '受付経由で再アプローチ', memo: '',             dueAt: '2026-03-23', completed: false },
-  { id: 't3', type: 'email', company: '株式会社イノベーション',  person: '佐々木 拓也', rank: 'A', owner: 'u1', ownerName: '田中太郎', category: 'contact', linkTo: '/contacts/3', title: '提案書ドラフトの送付', memo: '先日の商談を受けて、既存プロセスに合わせた段階導入案 (フェーズ1: 商談管理 / フェーズ2: AI議事録) を提案書に反映。料金は表記ベース+ボリュームディスカウント想定で。', dueAt: '2026-03-23', completed: false },
-  { id: 't4', type: 'call',  company: '合同会社フューチャー',    person: '山本 佳子',  rank: 'A', owner: 'u2', ownerName: '鈴木花子', category: 'contact', linkTo: '/contacts/2', title: '比較表のフォローコール', memo: '',             dueAt: '2026-03-23', completed: false },
-  { id: 't5', type: 'other', company: '有限会社サクセス',        person: '小林 健太',  rank: 'B', owner: 'u2', ownerName: '鈴木花子', category: 'contact', linkTo: '/contacts/5', title: '次回商談の事前準備', memo: '小林様向けの商談準備。先方の業務フロー (見積→提案→受注) に沿ったデモシナリオを作成。SR 2 名同席予定なので、現場視点の質問にも備える。',     dueAt: '2026-03-24', completed: false },
-  { id: 't6', type: 'call',  company: '株式会社ネクスト',        person: '鈴木 美香',  rank: 'C', owner: 'u1', ownerName: '田中太郎', category: 'contact', linkTo: '/contacts/6', title: '初回コール (リトライ)', memo: '',             dueAt: '2026-03-20', completed: false },
-  { id: 't7', type: 'other', company: '株式会社テクノリード',    person: '',           rank: 'A', owner: 'u1', ownerName: '田中太郎', category: 'deal',    linkTo: '/deals/d1', title: '機能差分 + 料金比較表の送付', memo: 'Salesforce との機能比較表を 4/3 までに送付。ROI 試算 (営業 12 名 × 月次工数削減効果) も併せて提示する。CTO 川崎様向けにセキュリティ仕様書も同梱予定。',     dueAt: '2026-03-25', completed: false },
-  { id: 't8', type: 'email', company: '株式会社グロース',        person: '中村 理恵',  rank: 'B', owner: 'u3', ownerName: '佐藤次郎', category: 'contact', linkTo: '/contacts/4', title: '商談リマインドメール', memo: '',             dueAt: '2026-03-21', completed: true  },
-  { id: 't9', type: 'other', company: '株式会社グロース',        person: '',           rank: 'A', owner: 'u3', ownerName: '佐藤次郎', category: 'deal',    linkTo: '/deals/d4', title: '決裁者向け提案書の作成', memo: '中村様 (推進担当) からの追加要望を反映。決裁者 MTG (4/25) で使用する想定で、ROI シミュレーション + 段階導入計画 (Q3 までの 3 フェーズ) をスライドに落とす。',   dueAt: '2026-03-22', completed: false },
-  { id: 't10', type: 'other', company: '株式会社デルタ',         person: '',           rank: 'B', owner: 'u3', ownerName: '佐藤次郎', category: 'deal',    linkTo: '/deals/d2', title: '正式見積書の送付', memo: '見積条件: 5 シート × ¥6,000/月 (年額一括払い、20% 割引適用)。支払サイクルは月末締め翌月末払い。発行依頼書は財務部宛にCCで送付。',   dueAt: '2026-03-23', completed: false },
-]
+const INITIAL_TASKS: Task[] = []
 
 // ─── Style ─────────────────────────────────────────────────────────────────────
 
@@ -110,7 +97,15 @@ const TASK_TYPE_ICON: Record<string, React.ElementType> = {
   other: Briefcase,
 }
 
-const OWNERS_FILTER = ['全員', '田中太郎', '鈴木花子', '佐藤次郎']
+const TASK_PANEL_SURFACE =
+  'linear-gradient(145deg, rgba(27,28,32,0.66) 0%, rgba(19,20,24,0.84) 48%, rgba(12,13,16,0.94) 100%)'
+const TASK_PANEL_RING =
+  'inset 0 0 0 1px rgba(171,199,255,0.105), inset 1px 1px 0 rgba(255,255,255,0.035), 0 18px 48px rgba(0,0,0,0.30)'
+const TASK_ROW_BACKGROUND =
+  'linear-gradient(90deg, rgba(255,255,255,0.010) 0%, rgba(171,199,255,0.012) 48%, rgba(255,255,255,0) 100%)'
+const TASK_ROW_HOVER =
+  'linear-gradient(90deg, rgba(171,199,255,0.052) 0%, rgba(255,255,255,0.022) 42%, rgba(255,255,255,0.004) 100%)'
+const TASK_DIVIDER = 'rgba(171,199,255,0.075)'
 
 // ─── Task Row ──────────────────────────────────────────────────────────────────
 
@@ -170,20 +165,24 @@ function TaskRow({ task, isLast, onComplete, onRestore, onUpdateDue, onEdit }: {
       className="relative overflow-hidden group"
       style={{
         backgroundColor: 'transparent',
-        ...(isLast ? {} : { boxShadow: 'inset 0 -1px 0 0 var(--color-obs-surface-low)' }),
+        ...(isLast ? {} : { boxShadow: `inset 0 -1px 0 0 ${TASK_DIVIDER}` }),
       }}
     >
       {/* 1行レイアウト — 担当先名は遷移、タイトル/メモは展開トグルで動線を分離 */}
       <div
         className="relative flex items-center gap-3 px-5 py-3"
+        style={{
+          background: TASK_ROW_BACKGROUND,
+          transition: 'background 180ms var(--ease-liquid)',
+        }}
         onMouseOver={(e) => {
           if (!task.completed && !completing) {
-            (e.currentTarget as HTMLDivElement).style.backgroundColor = 'var(--color-obs-surface-high)'
+            (e.currentTarget as HTMLDivElement).style.background = TASK_ROW_HOVER
           }
         }}
         onMouseOut={(e) => {
           if (!completing) {
-            (e.currentTarget as HTMLDivElement).style.backgroundColor = 'transparent'
+            (e.currentTarget as HTMLDivElement).style.background = TASK_ROW_BACKGROUND
           }
         }}
       >
@@ -208,7 +207,12 @@ function TaskRow({ task, isLast, onComplete, onRestore, onUpdateDue, onEdit }: {
       <div
         className="relative w-9 h-9 rounded-full flex items-center justify-center shrink-0"
         style={{
-          backgroundColor: isDoneVisual ? 'var(--color-obs-surface-high)' : 'var(--color-obs-surface-highest)',
+          background: isDoneVisual
+            ? 'linear-gradient(145deg, rgba(110,231,161,0.14), rgba(255,255,255,0.04))'
+            : 'linear-gradient(145deg, rgba(171,199,255,0.18), rgba(255,255,255,0.045))',
+          boxShadow: isDoneVisual
+            ? 'inset 0 0 0 1px rgba(110,231,161,0.18), 0 0 16px rgba(110,231,161,0.12)'
+            : 'inset 0 0 0 1px rgba(171,199,255,0.15), 0 0 16px rgba(171,199,255,0.10)',
           opacity: task.completed && !completing ? 0.55 : 1,
         }}
       >
@@ -289,7 +293,7 @@ function TaskRow({ task, isLast, onComplete, onRestore, onUpdateDue, onEdit }: {
             onMouseLeave={(e) => {
               ;(e.currentTarget as HTMLSpanElement).style.color = isDoneVisual
                 ? completing ? '#6ee7a1' : 'var(--color-obs-text-subtle)'
-                : 'var(--color-obs-text)'
+                : '#f1f5ff'
             }}
             className={`text-[13px] font-medium truncate transition-colors ${
               task.completed || completing ? '' : 'cursor-pointer'
@@ -297,7 +301,7 @@ function TaskRow({ task, isLast, onComplete, onRestore, onUpdateDue, onEdit }: {
             style={{
               color: isDoneVisual
                 ? completing ? '#6ee7a1' : 'var(--color-obs-text-subtle)'
-                : 'var(--color-obs-text)',
+                : '#f1f5ff',
               textDecoration: task.completed ? 'line-through' : 'none',
             }}
             title={!task.completed && !completing
@@ -318,7 +322,7 @@ function TaskRow({ task, isLast, onComplete, onRestore, onUpdateDue, onEdit }: {
         </div>
         <p
           className="text-[12px] mt-0.5 truncate"
-          style={{ color: isDoneVisual ? 'var(--color-obs-text-subtle)' : 'var(--color-obs-text-muted)' }}
+          style={{ color: isDoneVisual ? 'var(--color-obs-text-subtle)' : 'rgba(216,224,240,0.58)' }}
         >
           {task.company}
         </p>
@@ -341,6 +345,7 @@ function TaskRow({ task, isLast, onComplete, onRestore, onUpdateDue, onEdit }: {
             className="text-[12.5px] font-medium truncate"
             style={{
               color: isDoneVisual ? 'var(--color-obs-text-subtle)' : 'var(--color-obs-text)',
+              textShadow: isDoneVisual ? undefined : '0 0 18px rgba(171,199,255,0.08)',
               textDecoration: task.completed ? 'line-through' : 'none',
             }}
           >
@@ -379,17 +384,18 @@ function TaskRow({ task, isLast, onComplete, onRestore, onUpdateDue, onEdit }: {
           }}
           className="shrink-0 z-10 inline-flex items-center justify-center w-7 h-7 rounded-full transition-colors"
           style={{
-            backgroundColor: expanded ? 'var(--color-obs-surface-highest)' : 'transparent',
+            backgroundColor: expanded ? 'rgba(171,199,255,0.10)' : 'transparent',
             color: expanded ? 'var(--color-obs-text)' : 'var(--color-obs-text-muted)',
+            boxShadow: expanded ? 'inset 0 0 0 1px rgba(171,199,255,0.12)' : undefined,
           }}
           onMouseOver={(e) => {
             ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
-              'var(--color-obs-surface-highest)'
+              'rgba(171,199,255,0.12)'
             ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-obs-text)'
           }}
           onMouseOut={(e) => {
             ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = expanded
-              ? 'var(--color-obs-surface-highest)'
+              ? 'rgba(171,199,255,0.10)'
               : 'transparent'
             ;(e.currentTarget as HTMLButtonElement).style.color = expanded
               ? 'var(--color-obs-text)'
@@ -425,7 +431,7 @@ function TaskRow({ task, isLast, onComplete, onRestore, onUpdateDue, onEdit }: {
           }}
           onMouseOver={(e) => {
             ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
-              'var(--color-obs-surface-highest)'
+              'rgba(171,199,255,0.12)'
             ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-obs-text)'
           }}
           onMouseOut={(e) => {
@@ -447,15 +453,15 @@ function TaskRow({ task, isLast, onComplete, onRestore, onUpdateDue, onEdit }: {
             onClick={openDatePicker}
             className="inline-flex items-center gap-1 h-6 px-2 rounded-full text-[11px] font-semibold tabular-nums transition-colors"
             style={{
-              backgroundColor: 'rgba(171,199,255,0.12)',
-              color: 'var(--color-obs-primary)',
-              boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.32)',
+              background: 'linear-gradient(135deg, rgba(171,199,255,0.18), rgba(0,113,227,0.10))',
+              color: '#cfe0ff',
+              boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.32), 0 0 16px rgba(0,113,227,0.10)',
             }}
             onMouseOver={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(171,199,255,0.20)'
+              (e.currentTarget as HTMLButtonElement).style.background = 'linear-gradient(135deg, rgba(171,199,255,0.24), rgba(0,113,227,0.14))'
             }}
             onMouseOut={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(171,199,255,0.12)'
+              (e.currentTarget as HTMLButtonElement).style.background = 'linear-gradient(135deg, rgba(171,199,255,0.18), rgba(0,113,227,0.10))'
             }}
             aria-label="期日を変更"
           >
@@ -510,11 +516,11 @@ function TaskRow({ task, isLast, onComplete, onRestore, onUpdateDue, onEdit }: {
             style={{
               background: completing
                 ? 'linear-gradient(140deg, #6ee7a1 0%, #34c759 100%)'
-                : 'linear-gradient(140deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
+                : 'linear-gradient(140deg, #9fc3ff 0%, #2f8cff 64%, #0071e3 100%)',
               color: completing ? '#053D24' : 'var(--color-obs-on-primary)',
               boxShadow: completing
                 ? '0 4px 16px rgba(52,199,89,0.4), inset 0 1px 0 rgba(255,255,255,0.35)'
-                : 'inset 0 1px 0 rgba(255,255,255,0.18), 0 2px 8px rgba(0,113,227,0.22)',
+                : 'inset 0 1px 0 rgba(255,255,255,0.28), 0 8px 22px rgba(0,113,227,0.28)',
               cursor: completing ? 'default' : 'pointer',
             }}
           >
@@ -562,8 +568,8 @@ function TaskRow({ task, isLast, onComplete, onRestore, onUpdateDue, onEdit }: {
             <div
               className="mx-5 mb-3 px-4 py-3 rounded-[10px] space-y-3"
               style={{
-                backgroundColor: 'var(--color-obs-surface-low)',
-                boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.12)',
+                background: 'linear-gradient(145deg, rgba(13,14,18,0.64), rgba(31,33,39,0.72))',
+                boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.10), 0 12px 30px rgba(0,0,0,0.16)',
               }}
             >
               {task.title && (
@@ -623,10 +629,17 @@ function CategoryGroup({ label, icon: Icon, tasks, onComplete, onRestore, onUpda
   const accentFg = isDeal ? 'var(--color-obs-primary)' : 'var(--color-obs-low)'
   return (
     <div>
-      <div className="flex items-center gap-2 px-5 pt-3 pb-1.5">
+      <div className="flex items-center gap-2 px-5 pt-3 pb-2">
         <span
           className="inline-flex items-center justify-center w-[18px] h-[18px] rounded-[5px] shrink-0"
-          style={{ backgroundColor: 'var(--color-obs-surface-high)' }}
+          style={{
+            background: isDeal
+              ? 'linear-gradient(145deg, rgba(171,199,255,0.16), rgba(0,113,227,0.06))'
+              : 'linear-gradient(145deg, rgba(108,213,255,0.14), rgba(255,255,255,0.035))',
+            boxShadow: isDeal
+              ? 'inset 0 0 0 1px rgba(171,199,255,0.18), 0 0 14px rgba(171,199,255,0.08)'
+              : 'inset 0 0 0 1px rgba(108,213,255,0.15), 0 0 14px rgba(108,213,255,0.07)',
+          }}
         >
           <Icon size={11} style={{ color: accentFg }} strokeWidth={2.4} />
         </span>
@@ -646,6 +659,13 @@ function CategoryGroup({ label, icon: Icon, tasks, onComplete, onRestore, onUpda
         >
           {tasks.length}
         </motion.span>
+        <span
+          className="h-px flex-1"
+          style={{
+            background:
+              'linear-gradient(90deg, rgba(171,199,255,0.16), rgba(171,199,255,0.04), transparent)',
+          }}
+        />
       </div>
       <AnimatePresence initial={false}>
         {tasks.map((task, i) => (
@@ -889,24 +909,42 @@ function RepSection({ rep, tasks, completedTasks, index, onComplete, onRestore, 
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.28, delay: index * 0.06, ease: [0.16, 1, 0.3, 1] }}
     >
-      <ObsCard depth="low" padding="none" radius="xl">
+      <ObsCard
+        depth="low"
+        padding="none"
+        radius="xl"
+        style={{
+          background: TASK_PANEL_SURFACE,
+          boxShadow: TASK_PANEL_RING,
+        }}
+      >
         <button
           onClick={() => setOpen(!open)}
           className="w-full flex items-center gap-3 px-5 py-3.5 transition-colors"
           style={{
+            background: open
+              ? 'linear-gradient(90deg, rgba(171,199,255,0.08), rgba(255,255,255,0.025), transparent)'
+              : 'transparent',
             transitionTimingFunction: 'var(--ease-liquid)',
-            ...(open ? { boxShadow: 'inset 0 -1px 0 0 var(--color-obs-surface)' } : {}),
+            ...(open ? { boxShadow: `inset 0 -1px 0 0 ${TASK_DIVIDER}` } : {}),
           }}
           onMouseOver={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--color-obs-surface-high)'
+            (e.currentTarget as HTMLButtonElement).style.background =
+              'linear-gradient(90deg, rgba(171,199,255,0.12), rgba(255,255,255,0.04), transparent)'
           }}
           onMouseOut={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
+            ;(e.currentTarget as HTMLButtonElement).style.background = open
+              ? 'linear-gradient(90deg, rgba(171,199,255,0.08), rgba(255,255,255,0.025), transparent)'
+              : 'transparent'
           }}
         >
           <div
             className="w-[28px] h-[28px] rounded-full flex items-center justify-center text-[11px] font-bold shrink-0"
-            style={{ backgroundColor: rep.color, color: 'var(--color-obs-on-primary)' }}
+            style={{
+              background: `radial-gradient(circle at 32% 28%, rgba(255,255,255,0.96), ${rep.color} 44%, rgba(171,199,255,0.24) 100%)`,
+              color: '#07111f',
+              boxShadow: `inset 0 0 0 1px rgba(255,255,255,0.22), 0 0 20px ${rep.color}`,
+            }}
           >
             {rep.name[0]}
           </div>
@@ -938,21 +976,21 @@ function RepSection({ rep, tasks, completedTasks, index, onComplete, onRestore, 
               transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }} className="overflow-hidden">
               <CategoryGroup label="取引" icon={Building2} tasks={dealTasks} onComplete={onComplete} onRestore={onRestore} onUpdateDue={onUpdateDue} onEdit={onEdit} />
               {dealTasks.length > 0 && contactTasks.length > 0 && (
-                <div className="mx-5 h-px" style={{ backgroundColor: 'var(--color-obs-surface)' }} />
+                <div className="mx-5 h-px" style={{ background: `linear-gradient(90deg, transparent, ${TASK_DIVIDER}, transparent)` }} />
               )}
               <CategoryGroup label="コンタクト" icon={User} tasks={contactTasks} onComplete={onComplete} onRestore={onRestore} onUpdateDue={onUpdateDue} onEdit={onEdit} />
 
               {completedTasks.length > 0 && (
                 <>
-                  <div className="mx-5 h-px mt-1" style={{ backgroundColor: 'var(--color-obs-surface)' }} />
+                  <div className="mx-5 h-px mt-1" style={{ background: `linear-gradient(90deg, transparent, ${TASK_DIVIDER}, transparent)` }} />
                   <button
                     onClick={e => { e.stopPropagation(); setCompletedOpen(!completedOpen) }}
                     className="w-full flex items-center gap-2 px-5 py-3 transition-colors"
                     onMouseOver={(e) => {
-                      (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--color-obs-surface-high)'
+                      (e.currentTarget as HTMLButtonElement).style.background = TASK_ROW_HOVER
                     }}
                     onMouseOut={(e) => {
-                      (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
+                      (e.currentTarget as HTMLButtonElement).style.background = 'transparent'
                     }}
                   >
                     <Check size={12} style={{ color: 'var(--color-obs-low)' }} />
@@ -1003,17 +1041,57 @@ function RepSection({ rep, tasks, completedTasks, index, onComplete, onRestore, 
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS)
+  const [loading, setLoading] = useState(true)
   const [ownerFilter, setOwnerFilter] = useState('全員')
   const [modalTask, setModalTask] = useState<Task | null | 'new'>(null)
+
+  useEffect(() => {
+    let aborted = false
+    setLoading(true)
+    fetch('/api/tasks', { cache: 'no-store' })
+      .then((res) => (res.ok ? res.json() : { tasks: [] }))
+      .then((data: { tasks?: Task[] }) => {
+        if (!aborted) setTasks(data.tasks ?? [])
+      })
+      .catch(() => {
+        if (!aborted) setTasks([])
+      })
+      .finally(() => {
+        if (!aborted) setLoading(false)
+      })
+    return () => {
+      aborted = true
+    }
+  }, [])
+
+  // 表示する担当者リスト
+  const repsFromTasks = useMemo(() => {
+    const seen = new Map<string, { id: string; name: string; color: string }>()
+    for (const task of tasks) {
+      if (!seen.has(task.owner)) {
+        seen.set(task.owner, {
+          id: task.owner,
+          name: task.ownerName,
+          color: REPS[seen.size % REPS.length]?.color ?? 'var(--color-obs-primary)',
+        })
+      }
+    }
+    return Array.from(seen.values())
+  }, [tasks])
+
+  const ownerOptions = useMemo(() => ['全員', ...repsFromTasks.map((r) => r.name)], [repsFromTasks])
+  const visibleReps = ownerFilter === '全員'
+    ? repsFromTasks
+    : repsFromTasks.filter(r => r.name === ownerFilter)
 
   const filtered = useMemo(() => {
     let list = tasks
     if (ownerFilter !== '全員') {
-      const rep = REPS.find(r => r.name === ownerFilter)
+      const rep = repsFromTasks.find(r => r.name === ownerFilter)
       if (rep) list = list.filter(t => t.owner === rep.id)
     }
     return list
-  }, [tasks, ownerFilter])
+  }, [tasks, ownerFilter, repsFromTasks])
 
   function handleComplete(id: string) {
     setTasks(prev => prev.map(t => t.id === id ? { ...t, completed: true } : t))
@@ -1033,11 +1111,6 @@ export default function TasksPage() {
     setModalTask(null)
   }
 
-  // 表示する担当者リスト
-  const visibleReps = ownerFilter === '全員'
-    ? REPS
-    : REPS.filter(r => r.name === ownerFilter)
-
   return (
     <ObsPageShell>
       <div className="w-full px-8 xl:px-12 2xl:px-16 pb-16">
@@ -1050,7 +1123,7 @@ export default function TasksPage() {
 
         {/* ── Owner Filter ── */}
         <div className="flex items-center gap-1 mb-5 flex-wrap">
-          {OWNERS_FILTER.map(o => {
+          {ownerOptions.map(o => {
             const active = ownerFilter === o
             return (
               <ObsButton
@@ -1084,6 +1157,13 @@ export default function TasksPage() {
               />
             )
           })}
+          {!loading && visibleReps.length === 0 && (
+            <ObsCard depth="low" padding="lg">
+              <p className="text-sm" style={{ color: 'var(--color-obs-text-muted)' }}>
+                タスクはまだありません
+              </p>
+            </ObsCard>
+          )}
         </div>
 
         {/* ── Modal ── */}

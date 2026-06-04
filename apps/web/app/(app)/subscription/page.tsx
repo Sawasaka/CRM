@@ -516,6 +516,7 @@ function SubscriptionPageContent() {
   const isAdmin = currentRole === 'super_admin' || currentRole === 'admin'
 
   useEffect(() => {
+    if (tab !== 'team') return
     let cancelled = false
     async function loadSubscription() {
       try {
@@ -577,7 +578,7 @@ function SubscriptionPageContent() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [tab])
 
   const currentPlanData = PLANS.find((p) => p.id === currentPlan)
   const subscriptionTotal = subscriptionCredit.limitCredits // 今月のサブスク付与量
@@ -1355,108 +1356,290 @@ function SubscriptionPageContent() {
           </div>
         )}
 
-        {/* ── Integrations (管理者のみ) ── */}
-        {tab === 'integrations' && isAdmin && (
+        {/* ── Integrations ── */}
+        {tab === 'integrations' && (
           <div className="mt-12">
             <ObsSectionHeader
               title="連携設定"
-              caption="CRMで実際に使う Gmail・Meet議事録・Notion議事録だけを連携します"
+              caption="管理者の一括設定と、メンバー本人が許可する個別連携を分けて管理します"
             />
-            <div className="mt-6 space-y-4">
-              <ObsCard depth="low" padding="lg" radius="xl">
-                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                  <div className="flex items-start gap-3">
-                    <div
-                      className="shrink-0 w-10 h-10 rounded-[var(--radius-obs-md)] flex items-center justify-center"
-                      style={{
-                        background:
-                          'linear-gradient(135deg, rgba(171,199,255,0.18) 0%, rgba(0,113,227,0.18) 100%)',
-                        color: 'var(--color-obs-primary)',
-                      }}
+
+            <div className="mt-6 space-y-6">
+              {/* ── 個別設定 ── */}
+              <div>
+                <div className="mb-3 flex items-end justify-between gap-3">
+                  <div>
+                    <h3
+                      className="font-[family-name:var(--font-display)] text-lg font-semibold tracking-[-0.02em]"
+                      style={{ color: 'var(--color-obs-text)' }}
                     >
-                      <Users size={18} />
-                    </div>
+                      個別の連携設定
+                    </h3>
+                    <p className="text-[12.5px] mt-1" style={{ color: 'var(--color-obs-text-muted)' }}>
+                      GmailとMeet議事録は、メールボックス・予定・議事録Docが本人アカウントに紐づくため、各メンバーが自分で連携します。
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                  <IntegrationServiceCard
+                    icon={<OfficialIntegrationIcon src="/icons/gmail.png" alt="Gmail" />}
+                    title="Gmail"
+                    status={googleStatus?.services?.gmail}
+                    description="送受信メールを企業・コンタクト・取引のアクティビティに取り込みます。"
+                    connectHref="/api/google/install?service=gmail&returnTo=/subscription?tab=integrations"
+                    connectLabel="Gmailを連携"
+                    syncLabel="Gmailを同期"
+                    busy={integrationBusy === 'gmail'}
+                    onSync={syncGmail}
+                  />
+                  <IntegrationServiceCard
+                    icon={<OfficialIntegrationIcon src="/icons/google-meet.png" alt="Google Meet" />}
+                    title="Google Meet 議事録"
+                    status={{
+                      available:
+                        !!googleStatus?.services?.calendar?.available &&
+                        !!googleStatus?.services?.meet?.available,
+                      enabled:
+                        googleStatus?.services?.calendar?.enabled !== false &&
+                        googleStatus?.services?.meet?.enabled !== false,
+                      lastSyncAt:
+                        googleStatus?.services?.meet?.lastSyncAt ??
+                        googleStatus?.services?.calendar?.lastSyncAt ??
+                        null,
+                    }}
+                    description="カレンダー予定・Meet文字起こし・議事録Docを使って、商談と議事録を自動紐付けします。"
+                    connectHref="/api/google/install?service=calendar,meet&returnTo=/subscription?tab=integrations"
+                    connectLabel="Meet議事録を連携"
+                    syncLabel="Meet議事録を同期"
+                    busy={integrationBusy === 'meet'}
+                    onSync={syncMeetBundle}
+                  />
+                </div>
+              </div>
+
+              {/* ── 管理者設定 ── */}
+              {isAdmin && (
+                <div>
+                  <div className="mb-3 flex items-end justify-between gap-3">
                     <div>
                       <h3
                         className="font-[family-name:var(--font-display)] text-lg font-semibold tracking-[-0.02em]"
                         style={{ color: 'var(--color-obs-text)' }}
                       >
-                        メンバー連携状況
+                        管理者の連携設定
                       </h3>
-                      <p
-                        className="text-[13px] mt-1.5 leading-relaxed"
-                        style={{ color: 'var(--color-obs-text-muted)' }}
-                      >
-                        メンバーごとの Gmail・Google Meet 議事録・Notion 議事録の連携状態を確認できます。
+                      <p className="text-[12.5px] mt-1" style={{ color: 'var(--color-obs-text-muted)' }}>
+                        テナント共通で使う設定です。Notion議事録は管理者が連携すれば、共有済みDB/ページをチームで同期できます。
                       </p>
-                      {googleStatus?.email && (
-                        <p className="text-[12px] mt-2" style={{ color: 'var(--color-obs-text-subtle)' }}>
-                          Google連携中: {googleStatus.email}
-                        </p>
-                      )}
                     </div>
                   </div>
-                  <a
-                    href="/settings/integrations?tab=review"
-                    className="inline-flex min-w-[168px] items-center justify-center gap-2 whitespace-nowrap rounded-[var(--radius-obs-md)] px-4 py-2.5 text-[13px] font-semibold transition-colors"
+
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                    <ObsCard depth="high" padding="lg" radius="xl" className="h-full">
+                      <div className="flex h-full items-start gap-3">
+                        <OfficialIntegrationIcon src="/icons/google-workspace.png" alt="Google Workspace" />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="text-[15px] font-semibold" style={{ color: 'var(--color-obs-text)' }}>
+                              Google Workspace
+                            </h3>
+                            <span
+                              className="text-[10px] font-semibold uppercase tracking-[0.08em] px-1.5 py-0.5 rounded-full"
+                              style={{
+                                color: 'var(--color-obs-text-subtle)',
+                                backgroundColor: 'var(--color-obs-surface-high)',
+                              }}
+                            >
+                              管理者設定
+                            </span>
+                          </div>
+                          <p className="text-[12.5px] mt-1.5 leading-relaxed" style={{ color: 'var(--color-obs-text-muted)' }}>
+                            管理者がGoogle連携を許可します。
+                          </p>
+                          <div className="mt-3 grid gap-1.5 text-[12px]" style={{ color: 'var(--color-obs-text-muted)' }}>
+                            <div className="flex items-start gap-2">
+                              <Check size={13} className="mt-0.5 shrink-0" style={{ color: '#4ad98a' }} />
+                              <span>管理者: Google連携を許可</span>
+                            </div>
+                            <div className="flex items-start gap-2">
+                              <Check size={13} className="mt-0.5 shrink-0" style={{ color: '#4ad98a' }} />
+                              <span>メンバー: Gmail / Meetを個別に連携</span>
+                            </div>
+                          </div>
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            <a
+                              href="/api/google/install?service=gmail,calendar,meet&returnTo=/subscription?tab=integrations"
+                              className={INTEGRATION_ACTION_CLASS}
+                              style={INTEGRATION_ACTION_STYLE}
+                            >
+                              <Link2 size={12} />
+                              Googleを許可
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    </ObsCard>
+
+                    <NotionIntegrationCard
+                      status={notionStatus}
+                      busy={integrationBusy === 'notion'}
+                      showTokenForm={showNotionTokenForm}
+                      token={notionToken}
+                      message={notionMessage}
+                      onToggleForm={() => setShowNotionTokenForm((v) => !v)}
+                      onTokenChange={setNotionToken}
+                      onTokenSubmit={connectNotionToken}
+                      onSync={syncNotion}
+                      onCancel={() => setShowNotionTokenForm(false)}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* ── メンバー別 連携状況 ── */}
+              {isAdmin && (
+                <ObsCard depth="high" padding="lg" radius="xl">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3
+                      className="font-[family-name:var(--font-display)] text-lg font-semibold tracking-[-0.02em]"
+                      style={{ color: 'var(--color-obs-text)' }}
+                    >
+                      メンバー別 連携状況
+                    </h3>
+                    <p className="text-[12.5px] mt-1" style={{ color: 'var(--color-obs-text-muted)' }}>
+                      メンバーごとの Gmail・Meet 議事録の連携状況を確認できます。Notion議事録は管理者設定を全メンバーで利用します。
+                    </p>
+                  </div>
+                  <span
+                    className="text-[11px] font-medium uppercase tracking-[0.1em] px-2.5 py-1 rounded-full"
                     style={{
-                      backgroundColor: 'var(--color-obs-surface-high)',
-                      color: 'var(--color-obs-text)',
+                      backgroundColor: 'rgba(171,199,255,0.10)',
+                      color: 'var(--color-obs-primary)',
+                      boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.22)',
                     }}
                   >
-                    <ChevronRight size={14} />
-                    連携状況を確認
-                  </a>
+                    {members.length} 名
+                  </span>
                 </div>
-              </ObsCard>
 
-              <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-                <IntegrationServiceCard
-                  icon={<OfficialIntegrationIcon src="/icons/gmail.png" alt="Gmail" />}
-                  title="Gmail"
-                  status={googleStatus?.services?.gmail}
-                  description="送受信メールを企業・コンタクト・取引のアクティビティに取り込みます。"
-                  connectHref="/api/google/install?service=gmail"
-                  connectLabel="Gmailを連携"
-                  syncLabel="Gmailを同期"
-                  busy={integrationBusy === 'gmail'}
-                  onSync={syncGmail}
-                />
-                <IntegrationServiceCard
-                  icon={<OfficialIntegrationIcon src="/icons/google-meet.png" alt="Google Meet" />}
-                  title="Google Meet 議事録"
-                  status={{
-                    available:
-                      !!googleStatus?.services?.calendar?.available &&
-                      !!googleStatus?.services?.meet?.available,
-                    enabled:
-                      googleStatus?.services?.calendar?.enabled !== false &&
-                      googleStatus?.services?.meet?.enabled !== false,
-                    lastSyncAt:
-                      googleStatus?.services?.meet?.lastSyncAt ??
-                      googleStatus?.services?.calendar?.lastSyncAt ??
-                      null,
-                  }}
-                  description="カレンダー予定・Meet文字起こし・議事録Docを使って、商談と議事録を自動紐付けします。"
-                  connectHref="/api/google/install?service=calendar,meet"
-                  connectLabel="Meet議事録を連携"
-                  syncLabel="Meet議事録を同期"
-                  busy={integrationBusy === 'meet'}
-                  onSync={syncMeetBundle}
-                />
-                <NotionIntegrationCard
-                  status={notionStatus}
-                  busy={integrationBusy === 'notion'}
-                  showTokenForm={showNotionTokenForm}
-                  token={notionToken}
-                  message={notionMessage}
-                  onToggleForm={() => setShowNotionTokenForm((v) => !v)}
-                  onTokenChange={setNotionToken}
-                  onTokenSubmit={connectNotionToken}
-                  onSync={syncNotion}
-                  onCancel={() => setShowNotionTokenForm(false)}
-                />
-              </div>
+                {/* ヘッダ行 */}
+                <div
+                  className="hidden md:grid grid-cols-[1.4fr_repeat(2,minmax(0,1fr))_auto] gap-3 px-3 py-2 text-[11px] font-medium uppercase tracking-[0.08em]"
+                  style={{ color: 'var(--color-obs-text-subtle)' }}
+                >
+                  <div>メンバー</div>
+                  <div className="text-center">Gmail</div>
+                  <div className="text-center">Meet 議事録</div>
+                  <div className="w-[120px] text-right">アクション</div>
+                </div>
+
+                <div className="space-y-2">
+                  {members.length === 0 ? (
+                    <div
+                      className="rounded-[var(--radius-obs-md)] px-4 py-6 text-center text-[12.5px]"
+                      style={{
+                        backgroundColor: 'var(--color-obs-surface-high)',
+                        color: 'var(--color-obs-text-muted)',
+                      }}
+                    >
+                      メンバーがまだ招待されていません。
+                    </div>
+                  ) : (
+                    members.map((m) => (
+                      <div
+                        key={m.id}
+                        className="grid grid-cols-[1.4fr_repeat(2,minmax(0,1fr))_auto] gap-3 px-3 py-3 items-center rounded-[var(--radius-obs-md)]"
+                        style={{ backgroundColor: 'var(--color-obs-surface-high)' }}
+                      >
+                        {/* メンバー名 */}
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div
+                            className="w-7 h-7 rounded-full flex items-center justify-center text-[11.5px] font-semibold shrink-0"
+                            style={{
+                              backgroundColor: 'var(--color-obs-surface-highest)',
+                              color: 'var(--color-obs-text)',
+                            }}
+                          >
+                            {m.initial}
+                          </div>
+                          <div className="min-w-0">
+                            <div
+                              className="text-[13px] font-medium truncate"
+                              style={{ color: 'var(--color-obs-text)' }}
+                            >
+                              {m.name}
+                            </div>
+                            <div
+                              className="text-[11px] truncate"
+                              style={{ color: 'var(--color-obs-text-subtle)' }}
+                            >
+                              {m.email}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Gmail / Meet 状態ピル */}
+                        {[
+                          { key: 'gmail', connected: false },
+                          { key: 'meet', connected: false },
+                        ].map((s) => (
+                          <div key={s.key} className="flex justify-center">
+                            <span
+                              className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-full"
+                              style={{
+                                backgroundColor: s.connected
+                                  ? 'rgba(75,200,140,0.14)'
+                                  : 'rgba(255,255,255,0.06)',
+                                color: s.connected ? '#4BC88C' : 'var(--color-obs-text-subtle)',
+                                boxShadow: `inset 0 0 0 1px ${
+                                  s.connected
+                                    ? 'rgba(75,200,140,0.28)'
+                                    : 'rgba(255,255,255,0.08)'
+                                }`,
+                              }}
+                            >
+                              {s.connected ? (
+                                <>
+                                  <Check size={10} strokeWidth={3} /> 連携済み
+                                </>
+                              ) : (
+                                '未連携'
+                              )}
+                            </span>
+                          </div>
+                        ))}
+
+                        {/* アクション: リマインド送信 (今はモック) */}
+                        <div className="flex justify-end">
+                          <button
+                            type="button"
+                            className="text-[11.5px] font-medium px-3 py-1.5 rounded-[var(--radius-obs-md)] transition-colors"
+                            style={{
+                              backgroundColor: 'transparent',
+                              color: 'var(--color-obs-text-muted)',
+                              boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.08)',
+                            }}
+                            onMouseOver={(e) => {
+                              ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                                'rgba(171,199,255,0.10)'
+                            }}
+                            onMouseOut={(e) => {
+                              ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                                'transparent'
+                            }}
+                          >
+                            <Mail size={11} className="inline mr-1" />
+                            リマインド
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+                </ObsCard>
+              )}
 
               <ObsCard depth="low" padding="md" radius="xl">
                 <div className="flex items-start gap-3">

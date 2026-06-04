@@ -17,6 +17,10 @@ import {
   X,
 } from 'lucide-react'
 import {
+  OBS_HERO_CLASS,
+  OBS_HERO_STYLE,
+  OBS_PRIMARY_BUTTON,
+  OBS_PRODUCT_SURFACE,
   ObsButton,
   ObsInput,
   ObsPageShell,
@@ -228,13 +232,10 @@ const SERVICE_TONE = {
   low: 'var(--color-obs-primary)',
 } as const
 
-const GLASS_CARD_BG =
-  'linear-gradient(145deg, rgba(36,36,38,0.70) 0%, rgba(25,26,31,0.86) 46%, rgba(13,14,18,0.94) 100%)'
-const GLASS_CARD_SHADOW =
-  'inset 0 0 0 1px rgba(171,199,255,0.12), inset 1px 1px 0 rgba(255,255,255,0.055), inset -1px -1px 0 rgba(0,0,0,0.26), 0 20px 52px rgba(0,0,0,0.30)'
-const PRIMARY_BUTTON_BG = 'linear-gradient(135deg, #abc7ff 0%, #5aa0ff 45%, #0071e3 100%)'
-const SERVICE_PAGE_BACKGROUND =
-  'radial-gradient(circle at 50% 20%, rgba(171,199,255,0.06) 0%, transparent 45%), radial-gradient(circle at 20% 80%, rgba(0,113,227,0.04) 0%, transparent 50%)'
+const GLASS_CARD_BG = OBS_PRODUCT_SURFACE.panel
+const GLASS_CARD_SHADOW = OBS_PRODUCT_SURFACE.rim
+const PRIMARY_BUTTON_BG = OBS_PRIMARY_BUTTON.background
+const SERVICE_PAGE_BACKGROUND = OBS_PRODUCT_SURFACE.pageBackground
 
 const INTENT_TONE = {
   hot: {
@@ -775,24 +776,24 @@ export default function CompaniesPage() {
         }}
       >
         <div className="mb-7 flex flex-col 2xl:flex-row 2xl:items-end 2xl:justify-between gap-6">
-          <div className="max-w-3xl">
+          <div className={OBS_HERO_CLASS.body}>
             <span
-              className="inline-flex items-center gap-2 text-[11px] font-semibold tracking-[0.16em] uppercase mb-3"
-              style={{ color: 'var(--color-aurora)' }}
+              className={OBS_HERO_CLASS.eyebrow}
+              style={OBS_HERO_STYLE.eyebrow}
             >
               <span
                 className="block w-1.5 h-1.5 rounded-full"
-                style={{ background: 'var(--color-aurora)', boxShadow: '0 0 10px var(--color-aurora)' }}
+                style={OBS_HERO_STYLE.dot}
               />
               Company Master
             </span>
             <h1
-              className="font-[family-name:var(--font-display)] text-[2rem] sm:text-[2.75rem] md:text-[3.55rem] font-bold leading-[1.08] tracking-[-0.025em] mb-3 whitespace-nowrap"
+              className={OBS_HERO_CLASS.title}
+              style={OBS_HERO_STYLE.titleBase}
             >
-              <span style={{ color: '#e7e5ea' }}>290万社</span>
-              <span className="fo-gradient-text" style={{ WebkitTextFillColor: 'transparent' }}>DB</span>
+              企業DB
             </h1>
-            <p className="text-[14px] leading-relaxed max-w-none md:whitespace-nowrap" style={{ color: 'var(--color-obs-text-muted)' }}>
+            <p className={OBS_HERO_CLASS.caption} style={OBS_HERO_STYLE.caption}>
               {scopeMode === 'enriched'
                 ? `エンリッチ済${total.toLocaleString()}社を、求人インテント・業種・売上・拠点で検索。`
                 : '登記台帳290万社を、求人インテント・1stシグナル・業種・地域条件で検索。'}
@@ -805,7 +806,7 @@ export default function CompaniesPage() {
                 className="inline-flex items-center rounded-full p-0.5"
                 style={{
                   background:
-                    'linear-gradient(145deg, rgba(36,36,38,0.62) 0%, rgba(20,21,25,0.82) 100%)',
+                    OBS_PRODUCT_SURFACE.panelSoft,
                   backdropFilter: 'blur(18px) saturate(130%)',
                   WebkitBackdropFilter: 'blur(18px) saturate(130%)',
                   boxShadow:
@@ -850,7 +851,7 @@ export default function CompaniesPage() {
                 className="inline-flex items-center gap-1.5 px-2 py-1.5 rounded-[var(--radius-obs-lg)]"
                 style={{
                   background:
-                    'linear-gradient(145deg, rgba(36,36,38,0.74) 0%, rgba(21,22,26,0.90) 100%)',
+                    OBS_PRODUCT_SURFACE.panelSoft,
                   backdropFilter: 'blur(14px) saturate(130%)',
                   WebkitBackdropFilter: 'blur(14px) saturate(130%)',
                   boxShadow:
@@ -904,9 +905,8 @@ export default function CompaniesPage() {
                 className="h-9 px-4 rounded-[var(--radius-obs-md)] text-sm font-medium inline-flex items-center transition-colors duration-200"
                 style={{
                   background: PRIMARY_BUTTON_BG,
-                  color: '#05070a',
-                  boxShadow:
-                    'inset 0 1px 0 rgba(255,255,255,0.34), 0 0 0 1px rgba(171,199,255,0.22), 0 10px 26px -10px rgba(0,113,227,0.70), 0 0 28px rgba(171,199,255,0.18)',
+                  color: OBS_PRIMARY_BUTTON.color,
+                  boxShadow: OBS_PRIMARY_BUTTON.shadow,
                   transitionTimingFunction: 'var(--ease-liquid)',
                 }}
               >
@@ -1436,7 +1436,7 @@ function FilterTrigger({
       style={{
         background: active
           ? 'linear-gradient(140deg, rgba(171,199,255,0.18) 0%, rgba(0,113,227,0.24) 100%)'
-          : 'linear-gradient(145deg, rgba(36,36,38,0.58) 0%, rgba(20,21,25,0.76) 100%)',
+          : OBS_PRODUCT_SURFACE.panelSoft,
         backdropFilter: 'blur(10px) saturate(130%)',
         WebkitBackdropFilter: 'blur(10px) saturate(130%)',
         color: active ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',

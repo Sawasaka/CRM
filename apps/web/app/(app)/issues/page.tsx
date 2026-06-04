@@ -29,18 +29,7 @@ interface Issue {
 
 // ─── Mock Data ──────────────────────────────────────────────────────────────
 
-const MOCK_ISSUES: Issue[] = [
-  { id: 'i1', title: '既存ツールとのデータ連携', category: 'インテグレーション', occurrences: 4, newCount: 3, existingCount: 1, companies: ['テクノリード', 'サクセス', 'デルタ', 'フューチャー'], relatedMeetings: ['m1', 'm3', 'm5', 'm2'] },
-  { id: 'i2', title: 'ダッシュボード表示速度', category: 'パフォーマンス', occurrences: 3, newCount: 2, existingCount: 1, companies: ['サクセス', 'デルタ', 'グロース'], relatedMeetings: ['m3', 'm5', 'm6'] },
-  { id: 'i3', title: 'カスタムレポートの柔軟性', category: '機能要望', occurrences: 3, newCount: 1, existingCount: 2, companies: ['フューチャー', 'イノベーション', 'グロース'], relatedMeetings: ['m2', 'm4', 'm6'] },
-  { id: 'i4', title: 'SSO対応（SAML）', category: 'セキュリティ', occurrences: 2, newCount: 2, existingCount: 0, companies: ['デルタ', 'テクノリード'], relatedMeetings: ['m5', 'm1'] },
-  { id: 'i5', title: 'オートメーション設定のUI改善', category: 'UX/UI', occurrences: 2, newCount: 0, existingCount: 2, companies: ['フューチャー', 'グロース'], relatedMeetings: ['m2', 'm6'] },
-  { id: 'i6', title: 'API連携の安定性', category: 'インテグレーション', occurrences: 2, newCount: 1, existingCount: 1, companies: ['サクセス', 'イノベーション'], relatedMeetings: ['m3', 'm4'] },
-  { id: 'i7', title: 'ナレッジベースの検索精度向上', category: '機能要望', occurrences: 2, newCount: 0, existingCount: 2, companies: ['イノベーション', 'グロース'], relatedMeetings: ['m4', 'm6'] },
-  { id: 'i8', title: '監査ログの出力', category: 'セキュリティ', occurrences: 1, newCount: 1, existingCount: 0, companies: ['デルタ'], relatedMeetings: ['m5'] },
-  { id: 'i9', title: 'モバイル対応の有無', category: 'UX/UI', occurrences: 1, newCount: 1, existingCount: 0, companies: ['テクノリード'], relatedMeetings: ['m1'] },
-  { id: 'i10', title: 'オンボーディング後のフォロー不足', category: 'サポート', occurrences: 1, newCount: 0, existingCount: 1, companies: ['グロース'], relatedMeetings: ['m6'] },
-]
+const MOCK_ISSUES: Issue[] = []
 
 const ALL_CATEGORIES: Category[] = ['UX/UI', 'インテグレーション', 'パフォーマンス', 'セキュリティ', '機能要望', 'サポート']
 

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, Send, MousePointerClick, MessageSquare, FileText, X, ExternalLink, AlertTriangle, Loader2, CheckCircle2, CalendarClock, Globe, Link2, BarChart3, Users, Calendar, List } from 'lucide-react'
-import { ObsButton, ObsInput as RawObsInput } from '@/components/obsidian'
+import { OBS_PRIMARY_BUTTON, ObsButton, ObsInput as RawObsInput } from '@/components/obsidian'
 
 // パスワードマネージャ (1Password / LastPass / Bitwarden 等) の自動補完を抑制する
 // メール作成画面はパスワードフィールドではないため
@@ -71,6 +71,17 @@ const KIND_META: Record<LinkKind, { label: string; icon: React.ElementType; colo
   other:    { label: 'その他',   icon: Link2,         color: 'var(--color-obs-text-muted)' },
 }
 const KIND_ORDER: LinkKind[] = ['schedule', 'homepage', 'doc', 'other']
+
+const MAIL_CARD_SURFACE =
+  'linear-gradient(145deg, rgba(27,28,32,0.66) 0%, rgba(19,20,24,0.84) 48%, rgba(12,13,16,0.94) 100%)'
+const MAIL_CARD_RIM =
+  'inset 0 0 0 1px rgba(171,199,255,0.105), inset 1px 1px 0 rgba(255,255,255,0.035), 0 18px 48px rgba(0,0,0,0.30)'
+const MAIL_CARD_HOVER =
+  'linear-gradient(145deg, rgba(31,32,36,0.70) 0%, rgba(20,21,25,0.88) 50%, rgba(12,13,16,0.96) 100%)'
+const MAIL_INNER_SURFACE =
+  'linear-gradient(145deg, rgba(13,14,17,0.78), rgba(20,21,25,0.58))'
+const MAIL_INNER_RIM = 'inset 0 0 0 1px rgba(171,199,255,0.085), inset 1px 1px 0 rgba(255,255,255,0.025)'
+const MAIL_DIVIDER = 'rgba(171,199,255,0.075)'
 
 type ViewScope = 'total' | number  // 'total' = 全体合計 / number = 1始まりのラウンド番号
 
@@ -153,8 +164,8 @@ function CampaignFunnelCard({
     <div
       className="rounded-[var(--radius-obs-xl)] overflow-hidden transition-colors"
       style={{
-        backgroundColor: 'var(--color-obs-surface-high)',
-        boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.18), 0 2px 12px rgba(0,0,0,0.25)',
+        background: MAIL_CARD_SURFACE,
+        boxShadow: MAIL_CARD_RIM,
       }}
     >
       <div
@@ -162,7 +173,13 @@ function CampaignFunnelCard({
         tabIndex={0}
         onClick={onToggle}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle() } }}
-        className="w-full text-left p-5 transition-colors hover:bg-[rgba(171,199,255,0.04)] cursor-pointer"
+        className="w-full text-left p-5 transition-colors cursor-pointer"
+        onMouseOver={(e) => {
+          ;(e.currentTarget as HTMLDivElement).style.background = MAIL_CARD_HOVER
+        }}
+        onMouseOut={(e) => {
+          ;(e.currentTarget as HTMLDivElement).style.background = 'transparent'
+        }}
       >
         {/* ヘッダー */}
         <div className="flex items-start justify-between gap-4 mb-4">
@@ -216,7 +233,10 @@ function CampaignFunnelCard({
         {/* スコープ切替タブ (全体 / 1回目 / 2回目 / ...) */}
         <div
           className="flex items-center gap-1 mb-3 p-1 rounded-[var(--radius-obs-md)] w-fit"
-          style={{ backgroundColor: 'var(--color-obs-surface-low)' }}
+          style={{
+            background: 'linear-gradient(145deg, rgba(13,14,17,0.74), rgba(26,27,32,0.64))',
+            boxShadow: MAIL_INNER_RIM,
+          }}
           onClick={(e) => e.stopPropagation()}
         >
           <ScopeTab active={scope === 'total'} onClick={() => setScope('total')}>
@@ -241,7 +261,10 @@ function CampaignFunnelCard({
               <div
                 key={p.label}
                 className="rounded-[10px] p-3 relative overflow-hidden flex flex-col"
-                style={{ backgroundColor: 'var(--color-obs-surface-low)', boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.10)' }}
+                style={{
+                  background: MAIL_INNER_SURFACE,
+                  boxShadow: MAIL_INNER_RIM,
+                }}
               >
                 <div className="flex items-center gap-1.5 mb-1.5">
                   <Icon size={11} style={{ color: p.tint }} />
@@ -259,7 +282,8 @@ function CampaignFunnelCard({
                       className="h-full rounded-full"
                       style={{
                         width: `${Math.min(p.value / maxValue, 1) * 100}%`,
-                        backgroundColor: p.tint,
+                        background: `linear-gradient(90deg, ${p.tint}, rgba(171,199,255,0.90))`,
+                        boxShadow: `0 0 14px ${p.tint}`,
                       }}
                     />
                   </div>
@@ -279,9 +303,14 @@ function CampaignFunnelCard({
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className="overflow-hidden"
-            style={{ borderTop: '1px solid rgba(109,106,111,0.18)' }}
+            style={{ borderTop: `1px solid ${MAIL_DIVIDER}` }}
           >
-            <div className="p-5 space-y-5" style={{ backgroundColor: 'var(--color-obs-surface-base)' }}>
+            <div
+              className="p-5 space-y-5"
+              style={{
+                background: 'linear-gradient(180deg, rgba(14,15,19,0.70), rgba(9,10,13,0.82))',
+              }}
+            >
               {/* 種別ごとのクリック数 */}
               <div>
                 <div className="text-[10.5px] font-semibold uppercase tracking-[0.08em] mb-2 flex items-center gap-1.5" style={{ color: 'var(--color-obs-text-muted)' }}>
@@ -299,7 +328,7 @@ function CampaignFunnelCard({
                       <div
                         key={k}
                         className="rounded-[10px] p-3"
-                        style={{ backgroundColor: 'var(--color-obs-surface-low)', boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.10)' }}
+                        style={{ background: MAIL_INNER_SURFACE, boxShadow: MAIL_INNER_RIM }}
                       >
                         <div className="flex items-center gap-1.5 mb-1 min-w-0">
                           <Icon size={11} style={{ color: meta.color, flexShrink: 0 }} />
@@ -332,7 +361,7 @@ function CampaignFunnelCard({
                     <Send size={11} />
                     送信ラウンド一覧
                   </div>
-                  <div className="rounded-[10px] overflow-hidden" style={{ backgroundColor: 'var(--color-obs-surface-low)', boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.10)' }}>
+                  <div className="rounded-[10px] overflow-hidden" style={{ background: MAIL_INNER_SURFACE, boxShadow: MAIL_INNER_RIM }}>
                     {campaign.sends.map((r, i) => {
                       const rClicks = totalClicks(r.links)
                       return (
@@ -341,7 +370,7 @@ function CampaignFunnelCard({
                           className="grid items-center gap-3 px-3 py-2.5"
                           style={{
                             gridTemplateColumns: '60px 1.6fr 1fr 0.7fr 0.7fr',
-                            borderBottom: i < campaign.sends.length - 1 ? '1px solid rgba(109,106,111,0.10)' : undefined,
+                            borderBottom: i < campaign.sends.length - 1 ? `1px solid ${MAIL_DIVIDER}` : undefined,
                           }}
                         >
                           <span className="text-[11px] font-bold tabular-nums" style={{ color: 'var(--color-obs-primary)' }}>
@@ -379,7 +408,7 @@ function CampaignFunnelCard({
                     <Link2 size={11} />
                     {scope}回目に挿入したリンクごとのクリック数
                   </div>
-                  <div className="rounded-[10px] overflow-hidden" style={{ backgroundColor: 'var(--color-obs-surface-low)', boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.10)' }}>
+                  <div className="rounded-[10px] overflow-hidden" style={{ background: MAIL_INNER_SURFACE, boxShadow: MAIL_INNER_RIM }}>
                     {view.links.map((l, i) => {
                       const meta = KIND_META[l.kind]
                       const Icon = meta.icon
@@ -389,7 +418,7 @@ function CampaignFunnelCard({
                           className="grid items-center gap-3 px-3 py-2.5"
                           style={{
                             gridTemplateColumns: '90px 1fr 70px',
-                            borderBottom: i < view.links!.length - 1 ? '1px solid rgba(109,106,111,0.10)' : undefined,
+                            borderBottom: i < view.links!.length - 1 ? `1px solid ${MAIL_DIVIDER}` : undefined,
                           }}
                         >
                           <div className="flex items-center gap-1.5">
@@ -420,14 +449,14 @@ function CampaignFunnelCard({
                     <div className="text-[10.5px] font-semibold uppercase tracking-[0.08em] mb-1.5" style={{ color: 'var(--color-obs-text-muted)' }}>件名 ({scope}回目)</div>
                     <div
                       className="rounded-[8px] px-3 py-2.5 text-[12.5px]"
-                      style={{ backgroundColor: 'var(--color-obs-surface-low)', color: 'var(--color-obs-text)' }}
+                      style={{ background: MAIL_INNER_SURFACE, boxShadow: MAIL_INNER_RIM, color: 'var(--color-obs-text)' }}
                     >{view.subject}</div>
                   </div>
                   <div>
                     <div className="text-[10.5px] font-semibold uppercase tracking-[0.08em] mb-1.5" style={{ color: 'var(--color-obs-text-muted)' }}>本文 ({scope}回目)</div>
                     <div
                       className="rounded-[8px] px-3 py-2.5 text-[12.5px] whitespace-pre-line leading-[1.7]"
-                      style={{ backgroundColor: 'var(--color-obs-surface-low)', color: 'var(--color-obs-text)' }}
+                      style={{ background: MAIL_INNER_SURFACE, boxShadow: MAIL_INNER_RIM, color: 'var(--color-obs-text)' }}
                     >{view.body}</div>
                   </div>
                 </div>
@@ -450,8 +479,9 @@ function CampaignFunnelCard({
                   }}
                   className="inline-flex items-center gap-1.5 h-9 px-4 rounded-[var(--radius-obs-md)] text-[12px] font-semibold transition-colors whitespace-nowrap"
                   style={{
-                    background: 'linear-gradient(140deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
-                    color: 'var(--color-obs-on-primary)',
+                    background: OBS_PRIMARY_BUTTON.background,
+                    color: OBS_PRIMARY_BUTTON.color,
+                    boxShadow: OBS_PRIMARY_BUTTON.shadow,
                   }}
                 >
                   <Send size={12} />
@@ -473,9 +503,11 @@ function ScopeTab({ active, onClick, children }: { active: boolean; onClick: () 
       onClick={onClick}
       className="h-7 px-3 rounded-[6px] text-[11.5px] font-semibold transition-colors whitespace-nowrap"
       style={{
-        backgroundColor: active ? 'var(--color-obs-surface-highest)' : 'transparent',
+        background: active
+          ? 'linear-gradient(140deg, rgba(171,199,255,0.18), rgba(47,140,255,0.14))'
+          : 'transparent',
         color: active ? 'var(--color-obs-text)' : 'var(--color-obs-text-muted)',
-        boxShadow: active ? 'inset 0 0 0 1px rgba(171,199,255,0.18)' : 'none',
+        boxShadow: active ? 'inset 0 0 0 1px rgba(171,199,255,0.24), 0 0 16px rgba(47,140,255,0.16)' : 'none',
       }}
     >
       {children}
@@ -1162,15 +1194,15 @@ export function CampaignsView() {
             onClick={() => router.push('/contacts')}
             className="h-9 px-4 text-sm rounded-[var(--radius-obs-md)] font-medium tracking-[-0.01em] inline-flex items-center transition-all duration-200"
             style={{
-              backgroundColor: 'rgba(255,184,107,0.12)',
-              color: 'var(--color-obs-middle)',
-              boxShadow: 'inset 0 0 0 1px rgba(255,184,107,0.42)',
+              background: OBS_PRIMARY_BUTTON.background,
+              color: OBS_PRIMARY_BUTTON.color,
+              boxShadow: OBS_PRIMARY_BUTTON.shadow,
             }}
             onMouseOver={(e) => {
-              ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(255,184,107,0.20)'
+              ;(e.currentTarget as HTMLButtonElement).style.filter = 'brightness(1.08)'
             }}
             onMouseOut={(e) => {
-              ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(255,184,107,0.12)'
+              ;(e.currentTarget as HTMLButtonElement).style.filter = 'none'
             }}
           >
             <List size={14} className="mr-1.5 inline" strokeWidth={2.5} />

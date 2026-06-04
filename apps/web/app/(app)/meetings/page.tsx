@@ -32,50 +32,7 @@ interface Meeting {
 
 // ─── Mock Data ──────────────────────────────────────────────────────────────
 
-const MOCK_MEETINGS: Meeting[] = [
-  {
-    id: 'm1', title: '初回商談 — CRM導入検討', customerName: '株式会社テクノリード',
-    customerType: '新規顧客', date: '2026-03-26', duration: '45分',
-    participants: ['田中 誠', '田中太郎'], issueCount: 3,
-    summary: 'CRM導入の背景と現在の課題をヒアリング。既存ツールとの連携が最大の関心事。',
-    issues: ['既存ツールとのデータ連携', '導入時のデータ移行工数', 'モバイル対応の有無'],
-  },
-  {
-    id: 'm2', title: '定例MTG — 運用改善', customerName: '合同会社フューチャー',
-    customerType: '既存顧客', date: '2026-03-25', duration: '30分',
-    participants: ['山本 佳子', '鈴木花子'], issueCount: 2,
-    summary: 'レポート機能の改善要望とオートメーション設定のサポート依頼。',
-    issues: ['カスタムレポートの柔軟性', 'オートメーション設定のUI改善'],
-  },
-  {
-    id: 'm3', title: 'PoC振り返り', customerName: '有限会社サクセス',
-    customerType: '新規顧客', date: '2026-03-24', duration: '60分',
-    participants: ['小林 健太', '鈴木花子', '佐藤次郎'], issueCount: 4,
-    summary: 'PoC期間中の利用状況を振り返り。API連携の安定性とダッシュボードの表示速度が課題。',
-    issues: ['API連携の安定性', 'ダッシュボード表示速度', '権限設定の粒度', 'Slack通知の柔軟性'],
-  },
-  {
-    id: 'm4', title: '契約更新ヒアリング', customerName: '株式会社イノベーション',
-    customerType: '既存顧客', date: '2026-03-23', duration: '25分',
-    participants: ['佐々木 拓也', '田中太郎'], issueCount: 1,
-    summary: '契約更新に向けた満足度ヒアリング。全体的に満足だが、ナレッジ機能の充実を希望。',
-    issues: ['ナレッジベースの検索精度向上'],
-  },
-  {
-    id: 'm5', title: '要件定義 — エンタープライズプラン', customerName: '株式会社デルタ',
-    customerType: '新規顧客', date: '2026-03-22', duration: '90分',
-    participants: ['木村 隆', '佐藤次郎', '田中太郎'], issueCount: 5,
-    summary: '大規模導入に向けた要件定義。SSO、監査ログ、マルチテナント対応が必須要件。',
-    issues: ['SSO対応（SAML）', '監査ログの出力', 'マルチテナント対応', 'SLA保証', 'オンプレ連携'],
-  },
-  {
-    id: 'm6', title: 'CS定期レビュー', customerName: '株式会社グロース',
-    customerType: '既存顧客', date: '2026-03-21', duration: '30分',
-    participants: ['中村 理恵', '佐藤次郎'], issueCount: 2,
-    summary: '利用率が低下傾向。オンボーディング後のフォロー体制とヘルプコンテンツの充実が必要。',
-    issues: ['オンボーディング後のフォロー不足', 'ヘルプコンテンツの充実'],
-  },
-]
+const MOCK_MEETINGS: Meeting[] = []
 
 // ─── Page ───────────────────────────────────────────────────────────────────
 

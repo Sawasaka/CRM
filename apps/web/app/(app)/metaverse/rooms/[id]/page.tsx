@@ -4,12 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 
-const MOCK_ROOMS: Record<string, { name: string; category: string; host: string; participants: number; maxParticipants: number }> = {
-  'room-1': { name: '営業研修 — 商談の基礎', category: '営業研修', host: '鈴木花子', participants: 5, maxParticipants: 10 },
-  'room-2': { name: 'CS基礎 — オンボーディング', category: 'CS研修', host: '田中太郎', participants: 3, maxParticipants: 8 },
-  'room-3': { name: '業界知識 — SaaS市場トレンド', category: '業界知識', host: '佐藤次郎', participants: 8, maxParticipants: 8 },
-  'room-4': { name: '新人オンボーディング Week2', category: 'オンボーディング', host: '鈴木花子', participants: 2, maxParticipants: 5 },
-}
+const MOCK_ROOMS: Record<string, { name: string; category: string; host: string; participants: number; maxParticipants: number }> = {}
 
 const PARTICIPANTS = [
   { name: '鈴木花子', color: '#44FF88', role: 'ホスト' },

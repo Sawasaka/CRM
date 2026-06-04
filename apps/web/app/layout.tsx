@@ -11,6 +11,7 @@ import {
   serviceName,
 } from '@/lib/public-site'
 import { TRPCProvider } from '@/lib/trpc/provider'
+import { ViewTransitionProvider } from '@/components/view-transitions'
 import './globals.css'
 
 // Legacy（既存UI互換）
@@ -65,11 +66,11 @@ export const metadata: Metadata = {
     : undefined,
   icons: {
     icon: [
-      { url: '/icon.svg', type: 'image/svg+xml' },
-      { url: '/favicon.ico', sizes: '32x32' },
+      { url: '/icon.svg?v=hp-black-1-20260531-final', type: 'image/svg+xml' },
+      { url: '/favicon.ico?v=hp-black-1-20260531-final', sizes: '32x32' },
     ],
-    shortcut: '/icon.svg',
-    apple: '/icon.svg',
+    shortcut: '/icon.svg?v=hp-black-1-20260531-final',
+    apple: '/icon.svg?v=hp-black-1-20260531-final',
   },
   manifest: '/manifest.webmanifest',
 }
@@ -80,7 +81,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${dmSans.variable} ${inter.variable} ${plusJakarta.variable}`}>
         <SessionProvider>
           <TRPCProvider>
-            {children}
+            <ViewTransitionProvider>{children}</ViewTransitionProvider>
           </TRPCProvider>
         </SessionProvider>
         <GoogleAnalytics />

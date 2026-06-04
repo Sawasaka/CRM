@@ -16,33 +16,7 @@ export interface HistoryEntry {
   attendees?: string[]
 }
 
-const MOCK_CONTACT_HISTORY: HistoryEntry[] = [
-  {
-    id: 'h1',
-    kind: 'meeting',
-    occurredAt: '2026-03-28T14:00:00',
-    title: '初回オンライン商談',
-    detail: 'プロダクトデモ + 課題ヒアリング。次回までに比較表を送付予定。',
-    attendees: ['田中 誠', '開発 太郎', '佐藤 翔'],
-    durationSec: 50 * 60,
-  },
-  {
-    id: 'h2',
-    kind: 'email',
-    occurredAt: '2026-03-21T09:12:00',
-    title: '商談リマインドと事前資料',
-    detail: '事前資料と当日のアジェンダ案を送付。',
-  },
-  {
-    id: 'h3',
-    kind: 'call',
-    occurredAt: '2026-03-20T14:32:00',
-    title: '商談日程の確定コール',
-    detail: '3/28 14:00 で確定。Google Meet URLを当日午前中に送付する旨を共有。',
-    result: '通話',
-    durationSec: 8 * 60 + 24,
-  },
-]
+const MOCK_CONTACT_HISTORY: HistoryEntry[] = []
 
 const HISTORY_KIND_META: Record<HistoryKind | 'all', { label: string; Icon: ElementType; tone: string }> = {
   all: { label: 'すべて', Icon: Inbox, tone: 'var(--color-obs-text-muted)' },

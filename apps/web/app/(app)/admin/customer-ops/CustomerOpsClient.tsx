@@ -1,420 +1,244 @@
 'use client'
 
-import { useMemo, useState } from 'react'
-import { motion } from 'framer-motion'
-import Link from 'next/link'
-import {
-  Activity,
-  Building2,
-  ChevronRight,
-  Crown,
-  Database,
-  Search,
-  ShieldAlert,
-  Sparkles,
-  Ticket,
-  TrendingUp,
-  Users,
-} from 'lucide-react'
+import { useState } from 'react'
+import { Building2, ExternalLink, Pencil } from 'lucide-react'
 import { ObsCard, ObsHero, ObsPageShell } from '@/components/obsidian'
-import type {
-  CustomerOpsMetrics,
-  PlanTier,
-  TenantRow,
-  TenantStatus,
-} from '@/lib/admin/customer-ops-types'
+import type { CustomerOpsMetrics, TenantRow } from '@/lib/admin/customer-ops-types'
 
-type StatusFilter = TenantStatus | 'all'
-type PlanFilter = PlanTier | 'all'
+// 開発者用テナント一覧 (最小機能版 / 精緻UI)
+// - 行クリックで該当テナントの本環境を新規タブで開く
+//   (詳細ページへの遷移は廃止。確認はこのタブで完結)
 
 export function CustomerOpsClient({
   tenants,
-  metrics,
 }: {
   tenants: TenantRow[]
   metrics: CustomerOpsMetrics
 }) {
-  const [keyword, setKeyword] = useState('')
-  const [planFilter, setPlanFilter] = useState<PlanFilter>('all')
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
-
-  const filteredTenants = useMemo(() => {
-    const q = keyword.trim().toLowerCase()
-    return tenants.filter((tenant) => {
-      if (planFilter !== 'all' && tenant.plan !== planFilter) return false
-      if (statusFilter !== 'all' && tenant.status !== statusFilter) return false
-      if (q && !`${tenant.name} ${tenant.slug}`.toLowerCase().includes(q)) return false
-      return true
-    })
-  }, [keyword, planFilter, statusFilter, tenants])
-
   return (
     <ObsPageShell>
       <div className="w-full px-8 xl:px-12 2xl:px-16 pb-16">
         <ObsHero
           eyebrow="Admin"
-          title="Customer Operations"
-          caption="本番DBのOrganizationをもとに、実在するテナント・ユーザー・商談・問い合わせ・活動量を集計します。"
+          title="開発者ページ"
+          caption="本番テナントの一覧と環境アクセスができます。"
           action={
             <span
-              className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full uppercase tracking-[0.08em]"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold uppercase tracking-[0.08em]"
               style={{
+                background: 'rgba(255,193,7,0.10)',
                 color: '#FFC107',
-                backgroundColor: 'rgba(255,193,7,0.14)',
+                boxShadow: 'inset 0 0 0 1px rgba(255,193,7,0.30)',
               }}
             >
-              <ShieldAlert size={11} />
               開発者専用
             </span>
           }
         />
 
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
-          <MetricCard
-            label="総テナント"
-            value={metrics.totalTenants.toLocaleString()}
-            sub={`アクティブ ${metrics.activeTenantCount}`}
-            icon={Building2}
-            accent="var(--color-obs-primary)"
-          />
-          <MetricCard
-            label="ユーザー"
-            value={metrics.totalUsers.toLocaleString()}
-            sub={`30日Active ${metrics.activeUsers30d}`}
-            icon={Users}
-            accent="#50C8FF"
-          />
-          <MetricCard
-            label="企業データ"
-            value={metrics.totalCompanies.toLocaleString()}
-            sub="全テナント合計"
-            icon={Database}
-            accent="#4BC88C"
-          />
-          <MetricCard
-            label="商談 / チケット"
-            value={`${metrics.totalDeals.toLocaleString()} / ${metrics.totalTickets.toLocaleString()}`}
-            sub="Deal / Ticket"
-            icon={Ticket}
-            accent="#FFC107"
-          />
-          <MetricCard
-            label="30日活動"
-            value={metrics.totalActivities30d.toLocaleString()}
-            sub={`F:${metrics.planCounts.Free} L:${metrics.planCounts.Lite} S:${metrics.planCounts.Standard} P:${metrics.planCounts.PRO}`}
-            icon={Activity}
-            accent="#FF8A65"
-          />
-        </div>
-
-        <div className="mb-4 flex flex-wrap items-center gap-2">
-          <div
-            className="flex-1 min-w-[260px] flex items-center gap-2 px-3 h-10 rounded-[var(--radius-obs-md)]"
-            style={{ backgroundColor: 'var(--color-obs-surface-high)' }}
-          >
-            <Search size={14} style={{ color: 'var(--color-obs-text-subtle)' }} />
-            <input
-              type="text"
-              value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
-              placeholder="テナント名・slugで検索"
-              className="flex-1 bg-transparent border-0 outline-none text-[13px]"
-              style={{ color: 'var(--color-obs-text)' }}
-            />
-          </div>
-
-          <SegmentedControl<PlanFilter>
-            options={[
-              { value: 'all', label: 'すべて' },
-              { value: 'Free', label: 'Free' },
-              { value: 'Lite', label: 'Lite' },
-              { value: 'Standard', label: 'Standard' },
-              { value: 'PRO', label: 'PRO' },
-            ]}
-            value={planFilter}
-            onChange={setPlanFilter}
-          />
-
-          <SegmentedControl<StatusFilter>
-            options={[
-              { value: 'all', label: '全状態' },
-              { value: 'active', label: 'アクティブ' },
-              { value: 'dormant', label: '休眠' },
-            ]}
-            value={statusFilter}
-            onChange={setStatusFilter}
-          />
-        </div>
-
-        {filteredTenants.length === 0 ? (
+        {/* ── テナント一覧 ── */}
+        {tenants.length === 0 ? (
           <ObsCard depth="high" padding="lg" radius="xl">
-            <p className="text-[13px] text-center py-8" style={{ color: 'var(--color-obs-text-muted)' }}>
-              該当するテナントが見つかりません。本番DBにOrganizationが1件だけなら、この画面も1件だけ表示されます。
-            </p>
+            <div
+              className="px-4 py-12 text-center text-[13px]"
+              style={{ color: 'var(--color-obs-text-muted)' }}
+            >
+              テナントが見つかりません。
+            </div>
           </ObsCard>
         ) : (
-          <ObsCard depth="high" padding="none" radius="xl" className="overflow-hidden">
-            <div
-              className="grid grid-cols-[2fr_0.9fr_1fr_1fr_1fr_1fr_0.4fr] gap-3 px-5 py-3 text-[11px] font-medium uppercase tracking-[0.08em]"
-              style={{
-                color: 'var(--color-obs-text-subtle)',
-                backgroundColor: 'var(--color-obs-surface-high)',
-              }}
-            >
-              <span>テナント</span>
-              <span>プラン</span>
-              <span>ユーザー</span>
-              <span>企業 / 商談</span>
-              <span>問い合わせ</span>
-              <span>連携</span>
-              <span></span>
-            </div>
-
-            {filteredTenants.map((tenant, i) => (
-              <Link
-                key={tenant.id}
-                href={`/admin/customer-ops/${tenant.id}`}
-                className="block transition-colors"
-              >
-                <motion.div
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.04 }}
-                  className="grid grid-cols-[2fr_0.9fr_1fr_1fr_1fr_1fr_0.4fr] gap-3 px-5 py-4 hover:bg-[var(--color-obs-surface-high)] cursor-pointer"
-                  style={{
-                    borderTop: i === 0 ? 'none' : '1px solid rgba(255,255,255,0.04)',
-                  }}
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <div
-                      className="w-9 h-9 rounded-[var(--radius-obs-md)] flex items-center justify-center shrink-0"
-                      style={{
-                        background:
-                          tenant.status === 'active'
-                            ? 'linear-gradient(135deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)'
-                            : 'var(--color-obs-surface-highest)',
-                      }}
-                    >
-                      <Building2
-                        size={14}
-                        style={{
-                          color:
-                            tenant.status === 'active'
-                              ? 'var(--color-obs-on-primary)'
-                              : 'var(--color-obs-text-subtle)',
-                        }}
-                      />
-                    </div>
-                    <div className="min-w-0">
-                      <p
-                        className="text-[13px] font-semibold truncate"
-                        style={{ color: 'var(--color-obs-text)' }}
-                      >
-                        {tenant.name}
-                      </p>
-                      <p className="text-[11px] truncate" style={{ color: 'var(--color-obs-text-subtle)' }}>
-                        <StatusBadge status={tenant.status} />
-                        <span className="ml-2">
-                          最終活動: {formatDateShort(tenant.lastActivityAt)}
-                        </span>
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center">
-                    <PlanBadge plan={tenant.plan} />
-                  </div>
-
-                  <div className="flex flex-col justify-center text-[12px]">
-                    <span className="tabular-nums" style={{ color: 'var(--color-obs-text)' }}>
-                      {tenant.userCount.toLocaleString()} 名
-                    </span>
-                    <span className="text-[10.5px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
-                      30日Active: {tenant.activeUsers30d.toLocaleString()}
-                    </span>
-                  </div>
-
-                  <div className="flex flex-col justify-center text-[12px]">
-                    <span className="tabular-nums" style={{ color: 'var(--color-obs-text)' }}>
-                      {tenant.companyCount.toLocaleString()} 社
-                    </span>
-                    <span className="text-[10.5px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
-                      商談 {tenant.dealCount.toLocaleString()}
-                    </span>
-                  </div>
-
-                  <div className="flex flex-col justify-center text-[12px]">
-                    <span className="tabular-nums" style={{ color: 'var(--color-obs-text)' }}>
-                      {tenant.ticketCount.toLocaleString()} 件
-                    </span>
-                    <span className="text-[10.5px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
-                      活動 {tenant.activityCount30d.toLocaleString()} / 30日
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-1.5 text-[11px]" style={{ color: 'var(--color-obs-text-muted)' }}>
-                    <IntegrationDot label="G" active={tenant.integrations.google} />
-                    <IntegrationDot label="S" active={tenant.integrations.slack} />
-                    <IntegrationDot label="M" active={tenant.integrations.microsoft} />
-                  </div>
-
-                  <div className="flex items-center justify-end">
-                    <ChevronRight size={16} style={{ color: 'var(--color-obs-text-subtle)' }} />
-                  </div>
-                </motion.div>
-              </Link>
+          <div className="space-y-3">
+            {tenants.map((t) => (
+              <TenantRowItem key={t.id} tenant={t} />
             ))}
-          </ObsCard>
-        )}
-
-        <ObsCard depth="low" padding="md" radius="xl" className="mt-4">
-          <div
-            className="text-[11.5px] font-medium uppercase tracking-[0.1em] mb-2"
-            style={{ color: 'var(--color-obs-text-subtle)' }}
-          >
-            このページについて
           </div>
-          <ul className="text-[12.5px] space-y-1.5" style={{ color: 'var(--color-obs-text-muted)' }}>
-            <li>・表示対象は本番DBに存在する Organization のみです。サンプルテナントは表示しません。</li>
-            <li>・30日ActiveはActivityを作成したユーザー数で集計します。</li>
-            <li>・アクセスは開発者テナントに限定します。`BGM_TENANT_ID` を本番環境に設定してください。</li>
-          </ul>
-        </ObsCard>
+        )}
       </div>
     </ObsPageShell>
   )
 }
 
-function MetricCard({
-  label,
-  value,
-  sub,
-  icon: Icon,
-  accent,
-}: {
-  label: string
-  value: string
-  sub?: string
-  icon: React.ElementType
-  accent: string
-}) {
-  return (
-    <ObsCard depth="high" padding="md" radius="xl">
-      <div className="flex items-start justify-between mb-2">
-        <p
-          className="text-[10.5px] font-medium uppercase tracking-[0.1em]"
-          style={{ color: 'var(--color-obs-text-subtle)' }}
-        >
-          {label}
-        </p>
-        <div
-          className="w-7 h-7 rounded-[var(--radius-obs-sm)] flex items-center justify-center"
-          style={{ backgroundColor: `color-mix(in srgb, ${accent} 14%, transparent)` }}
-        >
-          <Icon size={13} style={{ color: accent }} />
-        </div>
-      </div>
-      <p
-        className="font-[family-name:var(--font-display)] text-[20px] font-bold tabular-nums tracking-[-0.02em]"
-        style={{ color: 'var(--color-obs-text)' }}
-      >
-        {value}
-      </p>
-      {sub && (
-        <p className="text-[11px] mt-0.5" style={{ color: 'var(--color-obs-text-subtle)' }}>
-          {sub}
-        </p>
-      )}
-    </ObsCard>
-  )
-}
+// ─── Tenant row (グラデ枠 + ambient glow + 精緻チップ) ───────────────────────
 
-function SegmentedControl<T extends string>({
-  options,
-  value,
-  onChange,
-}: {
-  options: { value: T; label: string }[]
-  value: T
-  onChange: (v: T) => void
-}) {
+function TenantRowItem({ tenant }: { tenant: TenantRow }) {
+  const [hover, setHover] = useState(false)
+  const tenantUrl = `/?tenant=${tenant.slug}`
+  const editUrl = `/admin/customer-ops/${tenant.id}`
   return (
     <div
-      className="inline-flex p-1 rounded-[var(--radius-obs-md)] gap-0.5"
-      style={{ backgroundColor: 'var(--color-obs-surface-high)' }}
+      className="block rounded-[20px] p-[1px] transition-all duration-200"
+      style={{
+        background: hover
+          ? 'linear-gradient(135deg, rgba(171,199,255,0.45) 0%, rgba(0,113,227,0.22) 50%, rgba(171,199,255,0.06) 100%)'
+          : 'linear-gradient(135deg, rgba(171,199,255,0.18) 0%, rgba(171,199,255,0.05) 60%, transparent 100%)',
+        boxShadow: hover
+          ? '0 12px 36px -16px rgba(171,199,255,0.30), 0 0 0 1px rgba(171,199,255,0.10)'
+          : '0 6px 24px -14px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.02)',
+      }}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
     >
-      {options.map((opt) => {
-        const active = value === opt.value
-        return (
-          <button
-            key={opt.value}
-            onClick={() => onChange(opt.value)}
-            className="px-3 h-8 rounded-[calc(var(--radius-obs-md)-2px)] text-[12px] font-medium transition-colors"
+      <div
+        className="rounded-[19px] px-5 py-4 relative overflow-hidden fo-glass-rim"
+        style={{
+          background:
+            'linear-gradient(180deg, rgba(18,18,22,0.94) 0%, rgba(12,12,16,0.96) 100%)',
+        }}
+      >
+        {/* hover時の ambient glow */}
+        {hover && (
+          <div
+            className="absolute -top-16 -right-12 w-48 h-48 rounded-full pointer-events-none"
             style={{
-              backgroundColor: active ? 'var(--color-obs-surface-highest)' : 'transparent',
-              color: active ? 'var(--color-obs-text)' : 'var(--color-obs-text-muted)',
+              background:
+                'radial-gradient(circle, rgba(171,199,255,0.16), transparent 60%)',
+              filter: 'blur(36px)',
+            }}
+          />
+        )}
+
+        <div className="flex items-center gap-4 relative">
+          {/* アイコンチップ (グラデ + 内側ring + 外側ソフト影) */}
+          <div
+            className="shrink-0 w-12 h-12 rounded-[14px] flex items-center justify-center"
+            style={{
+              background:
+                'linear-gradient(135deg, rgba(171,199,255,0.30) 0%, rgba(0,113,227,0.18) 100%)',
+              boxShadow:
+                'inset 0 0 0 1px rgba(171,199,255,0.40), inset 1px 1px 0 rgba(255,255,255,0.10), 0 8px 18px -8px rgba(171,199,255,0.30)',
             }}
           >
-            {opt.label}
-          </button>
-        )
-      })}
+            <Building2
+              size={20}
+              strokeWidth={2}
+              style={{
+                color: 'var(--color-obs-primary)',
+                filter: 'drop-shadow(0 0 6px rgba(171,199,255,0.35))',
+              }}
+            />
+          </div>
+
+          {/* 名前 + プラン + 状態 */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span
+                className="font-[family-name:var(--font-display)] text-[16px] font-semibold tracking-[-0.015em] truncate"
+                style={{ color: 'var(--color-obs-text)' }}
+              >
+                {tenant.name}
+              </span>
+              <PlanChip plan={tenant.plan} />
+              <StatusChip status={tenant.status} />
+            </div>
+            <div
+              className="text-[12px] mt-1 truncate"
+              style={{ color: 'var(--color-obs-text-subtle)' }}
+            >
+              <span className="font-mono">{tenant.slug}</span>
+              <span className="mx-1.5" style={{ color: 'var(--color-obs-text-muted)' }}>
+                ・
+              </span>
+              {tenant.userCount} 名
+              <span className="mx-1.5" style={{ color: 'var(--color-obs-text-muted)' }}>
+                ・
+              </span>
+              最終活動 {tenant.lastActivityAt ? formatDate(tenant.lastActivityAt) : '—'}
+            </div>
+          </div>
+
+          {/* アクション (編集 + 環境に入る) */}
+          <div className="flex items-center gap-2 shrink-0">
+            {/* 編集 (詳細ページへ) */}
+            <a
+              href={editUrl}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-[var(--radius-obs-md)] text-[12.5px] font-semibold transition-colors"
+              style={{
+                color: 'var(--color-obs-text-muted)',
+                background: 'rgba(255,255,255,0.04)',
+                boxShadow: 'inset 0 0 0 1px var(--color-obs-border)',
+              }}
+            >
+              <Pencil size={13} strokeWidth={2.2} />
+              編集
+            </a>
+
+            {/* 環境に入る (本環境を新規タブで開く) */}
+            <a
+              href={tenantUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-[var(--radius-obs-md)] text-[12.5px] font-semibold transition-transform"
+              style={{
+                background: hover
+                  ? 'linear-gradient(135deg, #c7d8ff 0%, #8db4ff 100%)'
+                  : 'linear-gradient(135deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
+                color: 'var(--color-obs-on-primary)',
+                boxShadow: hover
+                  ? '0 10px 22px -8px rgba(171,199,255,0.55), inset 1px 1px 0 rgba(255,255,255,0.25)'
+                  : '0 4px 14px -4px rgba(171,199,255,0.40), inset 1px 1px 0 rgba(255,255,255,0.18)',
+                transform: hover ? 'translateY(-1px)' : 'translateY(0)',
+              }}
+            >
+              環境に入る <ExternalLink size={13} strokeWidth={2.4} />
+            </a>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
 
-function StatusBadge({ status }: { status: TenantStatus }) {
-  const config: Record<TenantStatus, { label: string; bg: string; fg: string }> = {
-    active: { label: 'Active', bg: 'rgba(75,200,140,0.14)', fg: '#4BC88C' },
-    dormant: { label: 'Dormant', bg: 'rgba(255,193,7,0.14)', fg: '#FFC107' },
-  }
-  const c = config[status]
-  return (
-    <span
-      className="inline-block px-1.5 py-[1px] rounded text-[9.5px] font-semibold uppercase tracking-[0.06em]"
-      style={{ backgroundColor: c.bg, color: c.fg }}
-    >
-      {c.label}
-    </span>
-  )
-}
+// ─── Plan chip ───────────────────────────────────────────────────────────────
 
-function PlanBadge({ plan }: { plan: PlanTier }) {
-  const config: Record<PlanTier, { Icon: React.ElementType; bg: string; fg: string }> = {
-    Free: { Icon: Sparkles, bg: 'var(--color-obs-surface-highest)', fg: 'var(--color-obs-text-muted)' },
-    Lite: { Icon: TrendingUp, bg: 'rgba(80,200,255,0.14)', fg: '#50C8FF' },
-    Standard: { Icon: TrendingUp, bg: 'rgba(80,200,255,0.14)', fg: '#50C8FF' },
-    PRO: { Icon: Crown, bg: 'rgba(255,193,7,0.14)', fg: '#FFC107' },
-  }
-  const c = config[plan]
-  const Icon = c.Icon
+function PlanChip({ plan }: { plan: string }) {
   return (
     <span
-      className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full"
-      style={{ backgroundColor: c.bg, color: c.fg }}
+      className="text-[10px] font-semibold uppercase tracking-[0.08em] px-2 py-[3px] rounded-full shrink-0"
+      style={{
+        background: 'linear-gradient(135deg, rgba(171,199,255,0.18), rgba(171,199,255,0.06))',
+        color: 'var(--color-obs-primary)',
+        boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.28)',
+      }}
     >
-      <Icon size={10} />
       {plan}
     </span>
   )
 }
 
-function IntegrationDot({ label, active }: { label: string; active: boolean }) {
+// ─── Status chip (ACTIVE = 緑グロー / DORMANT = グレー) ───────────────────────
+
+function StatusChip({ status }: { status: 'active' | 'dormant' }) {
+  const isActive = status === 'active'
   return (
     <span
-      className="inline-flex w-6 h-6 items-center justify-center rounded-full text-[10px] font-semibold"
+      className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.08em] px-2 py-[3px] rounded-full shrink-0"
       style={{
-        backgroundColor: active ? 'rgba(75,200,140,0.14)' : 'var(--color-obs-surface-highest)',
-        color: active ? '#4BC88C' : 'var(--color-obs-text-subtle)',
+        background: isActive
+          ? 'linear-gradient(135deg, rgba(75,200,140,0.20), rgba(75,200,140,0.06))'
+          : 'rgba(255,255,255,0.05)',
+        color: isActive ? '#5CDEA6' : 'var(--color-obs-text-subtle)',
+        boxShadow: isActive
+          ? 'inset 0 0 0 1px rgba(75,200,140,0.32), 0 0 8px rgba(75,200,140,0.20)'
+          : 'inset 0 0 0 1px rgba(255,255,255,0.08)',
       }}
-      title={`${label}: ${active ? '連携済み' : '未連携'}`}
     >
-      {label}
+      <span
+        className="inline-block w-1.5 h-1.5 rounded-full"
+        style={{
+          backgroundColor: isActive ? '#5CDEA6' : 'rgba(255,255,255,0.30)',
+          boxShadow: isActive ? '0 0 6px #5CDEA6' : 'none',
+        }}
+      />
+      {isActive ? 'ACTIVE' : 'DORMANT'}
     </span>
   )
 }
 
-function formatDateShort(value: string | null) {
-  if (!value) return '-'
-  return new Date(value).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' })
+function formatDate(iso: string): string {
+  try {
+    const d = new Date(iso)
+    return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`
+  } catch {
+    return iso
+  }
 }

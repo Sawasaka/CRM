@@ -8,11 +8,11 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: '/service-icon.svg', type: 'image/svg+xml' },
-      { url: '/service-favicon.ico', sizes: '32x32' },
+      { url: '/service-icon.svg?v=service-black-2-20260531-final', type: 'image/svg+xml' },
+      { url: '/service-favicon.ico?v=service-black-2-20260531-final', sizes: '32x32' },
     ],
-    shortcut: '/service-icon.svg',
-    apple: '/service-icon.svg',
+    shortcut: '/service-icon.svg?v=service-black-2-20260531-final',
+    apple: '/service-icon.svg?v=service-black-2-20260531-final',
   },
 }
 

@@ -1,10 +1,14 @@
 'use client'
 
+import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { Mail, Sparkles } from 'lucide-react'
 import { DemoModal } from './DemoModal'
 
-export const Nav = () => {
+// ブランドバー(ロゴ + コンテンツ切替 + お問い合わせ/無料デモ)。
+// 固定は AppHub 側の sticky chrome が担うので、ここは通常フロー要素。
+export const Nav = ({ centerSlot }: { centerSlot?: ReactNode }) => {
   const [scrolled, setScrolled] = useState(false)
   const [demoOpen, setDemoOpen] = useState(false)
 
@@ -25,55 +29,62 @@ export const Nav = () => {
 
   return (
     <>
-      <header className="fixed top-0 inset-x-0 z-50 transition-all duration-300">
-        <div className="mx-auto max-w-7xl px-5 mt-3">
+      <header className="relative z-50 transition-all duration-300">
+        <div className="mx-auto max-w-7xl px-5 pt-3 pb-1">
           <div
-            className={`relative rounded-2xl pl-4 pr-2 md:pl-5 md:pr-3 h-14 flex items-center justify-between transition-all duration-300 fo-glass-rim ${
+            className={`relative grid min-h-14 grid-cols-[minmax(0,1fr)] items-center gap-3 rounded-2xl px-3 py-2 transition-all duration-300 fo-glass-rim md:grid-cols-[minmax(140px,1fr)_auto_minmax(140px,1fr)] md:py-0 md:pl-5 md:pr-3 ${
               scrolled ? 'fo-glass-strong' : 'fo-glass'
             }`}
             style={{ background: scrolled ? 'rgba(19,19,21,0.78)' : 'rgba(53,52,55,0.40)' }}
           >
-            {/* 左: ロゴ */}
-            <a
-              href="#"
-              className="font-display font-bold text-[1.05rem] fo-gradient-text tracking-[-0.01em]"
-            >
-              ルキスマCRM
-            </a>
-
-            {/* 中央: リリース準備中バッジ (絶対配置で完全中央) */}
-            <span
-              className="hidden sm:inline-flex items-center gap-2 rounded-full px-3.5 h-8 text-[11px] font-medium tracking-[0.02em] cursor-default absolute left-1/2 -translate-x-1/2 backdrop-blur-md"
-              style={{
-                background:
-                  'linear-gradient(135deg, rgba(171,199,255,0.10), rgba(171,199,255,0.03))',
-                color: '#cfdcff',
-                boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.22)',
-              }}
-              title="現在リリース準備中です"
-            >
-              <span className="relative inline-flex w-1.5 h-1.5">
-                <span
-                  className="absolute inline-flex w-full h-full rounded-full animate-ping opacity-70"
-                  style={{ backgroundColor: '#abc7ff' }}
-                />
-                <span
-                  className="relative inline-flex w-1.5 h-1.5 rounded-full"
-                  style={{
-                    backgroundColor: '#abc7ff',
-                    boxShadow: '0 0 8px rgba(171,199,255,0.6)',
-                  }}
-                />
+            {/* 左: ロゴ + リリース準備中ラベル */}
+            <div className="flex min-w-0 items-center gap-2.5">
+              <Link
+                href="/lp"
+                className="font-display font-bold text-[1.05rem] fo-gradient-text"
+                aria-label="ルキスマCRM ホーム"
+              >
+                ルキスマCRM
+              </Link>
+              <span
+                className="hidden md:inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 h-6 text-[10.5px] font-medium tracking-[0.02em] cursor-default whitespace-nowrap"
+                style={{
+                  background:
+                    'linear-gradient(135deg, rgba(171,199,255,0.10), rgba(171,199,255,0.03))',
+                  color: '#cfdcff',
+                  boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.22)',
+                }}
+                title="現在リリース準備中です"
+              >
+                <span className="relative inline-flex w-1.5 h-1.5">
+                  <span
+                    className="absolute inline-flex w-full h-full rounded-full animate-ping opacity-70"
+                    style={{ backgroundColor: '#abc7ff' }}
+                  />
+                  <span
+                    className="relative inline-flex w-1.5 h-1.5 rounded-full"
+                    style={{
+                      backgroundColor: '#abc7ff',
+                      boxShadow: '0 0 8px rgba(171,199,255,0.6)',
+                    }}
+                  />
+                </span>
+                リリース準備中
               </span>
-              リリース準備中
-            </span>
+            </div>
+
+            {centerSlot ? (
+              <div className="flex min-w-0 max-w-full justify-start overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:justify-center">
+                {centerSlot}
+              </div>
+            ) : null}
 
             {/* 右: お問い合わせ + 無料デモ (統一リズム: h-9, gap-2) */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 md:justify-end">
               <button
                 type="button"
                 onClick={scrollToContact}
-                className="inline-flex items-center gap-1.5 rounded-lg h-9 px-3.5 text-[12px] font-medium text-[#cfdcff] transition-all duration-200 hover:text-[#e7e5ea] hover:-translate-y-[1px]"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg h-9 px-3.5 text-[12px] font-medium text-[#cfdcff] transition-all duration-200 hover:text-[#e7e5ea] hover:-translate-y-[1px] whitespace-nowrap"
                 style={{
                   background: 'rgba(171,199,255,0.08)',
                   boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.24)',
@@ -94,7 +105,7 @@ export const Nav = () => {
               <button
                 type="button"
                 onClick={() => setDemoOpen(true)}
-                className="inline-flex items-center gap-1.5 rounded-lg h-9 px-4 text-[12px] font-semibold text-[#0a0a0c] transition-all duration-200 hover:-translate-y-[1px]"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg h-9 px-4 text-[12px] font-semibold text-[#0a0a0c] transition-all duration-200 hover:-translate-y-[1px] whitespace-nowrap"
                 style={{
                   background: 'linear-gradient(135deg, #8fb0e8, #1e6fcc)',
                   boxShadow:

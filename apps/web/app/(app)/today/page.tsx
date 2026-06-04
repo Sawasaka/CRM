@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { Phone, Mail, Briefcase, ChevronRight, User, Building2, Pencil, X, Check, RotateCcw, Calendar, CalendarClock, CheckSquare } from 'lucide-react'
@@ -13,7 +13,7 @@ import {
   ObsInput,
 } from '@/components/obsidian'
 
-// ─── Mock Data ───────────────────────────────────────────────────────────────
+// ─── Data ───────────────────────────────────────────────────────────────────
 
 const REPS = [
   { id: 'u1', name: '田中太郎', color: 'var(--color-obs-primary)' },
@@ -31,6 +31,7 @@ interface Task {
   rank: string
   urgent: boolean
   owner: string
+  ownerName: string
   category: TaskCategory
   linkTo: string
   memo: string
@@ -39,16 +40,7 @@ interface Task {
   completed: boolean
 }
 
-const INITIAL_TASKS: Task[] = [
-  { id: 't1', type: 'call',  company: '株式会社テクノリード',    person: '田中 誠',  rank: 'A', urgent: true,  owner: 'u1', category: 'contact', linkTo: '/contacts/1', memo: '', dueAt: '2026-03-28', remindAt: '2026-03-28T09:00', completed: false },
-  { id: 't2', type: 'call',  company: '合同会社ビジョン',        person: '加藤 雄介', rank: 'C', urgent: false, owner: 'u1', category: 'contact', linkTo: '/contacts/7', memo: '', dueAt: '2026-03-28', remindAt: '', completed: false },
-  { id: 't3', type: 'call',  company: '合同会社フューチャー',    person: '鈴木 様',  rank: 'A', urgent: true,  owner: 'u2', category: 'contact', linkTo: '/contacts/2', memo: '', dueAt: '2026-03-28', remindAt: '2026-03-28T10:00', completed: false },
-  { id: 't4', type: 'call',  company: '有限会社サクセス',        person: '小林 健太', rank: 'B', urgent: false, owner: 'u2', category: 'contact', linkTo: '/contacts/5', memo: '', dueAt: '2026-03-29', remindAt: '', completed: false },
-  { id: 't5', type: 'email', company: '株式会社ネクスト',        person: '鈴木 美香', rank: 'C', urgent: false, owner: 'u3', category: 'contact', linkTo: '/contacts/6', memo: '', dueAt: '2026-03-28', remindAt: '', completed: false },
-  { id: 't6', type: 'email', company: '株式会社イノベーション',  person: '',         rank: 'B', urgent: false, owner: 'u1', category: 'deal', linkTo: '/deals/d5', memo: '', dueAt: '2026-03-28', remindAt: '2026-03-28T14:00', completed: false },
-  { id: 't7', type: 'other', company: '株式会社デジタルフォース', person: '',         rank: 'A', urgent: true,  owner: 'u2', category: 'deal', linkTo: '/deals/d8', memo: '提案書作成', dueAt: '2026-03-28', remindAt: '', completed: false },
-  { id: 't8', type: 'other', company: '株式会社グロース',        person: '',         rank: 'A', urgent: true,  owner: 'u3', category: 'deal', linkTo: '/deals/d4', memo: '見積書送付', dueAt: '2026-03-28', remindAt: '2026-03-28T11:00', completed: false },
-]
+const INITIAL_TASKS: Task[] = []
 
 // ランク → ObsChip の tone マッピング（A=hot, B=middle, C=low）
 function rankToTone(rank: string): 'hot' | 'middle' | 'low' | 'neutral' {
@@ -486,10 +478,43 @@ function RepSection({ rep, tasks, completedTasks, index, onComplete, onRestore, 
 
 export default function HomePage() {
   const [tasks, setTasks] = useState(INITIAL_TASKS)
+  const [loading, setLoading] = useState(true)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
 
   const activeTasks = tasks.filter(t => !t.completed)
   const completedTasks = tasks.filter(t => t.completed)
+  const reps = useMemo(() => {
+    const seen = new Map<string, { id: string; name: string; color: string }>()
+    for (const task of tasks) {
+      if (!seen.has(task.owner)) {
+        seen.set(task.owner, {
+          id: task.owner,
+          name: task.ownerName,
+          color: REPS[seen.size % REPS.length]?.color ?? 'var(--color-obs-primary)',
+        })
+      }
+    }
+    return Array.from(seen.values())
+  }, [tasks])
+
+  useEffect(() => {
+    let aborted = false
+    setLoading(true)
+    fetch('/api/tasks?scope=today', { cache: 'no-store' })
+      .then((res) => (res.ok ? res.json() : { tasks: [] }))
+      .then((data: { tasks?: Task[] }) => {
+        if (!aborted) setTasks(data.tasks ?? [])
+      })
+      .catch(() => {
+        if (!aborted) setTasks([])
+      })
+      .finally(() => {
+        if (!aborted) setLoading(false)
+      })
+    return () => {
+      aborted = true
+    }
+  }, [])
 
   function handleComplete(id: string) {
     setTasks(prev => prev.map(t => t.id === id ? { ...t, completed: true } : t))
@@ -517,7 +542,7 @@ export default function HomePage() {
         />
 
         <div className="space-y-4">
-          {REPS.map((rep, i) => {
+          {reps.map((rep, i) => {
             const repActive = activeTasks.filter(t => t.owner === rep.id)
             const repCompleted = completedTasks.filter(t => t.owner === rep.id)
             if (repActive.length === 0 && repCompleted.length === 0) return null
@@ -535,7 +560,7 @@ export default function HomePage() {
             )
           })}
 
-          {activeTasks.length === 0 && completedTasks.length === 0 && (
+          {!loading && activeTasks.length === 0 && completedTasks.length === 0 && (
             <ObsCard depth="low" padding="lg">
               <p className="text-[14px]" style={{ color: 'var(--color-obs-text-muted)' }}>
                 本日のタスクはありません

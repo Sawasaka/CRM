@@ -7,6 +7,7 @@ import {
   ArrowLeft,
   Crown,
   Database,
+  ExternalLink,
   MessageCircle,
   Plug,
   ShieldAlert,
@@ -28,7 +29,7 @@ export function TenantDetailClient({ tenant }: { tenant: TenantDetail }) {
           style={{ color: 'var(--color-obs-text-muted)' }}
         >
           <ArrowLeft size={14} />
-          Customer Operations 一覧に戻る
+          開発者ページに戻る
         </Link>
 
         <ObsHero
@@ -36,16 +37,31 @@ export function TenantDetailClient({ tenant }: { tenant: TenantDetail }) {
           title={tenant.name}
           caption={`主担当: ${tenant.primaryContact ? `${tenant.primaryContact.name} (${tenant.primaryContact.email})` : '未登録'} ・ 作成 ${formatDate(tenant.createdAt)}`}
           action={
-            <span
-              className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full uppercase tracking-[0.08em]"
-              style={{
-                color: '#FFC107',
-                backgroundColor: 'rgba(255,193,7,0.14)',
-              }}
-            >
-              <ShieldAlert size={11} />
-              開発者専用
-            </span>
+            <div className="flex items-center gap-2">
+              <span
+                className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full uppercase tracking-[0.08em]"
+                style={{
+                  color: '#FFC107',
+                  backgroundColor: 'rgba(255,193,7,0.14)',
+                }}
+              >
+                <ShieldAlert size={11} />
+                開発者専用
+              </span>
+              <a
+                href={`/?tenant=${tenant.slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-[var(--radius-obs-md)] text-[12.5px] font-semibold transition-colors"
+                style={{
+                  background:
+                    'linear-gradient(135deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
+                  color: 'var(--color-obs-on-primary)',
+                }}
+              >
+                環境に入る <ExternalLink size={12} />
+              </a>
+            </div>
           }
         />
 

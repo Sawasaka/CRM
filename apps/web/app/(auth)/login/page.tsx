@@ -37,6 +37,7 @@ function LoginContent() {
   const initialMode = searchParams.get('mode') === 'register' ? 'register' : 'login'
   const authError = searchParams.get('error')
   const autoGoogle = searchParams.get('google') === '1'
+  const googleScope = searchParams.get('googleScope') ?? undefined
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
@@ -69,8 +70,8 @@ function LoginContent() {
       return
     }
     setLoading('google')
-    signIn('google', { callbackUrl })
-  }, [autoGoogle, callbackUrl, googleAvailable, providersLoaded])
+    signIn('google', { callbackUrl }, googleScope ? { scope: googleScope } : undefined)
+  }, [autoGoogle, callbackUrl, googleAvailable, googleScope, providersLoaded])
 
   async function submitPasswordLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -151,7 +152,7 @@ function LoginContent() {
                 disabled={mode === 'register' && !legalAccepted}
                 onClick={() => {
                   setLoading('google')
-                  signIn('google', { callbackUrl })
+                  signIn('google', { callbackUrl }, googleScope ? { scope: googleScope } : undefined)
                 }}
               >
                 <GoogleIcon />

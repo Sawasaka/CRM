@@ -25,6 +25,20 @@ const TABS: { key: 'OPEN' | 'PENDING' | 'DONE' | 'ALL'; label: string }[] = [
 
 const DONE_STATUSES: TicketStatus[] = ['SOLVED', 'CLOSED']
 
+const TICKET_PANEL_SURFACE =
+  'linear-gradient(145deg, rgba(27,28,32,0.66) 0%, rgba(19,20,24,0.84) 52%, rgba(12,13,16,0.94) 100%)'
+const TICKET_PANEL_RING =
+  'inset 0 0 0 1px rgba(171,199,255,0.105), inset 1px 1px 0 rgba(255,255,255,0.035), 0 18px 48px rgba(0,0,0,0.30)'
+const TICKET_HEADER_SURFACE =
+  'linear-gradient(90deg, rgba(171,199,255,0.050), rgba(255,255,255,0.018), rgba(255,255,255,0.004))'
+const TICKET_ROW_SURFACE =
+  'linear-gradient(90deg, rgba(255,255,255,0.010), rgba(171,199,255,0.012), rgba(255,255,255,0))'
+const TICKET_ROW_ALT_SURFACE =
+  'linear-gradient(90deg, rgba(171,199,255,0.020), rgba(255,255,255,0.010), rgba(255,255,255,0))'
+const TICKET_ROW_HOVER =
+  'linear-gradient(90deg, rgba(171,199,255,0.052), rgba(255,255,255,0.022), rgba(255,255,255,0.004))'
+const TICKET_DIVIDER = 'rgba(171,199,255,0.075)'
+
 function fmtDate(iso?: string | null) {
   if (!iso) return '—'
   const d = new Date(iso)
@@ -72,7 +86,6 @@ export default function TicketsPage() {
       const res = await fetch('/api/tickets', { cache: 'no-store' })
       if (res.ok) {
         const json = (await res.json()) as { tickets: TicketListItem[] }
-        // 実データが無ければUI確認用のダミーをフォールバック表示
         setTickets(json.tickets.length > 0 ? json.tickets : MOCK_TICKETS)
       } else {
         setTickets(MOCK_TICKETS)
@@ -84,7 +97,7 @@ export default function TicketsPage() {
     }
   }
 
-  // 行のステータスを更新 (ローカル即時反映 + APIに保存。モックIDは保存スキップ)
+  // 行のステータスを更新 (ローカル即時反映 + APIに保存)
   async function updateStatus(id: string, status: TicketStatus) {
     setTickets((prev) =>
       prev.map((t) =>
@@ -162,21 +175,22 @@ export default function TicketsPage() {
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
-              className="h-8 px-3 text-[12px] font-medium rounded-full transition-colors duration-150 inline-flex items-center gap-1.5"
+              className="h-8 px-3 text-[12px] font-medium rounded-full transition-all duration-150 inline-flex items-center gap-1.5"
               style={{
-                backgroundColor: active
-                  ? 'var(--color-obs-primary-container)'
-                  : 'var(--color-obs-surface-high)',
+                background: active
+                  ? 'linear-gradient(140deg, #9fc3ff 0%, #2f8cff 64%, #0071e3 100%)'
+                  : 'linear-gradient(145deg, rgba(41,43,50,0.72), rgba(22,23,27,0.76))',
                 color: active ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
+                boxShadow: active
+                  ? 'inset 0 1px 0 rgba(255,255,255,0.26), 0 8px 22px rgba(0,113,227,0.25)'
+                  : 'inset 0 0 0 1px rgba(171,199,255,0.08)',
               }}
             >
               {t.label}
               <span
                 className="text-[10.5px] tabular-nums px-1.5 rounded-full"
                 style={{
-                  backgroundColor: active
-                    ? 'rgba(255,255,255,0.18)'
-                    : 'var(--color-obs-surface-highest)',
+                  backgroundColor: active ? 'rgba(255,255,255,0.18)' : 'rgba(171,199,255,0.10)',
                   color: active ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-subtle)',
                 }}
               >
@@ -211,7 +225,15 @@ export default function TicketsPage() {
       </div>
 
       {/* テーブル */}
-      <ObsCard depth="low" padding="none" radius="xl">
+      <ObsCard
+        depth="low"
+        padding="none"
+        radius="xl"
+        style={{
+          background: TICKET_PANEL_SURFACE,
+          boxShadow: TICKET_PANEL_RING,
+        }}
+      >
         {loading ? (
           <div className="text-center py-16">
             <p className="text-[13px]" style={{ color: 'var(--color-obs-text-muted)' }}>
@@ -231,8 +253,9 @@ export default function TicketsPage() {
                 <tr
                   className="text-left"
                   style={{
-                    color: 'var(--color-obs-text-subtle)',
-                    backgroundColor: 'var(--color-obs-surface-low)',
+                    color: 'rgba(216,224,240,0.62)',
+                    background: TICKET_HEADER_SURFACE,
+                    boxShadow: `inset 0 -1px 0 0 ${TICKET_DIVIDER}`,
                   }}
                 >
                   <th className="px-4 py-3 font-medium text-[11.5px] tracking-wider">番号</th>
@@ -246,32 +269,32 @@ export default function TicketsPage() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((t) => {
+                {filtered.map((t, index) => {
                   const expanded = expandedId === t.id
                   const detail = detailsCache[t.id]
+                  const rowBackground = index % 2 === 0 ? TICKET_ROW_SURFACE : TICKET_ROW_ALT_SURFACE
                   return (
                   <Fragment key={t.id}>
                   <tr
                     onClick={() => router.push(`/tickets/${t.id}`)}
                     className="border-t transition-colors cursor-pointer"
                     style={{
-                      borderColor: 'var(--color-obs-surface-low)',
-                      backgroundColor: expanded ? 'var(--color-obs-surface-high)' : 'transparent',
+                      borderColor: TICKET_DIVIDER,
+                      background: expanded ? TICKET_ROW_HOVER : rowBackground,
                     }}
                     onMouseOver={(e) => {
                       if (!expanded)
-                        (e.currentTarget as HTMLTableRowElement).style.backgroundColor =
-                          'var(--color-obs-surface-high)'
+                        (e.currentTarget as HTMLTableRowElement).style.background = TICKET_ROW_HOVER
                     }}
                     onMouseOut={(e) => {
                       if (!expanded)
-                        (e.currentTarget as HTMLTableRowElement).style.backgroundColor = 'transparent'
+                        (e.currentTarget as HTMLTableRowElement).style.background = rowBackground
                     }}
                   >
                     <td className="px-4 py-3 font-mono text-[12px]" style={{ color: 'var(--color-obs-text-muted)' }}>
                       T-{String(t.ticketNumber).padStart(4, '0')}
                     </td>
-                    <td className="px-4 py-3" style={{ color: 'var(--color-obs-text)' }}>
+                    <td className="px-4 py-3" style={{ color: '#f1f5ff' }}>
                       <div className="inline-flex items-center gap-1.5 group/subject">
                         <button
                           type="button"
@@ -281,13 +304,18 @@ export default function TicketsPage() {
                           }}
                           aria-label={expanded ? '詳細を閉じる' : '詳細を表示'}
                           className="w-5 h-5 rounded flex items-center justify-center shrink-0 transition-colors"
-                          style={{ color: 'var(--color-obs-text-subtle)' }}
+                          style={{
+                            color: expanded ? 'var(--color-obs-primary)' : 'var(--color-obs-text-subtle)',
+                            backgroundColor: expanded ? 'rgba(171,199,255,0.10)' : 'transparent',
+                          }}
                           onMouseOver={(e) =>
                             ((e.currentTarget as HTMLButtonElement).style.backgroundColor =
-                              'var(--color-obs-surface-highest)')
+                              'rgba(171,199,255,0.12)')
                           }
                           onMouseOut={(e) =>
-                            ((e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent')
+                            ((e.currentTarget as HTMLButtonElement).style.backgroundColor = expanded
+                              ? 'rgba(171,199,255,0.10)'
+                              : 'transparent')
                           }
                         >
                           {expanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
@@ -302,7 +330,7 @@ export default function TicketsPage() {
                           href={`/deals/${t.deal.id}`}
                           onClick={(e) => e.stopPropagation()}
                           className="hover:underline"
-                          style={{ color: 'var(--color-obs-primary)' }}
+                          style={{ color: '#b9d2ff' }}
                         >
                           {t.deal.name}
                         </Link>
@@ -338,8 +366,9 @@ export default function TicketsPage() {
                   {expanded && (
                     <tr
                       style={{
-                        backgroundColor: 'var(--color-obs-surface-low)',
-                        borderColor: 'var(--color-obs-surface-low)',
+                        background:
+                          'linear-gradient(145deg, rgba(13,14,18,0.66), rgba(31,33,39,0.74))',
+                        borderColor: TICKET_DIVIDER,
                       }}
                       className="border-t"
                     >
@@ -409,12 +438,12 @@ function RowCopyLinkButton({ ticketId }: { ticketId: string }) {
       className="inline-flex items-center gap-1 h-6 px-2 rounded shrink-0 text-[10.5px] font-medium transition-colors"
       style={{
         color: copied ? 'var(--color-obs-primary)' : 'var(--color-obs-text-subtle)',
-        backgroundColor: copied ? 'var(--color-obs-surface-highest)' : 'transparent',
+        backgroundColor: copied ? 'rgba(171,199,255,0.12)' : 'transparent',
       }}
       onMouseOver={(e) => {
         if (!copied)
           (e.currentTarget as HTMLButtonElement).style.backgroundColor =
-            'var(--color-obs-surface-highest)'
+            'rgba(171,199,255,0.10)'
       }}
       onMouseOut={(e) => {
         if (!copied) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
@@ -480,9 +509,9 @@ function RowCompleteButton({
         onClick={onReopen}
         className="inline-flex items-center gap-1 h-7 px-2.5 rounded-full text-[11px] font-medium whitespace-nowrap transition-colors"
         style={{
-          backgroundColor: 'var(--color-obs-surface-high)',
+          background: 'linear-gradient(145deg, rgba(41,43,50,0.72), rgba(22,23,27,0.76))',
           color: 'var(--color-obs-text-muted)',
-          boxShadow: 'inset 0 0 0 1px var(--color-obs-surface-highest)',
+          boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.10)',
         }}
         title="未対応に戻す"
       >
@@ -497,8 +526,9 @@ function RowCompleteButton({
       className="inline-flex items-center gap-1 h-7 px-2.5 rounded-full text-[11px] font-semibold whitespace-nowrap transition-all duration-150 hover:opacity-90 active:opacity-80"
       style={{
         background:
-          'linear-gradient(140deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
+          'linear-gradient(140deg, #9fc3ff 0%, #2f8cff 64%, #0071e3 100%)',
         color: 'var(--color-obs-on-primary)',
+        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.26), 0 8px 22px rgba(0,113,227,0.24)',
       }}
       title="このチケットを完了にする"
     >

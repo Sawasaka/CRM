@@ -80,18 +80,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         })
         token.userId = userId
 
-        if (account.refresh_token) {
-          const existing = await getGoogleAccountSnapshot(userId)
-          await upsertGoogleAccountSnapshot({
-            userId,
-            googleSub: account.providerAccountId,
-            email: profile.email as string,
-            accessToken: account.access_token ?? null,
-            refreshToken: account.refresh_token ?? existing?.refreshToken ?? null,
-            expiresAt: account.expires_at ? new Date(account.expires_at * 1000) : null,
-            scope: mergeScopes(existing?.scope ?? null, (account.scope as string) ?? ''),
-          })
-        }
+        const existing = await getGoogleAccountSnapshot(userId)
+        await upsertGoogleAccountSnapshot({
+          userId,
+          googleSub: account.providerAccountId,
+          email: profile.email as string,
+          accessToken: account.access_token ?? existing?.accessToken ?? null,
+          refreshToken: account.refresh_token ?? existing?.refreshToken ?? null,
+          expiresAt: account.expires_at
+            ? new Date(account.expires_at * 1000)
+            : existing?.expiresAt ?? null,
+          scope: mergeScopes(existing?.scope ?? null, (account.scope as string) ?? ''),
+        })
       }
 
       return token

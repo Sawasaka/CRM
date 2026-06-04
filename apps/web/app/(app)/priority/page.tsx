@@ -102,6 +102,20 @@ function formatMeetingDate(iso: string): string {
 // 表示するカテゴリ (議事録から自動抽出する「ニーズ」と「課題」のみ)
 const ALL_CATEGORIES: PriorityCategory[] = ['ニーズ', '課題']
 
+const PRIORITY_PANEL_SURFACE =
+  'linear-gradient(145deg, rgba(27,28,32,0.66) 0%, rgba(19,20,24,0.84) 48%, rgba(12,13,16,0.94) 100%)'
+const PRIORITY_PANEL_RIM =
+  'inset 0 0 0 1px rgba(171,199,255,0.105), inset 1px 1px 0 rgba(255,255,255,0.035), 0 18px 48px rgba(0,0,0,0.30)'
+const PRIORITY_HEADER_SURFACE =
+  'linear-gradient(90deg, rgba(171,199,255,0.050), rgba(255,255,255,0.018), rgba(255,255,255,0.004))'
+const PRIORITY_ROW_HOVER =
+  'linear-gradient(90deg, rgba(171,199,255,0.052) 0%, rgba(255,255,255,0.022) 46%, rgba(255,255,255,0.004) 100%)'
+const PRIORITY_DETAIL_SURFACE =
+  'linear-gradient(145deg, rgba(13,14,17,0.78), rgba(20,21,25,0.58))'
+const PRIORITY_EVIDENCE_SURFACE =
+  'linear-gradient(145deg, rgba(20,21,25,0.62), rgba(13,14,17,0.82))'
+const PRIORITY_DIVIDER = 'rgba(171,199,255,0.075)'
+
 // ─── Item Status ───────────────────────────────────────────────────────────────
 type ItemStatus = 'pending' | 'rejected' | 'done'
 
@@ -211,8 +225,8 @@ export default function DevelopmentPriorityPage() {
                   <span
                     className="inline-flex items-center justify-center w-7 h-7 rounded-full"
                     style={{
-                      backgroundColor: meta.bg,
-                      boxShadow: `inset 0 0 0 1px ${meta.ring}`,
+                      background: `radial-gradient(circle at 35% 30%, rgba(255,255,255,0.22), transparent 34%), ${meta.bg}`,
+                      boxShadow: `inset 0 0 0 1px ${meta.ring}, 0 0 18px ${meta.ring}`,
                     }}
                   >
                     <Icon size={13} style={{ color: meta.iconColor }} />
@@ -235,21 +249,31 @@ export default function DevelopmentPriorityPage() {
                   </span>
                   <p
                     className="ml-2 text-[11.5px]"
-                    style={{ color: 'var(--color-obs-text-subtle)' }}
+                    style={{ color: 'var(--color-obs-text-muted)' }}
                   >
                     {meta.caption}
                   </p>
                 </div>
 
                 {/* リスト (全ステータス同じテーブル内に表示) */}
-                <ObsCard depth="high" padding="none" radius="xl">
+                <ObsCard
+                  depth="high"
+                  padding="none"
+                  radius="xl"
+                  style={{
+                    background: PRIORITY_PANEL_SURFACE,
+                    boxShadow: PRIORITY_PANEL_RIM,
+                    overflow: 'hidden',
+                  }}
+                >
                   {/* テーブルヘッダー */}
                   <div
                     className="grid items-center px-5 py-3 text-[10.5px] font-medium tracking-[0.12em] uppercase gap-3"
                     style={{
                       gridTemplateColumns: '36px 1fr 90px 120px 32px',
-                      color: 'var(--color-obs-text-subtle)',
-                      backgroundColor: 'var(--color-obs-surface-low)',
+                      color: 'rgba(171,199,255,0.64)',
+                      background: PRIORITY_HEADER_SURFACE,
+                      boxShadow: `inset 0 -1px 0 ${PRIORITY_DIVIDER}`,
                     }}
                   >
                     <span>#</span>
@@ -323,7 +347,7 @@ function PriorityRow({
     <div
       id={`priority-row-${item.id}`}
       style={{
-        borderTop: '1px solid rgba(65,71,83,0.12)',
+        boxShadow: `inset 0 1px 0 ${PRIORITY_DIVIDER}`,
         scrollMarginTop: 80,
       }}
     >
@@ -342,20 +366,20 @@ function PriorityRow({
         className="grid items-center px-5 py-4 transition-colors duration-150 gap-3 cursor-pointer"
         style={{
           gridTemplateColumns: '36px 1fr 90px 120px 32px',
-          backgroundColor: 'transparent',
+          background: 'transparent',
           opacity: isDimmed ? 0.6 : 1,
         }}
         onMouseOver={(e) => {
-          ;(e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(65,71,83,0.08)'
+          ;(e.currentTarget as HTMLDivElement).style.background = PRIORITY_ROW_HOVER
         }}
         onMouseOut={(e) => {
-          ;(e.currentTarget as HTMLDivElement).style.backgroundColor = 'transparent'
+          ;(e.currentTarget as HTMLDivElement).style.background = 'transparent'
         }}
       >
         {/* 順位 */}
         <span
           className="text-[12px] font-semibold tabular-nums self-start pt-1"
-          style={{ color: 'var(--color-obs-text-subtle)' }}
+          style={{ color: 'rgba(171,199,255,0.56)' }}
         >
           {String(rank).padStart(2, '0')}
         </span>
@@ -373,7 +397,7 @@ function PriorityRow({
           </p>
           <p
             className="text-[11px] mt-1 truncate"
-            style={{ color: 'var(--color-obs-text-subtle)' }}
+            style={{ color: 'var(--color-obs-text-muted)' }}
           >
             {item.evidence
               .map((e) => e.companyName)
@@ -387,9 +411,9 @@ function PriorityRow({
           <span
             className="inline-flex items-center justify-center gap-1 h-7 px-2.5 rounded-full text-[12px] font-bold tabular-nums"
             style={{
-              backgroundColor: meta.bg,
+              background: `linear-gradient(145deg, ${meta.bg}, rgba(255,255,255,0.020))`,
               color: meta.iconColor,
-              boxShadow: `inset 0 0 0 1px ${meta.ring}`,
+              boxShadow: `inset 0 0 0 1px ${meta.ring}, 0 0 18px ${meta.ring}`,
             }}
           >
             {count}
@@ -438,7 +462,10 @@ function PriorityRow({
       {open && (
         <div
           className="px-5 pb-5"
-          style={{ backgroundColor: 'rgba(65,71,83,0.06)' }}
+          style={{
+            background: PRIORITY_DETAIL_SURFACE,
+            boxShadow: `inset 0 1px 0 ${PRIORITY_DIVIDER}`,
+          }}
         >
           <div className="pt-3 space-y-2">
             {item.evidence.map((ev, idx) => {
@@ -454,8 +481,8 @@ function PriorityRow({
                   key={`${ev.companyId}-${idx}`}
                   className="rounded-[var(--radius-obs-md)] p-3.5"
                   style={{
-                    backgroundColor: 'var(--color-obs-surface-low)',
-                    boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.14)',
+                    background: PRIORITY_EVIDENCE_SURFACE,
+                    boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.10), inset 0 1px 0 rgba(255,255,255,0.040)',
                   }}
                 >
                   <div className="flex items-center gap-3 mb-2 flex-wrap">
@@ -480,8 +507,9 @@ function PriorityRow({
                       onClick={(e) => e.stopPropagation()}
                       className="ml-auto inline-flex items-center gap-1 h-6 px-2.5 rounded-full text-[10.5px] font-semibold transition-colors hover:opacity-90"
                       style={{
-                        backgroundColor: 'rgba(171,199,255,0.14)',
+                        background: 'linear-gradient(140deg, rgba(171,199,255,0.18), rgba(0,113,227,0.12))',
                         color: 'var(--color-obs-primary)',
+                        boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.18)',
                       }}
                       title={linkTitle}
                     >
@@ -549,9 +577,9 @@ function StatusDropdown({
         aria-expanded={open}
         className="inline-flex items-center gap-1 h-7 pl-2 pr-1.5 rounded-full text-[11px] font-semibold transition-all whitespace-nowrap"
         style={{
-          backgroundColor: currentMeta.bg,
+          background: `linear-gradient(145deg, ${currentMeta.bg}, rgba(255,255,255,0.020))`,
           color: currentMeta.color,
-          boxShadow: `inset 0 0 0 1px ${currentMeta.ring}`,
+          boxShadow: `inset 0 0 0 1px ${currentMeta.ring}, 0 10px 24px rgba(0,0,0,0.12)`,
         }}
         title="ステータスを変更"
       >
@@ -573,8 +601,10 @@ function StatusDropdown({
           role="listbox"
           className="absolute right-0 top-full mt-1.5 min-w-[148px] py-1 rounded-[var(--radius-obs-md)] z-50"
           style={{
-            backgroundColor: 'var(--color-obs-surface-highest)',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(109,106,111,0.18)',
+            background: 'linear-gradient(145deg, rgba(53,52,55,0.96), rgba(22,23,28,0.98))',
+            boxShadow: '0 18px 42px rgba(0,0,0,0.46), inset 0 0 0 1px rgba(171,199,255,0.14), inset 0 1px 0 rgba(255,255,255,0.055)',
+            backdropFilter: 'blur(22px) saturate(145%)',
+            WebkitBackdropFilter: 'blur(22px) saturate(145%)',
           }}
         >
           {ALL_STATUSES.map((s) => {

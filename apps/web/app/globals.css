@@ -333,6 +333,36 @@ textarea:focus-visible,
 }
 .fo-word-in { animation: fo-word-in 600ms cubic-bezier(0.4, 0, 0.2, 1) both; }
 
+/* page enter (route transition fade) — /lp ↔ /media のガクつき緩和。
+   transform は使わない (fixed/sticky の containing block を壊すため) */
+@keyframes fo-page-enter {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+/* View Transitions 非対応ブラウザ向けフォールバック (到着時フェードイン)。
+   対応ブラウザでは下の ::view-transition がクロスフェードを担うので、
+   ここで二重にフェードさせない (新ページが半透明で snapshot されるのを防ぐ) */
+@supports not (view-transition-name: none) {
+  .fo-page-enter { animation: fo-page-enter 320ms ease both; }
+}
+
+/* ハブのビュー切替フェード (HOME/図鑑/心理学を同一ページで差し替え)。
+   transform は使わない (HOMEの fixed ヘッダーを壊さないため) */
+.fo-fade-swap { animation: fo-page-enter 280ms ease both; }
+
+/* View Transitions: /lp ↔ /media のルート間クロスフェード */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 300ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none !important;
+  }
+}
+
 /* halo around input */
 @keyframes fo-halo {
   0%, 100% { opacity: 0.6; }
@@ -383,6 +413,8 @@ textarea:focus-visible,
   .fo-line-pulse,
   .fo-halo,
   .fo-word-in,
+  .fo-page-enter,
+  .fo-fade-swap,
   .fo-cursor-blink {
     animation: none !important;
   }

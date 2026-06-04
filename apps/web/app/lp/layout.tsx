@@ -8,6 +8,7 @@ import {
   publicSiteUrl,
   serviceName,
 } from '@/lib/public-site'
+import { PRODUCT_BACKGROUND_COLOR, PRODUCT_BACKGROUND_IMAGE } from '@/lib/product-background'
 
 export const metadata: Metadata = {
   metadataBase: new URL(publicSiteUrl),
@@ -43,7 +44,14 @@ export const metadata: Metadata = {
 
 export default function MarketingLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="bg-obsidian text-[#e7e5ea] min-h-screen">
+    <div
+      className="text-[#e7e5ea] min-h-screen"
+      style={{
+        backgroundColor: PRODUCT_BACKGROUND_COLOR,
+        backgroundImage: PRODUCT_BACKGROUND_IMAGE,
+        backgroundAttachment: 'fixed',
+      }}
+    >
       {children}
     </div>
   )

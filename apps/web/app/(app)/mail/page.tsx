@@ -16,6 +16,12 @@ const TABS: { key: Tab; label: string; icon: React.ElementType }[] = [
   { key: 'firstparty', label: '1stパーティ設定', icon: Activity },
 ]
 
+const MAIL_TAB_SHELL =
+  'linear-gradient(145deg, rgba(22,23,27,0.58) 0%, rgba(14,15,18,0.86) 100%)'
+const MAIL_TAB_ACTIVE =
+  'linear-gradient(140deg, #9fc3ff 0%, #2f8cff 62%, #0071e3 100%)'
+const MAIL_TAB_INACTIVE = 'linear-gradient(145deg, rgba(255,255,255,0.018), rgba(255,255,255,0.006))'
+
 export default function MailPage() {
   const [tab, setTab] = useState<Tab>('send')
 
@@ -32,7 +38,10 @@ export default function MailPage() {
         {/* Tab nav */}
         <div
           className="inline-flex items-center p-1 rounded-[var(--radius-obs-md)] mb-6 gap-1"
-          style={{ backgroundColor: 'var(--color-obs-surface-high)' }}
+          style={{
+            background: MAIL_TAB_SHELL,
+            boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.085), inset 1px 1px 0 rgba(255,255,255,0.025), 0 14px 36px rgba(0,0,0,0.24)',
+          }}
         >
           {TABS.map((t) => {
             const active = tab === t.key
@@ -43,8 +52,11 @@ export default function MailPage() {
                 onClick={() => setTab(t.key)}
                 className="inline-flex items-center gap-1.5 h-9 px-4 rounded-[calc(var(--radius-obs-md)-2px)] text-[13px] font-medium transition-colors"
                 style={{
-                  backgroundColor: active ? 'var(--color-obs-primary-container)' : 'transparent',
+                  background: active ? MAIL_TAB_ACTIVE : MAIL_TAB_INACTIVE,
                   color: active ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
+                  boxShadow: active
+                    ? 'inset 0 1px 0 rgba(255,255,255,0.26), 0 0 22px rgba(47,140,255,0.32)'
+                    : 'inset 0 0 0 1px rgba(171,199,255,0.05)',
                 }}
               >
                 <Icon size={14} />

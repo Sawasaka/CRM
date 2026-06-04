@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowUp, Loader2, Paperclip, Mic } from 'lucide-react'
-import { ObsPageShell } from '@/components/obsidian'
+import { OBS_PRODUCT_SURFACE, ObsPageShell } from '@/components/obsidian'
 import {
   AssigneeFilter,
   DEFAULT_SCOPE,
@@ -280,9 +280,8 @@ function HomePageContent() {
       <div
         className={`min-h-[calc(100vh-56px)] flex flex-col items-center px-8 ${hasConversation ? 'justify-between py-8' : 'justify-center'}`}
         style={{
-          backgroundColor: 'var(--color-obs-surface)',
-          backgroundImage:
-            'radial-gradient(circle at 50% 20%, rgba(171,199,255,0.06) 0%, transparent 45%), radial-gradient(circle at 20% 80%, rgba(0,113,227,0.04) 0%, transparent 50%)',
+          backgroundColor: '#0f1013',
+          backgroundImage: OBS_PRODUCT_SURFACE.pageBackground,
         }}
       >
         {hasConversation && (

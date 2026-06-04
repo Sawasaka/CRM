@@ -30,6 +30,8 @@ import {
   Square,
 } from 'lucide-react'
 import {
+  OBS_PRIMARY_BUTTON,
+  OBS_PRODUCT_SURFACE,
   ObsButton,
   ObsChip,
   ObsHero,
@@ -104,22 +106,17 @@ const INTENT_TONE: Record<IntentLevel, { fg: string; bg: string; bgStrong: strin
   NONE: { fg: 'var(--color-obs-text-subtle)', bg: 'transparent', bgStrong: 'transparent', ring: 'transparent', glow: 'transparent' },
 }
 
-const SERVICE_PAGE_BACKGROUND =
-  'radial-gradient(circle at 50% 20%, rgba(171,199,255,0.06) 0%, transparent 45%), radial-gradient(circle at 20% 80%, rgba(0,113,227,0.04) 0%, transparent 50%)'
-const GLASS_TABLE_BG =
-  'linear-gradient(145deg, rgba(36,36,38,0.70) 0%, rgba(25,26,31,0.86) 46%, rgba(13,14,18,0.94) 100%)'
-const GLASS_TABLE_SHADOW =
-  'inset 0 0 0 1px rgba(171,199,255,0.12), inset 1px 1px 0 rgba(255,255,255,0.055), inset -1px -1px 0 rgba(0,0,0,0.26), 0 20px 52px rgba(0,0,0,0.30)'
+const SERVICE_PAGE_BACKGROUND = OBS_PRODUCT_SURFACE.pageBackground
+const GLASS_TABLE_BG = OBS_PRODUCT_SURFACE.panel
+const GLASS_TABLE_SHADOW = OBS_PRODUCT_SURFACE.rim
 const FILTER_IDLE_BG =
-  'linear-gradient(145deg, rgba(36,36,38,0.58) 0%, rgba(20,21,25,0.76) 100%)'
-const FILTER_ACTIVE_BG =
-  'linear-gradient(140deg, rgba(171,199,255,0.18) 0%, rgba(0,113,227,0.24) 100%)'
+  OBS_PRODUCT_SURFACE.panelSoft
+const FILTER_ACTIVE_BG = OBS_PRIMARY_BUTTON.background
 const FILTER_IDLE_SHADOW =
   'inset 0 0 0 1px rgba(171,199,255,0.085), inset 1px 1px 0 rgba(255,255,255,0.035)'
-const FILTER_ACTIVE_SHADOW =
-  'inset 1px 1px 0 rgba(255,255,255,0.12), inset 0 0 0 1px rgba(171,199,255,0.26), 0 0 16px rgba(171,199,255,0.13)'
+const FILTER_ACTIVE_SHADOW = OBS_PRIMARY_BUTTON.shadow
 const MENU_SURFACE =
-  'linear-gradient(145deg, rgba(36,36,38,0.96) 0%, rgba(20,21,25,0.98) 100%)'
+  'linear-gradient(145deg, rgba(20,21,25,0.96) 0%, rgba(12,13,16,0.98) 100%)'
 const MENU_SHADOW =
   '0 24px 60px rgba(0,0,0,0.52), inset 0 0 0 1px rgba(171,199,255,0.12), inset 1px 1px 0 rgba(255,255,255,0.050), inset -1px -1px 0 rgba(0,0,0,0.25)'
 const TABLE_HEADER_TEXT_COLOR = 'rgba(217,226,255,0.44)'

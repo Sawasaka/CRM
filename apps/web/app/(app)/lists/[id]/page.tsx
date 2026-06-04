@@ -28,32 +28,7 @@ import { MOCK_CONTACTS_BY_ID, type LeadSourceType } from '@/lib/mock-data/contac
 
 // ─── Mock Data ─────────────────────────────────────────────────────────────────
 
-const MOCK_LISTS: Record<string, CallList & { accent: string }> = {
-  'list-1': {
-    id: 'list-1', name: '今週のコール対象', description: '今週中にコールすべきターゲット',
-    ownerName: '田中太郎', contactCount: 12, completedCount: 5, appointmentCount: 2,
-    color: '#4a9eff', accent: '#4a9eff',
-    createdAt: '2026-03-24', updatedAt: '2026-03-26',
-  },
-  'list-2': {
-    id: 'list-2', name: '再フォローリスト', description: '不在/不通で再コールが必要',
-    ownerName: '田中太郎', contactCount: 8, completedCount: 1, appointmentCount: 0,
-    color: '#ffb347', accent: '#ffb347',
-    createdAt: '2026-03-20', updatedAt: '2026-03-25',
-  },
-  'list-3': {
-    id: 'list-3', name: 'セミナー参加者リスト', description: '3/15セミナー参加者へのフォローアップ',
-    ownerName: '鈴木花子', contactCount: 20, completedCount: 14, appointmentCount: 5,
-    color: '#4ad98a', accent: '#4ad98a',
-    createdAt: '2026-03-16', updatedAt: '2026-03-22',
-  },
-  'list-4': {
-    id: 'list-4', name: 'Aランク未着手', description: 'Aランクでまだ未アプローチの企業',
-    ownerName: '田中太郎', contactCount: 6, completedCount: 0, appointmentCount: 0,
-    color: '#ff6b6b', accent: '#ff6b6b',
-    createdAt: '2026-03-18', updatedAt: '2026-03-26',
-  },
-}
+const MOCK_LISTS: Record<string, CallList & { accent: string }> = {}
 
 type CallListItemEx = CallListItem & { leadSource: LeadSourceType }
 

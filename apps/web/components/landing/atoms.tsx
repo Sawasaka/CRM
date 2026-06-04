@@ -185,8 +185,9 @@ interface SectionProps {
 export const Section = ({ id, children, className = '', tone = 'obsidian', screenLabel }: SectionProps) => (
   <section
     id={id}
+    data-tone={tone}
     data-screen-label={screenLabel}
-    className={`relative ${tone === 'pitch' ? 'bg-pitch' : 'bg-obsidian'} ${className}`}
+    className={`relative ${className}`}
   >
     {children}
   </section>

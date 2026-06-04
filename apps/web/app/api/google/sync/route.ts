@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { resolveGoogleIntegrationUserId } from '@/lib/google/current-user'
 import { syncGmailForUser } from '@/lib/google/gmail-sync'
-import { syncDriveForUser } from '@/lib/google/drive-sync'
 import { syncCalendarForUser } from '@/lib/google/calendar-sync'
 import { syncMeetForUser } from '@/lib/google/meet-sync'
 import { syncChatForUser } from '@/lib/google/chat-sync'
@@ -13,7 +12,7 @@ export const dynamic = 'force-dynamic'
 
 /**
  * Google 連携の手動同期エンドポイント。
- * POST /api/google/sync?scope=gmail|drive|calendar|meet|chat|all
+ * POST /api/google/sync?scope=gmail|calendar|meet|chat|all
  */
 export async function POST(req: Request) {
   const userId = await resolveGoogleIntegrationUserId()
@@ -22,7 +21,6 @@ export async function POST(req: Request) {
   const url = new URL(req.url)
   const scope = (url.searchParams.get('scope') ?? 'all') as
     | 'gmail'
-    | 'drive'
     | 'calendar'
     | 'meet'
     | 'chat'
@@ -32,12 +30,11 @@ export async function POST(req: Request) {
     const account = await getGoogleAccountSnapshot(userId)
     if (!account) throw new GoogleAccountNotConnectedError(userId)
 
-    const shouldRun = (s: 'gmail' | 'drive' | 'calendar' | 'meet' | 'chat') => {
+    const shouldRun = (s: 'gmail' | 'calendar' | 'meet' | 'chat') => {
       if (scope !== 'all' && scope !== s) return false
       if (scope === 'all') {
         const scopes = account.scope ?? ''
         if (s === 'gmail') return scopes.includes('gmail')
-        if (s === 'drive') return scopes.includes('drive')
         if (s === 'calendar') return scopes.includes('calendar')
         if (s === 'meet') return scopes.includes('meetings.space')
         return false
@@ -47,7 +44,6 @@ export async function POST(req: Request) {
 
     const out: Record<string, unknown> = {}
     if (shouldRun('gmail')) out.gmail = await syncGmailForUser(userId)
-    if (shouldRun('drive')) out.drive = await syncDriveForUser(userId)
     if (shouldRun('calendar')) out.calendar = await syncCalendarForUser(userId)
     if (shouldRun('meet')) out.meet = await syncMeetForUser(userId)
     if (shouldRun('chat')) out.chat = await syncChatForUser(userId)

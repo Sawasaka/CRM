@@ -12,7 +12,7 @@ import {
   ChevronDown,
   Clock,
 } from 'lucide-react'
-import { ObsPageShell } from '@/components/obsidian'
+import { OBS_HERO_CLASS, OBS_HERO_STYLE, OBS_PRODUCT_SURFACE, ObsPageShell } from '@/components/obsidian'
 import { SignalBadge } from '@/components/crm/SignalBadge'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -59,52 +59,134 @@ interface Deal {
 // 経由元カテゴリ：POC移行率テーブルの行と一致
 type SourceCategory = 'web' | 'referral' | 'partner' | 'event' | 'media'
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
+const INITIAL_DEALS: Deal[] = []
 
-const INITIAL_DEALS: Deal[] = [
-  { id: 'd1',  code: 'RKS-0842', name: 'グローバルERP統合計画',       company: '株式会社テクノリード',    contact: '田中 誠',    amount: 12_500_000, intent: 'Hot',    owner: '田中太郎', stage: 'IS',              order: 0, probability: 35, dueDate: '14 Oct', createdAt: '2026-04-02', emailCount: 2,  meetingCount: 0, status: 'アポ獲得待ち', nextAction: '初回コール', nextActionDate: '4/22', sourceCategory: 'web', source: 'HP' },
-  { id: 'd2',  code: 'RKS-1209', name: 'マーケティングHub連携',       company: '合同会社ビジョン',        contact: '加藤 雄介',  amount: 2_100_000,  intent: 'Low',    owner: '佐藤次郎', stage: 'IS',              order: 1, probability: 15, dueDate: '21 Oct', createdAt: '2026-04-08', emailCount: 1,  meetingCount: 0, status: '期日超過(2日)', nextAction: '資料送付', nextActionDate: '4/20', sourceCategory: 'web', source: 'HP' },
-  { id: 'd4',  code: 'RKS-1104', name: 'SFA刷新案件 - A社',          company: '有限会社サクセス',        contact: '小林 健太',  amount: 5_200_000,  intent: 'Middle', owner: '鈴木花子', stage: 'MEETING_PLANNED', order: 0, probability: 52, dueDate: '28 Oct', createdAt: '2026-03-22', emailCount: 4,  meetingCount: 0, status: '初回商談前', nextAction: '商談実施', nextActionDate: '4/28', sourceCategory: 'referral', source: '名和さん紹介' },
-  { id: 'd5',  code: 'RKS-1066', name: '物流最適化システム提案',      company: '株式会社イノベーション',  contact: '佐々木 拓也', amount: 3_600_000,  intent: 'Middle', owner: '田中太郎', stage: 'MEETING_DONE',    order: 0, probability: 60, createdAt: '2026-03-10', emailCount: 8,  meetingCount: 1, status: '提案書レビュー待ち(先方CTO)', nextAction: '提案書レビュー', nextActionDate: '4/23', sourceCategory: 'event', source: 'IT・情シス DXPO' },
-  { id: 'd6',  code: 'RKS-1122', name: '基幹システムクラウド移行',    company: '株式会社グロース',        contact: '中村 理恵',  amount: 18_500_000, intent: 'Hot',    owner: '田中太郎', stage: 'PROJECT_PLANNED', order: 0, probability: 92, priorityPhase: 'PRIORITY Q4', createdAt: '2026-02-18', emailCount: 22, meetingCount: 3, status: '決裁者MTG調整中', nextAction: '決裁者MTG', nextActionDate: '4/25', sourceCategory: 'partner', source: '株式会社アシスト' },
-  { id: 'd7',  code: 'RKS-0901', name: 'AI解析エンジン検証',          company: '株式会社ネクスト',        contact: '鈴木 美香',  amount: 6_800_000,  intent: 'Hot',    owner: '田中太郎', stage: 'POC',             order: 0, probability: 70, priorityPhase: 'Phase: Model Validation', createdAt: '2026-02-01', emailCount: 35, meetingCount: 5, status: 'PoC進行中 (週次定例)', nextAction: 'POC中間報告', nextActionDate: '4/26', sourceCategory: 'web', source: 'HP' },
-  { id: 'd8',  code: 'RKS-0718', name: 'エンタープライズ契約（2期）', company: '株式会社テクノリード',    contact: '田中 誠',    amount: 48_000_000, intent: 'Hot',    owner: '田中太郎', stage: 'CLOSED_WON',      order: 0, probability: 100, createdAt: '2025-12-12', emailCount: 58, meetingCount: 12, status: '契約完了 / オンボ開始', nextAction: 'オンボーディング', nextActionDate: '5/1', sourceCategory: 'event', source: 'Startup JAPAN EXPO' },
-  { id: 'd10', code: 'RKS-0821', name: 'データ分析基盤構築',         company: '株式会社アルファ',        contact: '渡辺 健二',  amount: 1_500_000,  intent: 'Middle', owner: '鈴木花子', stage: 'LOST_DEAL',       order: 0, createdAt: '2026-01-20', emailCount: 11, meetingCount: 2, sourceCategory: 'media', source: 'アイスマイリー',       status: 'POC後に競合決定 (機能差で失注)', nextAction: '失注理由ヒアリング',   nextActionDate: '1/30' },
-  { id: 'd11', code: 'RKS-0633', name: 'カスタマーサクセス契約',     company: '合同会社ベータ',          contact: '佐藤 良子',  amount: 960_000,    intent: 'Middle', owner: '田中太郎', stage: 'CHURN',           order: 0, createdAt: '2025-10-05', emailCount: 40, meetingCount: 4, sourceCategory: 'partner', source: '後藤さん紹介',          status: 'Q4更新で解約 (社内体制変更)',     nextAction: 'Win-back提案準備',     nextActionDate: '11/1' },
-  { id: 'd12', code: 'RKS-0299', name: 'AI活用コンサルティング',     company: '株式会社デルタ',          contact: '木村 隆',    amount: 2_100_000,  intent: 'Hot',    owner: '佐藤次郎', stage: 'LOST',            order: 0, createdAt: '2026-01-08', emailCount: 14, meetingCount: 2, sourceCategory: 'event', source: 'デジタル化・DX推進展', status: '追客終了 (3ヶ月接触なし)',        nextAction: '対応終了',             nextActionDate: '—' },
-]
+type ApiDeal = {
+  id: string
+  name: string
+  stage: string
+  amount: number | null
+  probability: number | null
+  expectedCloseAt: string | null
+  createdAt: string
+  updatedAt: string
+  nextActionUs: string | null
+  desiredService: string | null
+  timeline: string | null
+  company: { id: string; name: string }
+  contact: { id: string; name: string } | null
+  owner: { id: string; name: string }
+  _count: { emailMessages: number; meetingEvents: number }
+}
+
+function toStageKey(stage: string): StageKey {
+  const map: Record<string, StageKey> = {
+    NEW_LEAD: 'IS',
+    QUALIFIED: 'MEETING_PLANNED',
+    FIRST_MEETING: 'MEETING_DONE',
+    SOLUTION_FIT: 'PROJECT_PLANNED',
+    PROPOSAL: 'MULTI_MEETING',
+    NEGOTIATION: 'POC',
+    VERBAL_COMMIT: 'POC',
+    CLOSED_WON: 'CLOSED_WON',
+    CLOSED_LOST: 'LOST_DEAL',
+  }
+  return map[stage] ?? 'IS'
+}
+
+function formatShortDate(value: string | null) {
+  if (!value) return undefined
+  const d = new Date(value)
+  return `${d.getMonth() + 1}/${d.getDate()}`
+}
+
+function toPipelineDeal(item: ApiDeal, index: number): Deal {
+  const createdAt = item.createdAt.slice(0, 10)
+  return {
+    id: item.id,
+    code: item.id.slice(0, 8),
+    name: item.name,
+    company: item.company.name,
+    contact: item.contact?.name ?? '',
+    amount: item.amount ?? 0,
+    intent: 'Low',
+    owner: item.owner.name,
+    stage: toStageKey(item.stage),
+    order: index,
+    probability: item.probability ?? undefined,
+    dueDate: formatShortDate(item.expectedCloseAt),
+    createdAt,
+    emailCount: item._count.emailMessages,
+    meetingCount: item._count.meetingEvents,
+    status: item.desiredService ?? item.timeline ?? undefined,
+    nextAction: item.nextActionUs ?? undefined,
+    nextActionDate: formatShortDate(item.expectedCloseAt),
+  }
+}
 
 // ─── Stages ────────────────────────────────────────────────────────────────────
 
 type StageColor = { accent: string; bg: string; glow: string; text: string }
 
+const STAGE_BLUE_CORE: StageColor = {
+  accent: '#abc7ff',
+  bg: 'rgba(171,199,255,0.075)',
+  glow: 'rgba(171,199,255,0.13)',
+  text: '#d5e2ff',
+}
+
+const STAGE_BLUE_SKY: StageColor = {
+  accent: '#7ec6ff',
+  bg: 'rgba(126,198,255,0.072)',
+  glow: 'rgba(126,198,255,0.12)',
+  text: '#c6e7ff',
+}
+
+const STAGE_BLUE_ICE: StageColor = {
+  accent: '#8eb7ff',
+  bg: 'rgba(142,183,255,0.070)',
+  glow: 'rgba(142,183,255,0.12)',
+  text: '#d2e0ff',
+}
+
+const STAGE_WON_RED: StageColor = {
+  accent: '#ff6b7a',
+  bg: 'rgba(255,107,122,0.070)',
+  glow: 'rgba(255,107,122,0.12)',
+  text: '#ffc7cf',
+}
+
+const STAGE_AFTER_GREEN: StageColor = {
+  accent: '#8dffc9',
+  bg: 'rgba(141,255,201,0.070)',
+  glow: 'rgba(141,255,201,0.12)',
+  text: '#c8ffe6',
+}
+
 const STAGES: { key: StageKey; label: string; desc: string; color: StageColor }[] = [
   { key: 'IS',               label: 'IS',             desc: '未商談の企業へアプローチ',
-    color: { accent: '#abc7ff', bg: 'rgba(171,199,255,0.075)', glow: 'rgba(171,199,255,0.13)', text: '#d5e2ff' } },
+    color: STAGE_BLUE_CORE },
   { key: 'MEETING_PLANNED',  label: '商談予定',       desc: '初回商談がスケジュール済み',
-    color: { accent: '#7ec6ff', bg: 'rgba(126,198,255,0.072)',  glow: 'rgba(126,198,255,0.12)', text: '#c6e7ff' } },
+    color: STAGE_BLUE_SKY },
   { key: 'MEETING_DONE',     label: '商談済み',       desc: '初回商談が完了した案件',
-    color: { accent: '#88bbff', bg: 'rgba(136,187,255,0.070)',  glow: 'rgba(136,187,255,0.12)', text: '#d1e0ff' } },
+    color: STAGE_BLUE_ICE },
   { key: 'PROJECT_PLANNED',  label: 'PJ化予定あり',   desc: '具体的なプロジェクト化が見込める',
-    color: { accent: '#8dffc9', bg: 'rgba(141,255,201,0.070)',  glow: 'rgba(141,255,201,0.12)', text: '#c8ffe6' } },
+    color: STAGE_BLUE_ICE },
   { key: 'MULTI_MEETING',    label: '複数商談済み',   desc: '2回以上の商談を実施済み',
-    color: { accent: '#c8b9ff', bg: 'rgba(200,185,255,0.062)',  glow: 'rgba(200,185,255,0.105)', text: '#e2dcff' } },
+    color: STAGE_BLUE_ICE },
   { key: 'POC',              label: 'POC',            desc: '検証・トライアルを実施中',
-    color: { accent: '#ffcf4a', bg: 'rgba(255,207,74,0.060)',  glow: 'rgba(255,207,74,0.10)', text: '#ffeaa0' } },
+    color: STAGE_BLUE_ICE },
   { key: 'CLOSED_WON',       label: '受注',           desc: '契約締結が完了した案件',
-    color: { accent: '#8dffc9', bg: 'rgba(141,255,201,0.075)',  glow: 'rgba(141,255,201,0.13)', text: '#c8ffe6' } },
+    color: STAGE_WON_RED },
   { key: 'LOST_DEAL',        label: '失注',           desc: 'POC後に受注に至らなかった案件',
-    color: { accent: '#ff6b7a', bg: 'rgba(255,107,122,0.065)',  glow: 'rgba(255,107,122,0.11)', text: '#ffc7cf' } },
+    color: STAGE_AFTER_GREEN },
   { key: 'CHURN',            label: 'チャーン',       desc: '契約後に解約となった案件',
-    color: { accent: '#ff6b7a', bg: 'rgba(255,107,122,0.065)',  glow: 'rgba(255,107,122,0.11)', text: '#ffc7cf' } },
+    color: STAGE_AFTER_GREEN },
   { key: 'LOST',             label: 'ロスト',         desc: '追客を完全に終了した案件',
-    color: { accent: '#ff6b7a', bg: 'rgba(255,107,122,0.065)',  glow: 'rgba(255,107,122,0.11)', text: '#ffc7cf' } },
+    color: STAGE_AFTER_GREEN },
 ]
 
-const OWNERS = ['全員', '田中太郎', '鈴木花子', '佐藤次郎']
-
-const SERVICE_PAGE_BACKGROUND =
-  'radial-gradient(circle at 50% 20%, rgba(171,199,255,0.06) 0%, transparent 45%), radial-gradient(circle at 20% 80%, rgba(0,113,227,0.04) 0%, transparent 50%)'
+const SERVICE_PAGE_BACKGROUND = OBS_PRODUCT_SURFACE.pageBackground
 
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -113,6 +195,7 @@ type ViewMode = 'kanban' | 'funnel'
 
 export default function PipelinePage() {
   const [deals, setDeals] = useState<Deal[]>(INITIAL_DEALS)
+  const [loading, setLoading] = useState(true)
   const [ownerFilter, setOwnerFilter] = useState('全員')
   const [dragOverStage, setDragOverStage] = useState<StageKey | null>(null)
   const [view, setView] = useState<ViewMode>('kanban')
@@ -122,6 +205,30 @@ export default function PipelinePage() {
     if (ownerFilter === '全員') return deals
     return deals.filter((d) => d.owner === ownerFilter)
   }, [deals, ownerFilter])
+
+  const ownerOptions = useMemo(() => {
+    return ['全員', ...Array.from(new Set(deals.map((d) => d.owner).filter(Boolean)))]
+  }, [deals])
+
+  useEffect(() => {
+    let aborted = false
+    setLoading(true)
+    fetch('/api/deals?take=100', { cache: 'no-store' })
+      .then((res) => (res.ok ? res.json() : { deals: [] }))
+      .then((data: { deals?: ApiDeal[] }) => {
+        if (aborted) return
+        setDeals((data.deals ?? []).map(toPipelineDeal))
+      })
+      .catch(() => {
+        if (!aborted) setDeals([])
+      })
+      .finally(() => {
+        if (!aborted) setLoading(false)
+      })
+    return () => {
+      aborted = true
+    }
+  }, [])
 
   const dealsByStage = useMemo(() => {
     const map = {} as Record<StageKey, Deal[]>
@@ -177,26 +284,26 @@ export default function PipelinePage() {
       >
         <div className="relative w-full px-8 xl:px-12 2xl:px-16 pt-10">
           {/* ── Hero (§15 Section Composition + §12 Service タイポスケール) ── */}
-          <div className="mb-8 max-w-5xl">
+          <div className={`${OBS_HERO_CLASS.body} mb-8`}>
             {/* Eyebrow — §17 Pattern Snippet */}
             <div
-              className="inline-flex items-center gap-2 font-semibold uppercase tracking-[0.14em] text-[0.72rem] mb-3"
-              style={{ color: '#abc7ff' }}
+              className={OBS_HERO_CLASS.eyebrow}
+              style={OBS_HERO_STYLE.eyebrow}
             >
               <span
                 className="block w-1.5 h-1.5 rounded-full"
-                style={{ background: '#abc7ff', boxShadow: '0 0 10px #abc7ff' }}
+                style={OBS_HERO_STYLE.dot}
               />
               Pipeline
             </div>
             {/* Page Title */}
             <h1
-              className="font-[family-name:var(--font-display)] text-[2rem] sm:text-[2.75rem] md:text-[3.55rem] font-bold leading-[1.08] tracking-[-0.025em] mb-3 whitespace-nowrap"
+              className={OBS_HERO_CLASS.title}
             >
-              <span style={{ color: '#e7e5ea' }}>パイプ</span>
+              <span style={OBS_HERO_STYLE.titleBase}>パイプ</span>
               <span className="fo-gradient-text" style={{ WebkitTextFillColor: 'transparent' }}>ライン</span>
             </h1>
-            <p className="text-[14px] leading-relaxed max-w-none md:whitespace-nowrap" style={{ color: 'var(--color-obs-text-muted)' }}>
+            <p className={OBS_HERO_CLASS.caption} style={OBS_HERO_STYLE.caption}>
               商談フェーズごとの案件を、金額・シグナル・次アクションで管理。
             </p>
           </div>
@@ -252,7 +359,7 @@ export default function PipelinePage() {
             <>
               {/* ── Owner Filter — §17 Pill / Chip パターン ── */}
               <div className="flex items-center gap-2 mb-6 flex-wrap">
-                {OWNERS.map((o) => {
+                {ownerOptions.map((o) => {
                   const active = ownerFilter === o
                   return (
                     <button
@@ -285,7 +392,7 @@ export default function PipelinePage() {
                   className="ml-auto text-[10.5px] uppercase tracking-[0.16em] tabular-nums"
                   style={{ color: 'var(--color-obs-text-subtle)' }}
                 >
-                  {filtered.length} 件
+                  {loading ? '読込中' : `${filtered.length} 件`}
                 </span>
               </div>
 
