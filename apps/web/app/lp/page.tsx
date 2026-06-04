@@ -1,6 +1,6 @@
 /**
  * ルキスマCRM Landing Page (/lp)
- * AppHub の 'home' ビューとして表示。上部スイッチで図鑑/武器庫/学校へ
+ * AppHub の 'home' ビューとして表示。上部スイッチで図鑑/武器庫へ
  * ページ遷移なしで切り替わる(URLは履歴APIで /media 等に同期)。
  */
 
@@ -8,7 +8,6 @@ import AppHub from '@/components/AppHub'
 import { HomeView } from '@/components/landing/HomeView'
 import DragonGuide from '../media/DragonGuide'
 import SalesPsychologyGuide from '../media/SalesPsychologyGuide'
-import SalesSchoolGuide from '../media/SalesSchoolGuide'
 import { publicSiteStructuredData } from '@/lib/public-site'
 
 export default function RukismaCRMLandingPage() {
@@ -23,7 +22,6 @@ export default function RukismaCRMLandingPage() {
         home={<HomeView />}
         dragon={<DragonGuide />}
         psychology={<SalesPsychologyGuide />}
-        school={<SalesSchoolGuide />}
       />
     </>
   )

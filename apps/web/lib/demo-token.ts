@@ -6,14 +6,14 @@
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
 
 const SECRET =
-  process.env.DEMO_ACCESS_SECRET ??
-  'dev-only-fallback-please-set-DEMO_ACCESS_SECRET-in-prod'
+  process.env.DEMO_ACCESS_SECRET ?? 'dev-only-fallback-please-set-DEMO_ACCESS_SECRET-in-prod'
 
 export const DEMO_CREDITS_DEFAULT = 100
 export const DEMO_TOKEN_TTL_MS = 30 * 60 * 1000 // 30分
 
 export interface DemoClaims {
   sessionId: string
+  tenantSlug?: string
   company: string
   name: string
   email: string
@@ -46,6 +46,7 @@ function generateSessionId(): string {
 }
 
 export async function buildDemoToken(input: {
+  tenantSlug?: string
   company: string
   name: string
   email: string
@@ -55,6 +56,7 @@ export async function buildDemoToken(input: {
   const sessionId = generateSessionId()
   const claims: DemoClaims = {
     sessionId,
+    tenantSlug: input.tenantSlug,
     company: input.company,
     name: input.name,
     email: input.email,
@@ -67,7 +69,9 @@ export async function buildDemoToken(input: {
   return { token: `${payload}.${sig}`, claims }
 }
 
-export async function verifyDemoToken(token: string | null | undefined): Promise<DemoClaims | null> {
+export async function verifyDemoToken(
+  token: string | null | undefined
+): Promise<DemoClaims | null> {
   if (!token) return null
   try {
     const [payload, sig] = token.split('.')

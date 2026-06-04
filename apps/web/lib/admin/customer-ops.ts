@@ -33,11 +33,13 @@ export async function getCustomerOpsOverview(): Promise<
   const access = await getCustomerOpsAdminAccess()
   if (!access.authorized) return access
 
-  const tenants = await buildTenantRows()
+  const tenants = sortTenantRows(await buildTenantRows())
   return { authorized: true, tenants, metrics: buildMetrics(tenants) }
 }
 
-export async function getCustomerOpsTenantDetail(id: string): Promise<
+export async function getCustomerOpsTenantDetail(
+  id: string
+): Promise<
   | { authorized: false; reason: AdminAccessDeniedReason }
   | { authorized: true; tenant: TenantDetail | null }
 > {
@@ -214,7 +216,9 @@ async function buildTenantRows(orgId?: string): Promise<TenantRow[]> {
   const activityTotalByOrg = new Map(activityTotals.map((row) => [row.orgId, row._count._all]))
   const activity30ByOrg = new Map(activity30Totals.map((row) => [row.orgId, row._count._all]))
   const activeUsersByOrg = countActiveUsersByOrg(activeUserPairs)
-  const latestActivityByOrg = new Map(latestActivities.map((row) => [row.orgId, row._max.occurredAt]))
+  const latestActivityByOrg = new Map(
+    latestActivities.map((row) => [row.orgId, row._max.occurredAt])
+  )
   const latestDealByOrg = new Map(latestDeals.map((row) => [row.orgId, row._max.updatedAt]))
   const latestTicketByOrg = new Map(latestTickets.map((row) => [row.orgId, row._max.updatedAt]))
   const latestCompanyByOrg = new Map(latestCompanies.map((row) => [row.orgId, row._max.updatedAt]))
@@ -224,7 +228,6 @@ async function buildTenantRows(orgId?: string): Promise<TenantRow[]> {
   return orgs.map((org) =>
     toTenantRow({
       org,
-      since,
       activityCount: activityTotalByOrg.get(org.id) ?? org._count.activities,
       activityCount30d: activity30ByOrg.get(org.id) ?? 0,
       activeUsers30d: activeUsersByOrg.get(org.id) ?? 0,
@@ -238,13 +241,12 @@ async function buildTenantRows(orgId?: string): Promise<TenantRow[]> {
         ...org.users.map((user) => user.googleAccount?.updatedAt ?? user.createdAt),
       ]),
       slackConnected: slackOrgIds.has(org.id),
-    }),
+    })
   )
 }
 
 function toTenantRow({
   org,
-  since,
   activityCount,
   activityCount30d,
   activeUsers30d,
@@ -252,22 +254,20 @@ function toTenantRow({
   slackConnected,
 }: {
   org: OrgBase
-  since: Date
   activityCount: number
   activityCount30d: number
   activeUsers30d: number
   latestActivityAt: Date | null
   slackConnected: boolean
 }): TenantRow {
-  const primaryUser =
-    org.users.find((user) => user.role === 'ADMIN') ?? org.users[0] ?? null
+  const primaryUser = org.users.find((user) => user.role === 'ADMIN') ?? org.users[0] ?? null
   const googleConnected = org.users.some((user) => Boolean(user.googleAccount))
   return {
     id: org.id,
     name: org.name,
     slug: org.slug,
     plan: PLAN_LABELS[org.plan],
-    status: latestActivityAt && latestActivityAt >= since ? 'active' : 'dormant',
+    status: org.slug === 'default' || org.plan !== 'FREE' ? 'active' : 'dormant',
     userCount: org._count.users,
     activeUsers30d,
     companyCount: org._count.companies,
@@ -284,6 +284,14 @@ function toTenantRow({
       ? { name: primaryUser.name || primaryUser.email, email: primaryUser.email }
       : null,
   }
+}
+
+function sortTenantRows(tenants: TenantRow[]) {
+  return [...tenants].sort((a, b) => {
+    if (a.slug === 'default' && b.slug !== 'default') return -1
+    if (b.slug === 'default' && a.slug !== 'default') return 1
+    return a.createdAt.localeCompare(b.createdAt)
+  })
 }
 
 function buildMetrics(tenants: TenantRow[]): CustomerOpsMetrics {

@@ -4,7 +4,6 @@ import AppHub from '@/components/AppHub'
 import { HomeView } from '@/components/landing/HomeView'
 import DragonGuide from './DragonGuide'
 import SalesPsychologyGuide from './SalesPsychologyGuide'
-import SalesSchoolGuide from './SalesSchoolGuide'
 
 export const metadata: Metadata = {
   title: '営業ドラゴン図鑑｜はぐれ博士の営業組織エンタメメディア',
@@ -28,14 +27,13 @@ export default async function MediaHubPage({
   searchParams: Promise<{ view?: string }>
 }) {
   const { view } = await searchParams
-  const initialView = view === 'psychology' ? 'psychology' : view === 'school' ? 'school' : 'dragon'
+  const initialView = view === 'psychology' ? 'psychology' : 'dragon'
   return (
     <AppHub
       initialView={initialView}
       home={<HomeView />}
       dragon={<DragonGuide />}
       psychology={<SalesPsychologyGuide />}
-      school={<SalesSchoolGuide />}
     />
   )
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { prisma } from '@bgm/db'
 import { getAppBaseUrl } from '@/lib/app-url'
 import { buildDemoToken, DEMO_CREDITS_DEFAULT } from '@/lib/demo-token'
 
@@ -18,6 +19,7 @@ const NOTIFY_INBOX =
 const FROM_ADDRESS = process.env.CONTACT_FROM ?? 'ルキスマCRM <noreply@rookiesmart-jp.com>'
 
 interface DemoPayload {
+  tenant?: string
   company: string
   name: string
   email: string
@@ -35,9 +37,11 @@ function validate(body: unknown): DemoPayload | null {
   const company = typeof b.company === 'string' ? b.company.trim().slice(0, 120) : ''
   const name = typeof b.name === 'string' ? b.name.trim().slice(0, 80) : ''
   const email = typeof b.email === 'string' ? b.email.trim().slice(0, 160) : ''
+  const tenant = typeof b.tenant === 'string' ? b.tenant.trim().toLowerCase().slice(0, 80) : ''
   if (!company || !name || !email) return null
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return null
-  return { company, name, email }
+  if (tenant && !/^[a-z0-9-]+$/.test(tenant)) return null
+  return { tenant: tenant || undefined, company, name, email }
 }
 
 function buildContext(req: Request): RequestContext {
@@ -69,7 +73,7 @@ function buildEmail(
   context: RequestContext,
   sessionId: string,
   expiresAt: number,
-  demoUrl: string,
+  demoUrl: string
 ) {
   const expiresAtText = new Date(expiresAt).toLocaleString('ja-JP', {
     timeZone: 'Asia/Tokyo',
@@ -79,6 +83,7 @@ function buildEmail(
     'ルキスマCRM LP から無料デモURLが発行されました。',
     '',
     `■ 会社名: ${p.company}`,
+    p.tenant ? `■ テナント: ${p.tenant}` : null,
     `■ 氏名:   ${p.name}`,
     `■ メール: ${p.email}`,
     `■ 発行日時: ${context.issuedAt}`,
@@ -88,12 +93,19 @@ function buildEmail(
     `■ 発行URL: ${demoUrl}`,
     `■ 発行ページ: ${context.referer}`,
     `■ IP: ${context.ipAddress}`,
-  ].join('\n')
+  ]
+    .filter(Boolean)
+    .join('\n')
   const html = `
     <div style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif;font-size:14px;line-height:1.7;color:#1a1a1c;">
       <p>ルキスマCRM LP から無料デモURLが発行されました。</p>
       <table style="border-collapse:collapse;margin-top:12px;">
         <tr><td style="padding:4px 12px 4px 0;color:#7e7c83;">会社名</td><td>${escapeHtml(p.company)}</td></tr>
+        ${
+          p.tenant
+            ? `<tr><td style="padding:4px 12px 4px 0;color:#7e7c83;">テナント</td><td>${escapeHtml(p.tenant)}</td></tr>`
+            : ''
+        }
         <tr><td style="padding:4px 12px 4px 0;color:#7e7c83;">氏名</td><td>${escapeHtml(p.name)}</td></tr>
         <tr><td style="padding:4px 12px 4px 0;color:#7e7c83;">メール</td><td><a href="mailto:${escapeHtml(p.email)}">${escapeHtml(p.email)}</a></td></tr>
         <tr><td style="padding:4px 12px 4px 0;color:#7e7c83;">発行日時</td><td>${escapeHtml(context.issuedAt)}</td></tr>
@@ -117,7 +129,7 @@ async function notifyOwner(
   context: RequestContext,
   sessionId: string,
   expiresAt: number,
-  demoUrl: string,
+  demoUrl: string
 ) {
   const apiKey = process.env.RESEND_API_KEY
   if (!apiKey) {
@@ -166,10 +178,25 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: '必須項目を入力してください' }, { status: 400 })
   }
 
+  if (payload.tenant) {
+    const org = await prisma.organization.findUnique({
+      where: { slug: payload.tenant },
+      select: { id: true, name: true, slug: true, plan: true },
+    })
+    if (!org || org.slug === 'default' || org.plan !== 'FREE') {
+      return NextResponse.json({ error: 'デモリンクが無効です' }, { status: 404 })
+    }
+  }
+
   let token: string
   let claims: Awaited<ReturnType<typeof buildDemoToken>>['claims']
   try {
-    const issued = await buildDemoToken(payload)
+    const issued = await buildDemoToken({
+      tenantSlug: payload.tenant,
+      company: payload.company,
+      name: payload.name,
+      email: payload.email,
+    })
     token = issued.token
     claims = issued.claims
   } catch (e) {
@@ -185,7 +212,7 @@ export async function POST(req: Request) {
     context,
     claims.sessionId,
     claims.expiresAt,
-    absoluteDemoUrl,
+    absoluteDemoUrl
   )
 
   return NextResponse.json({

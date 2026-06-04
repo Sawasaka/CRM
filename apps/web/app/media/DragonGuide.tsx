@@ -10,19 +10,10 @@ import {
   BookOpen,
   BrainCircuit,
   CircleCheck,
-  Compass,
   ShieldAlert,
   Sparkles,
   X,
 } from 'lucide-react'
-
-const navLinks = [
-  { label: '診断', href: '#diagnosis', icon: Compass },
-  { label: '営業四竜', href: '#dragons', icon: BookOpen },
-  { label: '上司タイプ', href: '#boss-types', icon: ShieldAlert },
-  { label: '部下スタイル', href: '#member-types', icon: BrainCircuit },
-  { label: 'はぐれ博士', href: '#professor', icon: Sparkles },
-]
 
 type DiagnosisCardItem = {
   title: string
@@ -340,7 +331,7 @@ const memberTypes: ProfileType[] = [
   },
 ]
 
-const professorChecks = ['失注パターンの解剖', 'CRM墓場の調査', '上司の生態観察', '現場のあるある収集']
+const professorChecks = ['失注パターンの解剖', '営業現場の生態観察', '上司タイプの調査', '部下スタイルの収集']
 
 export default function DragonGuide() {
   const [selectedDragon, setSelectedDragon] = useState<(typeof dragons)[number] | null>(null)
@@ -460,30 +451,6 @@ export default function DragonGuide() {
               </span>
             </span>
           </Link>
-
-          <div className="hidden items-center gap-1.5 rounded-full border border-[#f4e0b5]/10 bg-[#0b2539]/70 p-1 text-[13px] font-black text-[#fff3d8] xl:flex">
-            {navLinks.map((item) => {
-              const Icon = item.icon
-              return (
-                <a
-                  key={item.label}
-                  href={item.href}
-                  className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 transition-colors hover:bg-[#d7ad59]/12 hover:text-[#f0c76b]"
-                >
-                  <Icon size={17} strokeWidth={2.4} />
-                  {item.label}
-                </a>
-              )
-            })}
-          </div>
-
-          <a
-            href="#diagnosis"
-            className="inline-flex h-10 shrink-0 items-center gap-2 rounded-xl bg-[#d7ad59] px-3 text-sm font-black text-[#07111a] shadow-[0_10px_24px_-16px_rgba(215,173,89,0.9)] transition-transform hover:-translate-y-0.5 sm:px-5"
-          >
-            <span className="text-lg">竜</span>
-            <span className="hidden sm:inline">無料診断</span>
-          </a>
         </nav>
       </header>
 
@@ -520,7 +487,7 @@ export default function DragonGuide() {
               </h1>
 
               <p className="mt-5 max-w-[700px] text-base font-black leading-8 text-[#151f2c] sm:text-lg">
-                はぐれ博士が、失注・上司・CRM墓場を図鑑化する営業エンタメメディア
+                はぐれ博士が、失注・上司・営業現場を図鑑化する営業エンタメメディア
               </p>
 
               <div className="mt-6 flex flex-col gap-4 sm:flex-row">

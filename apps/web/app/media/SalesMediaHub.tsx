@@ -11,7 +11,7 @@ type TabKey = 'dragon' | 'psychology' | 'school'
 const TABS: { key: TabKey; label: string; accent: string }[] = [
   { key: 'dragon', label: '営業ドラゴン図鑑', accent: '#d7ad59' },
   { key: 'psychology', label: '営業武器庫', accent: '#d7ad59' },
-  { key: 'school', label: '営業スクール', accent: '#7dd9b5' },
+  { key: 'school', label: '営業留学園', accent: '#d7ad59' },
 ]
 
 export default function SalesMediaHub({ initialTab = 'dragon' }: { initialTab?: TabKey }) {

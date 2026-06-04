@@ -32,7 +32,7 @@ interface PartnershipTier {
 const partnershipTiers: PartnershipTier[] = [
   {
     id: 'business-director',
-    name: '事業責任者',
+    name: '営業責任者',
     price: 350000,
     slotsTotal: 1,
     slotsRemaining: 1,
@@ -59,7 +59,7 @@ const partnershipTiers: PartnershipTier[] = [
   },
   {
     id: 'is-design',
-    name: 'IS 設計',
+    name: 'IS マネージャー',
     price: 200000,
     slotsTotal: 3,
     slotsRemaining: 3,
@@ -69,8 +69,8 @@ const partnershipTiers: PartnershipTier[] = [
     accentHex: '#FFC107',
     accentRgb: '255, 193, 7',
     scope: [
-      'IS チーム組成',
-      'IS 設計',
+      'IS 戦略',
+      'IS 設計 / オペレーション',
       'IS マネジメント',
     ],
     crm: [
@@ -89,8 +89,8 @@ const partnershipTiers: PartnershipTier[] = [
     // (戦略・設計・分析の knowledge layer 寄せ。組成 / マネジメントの実働は含まない)
     // Vivid emerald (#10B981) — IS 設計から引き継いだ緑系
     id: 'is-strategy',
-    name: 'IS 戦略',
-    price: 200000,
+    name: 'IS 設計',
+    price: 100000,
     slotsTotal: 3,
     slotsRemaining: 3,
     icon: Sparkles,
@@ -99,7 +99,7 @@ const partnershipTiers: PartnershipTier[] = [
     scope: [
       'IS 戦略',
       'IS 設計',
-      'IS 分析',
+      'ISオペレーション',
     ],
     crm: [
       'CRM 構築',
@@ -202,7 +202,7 @@ export const Pricing = () => {
             <Eyebrow color="#FFC107">SALES × CRM</Eyebrow>
           </div>
           <h2 className="font-display font-bold tracking-[-0.025em] text-[2.2rem] md:text-[3rem] leading-[1.06] mt-5">
-            <span className="fo-gradient-text">CRMと部署番号が、無償。</span>
+            <span className="fo-gradient-text">CRMと部署番号は、無償。</span>
             <br />
             <span className="fo-gradient-text-soft">営業実行 × CRM構築</span>
           </h2>
