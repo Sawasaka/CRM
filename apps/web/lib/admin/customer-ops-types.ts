@@ -1,5 +1,11 @@
 export type PlanTier = 'Free' | 'Lite' | 'Standard' | 'PRO'
-export type TenantStatus = 'active' | 'dormant'
+export type TenantStatus = 'active' | 'demo' | 'inactive'
+
+// 契約情報の自由項目 (企業ごとに項目名・内容を自由に持てる)
+export interface ContractItem {
+  label: string
+  value: string
+}
 
 export interface TenantRow {
   id: string
@@ -7,6 +13,7 @@ export interface TenantRow {
   slug: string
   plan: PlanTier
   status: TenantStatus
+  demoExpiresAt: string | null
   userCount: number
   activeUsers30d: number
   companyCount: number
@@ -20,6 +27,8 @@ export interface TenantRow {
   createdAt: string
   lastActivityAt: string | null
   primaryContact: { name: string; email: string } | null
+  contractInfo: ContractItem[]
+  memo: string
 }
 
 export interface CustomerOpsMetrics {

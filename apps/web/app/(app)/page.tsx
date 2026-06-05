@@ -105,6 +105,51 @@ function HomePageContent() {
   const searchParams = useSearchParams()
   const chatIdParam = searchParams.get('chat')
 
+  // ホーム (`/`) を管理者ページ (Customer Operations) へリダイレクトするロジック。
+  // - ローカル開発環境: 常にリダイレクト (BGM テナント判定をスキップ)
+  // - 本番: 開発者テナント (BGM_TENANT_ID) のときだけリダイレクト
+  // - 無料デモ経由 (?demo=... / ?tenant=...) や ?chat=... はリダイレクトしない
+  const [adminRedirectChecked, setAdminRedirectChecked] = useState(false)
+  useEffect(() => {
+    if (adminRedirectChecked) return
+    const hasChatQuery = chatIdParam !== null
+    const isDemoAccess =
+      searchParams.get('demo') !== null || searchParams.get('tenant') !== null
+    if (hasChatQuery || isDemoAccess) {
+      setAdminRedirectChecked(true)
+      return
+    }
+    // ローカル環境はホスト名で判定 (NODE_ENV だけでは Vercel preview 等と区別できないため)
+    const isLocalEnv =
+      typeof window !== 'undefined' &&
+      (window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1' ||
+        window.location.hostname.startsWith('192.168.') ||
+        window.location.hostname.endsWith('.local'))
+    if (isLocalEnv) {
+      router.replace('/admin/customer-ops')
+      return
+    }
+    let cancelled = false
+    fetch('/api/admin/customer-ops/access', { cache: 'no-store' })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { allowed?: boolean } | null) => {
+        if (cancelled) return
+        if (data?.allowed) {
+          router.replace('/admin/customer-ops')
+        } else {
+          setAdminRedirectChecked(true)
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setAdminRedirectChecked(true)
+      })
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const [prompt, setPrompt] = useState('')
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [chatId, setChatId] = useState<string | null>(null)
@@ -478,13 +523,13 @@ function HomePageContent() {
               </div>
             )}
 
-            <div className="flex items-center justify-between px-3 pb-2 pt-1">
-              <div className="flex items-center gap-1">
+            <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 px-3 pb-2 pt-1">
+              <div className="flex flex-wrap items-center gap-1 min-w-0">
                 <button
                   type="button"
                   onClick={attach.openPicker}
                   disabled={isLoading}
-                  className="w-9 h-9 rounded-full flex items-center justify-center transition-colors duration-150"
+                  className="w-9 h-9 rounded-full flex items-center justify-center transition-colors duration-150 shrink-0"
                   style={{ color: 'var(--color-obs-text-muted)' }}
                   onMouseOver={(e) => {
                     ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
@@ -513,11 +558,11 @@ function HomePageContent() {
                 <AssigneeFilter value={scope} onChange={setScope} />
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 ml-auto shrink-0">
                 <button
                   type="button"
                   disabled={isLoading}
-                  className="w-9 h-9 rounded-full flex items-center justify-center transition-colors duration-150"
+                  className="w-9 h-9 rounded-full flex items-center justify-center transition-colors duration-150 shrink-0"
                   style={{ color: 'var(--color-obs-text-muted)' }}
                   onMouseOver={(e) => {
                     ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =

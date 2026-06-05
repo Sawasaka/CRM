@@ -15,11 +15,22 @@ export default async function DemoAccessPage({
   const org = slug
     ? await prisma.organization.findUnique({
         where: { slug },
-        select: { id: true, name: true, slug: true, plan: true },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          lifecycleStatus: true,
+          demoExpiresAt: true,
+        },
       })
     : null
 
-  if (!org || org.slug === 'default' || org.plan !== 'FREE') {
+  if (
+    !org ||
+    org.slug === 'default' ||
+    org.lifecycleStatus !== 'DEMO' ||
+    (org.demoExpiresAt && org.demoExpiresAt <= new Date())
+  ) {
     return <InvalidDemoLink />
   }
 
@@ -56,7 +67,7 @@ export default async function DemoAccessPage({
               {org.name}様 専用デモ登録
             </h1>
             <p className="mt-3 text-[13px] leading-relaxed text-[#9b99a0]">
-              下記を入力すると、30分有効のデモ環境URLを発行します。
+              下記を入力すると、15分有効のデモ環境URLを発行します。
               デモ内のデータはサンプルデータです。
             </p>
 

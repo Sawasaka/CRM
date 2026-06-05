@@ -1,10 +1,16 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Building2, Check, Copy, ExternalLink, Link2, Pencil, Plus, X } from 'lucide-react'
+import { Building2, Check, Copy, ExternalLink, Link2, Pencil, Plus, Trash2, X } from 'lucide-react'
 import { ObsCard, ObsHero, ObsPageShell } from '@/components/obsidian'
-import type { CustomerOpsMetrics, TenantRow } from '@/lib/admin/customer-ops-types'
+import type {
+  ContractItem,
+  CustomerOpsMetrics,
+  TenantRow,
+  TenantStatus,
+} from '@/lib/admin/customer-ops-types'
 
 // 開発者用テナント一覧 (最小機能版 / 精緻UI)
 // - 行クリックで該当テナントの本環境を新規タブで開く
@@ -16,8 +22,25 @@ export function CustomerOpsClient({
   tenants: TenantRow[]
   metrics: CustomerOpsMetrics
 }) {
+  const router = useRouter()
   const [tenants, setTenants] = useState<TenantRow[]>(() => sortTenantsDefaultFirst(initialTenants))
   const [editingTenant, setEditingTenant] = useState<TenantRow | null>(null)
+
+  useEffect(() => {
+    setTenants(sortTenantsDefaultFirst(initialTenants))
+  }, [initialTenants])
+
+  useEffect(() => {
+    const refresh = () => router.refresh()
+    const intervalId = window.setInterval(refresh, 10_000)
+    window.addEventListener('focus', refresh)
+    document.addEventListener('visibilitychange', refresh)
+    return () => {
+      window.clearInterval(intervalId)
+      window.removeEventListener('focus', refresh)
+      document.removeEventListener('visibilitychange', refresh)
+    }
+  }, [router])
 
   const handleCreateNew = () => {
     setEditingTenant(buildEmptyTenant())
@@ -32,6 +55,11 @@ export function CustomerOpsClient({
       }
       return sortTenantsDefaultFirst([saved, ...prev])
     })
+    setEditingTenant(null)
+  }
+
+  const handleDeleted = (id: string) => {
+    setTenants((prev) => prev.filter((tenant) => tenant.id !== id))
     setEditingTenant(null)
   }
 
@@ -112,6 +140,7 @@ export function CustomerOpsClient({
         tenant={editingTenant}
         onClose={() => setEditingTenant(null)}
         onSaved={handleSaved}
+        onDeleted={handleDeleted}
       />
     </ObsPageShell>
   )
@@ -137,7 +166,10 @@ function buildEmptyTenant(): TenantRow {
     integrations: { google: false, slack: false, microsoft: false },
     createdAt: new Date().toISOString(),
     lastActivityAt: null,
+    demoExpiresAt: null,
     primaryContact: null,
+    contractInfo: [],
+    memo: '',
   }
 }
 
@@ -145,7 +177,9 @@ function sortTenantsDefaultFirst(tenants: TenantRow[]) {
   return [...tenants].sort((a, b) => {
     if (a.slug === 'default' && b.slug !== 'default') return -1
     if (b.slug === 'default' && a.slug !== 'default') return 1
-    return a.createdAt.localeCompare(b.createdAt)
+    const aTime = a.lastActivityAt ?? a.createdAt
+    const bTime = b.lastActivityAt ?? b.createdAt
+    return bTime.localeCompare(aTime)
   })
 }
 
@@ -153,7 +187,8 @@ function sortTenantsDefaultFirst(tenants: TenantRow[]) {
 
 function TenantRowItem({ tenant, onEdit }: { tenant: TenantRow; onEdit: () => void }) {
   const [hover, setHover] = useState(false)
-  const tenantUrl = `/?tenant=${tenant.slug}`
+  const tenantUrl = buildTenantEnvironmentUrl(tenant.slug)
+  const canOpenTenant = tenant.status !== 'inactive'
   return (
     <div
       className="block rounded-[20px] p-[1px] transition-all duration-200"
@@ -263,24 +298,37 @@ function TenantRowItem({ tenant, onEdit }: { tenant: TenantRow; onEdit: () => vo
             </button>
 
             {/* 環境に入る (本環境を新規タブで開く) */}
-            <a
-              href={tenantUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-[var(--radius-obs-md)] text-[12.5px] font-semibold transition-transform"
-              style={{
-                background: hover
-                  ? 'linear-gradient(135deg, #c7d8ff 0%, #8db4ff 100%)'
-                  : 'linear-gradient(135deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
-                color: 'var(--color-obs-on-primary)',
-                boxShadow: hover
-                  ? '0 10px 22px -8px rgba(171,199,255,0.55), inset 1px 1px 0 rgba(255,255,255,0.25)'
-                  : '0 4px 14px -4px rgba(171,199,255,0.40), inset 1px 1px 0 rgba(255,255,255,0.18)',
-                transform: hover ? 'translateY(-1px)' : 'translateY(0)',
-              }}
-            >
-              環境に入る <ExternalLink size={13} strokeWidth={2.4} />
-            </a>
+            {canOpenTenant ? (
+              <a
+                href={tenantUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-[var(--radius-obs-md)] text-[12.5px] font-semibold transition-transform"
+                style={{
+                  background: hover
+                    ? 'linear-gradient(135deg, #c7d8ff 0%, #8db4ff 100%)'
+                    : 'linear-gradient(135deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
+                  color: 'var(--color-obs-on-primary)',
+                  boxShadow: hover
+                    ? '0 10px 22px -8px rgba(171,199,255,0.55), inset 1px 1px 0 rgba(255,255,255,0.25)'
+                    : '0 4px 14px -4px rgba(171,199,255,0.40), inset 1px 1px 0 rgba(255,255,255,0.18)',
+                  transform: hover ? 'translateY(-1px)' : 'translateY(0)',
+                }}
+              >
+                環境に入る <ExternalLink size={13} strokeWidth={2.4} />
+              </a>
+            ) : (
+              <span
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-[var(--radius-obs-md)] text-[12.5px] font-semibold"
+                style={{
+                  background: 'rgba(255,255,255,0.04)',
+                  color: 'var(--color-obs-text-muted)',
+                  boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.08)',
+                }}
+              >
+                停止中
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -288,34 +336,42 @@ function TenantRowItem({ tenant, onEdit }: { tenant: TenantRow; onEdit: () => vo
   )
 }
 
-// ─── Status chip (アクティブ = 緑グロー / 無料 = グレー) ─────────────────────
+function buildTenantEnvironmentUrl(slug: string) {
+  const previewSlug =
+    process.env.NEXT_PUBLIC_DEFAULT_TENANT_PREVIEW_SLUG?.trim() || 'test'
+  return `/?tenant=${encodeURIComponent(slug === 'default' ? previewSlug : slug)}`
+}
 
-type ContractStatus = 'active' | 'free'
+// ─── Status chip ─────────────────────────────────────────────────────────────
 
-function StatusChip({ status }: { status: 'active' | 'dormant' }) {
-  // 旧 DORMANT は「無料」として表示
-  const isActive = status === 'active'
+type ContractStatus = TenantStatus
+
+const STATUS_META: Record<TenantStatus, { label: string; color: string; bg: string }> = {
+  active: { label: 'Active', color: '#5CDEA6', bg: 'rgba(75,200,140,0.12)' },
+  demo: { label: 'Demo', color: '#FFC107', bg: 'rgba(255,193,7,0.12)' },
+  inactive: { label: 'Inactive', color: '#9b99a0', bg: 'rgba(255,255,255,0.05)' },
+}
+
+function StatusChip({ status }: { status: TenantStatus }) {
+  const meta = STATUS_META[status]
+  const isInactive = status === 'inactive'
   return (
     <span
       className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.08em] px-2 py-[3px] rounded-full shrink-0"
       style={{
-        background: isActive
-          ? 'linear-gradient(135deg, rgba(75,200,140,0.20), rgba(75,200,140,0.06))'
-          : 'rgba(255,255,255,0.05)',
-        color: isActive ? '#5CDEA6' : 'var(--color-obs-text-subtle)',
-        boxShadow: isActive
-          ? 'inset 0 0 0 1px rgba(75,200,140,0.32), 0 0 8px rgba(75,200,140,0.20)'
-          : 'inset 0 0 0 1px rgba(255,255,255,0.08)',
+        background: meta.bg,
+        color: meta.color,
+        boxShadow: `inset 0 0 0 1px ${isInactive ? 'rgba(255,255,255,0.08)' : `${meta.color}52`}`,
       }}
     >
       <span
         className="inline-block w-1.5 h-1.5 rounded-full"
         style={{
-          backgroundColor: isActive ? '#5CDEA6' : 'rgba(255,255,255,0.30)',
-          boxShadow: isActive ? '0 0 6px #5CDEA6' : 'none',
+          backgroundColor: meta.color,
+          boxShadow: isInactive ? 'none' : `0 0 6px ${meta.color}`,
         }}
       />
-      {isActive ? 'アクティブ' : '無料'}
+      {meta.label}
     </span>
   )
 }
@@ -329,38 +385,68 @@ function formatDate(iso: string): string {
   }
 }
 
+function formatDateTime(iso: string): string {
+  try {
+    const d = new Date(iso)
+    return `${formatDate(iso)} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+  } catch {
+    return iso
+  }
+}
+
 // ─── Tenant edit modal (中央モーダル・画面遷移なし) ─────────────────────────
 
 type TenantDraft = {
   name: string
   slug: string
-  status: ContractStatus // アクティブ / 無料
+  status: ContractStatus
   memo: string
+  contractInfo: ContractItem[]
 }
 
 function TenantEditDrawer({
   tenant,
   onClose,
   onSaved,
+  onDeleted,
 }: {
   tenant: TenantRow | null
   onClose: () => void
   onSaved: (saved: TenantRow) => void
+  onDeleted: (id: string) => void
 }) {
   const isNew = tenant?.id === ''
+  const isDefaultTenant = tenant?.slug === 'default'
+  const isDemoTenant = tenant?.status === 'demo'
+  const statusOptions =
+    isDemoTenant && !isNew
+      ? [{ value: 'demo', label: 'Demo' }]
+      : [
+          { value: 'active', label: 'Active' },
+          { value: 'demo', label: 'Demo' },
+        ]
   const [draft, setDraft] = useState<TenantDraft>({
     name: '',
     slug: '',
     status: 'active',
     memo: '',
+    contractInfo: [],
   })
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteArmed, setDeleteArmed] = useState(false)
   const [copied, setCopied] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // 共有リンクは「無料」状態時のみ意味があり、無料デモアクセス画面へ誘導するリンク
-  const isFreeStatus = draft.status === 'free'
-  const shareUrl = isFreeStatus && draft.slug ? buildDemoAccessUrl(draft.slug) : ''
+  const isDemoStatus = draft.status === 'demo'
+  const isPaidStatus = draft.status === 'active'
+  const shareUrl = draft.slug
+    ? isDemoStatus
+      ? buildDemoAccessUrl(draft.slug)
+      : isPaidStatus
+        ? buildPaidJoinUrl(draft.slug)
+        : ''
+    : ''
 
   // 開く度に draft を tenant の値で初期化
   useEffect(() => {
@@ -368,10 +454,12 @@ function TenantEditDrawer({
       setDraft({
         name: tenant.name,
         slug: tenant.slug,
-        status: tenant.status === 'active' ? 'active' : 'free',
-        memo: '',
+        status: tenant.status,
+        memo: tenant.memo ?? '',
+        contractInfo: tenant.contractInfo ?? [],
       })
       setCopied(false)
+      setDeleteArmed(false)
       setError(null)
     }
   }, [tenant])
@@ -386,16 +474,36 @@ function TenantEditDrawer({
     return () => window.removeEventListener('keydown', handler)
   }, [tenant, onClose])
 
+  // 契約情報の自由項目を編集 (追加 / 更新 / 削除)
+  const addContractItem = () => {
+    setDraft((d) => ({ ...d, contractInfo: [...d.contractInfo, { label: '', value: '' }] }))
+  }
+  const updateContractItem = (index: number, patch: Partial<ContractItem>) => {
+    setDraft((d) => ({
+      ...d,
+      contractInfo: d.contractInfo.map((item, i) => (i === index ? { ...item, ...patch } : item)),
+    }))
+  }
+  const removeContractItem = (index: number) => {
+    setDraft((d) => ({ ...d, contractInfo: d.contractInfo.filter((_, i) => i !== index) }))
+  }
+
   const handleSave = async () => {
     if (!tenant) return
     if (isNew && (!draft.name.trim() || !draft.slug.trim())) return
     setSaving(true)
     setError(null)
     try {
+      // 空行 (項目名・内容の両方が空) は除外して送信
+      const cleanedContract = draft.contractInfo
+        .map((item) => ({ label: item.label.trim(), value: item.value.trim() }))
+        .filter((item) => item.label !== '' || item.value !== '')
       const payload = {
         name: draft.name.trim(),
         slug: draft.slug.trim(),
         status: draft.status,
+        contractInfo: cleanedContract,
+        memo: draft.memo.trim(),
       }
       const res = await fetch(isNew ? '/api/admin/tenants' : `/api/admin/tenants/${tenant.id}`, {
         method: isNew ? 'POST' : 'PATCH',
@@ -417,15 +525,44 @@ function TenantEditDrawer({
         id: tenant.id || String(json.id ?? ''),
         name: payload.name,
         slug: payload.slug,
-        // 「無料」状態は内部的に DORMANT として保持
-        status: payload.status === 'active' ? 'active' : 'dormant',
+        status: payload.status,
+        demoExpiresAt: json.demoExpiresAt ?? tenant.demoExpiresAt ?? null,
         createdAt: tenant.id ? tenant.createdAt : new Date().toISOString(),
+        contractInfo: (json.contractInfo as ContractItem[] | undefined) ?? cleanedContract,
+        memo: (json.memo as string | undefined) ?? payload.memo,
       }
       onSaved(saved)
     } catch (err) {
       setError(err instanceof Error ? err.message : '保存に失敗しました。')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!tenant || isNew || isDefaultTenant) return
+    if (!deleteArmed) {
+      setDeleteArmed(true)
+      setError('削除する場合は、もう一度「削除を確定」を押してください。')
+      return
+    }
+    setDeleting(true)
+    setError(null)
+    try {
+      const res = await fetch(`/api/admin/tenants/${tenant.id}`, { method: 'DELETE' })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        const message =
+          json.error === 'default_tenant_is_readonly'
+            ? 'Defaultテナントはマスター環境のため削除できません。'
+            : '削除に失敗しました。'
+        throw new Error(message)
+      }
+      onDeleted(tenant.id)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '削除に失敗しました。')
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -472,7 +609,7 @@ function TenantEditDrawer({
 
           {/* モーダル本体 */}
           <motion.div
-            className="relative w-full max-w-[480px] flex flex-col rounded-[20px] overflow-hidden"
+            className="relative w-full max-w-[560px] flex flex-col rounded-[20px] overflow-hidden"
             initial={{ scale: 0.96, y: 8, opacity: 0 }}
             animate={{ scale: 1, y: 0, opacity: 1 }}
             exit={{ scale: 0.97, y: 4, opacity: 0 }}
@@ -487,7 +624,7 @@ function TenantEditDrawer({
           >
             {/* ヘッダー */}
             <div
-              className="flex items-center justify-between px-6 py-5 relative overflow-hidden shrink-0"
+              className="flex items-center justify-between px-6 py-4 relative overflow-hidden shrink-0"
               style={{
                 boxShadow: 'inset 0 -1px 0 rgba(255,255,255,0.05)',
               }}
@@ -558,13 +695,14 @@ function TenantEditDrawer({
               </button>
             </div>
 
-            {/* 本体 (スクロール) */}
-            <div className="flex-1 overflow-y-auto px-6 py-6 space-y-5">
-              <Field label="テナント名">
-                <TextInput value={draft.name} onChange={(v) => setDraft({ ...draft, name: v })} />
-              </Field>
+            {/* 本体 */}
+            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="テナント名">
+                  <TextInput value={draft.name} onChange={(v) => setDraft({ ...draft, name: v })} />
+                </Field>
 
-              <Field label="slug" hint={isNew ? 'URL に使われます (例: acme-corp)' : '変更不可'}>
+                <Field label="slug" hint={isNew ? 'URL に使われます (例: acme-corp)' : '変更不可'}>
                 {isNew ? (
                   <TextInput
                     value={draft.slug}
@@ -591,33 +729,46 @@ function TenantEditDrawer({
                     {tenant.slug}
                   </div>
                 )}
-              </Field>
+                </Field>
+              </div>
 
-              <Field label="状態">
-                <SegmentSelect
-                  options={[
-                    { value: 'active', label: 'アクティブ' },
-                    { value: 'free', label: '無料' },
-                  ]}
-                  value={draft.status}
-                  onChange={(v) => setDraft({ ...draft, status: v as ContractStatus })}
-                />
-              </Field>
+              <div className="grid grid-cols-2 gap-4 items-start">
+                <Field label="状態">
+                  <SegmentSelect
+                    options={statusOptions}
+                    value={draft.status}
+                    onChange={(v) => setDraft({ ...draft, status: v as ContractStatus })}
+                  />
+                  {isDemoTenant && !isNew && (
+                    <p className="mt-2 text-[11px] leading-relaxed" style={{ color: 'var(--color-obs-text-muted)' }}>
+                      有料化する場合は、このデモを変換せず新しい有料テナントを発行します。
+                    </p>
+                  )}
+                </Field>
 
-              <Field label="メモ" hint="社内メモ">
-                <textarea
-                  value={draft.memo}
-                  onChange={(e) => setDraft({ ...draft, memo: e.target.value })}
-                  rows={3}
-                  placeholder="このテナントに関するメモ..."
-                  className="w-full px-3.5 py-2.5 rounded-[var(--radius-obs-md)] text-[13px] bg-transparent border-0 outline-none resize-none"
-                  style={{
-                    color: 'var(--color-obs-text)',
-                    background: 'rgba(255,255,255,0.03)',
-                    boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.06)',
-                  }}
-                />
-              </Field>
+                <Field label="メモ" hint="社内メモ">
+                  <textarea
+                    value={draft.memo}
+                    onChange={(e) => setDraft({ ...draft, memo: e.target.value })}
+                    rows={2}
+                    placeholder="このテナントに関するメモ..."
+                    className="w-full px-3.5 py-2.5 rounded-[var(--radius-obs-md)] text-[13px] bg-transparent border-0 outline-none resize-none"
+                    style={{
+                      color: 'var(--color-obs-text)',
+                      background: 'rgba(255,255,255,0.03)',
+                      boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.06)',
+                    }}
+                  />
+                </Field>
+              </div>
+
+              {/* 契約情報 (企業ごとに自由な項目を追加できる) */}
+              <ContractEditor
+                items={draft.contractInfo}
+                onAdd={addContractItem}
+                onUpdate={updateContractItem}
+                onRemove={removeContractItem}
+              />
 
               {error && (
                 <div
@@ -632,75 +783,107 @@ function TenantEditDrawer({
                 </div>
               )}
 
-              {/* テナント情報 (read-only / 新規時は非表示) */}
+              {/* テナント情報 + 主担当 (read-only / 新規時は非表示) — 左右2カラムで縦を圧縮 */}
               {!isNew && (
-                <div className="space-y-3">
-                  <div
-                    className="text-[10.5px] font-semibold uppercase tracking-[0.12em]"
-                    style={{ color: 'var(--color-obs-text-subtle)' }}
-                  >
-                    テナント情報
-                  </div>
-                  <div
-                    className="rounded-[var(--radius-obs-md)] px-4 py-3.5 space-y-2"
-                    style={{
-                      background: 'rgba(255,255,255,0.02)',
-                      boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.05)',
-                    }}
-                  >
-                    <MetaRow label="登録メンバー数" value={`${tenant.userCount} 名`} />
-                    <MetaRow
-                      label="最終活動日"
-                      value={tenant.lastActivityAt ? formatDate(tenant.lastActivityAt) : '—'}
-                    />
-                    <MetaRow label="作成日" value={formatDate(tenant.createdAt)} />
-                  </div>
-                </div>
-              )}
-
-              {/* 主担当 (デモアクセスから登録された会社名・氏名・メール) */}
-              {!isNew && (
-                <div className="space-y-3">
-                  <div className="flex items-baseline justify-between">
+                <div className="grid grid-cols-2 gap-4 items-start">
+                  {/* テナント情報 */}
+                  <div className="space-y-2">
                     <div
                       className="text-[10.5px] font-semibold uppercase tracking-[0.12em]"
                       style={{ color: 'var(--color-obs-text-subtle)' }}
                     >
-                      主担当
+                      テナント情報
                     </div>
-                    <span className="text-[10px]" style={{ color: 'var(--color-obs-text-muted)' }}>
-                      デモアクセスから登録
-                    </span>
+                    <div
+                      className="rounded-[var(--radius-obs-md)] px-4 py-3 space-y-2"
+                      style={{
+                        background: 'rgba(255,255,255,0.02)',
+                        boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.05)',
+                      }}
+                    >
+                      <MetaRow label="登録メンバー数" value={`${tenant.userCount} 名`} />
+                      <MetaRow label="状態" value={STATUS_META[tenant.status].label} />
+                      <MetaRow
+                        label="最終活動日"
+                        value={tenant.lastActivityAt ? formatDate(tenant.lastActivityAt) : '—'}
+                      />
+                      <MetaRow label="作成日" value={formatDate(tenant.createdAt)} />
+                      {tenant.demoExpiresAt && (
+                        <MetaRow label="デモ期限" value={formatDateTime(tenant.demoExpiresAt)} />
+                      )}
+                    </div>
                   </div>
-                  {tenant.primaryContact ? (
-                    <div
-                      className="rounded-[var(--radius-obs-md)] px-4 py-3.5 space-y-2"
-                      style={{
-                        background: 'rgba(255,255,255,0.02)',
-                        boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.05)',
-                      }}
-                    >
-                      <MetaRow label="会社名" value={tenant.name} />
-                      <MetaRow label="氏名" value={tenant.primaryContact.name} />
-                      <MetaRow label="メールアドレス" value={tenant.primaryContact.email} />
+
+                  {/* 主担当 / デモ登録者 */}
+                  <div className="space-y-2">
+                    <div className="flex items-baseline justify-between">
+                      <div
+                        className="text-[10.5px] font-semibold uppercase tracking-[0.12em]"
+                        style={{ color: 'var(--color-obs-text-subtle)' }}
+                      >
+                        {isDemoTenant ? 'デモ登録者' : '登録情報'}
+                      </div>
+                      <span
+                        className="text-[10px]"
+                        style={{ color: 'var(--color-obs-text-muted)' }}
+                      >
+                        {isDemoTenant ? 'デモ申込で入力' : '登録済みユーザー'}
+                      </span>
                     </div>
-                  ) : (
-                    <div
-                      className="rounded-[var(--radius-obs-md)] px-4 py-4 text-[12px] text-center"
-                      style={{
-                        background: 'rgba(255,255,255,0.02)',
-                        color: 'var(--color-obs-text-muted)',
-                        boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.05)',
-                      }}
-                    >
-                      まだ登録されていません。
-                    </div>
-                  )}
+                    {isDemoTenant ? (
+                      // デモは3項目を最初から用意し、申込が入ると値が埋まる
+                      <div
+                        className="rounded-[var(--radius-obs-md)] px-4 py-3 space-y-2"
+                        style={{
+                          background: 'rgba(255,255,255,0.02)',
+                          boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.05)',
+                        }}
+                      >
+                        <MetaRow
+                          label="会社名"
+                          value={tenant.primaryContact ? tenant.name : '未入力'}
+                          muted={!tenant.primaryContact}
+                        />
+                        <MetaRow
+                          label="氏名"
+                          value={tenant.primaryContact?.name || '未入力'}
+                          muted={!tenant.primaryContact}
+                        />
+                        <MetaRow
+                          label="メール"
+                          value={tenant.primaryContact?.email || '未入力'}
+                          muted={!tenant.primaryContact}
+                        />
+                      </div>
+                    ) : tenant.primaryContact ? (
+                      <div
+                        className="rounded-[var(--radius-obs-md)] px-4 py-3 space-y-2"
+                        style={{
+                          background: 'rgba(255,255,255,0.02)',
+                          boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.05)',
+                        }}
+                      >
+                        <MetaRow label="会社名" value={tenant.name} />
+                        <MetaRow label="氏名" value={tenant.primaryContact.name} />
+                        <MetaRow label="メール" value={tenant.primaryContact.email} />
+                      </div>
+                    ) : (
+                      <div
+                        className="rounded-[var(--radius-obs-md)] px-4 py-4 text-[12px] text-center leading-relaxed"
+                        style={{
+                          background: 'rgba(255,255,255,0.02)',
+                          color: 'var(--color-obs-text-muted)',
+                          boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.05)',
+                        }}
+                      >
+                        まだ登録されていません。
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 
-              {/* 無料デモアクセスリンク (状態 = 無料 のときのみ表示) */}
-              {isFreeStatus && (
+              {(isDemoStatus || isPaidStatus) && (
                 <div>
                   <div className="flex items-baseline justify-between mb-1.5">
                     <label
@@ -708,10 +891,10 @@ function TenantEditDrawer({
                       style={{ color: 'var(--color-obs-text-subtle)' }}
                     >
                       <Link2 size={11} />
-                      無料デモアクセスリンク
+                      {isDemoStatus ? 'デモ登録リンク' : '有料登録リンク'}
                     </label>
                     <span className="text-[10px]" style={{ color: 'var(--color-obs-text-muted)' }}>
-                      無料テナント発行用
+                      {isDemoStatus ? '15分デモ発行用' : 'Google登録用'}
                     </span>
                   </div>
 
@@ -769,8 +952,9 @@ function TenantEditDrawer({
                     className="text-[11px] mt-2 leading-relaxed"
                     style={{ color: 'var(--color-obs-text-muted)' }}
                   >
-                    無料テナント発行用のリンクです。相手は無料デモアクセス画面 (会社名 / 氏名 /
-                    メール入力) を経由してテナントへ入れます。
+                    {isDemoStatus
+                      ? 'デモ発行用のリンクです。相手が会社名 / 氏名 / メール入力を完了すると、15分有効のデモ環境が発行されます。'
+                      : '有料登録リンクです。相手はGoogle登録から期限なしの本番環境へ入ります。デモ用のダミーデータは使いません。'}
                   </p>
                 </div>
               )}
@@ -778,42 +962,64 @@ function TenantEditDrawer({
 
             {/* フッター */}
             <div
-              className="flex items-center justify-end gap-2 px-6 py-4 shrink-0"
+              className="flex items-center justify-between gap-2 px-6 py-4 shrink-0"
               style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)' }}
             >
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2.5 rounded-[var(--radius-obs-md)] text-[12.5px] font-semibold transition-colors"
-                style={{
-                  background: 'rgba(255,255,255,0.04)',
-                  color: 'var(--color-obs-text-muted)',
-                  boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.06)',
-                }}
-              >
-                キャンセル
-              </button>
-              <button
-                type="button"
-                onClick={handleSave}
-                disabled={saving || (isNew && (!draft.name.trim() || !draft.slug.trim()))}
-                className="px-5 py-2.5 rounded-[var(--radius-obs-md)] text-[12.5px] font-semibold transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{
-                  background:
-                    'linear-gradient(135deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
-                  color: 'var(--color-obs-on-primary)',
-                  boxShadow:
-                    '0 6px 16px -4px rgba(171,199,255,0.40), inset 1px 1px 0 rgba(255,255,255,0.20)',
-                }}
-              >
-                {saving
-                  ? isNew
-                    ? '作成中...'
-                    : '保存中...'
-                  : isNew
-                    ? 'テナントを作成'
-                    : '保存する'}
-              </button>
+              <div>
+                {!isNew && !isDefaultTenant && (
+                  <button
+                    type="button"
+                    onClick={handleDelete}
+                    disabled={deleting || saving}
+                    className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-[var(--radius-obs-md)] text-[12.5px] font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{
+                      background: 'rgba(255,107,107,0.08)',
+                      color: '#ff8d8d',
+                      boxShadow: 'inset 0 0 0 1px rgba(255,107,107,0.24)',
+                    }}
+                  >
+                    <Trash2 size={13} strokeWidth={2.4} />
+                    {deleting ? '削除中...' : deleteArmed ? '削除を確定' : '削除'}
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-4 py-2.5 rounded-[var(--radius-obs-md)] text-[12.5px] font-semibold transition-colors"
+                  style={{
+                    background: 'rgba(255,255,255,0.04)',
+                    color: 'var(--color-obs-text-muted)',
+                    boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.06)',
+                  }}
+                >
+                  キャンセル
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={
+                    saving || deleting || (isNew && (!draft.name.trim() || !draft.slug.trim()))
+                  }
+                  className="px-5 py-2.5 rounded-[var(--radius-obs-md)] text-[12.5px] font-semibold transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{
+                    background:
+                      'linear-gradient(135deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
+                    color: 'var(--color-obs-on-primary)',
+                    boxShadow:
+                      '0 6px 16px -4px rgba(171,199,255,0.40), inset 1px 1px 0 rgba(255,255,255,0.20)',
+                  }}
+                >
+                  {saving
+                    ? isNew
+                      ? '作成中...'
+                      : '保存中...'
+                    : isNew
+                      ? 'テナントを作成'
+                      : '保存する'}
+                </button>
+              </div>
             </div>
           </motion.div>
         </motion.div>
@@ -822,13 +1028,20 @@ function TenantEditDrawer({
   )
 }
 
-// 無料デモアクセス画面への遷移URL を組み立てる
 function buildDemoAccessUrl(slug: string): string {
   const origin =
     typeof window !== 'undefined' && window.location?.origin
       ? window.location.origin
       : 'https://crm.rookiesmart-jp.com'
   return `${origin}/demo/access?tenant=${slug}`
+}
+
+function buildPaidJoinUrl(slug: string): string {
+  const origin =
+    typeof window !== 'undefined' && window.location?.origin
+      ? window.location.origin
+      : 'https://crm.rookiesmart-jp.com'
+  return `${origin}/join/${slug}`
 }
 
 // ─── Drawer 内部 helpers ─────────────────────────────────────────────────────
@@ -923,7 +1136,101 @@ function SegmentSelect({
   )
 }
 
-function MetaRow({ label, value }: { label: string; value: string }) {
+// ─── Contract editor (企業ごとに自由な項目を追加できる契約欄) ────────────────
+
+function ContractEditor({
+  items,
+  onAdd,
+  onUpdate,
+  onRemove,
+}: {
+  items: ContractItem[]
+  onAdd: () => void
+  onUpdate: (index: number, patch: Partial<ContractItem>) => void
+  onRemove: (index: number) => void
+}) {
+  const inputClass =
+    'w-full px-3 py-2 rounded-[var(--radius-obs-sm)] text-[13px] bg-transparent border-0 outline-none'
+  const inputStyle = {
+    color: 'var(--color-obs-text)',
+    background: 'rgba(255,255,255,0.03)',
+    boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.06)',
+  } as const
+
+  return (
+    <div>
+      <div className="flex items-baseline justify-between mb-1.5">
+        <label
+          className="text-[10.5px] font-semibold uppercase tracking-[0.12em]"
+          style={{ color: 'var(--color-obs-text-subtle)' }}
+        >
+          契約情報
+        </label>
+        <span className="text-[10px]" style={{ color: 'var(--color-obs-text-muted)' }}>
+          企業ごとに項目を自由に追加
+        </span>
+      </div>
+
+      <div className="space-y-2">
+        {items.length === 0 && (
+          <p className="text-[12px]" style={{ color: 'var(--color-obs-text-muted)' }}>
+            まだ項目がありません。「項目を追加」から契約内容を入力できます。
+          </p>
+        )}
+
+        {items.map((item, index) => (
+          <div key={index} className="grid grid-cols-[150px_1fr_auto] gap-2 items-center">
+            <input
+              type="text"
+              value={item.label}
+              onChange={(e) => onUpdate(index, { label: e.target.value })}
+              placeholder="項目名 (例: 契約プラン)"
+              className={inputClass}
+              style={inputStyle}
+            />
+            <input
+              type="text"
+              value={item.value}
+              onChange={(e) => onUpdate(index, { value: e.target.value })}
+              placeholder="内容 (例: ENTERPRISE / 月10万円)"
+              className={inputClass}
+              style={inputStyle}
+            />
+            <button
+              type="button"
+              onClick={() => onRemove(index)}
+              aria-label="この項目を削除"
+              className="w-8 h-8 rounded-[var(--radius-obs-sm)] flex items-center justify-center shrink-0 transition-colors"
+              style={{
+                color: 'var(--color-obs-text-muted)',
+                background: 'rgba(255,255,255,0.03)',
+                boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.06)',
+              }}
+            >
+              <Trash2 size={13} strokeWidth={2.2} />
+            </button>
+          </div>
+        ))}
+
+        <button
+          type="button"
+          onClick={onAdd}
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-[var(--radius-obs-md)] text-[12px] font-semibold transition-colors"
+          style={{
+            color: 'var(--color-obs-primary)',
+            background: 'rgba(171,199,255,0.08)',
+            boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.22)',
+          }}
+        >
+          <Plus size={13} strokeWidth={2.6} />
+          項目を追加
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function MetaRow({ label, value, muted }: { label: string; value: string; muted?: boolean }) {
   return (
     <div className="flex items-center justify-between text-[12px] gap-3">
       <span className="shrink-0" style={{ color: 'var(--color-obs-text-subtle)' }}>
@@ -931,7 +1238,7 @@ function MetaRow({ label, value }: { label: string; value: string }) {
       </span>
       <span
         className="tabular-nums font-medium truncate text-right"
-        style={{ color: 'var(--color-obs-text)' }}
+        style={{ color: muted ? 'var(--color-obs-text-muted)' : 'var(--color-obs-text)' }}
       >
         {value}
       </span>

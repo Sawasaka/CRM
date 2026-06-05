@@ -3,11 +3,12 @@
 /**
  * 無料デモアクセスのモーダル。
  * 会社名・氏名・メールアドレスを入力して /api/demo-access を叩き、
- * 返却された /demo?t=... を新しいタブで開く。
+ * 返却されたデモテナントへ一時ログインして開く。
  */
 
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { createPortal } from 'react-dom'
+import { signIn } from 'next-auth/react'
 import { Loader2, Sparkles, X } from 'lucide-react'
 
 interface DemoModalProps {
@@ -22,10 +23,12 @@ interface Fields {
 }
 
 const INITIAL: Fields = { company: '', name: '', email: '' }
+type SubmitStep = 'idle' | 'issuing' | 'signing-in'
 
 export const DemoModal = ({ open, onClose }: DemoModalProps) => {
   const [values, setValues] = useState<Fields>(INITIAL)
   const [submitting, setSubmitting] = useState(false)
+  const [submitStep, setSubmitStep] = useState<SubmitStep>('idle')
   const [error, setError] = useState<string | null>(null)
   const dialogRef = useRef<HTMLDivElement | null>(null)
 
@@ -45,6 +48,7 @@ export const DemoModal = ({ open, onClose }: DemoModalProps) => {
       setValues(INITIAL)
       setError(null)
       setSubmitting(false)
+      setSubmitStep('idle')
     }
   }, [open])
 
@@ -65,6 +69,7 @@ export const DemoModal = ({ open, onClose }: DemoModalProps) => {
       return
     }
     setSubmitting(true)
+    setSubmitStep('issuing')
     try {
       const res = await fetch('/api/demo-access', {
         method: 'POST',
@@ -75,12 +80,32 @@ export const DemoModal = ({ open, onClose }: DemoModalProps) => {
       if (!res.ok || !json.url) {
         throw new Error(json.error || `発行に失敗しました (HTTP ${res.status})`)
       }
-      // 別タブで開いてユーザー側はモーダルを閉じる
-      window.open(json.url, '_blank', 'noopener,noreferrer')
-      onClose()
+      const auth = json.auth as
+        | { email?: string; password?: string; tenant?: string }
+        | undefined
+      if (!auth?.email || !auth.password || !auth.tenant) {
+        throw new Error('デモログイン情報の発行に失敗しました。')
+      }
+      setSubmitStep('signing-in')
+      const result = await signIn('credentials', {
+        email: auth.email,
+        password: auth.password,
+        tenant: auth.tenant,
+        redirect: false,
+        callbackUrl: json.url,
+      })
+      if (!result?.ok) {
+        throw new Error('デモログインに失敗しました。')
+      }
+      window.location.href = result.url ?? json.url
     } catch (err) {
-      setError(err instanceof Error ? err.message : '発行に失敗しました。')
+      setError(
+        err instanceof Error
+          ? err.message
+          : '発行に失敗しました。時間をおいて再度お試しください。'
+      )
       setSubmitting(false)
+      setSubmitStep('idle')
     }
   }
 
@@ -127,7 +152,7 @@ export const DemoModal = ({ open, onClose }: DemoModalProps) => {
           無料デモにアクセス
         </h2>
         <p className="mt-1 text-[11.5px] text-[#9b99a0] leading-relaxed">
-          <span className="text-aurora">30分有効</span> のデモURLを発行します。
+          <span className="text-aurora">15分有効</span> のデモ環境を発行します。
         </p>
 
         {/* ダミーデータ注釈 */}
@@ -196,7 +221,7 @@ export const DemoModal = ({ open, onClose }: DemoModalProps) => {
             {submitting ? (
               <>
                 <Loader2 size={14} strokeWidth={2.4} className="animate-spin" />
-                発行中…
+                {submitStep === 'signing-in' ? 'デモ環境へ入室中…' : 'デモ環境を準備中…'}
               </>
             ) : (
               <>

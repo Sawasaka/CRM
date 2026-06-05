@@ -773,7 +773,7 @@ export const Hero = () => {
                   {/* Row 1: input */}
                   <div className="flex items-center gap-3 mb-3">
                     <Sparkles size={18} color="#abc7ff" className="shrink-0" />
-                    <div className="flex-1 relative">
+                    <div className="flex-1 relative min-w-0 overflow-hidden">
                       <input
                         ref={inputRef}
                         value={input}
@@ -785,10 +785,10 @@ export const Hero = () => {
                         aria-label="ask ルキスマCRM"
                       />
                       {!input && (
-                        <div className="absolute inset-y-0 left-0 flex items-center pointer-events-none">
+                        <div className="absolute inset-y-0 left-0 right-0 flex items-center pointer-events-none overflow-hidden">
                           <span className="fo-cursor-blink shrink-0" />
                           <span
-                            className={`ml-2 text-[#7e7c83] text-[1rem] md:text-[1.05rem] transition-all duration-[600ms] ${phShow ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-1'}`}
+                            className={`ml-2 text-[#7e7c83] text-[1rem] md:text-[1.05rem] transition-all duration-[600ms] whitespace-nowrap overflow-hidden text-ellipsis min-w-0 ${phShow ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-1'}`}
                           >
                             {demoLimitReached ? '本日のデモ質問上限に達しました' : PLACEHOLDERS[phIdx]}
                           </span>
@@ -798,11 +798,11 @@ export const Hero = () => {
                   </div>
 
                   {/* Row 2: option chips + actions */}
-                  <div ref={menuRootRef} className="flex items-center justify-between flex-wrap gap-2">
-                    <div className="flex items-center gap-1.5 flex-wrap">
+                  <div ref={menuRootRef} className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                    <div className="flex items-center gap-1.5 flex-wrap min-w-0">
                       <button
                         type="button"
-                        className="w-8 h-8 rounded-full inline-flex items-center justify-center text-[#9b99a0] hover:bg-shimmer/40 transition-colors"
+                        className="w-8 h-8 rounded-full inline-flex items-center justify-center text-[#9b99a0] hover:bg-shimmer/40 transition-colors shrink-0"
                         onClick={(e) => e.stopPropagation()}
                         aria-label="添付"
                       >
@@ -813,11 +813,12 @@ export const Hero = () => {
                       <div className="relative">
                         <button
                           type="button"
-                          className={`h-8 px-2.5 rounded-full inline-flex items-center gap-1.5 text-[11.5px] text-[#c7c5c9] transition-colors ${openMenu === 'model' ? 'bg-shimmer/70' : 'bg-shimmer/40 hover:bg-shimmer/60'}`}
+                          className={`h-8 px-2.5 rounded-full inline-flex items-center gap-1.5 text-[11.5px] text-[#c7c5c9] transition-colors whitespace-nowrap ${openMenu === 'model' ? 'bg-shimmer/70' : 'bg-shimmer/40 hover:bg-shimmer/60'}`}
                           onClick={(e) => { e.stopPropagation(); setOpenMenu(openMenu === 'model' ? null : 'model') }}
                         >
                           <Sparkles size={11} color="#abc7ff" />
-                          {MODEL_LABELS[model]}
+                          <span className="hidden sm:inline">{MODEL_LABELS[model]}</span>
+                          <span className="sm:hidden">{model === 'gemini-3-flash-preview' ? 'Gemini 3' : 'GPT-5.5'}</span>
                           <ChevronDown size={11} color="#7e7c83" />
                         </button>
                         {openMenu === 'model' && (
@@ -979,10 +980,10 @@ export const Hero = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5 w-full md:w-auto md:shrink-0">
                       <button
                         type="button"
-                        className="w-8 h-8 rounded-full inline-flex items-center justify-center text-[#9b99a0] hover:bg-shimmer/40 transition-colors"
+                        className="w-8 h-8 shrink-0 rounded-full inline-flex items-center justify-center text-[#9b99a0] hover:bg-shimmer/40 transition-colors"
                         onClick={(e) => e.stopPropagation()}
                         aria-label="音声入力"
                       >
@@ -991,7 +992,7 @@ export const Hero = () => {
                       <button
                         onClick={sendInput}
                         disabled={!input.trim() || !!streamingId || demoLimitReached}
-                        className="rounded-lg px-3.5 h-9 inline-flex items-center gap-1.5 text-[12.5px] font-medium disabled:opacity-40"
+                        className="flex-1 justify-center md:flex-none md:justify-start rounded-lg px-3.5 h-9 inline-flex items-center gap-1.5 text-[12.5px] font-medium disabled:opacity-40 whitespace-nowrap"
                         style={{ background: 'linear-gradient(135deg, #abc7ff, #0071e3)', color: '#0a0a0c' }}
                       >
                         送信 <Send size={13} color="#0a0a0c" />

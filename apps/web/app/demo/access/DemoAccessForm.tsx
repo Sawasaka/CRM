@@ -1,7 +1,10 @@
 'use client'
 
 import { useState, type FormEvent } from 'react'
+import { signIn } from 'next-auth/react'
 import { Loader2, Sparkles } from 'lucide-react'
+
+type SubmitStep = 'idle' | 'issuing' | 'signing-in'
 
 export function DemoAccessForm({
   tenantSlug,
@@ -13,6 +16,7 @@ export function DemoAccessForm({
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [submitStep, setSubmitStep] = useState<SubmitStep>('idle')
   const [error, setError] = useState<string | null>(null)
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -24,6 +28,7 @@ export function DemoAccessForm({
       return
     }
     setSubmitting(true)
+    setSubmitStep('issuing')
     try {
       const res = await fetch('/api/demo-access', {
         method: 'POST',
@@ -39,10 +44,28 @@ export function DemoAccessForm({
       if (!res.ok || !json.url) {
         throw new Error(json.error || 'デモURLの発行に失敗しました。')
       }
-      window.location.href = json.url
+      const auth = json.auth as
+        | { email?: string; password?: string; tenant?: string }
+        | undefined
+      if (!auth?.email || !auth.password || !auth.tenant) {
+        throw new Error('デモログイン情報の発行に失敗しました。')
+      }
+      setSubmitStep('signing-in')
+      const result = await signIn('credentials', {
+        email: auth.email,
+        password: auth.password,
+        tenant: auth.tenant,
+        redirect: false,
+        callbackUrl: json.url,
+      })
+      if (!result?.ok) {
+        throw new Error('デモログインに失敗しました。')
+      }
+      window.location.href = result.url ?? json.url
     } catch (err) {
       setError(err instanceof Error ? err.message : 'デモURLの発行に失敗しました。')
       setSubmitting(false)
+      setSubmitStep('idle')
     }
   }
 
@@ -87,7 +110,7 @@ export function DemoAccessForm({
         {submitting ? (
           <>
             <Loader2 size={14} strokeWidth={2.4} className="animate-spin" />
-            発行中...
+            {submitStep === 'signing-in' ? 'デモ環境へ入室中...' : 'デモ環境を準備中...'}
           </>
         ) : (
           <>

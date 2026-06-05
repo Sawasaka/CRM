@@ -137,7 +137,7 @@ export const ContactForm = () => {
       )}
 
       <div
-        className="flex items-center justify-between gap-4 pt-4"
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 pt-4"
         style={{ borderTop: '1px solid rgba(171,199,255,0.08)' }}
       >
         <p className="text-[10.5px] text-[#7e7c83] leading-relaxed">
@@ -146,7 +146,7 @@ export const ContactForm = () => {
         <button
           type="submit"
           disabled={submitting}
-          className="inline-flex items-center gap-2 h-10 px-5 rounded-[10px] text-[13px] font-semibold transition-all disabled:opacity-60 shrink-0"
+          className="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-[10px] text-[13px] font-semibold transition-all disabled:opacity-60 shrink-0 w-full sm:w-auto"
           style={{
             background:
               'linear-gradient(140deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',

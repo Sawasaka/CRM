@@ -12,25 +12,85 @@ const providers = [
     credentials: {
       email: { label: 'Email', type: 'email' },
       password: { label: 'Password', type: 'password' },
+      tenant: { label: 'Tenant', type: 'text' },
     },
     async authorize(credentials) {
       const email = String(credentials.email ?? '')
         .trim()
         .toLowerCase()
       const password = String(credentials.password ?? '')
+      const tenant = String(credentials.tenant ?? '')
+        .trim()
+        .toLowerCase()
       if (!email || !password) return null
+      if (tenant && !/^[a-z0-9-]+$/.test(tenant)) return null
 
       await ensureAuthUserColumns()
-      const rows = await prisma.$queryRaw<
-        Array<{ id: string; email: string; name: string; passwordHash: string | null }>
-      >`
-        SELECT "id", "email", "name", "passwordHash"
-        FROM "User"
-        WHERE "email" = ${email}
-        LIMIT 1
-      `
+      const rows = tenant
+        ? await prisma.$queryRaw<
+            Array<{
+              id: string
+              email: string
+              name: string
+              passwordHash: string | null
+              orgLifecycleStatus: 'ACTIVE' | 'FREE' | 'DEMO' | 'INACTIVE'
+              demoExpiresAt: Date | null
+              orgId: string
+            }>
+          >`
+            SELECT
+              u."id",
+              u."email",
+              u."name",
+              u."passwordHash",
+              o."id" AS "orgId",
+              o."lifecycleStatus" AS "orgLifecycleStatus",
+              o."demoExpiresAt" AS "demoExpiresAt"
+            FROM "User" u
+            INNER JOIN "Organization" o ON o."id" = u."orgId"
+            WHERE u."email" = ${email}
+              AND o."slug" = ${tenant}
+            LIMIT 1
+          `
+        : await prisma.$queryRaw<
+            Array<{
+              id: string
+              email: string
+              name: string
+              passwordHash: string | null
+              orgLifecycleStatus: 'ACTIVE' | 'FREE' | 'DEMO' | 'INACTIVE'
+              demoExpiresAt: Date | null
+              orgId: string
+            }>
+          >`
+            SELECT
+              u."id",
+              u."email",
+              u."name",
+              u."passwordHash",
+              o."id" AS "orgId",
+              o."lifecycleStatus" AS "orgLifecycleStatus",
+              o."demoExpiresAt" AS "demoExpiresAt"
+            FROM "User" u
+            INNER JOIN "Organization" o ON o."id" = u."orgId"
+            WHERE u."email" = ${email}
+            ORDER BY u."createdAt" ASC
+            LIMIT 1
+          `
       const user = rows[0]
       if (!user?.passwordHash) return null
+      if (user.orgLifecycleStatus === 'INACTIVE') return null
+      if (
+        user.orgLifecycleStatus === 'DEMO' &&
+        user.demoExpiresAt &&
+        user.demoExpiresAt <= new Date()
+      ) {
+        await prisma.organization.updateMany({
+          where: { id: user.orgId, lifecycleStatus: 'DEMO' },
+          data: { lifecycleStatus: 'INACTIVE' },
+        })
+        return null
+      }
 
       const ok = await verifyPassword(password, user.passwordHash)
       if (!ok) return null

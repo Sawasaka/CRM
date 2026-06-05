@@ -69,8 +69,8 @@ const partnershipTiers: PartnershipTier[] = [
     accentHex: '#FFC107',
     accentRgb: '255, 193, 7',
     scope: [
-      'IS 戦略',
-      'IS 設計 / オペレーション',
+      'IS 設計',
+      'IS オペレーション',
       'IS マネジメント',
     ],
     crm: [

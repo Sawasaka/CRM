@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@bgm/db'
+import { randomBytes } from 'node:crypto'
+import { prisma, type Prisma } from '@bgm/db'
 import { getAppBaseUrl } from '@/lib/app-url'
+import { ensureAuthUserColumns } from '@/lib/auth-schema'
 import { buildDemoToken, DEMO_CREDITS_DEFAULT } from '@/lib/demo-token'
+import { hashPassword } from '@/lib/password'
 
 /**
  * 無料デモアクセスのリンク発行API。
@@ -9,13 +12,13 @@ import { buildDemoToken, DEMO_CREDITS_DEFAULT } from '@/lib/demo-token'
  * 入力: { company, name, email }
  * 動作:
  *   1) 入力をバリデート
- *   2) 30分後 expiresAt を埋め込んだ署名付きトークンを生成 (lib/demo-token)
- *   3) /demo-app?t=<token> URL を返却(クライアントで window.open する)
+ *   2) 15分後 expiresAt を埋め込んだ署名付きトークンを生成 (lib/demo-token)
+ *   3) 通常CRMへログインするための一時認証情報を返却
  *   4) 同時にリード情報をログ + 可能なら h.sawasaka@rookiesmart.jp に通知メール送信
  */
 
-const NOTIFY_INBOX =
-  process.env.DEMO_NOTIFY_INBOX ?? process.env.CONTACT_INBOX ?? 'h.sawasaka@rookiesmart.jp'
+// デモ登録通知は「沢坂のアドレスのみ」に固定送信する (環境変数で別宛先へ逸れないようにする)
+const NOTIFY_INBOX = 'h.sawasaka@rookiesmart.jp'
 const FROM_ADDRESS = process.env.CONTACT_FROM ?? 'ルキスマCRM <noreply@rookiesmart-jp.com>'
 
 interface DemoPayload {
@@ -30,6 +33,20 @@ interface RequestContext {
   referer: string
   ipAddress: string
 }
+
+type DemoOrg = {
+  id: string
+  name: string
+  slug: string
+}
+
+type DemoLogin = {
+  email: string
+  password: string
+  tenant: string
+}
+
+type DbClient = Prisma.TransactionClient | typeof prisma
 
 function validate(body: unknown): DemoPayload | null {
   if (!body || typeof body !== 'object') return null
@@ -57,6 +74,122 @@ function getAbsoluteDemoUrl(req: Request, demoPath: string) {
   const origin = req.headers.get('origin')
   const baseUrl = origin && /^https?:\/\//.test(origin) ? origin : getAppBaseUrl()
   return new URL(demoPath, baseUrl).toString()
+}
+
+function isExpiredDemo(expiresAt: Date | null): boolean {
+  return Boolean(expiresAt && expiresAt <= new Date())
+}
+
+async function buildUniqueDemoSlug(db: DbClient) {
+  for (let i = 0; i < 5; i += 1) {
+    const slug = `demo-${Date.now().toString(36)}-${randomBytes(3).toString('hex')}`
+    const exists = await db.organization.findUnique({
+      where: { slug },
+      select: { id: true },
+    })
+    if (!exists) return slug
+  }
+  throw new Error('demo slug generation failed')
+}
+
+async function resolveDemoOrg(db: DbClient, payload: DemoPayload): Promise<DemoOrg | null> {
+  if (payload.tenant) {
+    const org = await db.organization.findUnique({
+      where: { slug: payload.tenant },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        lifecycleStatus: true,
+        demoExpiresAt: true,
+      },
+    })
+    if (!org || org.slug === 'default') return null
+    if (org.lifecycleStatus !== 'DEMO') return null
+    if (isExpiredDemo(org.demoExpiresAt)) {
+      await db.organization.update({
+        where: { id: org.id },
+        data: { lifecycleStatus: 'INACTIVE' },
+      })
+      return null
+    }
+    return { id: org.id, name: org.name, slug: org.slug }
+  }
+
+  const reusableOrg = await findReusableDemoOrg(db, payload)
+  if (reusableOrg) return reusableOrg
+
+  const slug = await buildUniqueDemoSlug(db)
+  return db.organization.create({
+    data: {
+      name: payload.company,
+      slug,
+      plan: 'FREE',
+      lifecycleStatus: 'DEMO',
+      demoExpiresAt: null,
+    },
+    select: { id: true, name: true, slug: true },
+  })
+}
+
+async function findReusableDemoOrg(db: DbClient, payload: DemoPayload): Promise<DemoOrg | null> {
+  const org = await db.organization.findFirst({
+    where: {
+      slug: { startsWith: 'demo-' },
+      name: payload.company,
+      lifecycleStatus: { in: ['DEMO', 'INACTIVE'] },
+      users: {
+        some: { email: payload.email },
+      },
+    },
+    orderBy: { updatedAt: 'desc' },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+    },
+  })
+  return org
+}
+
+async function upsertDemoLead(
+  db: DbClient,
+  orgId: string,
+  tenantSlug: string,
+  payload: DemoPayload
+): Promise<DemoLogin> {
+  const temporaryPassword = randomBytes(24).toString('base64url')
+  const passwordHash = await hashPassword(temporaryPassword)
+  const existing = await db.user.findFirst({
+    where: {
+        orgId,
+        email: payload.email,
+    },
+    select: { id: true },
+  })
+  if (existing) {
+    await db.user.update({
+      where: { id: existing.id },
+      data: {
+        name: payload.name,
+        role: 'ADMIN',
+        passwordHash,
+        passwordUpdatedAt: new Date(),
+      },
+    })
+  } else {
+    await db.user.create({
+      data: {
+        orgId,
+        email: payload.email,
+        name: payload.name,
+        role: 'ADMIN',
+        passwordHash,
+        passwordUpdatedAt: new Date(),
+      },
+    })
+  }
+  return { email: payload.email, password: temporaryPassword, tenant: tenantSlug }
 }
 
 function escapeHtml(s: string): string {
@@ -87,7 +220,7 @@ function buildEmail(
     `■ 氏名:   ${p.name}`,
     `■ メール: ${p.email}`,
     `■ 発行日時: ${context.issuedAt}`,
-    `■ 有効期限: ${expiresAtText} (30分)`,
+    `■ 有効期限: ${expiresAtText} (15分)`,
     `■ セッションID: ${sessionId}`,
     `■ クレジット: ${DEMO_CREDITS_DEFAULT}`,
     `■ 発行URL: ${demoUrl}`,
@@ -109,7 +242,7 @@ function buildEmail(
         <tr><td style="padding:4px 12px 4px 0;color:#7e7c83;">氏名</td><td>${escapeHtml(p.name)}</td></tr>
         <tr><td style="padding:4px 12px 4px 0;color:#7e7c83;">メール</td><td><a href="mailto:${escapeHtml(p.email)}">${escapeHtml(p.email)}</a></td></tr>
         <tr><td style="padding:4px 12px 4px 0;color:#7e7c83;">発行日時</td><td>${escapeHtml(context.issuedAt)}</td></tr>
-        <tr><td style="padding:4px 12px 4px 0;color:#7e7c83;">有効期限</td><td>${escapeHtml(expiresAtText)} (30分)</td></tr>
+        <tr><td style="padding:4px 12px 4px 0;color:#7e7c83;">有効期限</td><td>${escapeHtml(expiresAtText)} (15分)</td></tr>
         <tr><td style="padding:4px 12px 4px 0;color:#7e7c83;">セッションID</td><td>${escapeHtml(sessionId)}</td></tr>
         <tr><td style="padding:4px 12px 4px 0;color:#7e7c83;">クレジット</td><td>${DEMO_CREDITS_DEFAULT}</td></tr>
         <tr><td style="padding:4px 12px 4px 0;color:#7e7c83;">発行ページ</td><td>${escapeHtml(context.referer)}</td></tr>
@@ -178,37 +311,46 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: '必須項目を入力してください' }, { status: 400 })
   }
 
-  if (payload.tenant) {
-    const org = await prisma.organization.findUnique({
-      where: { slug: payload.tenant },
-      select: { id: true, name: true, slug: true, plan: true },
-    })
-    if (!org || org.slug === 'default' || org.plan !== 'FREE') {
+  let claims: Awaited<ReturnType<typeof buildDemoToken>>['claims']
+  let demoOrg: DemoOrg
+  let login: DemoLogin
+  try {
+    await ensureAuthUserColumns()
+    ;({ demoOrg, login, claims } = await prisma.$transaction(async (tx) => {
+      const resolvedOrg = await resolveDemoOrg(tx, payload)
+      if (!resolvedOrg) {
+        throw new Error('invalid_demo_link')
+      }
+      const issued = await buildDemoToken({
+        tenantSlug: resolvedOrg.slug,
+        company: resolvedOrg.name,
+        name: payload.name,
+        email: payload.email,
+      })
+      await tx.organization.update({
+        where: { id: resolvedOrg.id },
+        data: {
+          lifecycleStatus: 'DEMO',
+          demoExpiresAt: new Date(issued.claims.expiresAt),
+        },
+      })
+      const demoLogin = await upsertDemoLead(tx, resolvedOrg.id, resolvedOrg.slug, payload)
+      return { demoOrg: resolvedOrg, login: demoLogin, claims: issued.claims }
+    }))
+  } catch (e) {
+    if (e instanceof Error && e.message === 'invalid_demo_link') {
       return NextResponse.json({ error: 'デモリンクが無効です' }, { status: 404 })
     }
-  }
-
-  let token: string
-  let claims: Awaited<ReturnType<typeof buildDemoToken>>['claims']
-  try {
-    const issued = await buildDemoToken({
-      tenantSlug: payload.tenant,
-      company: payload.company,
-      name: payload.name,
-      email: payload.email,
-    })
-    token = issued.token
-    claims = issued.claims
-  } catch (e) {
-    console.error('[demo-access] token issue failed:', e)
+    console.error('[demo-access] issue failed:', e)
     return NextResponse.json({ error: 'デモURLの発行に失敗しました' }, { status: 500 })
   }
 
   const context = buildContext(req)
-  const demoUrl = `/demo-app?t=${encodeURIComponent(token)}`
+  const issuedPayload = { ...payload, tenant: demoOrg.slug, company: demoOrg.name }
+  const demoUrl = `/?tenant=${encodeURIComponent(demoOrg.slug)}&demo=1`
   const absoluteDemoUrl = getAbsoluteDemoUrl(req, demoUrl)
   const notificationDelivered = await notifyOwner(
-    payload,
+    issuedPayload,
     context,
     claims.sessionId,
     claims.expiresAt,
@@ -218,6 +360,7 @@ export async function POST(req: Request) {
   return NextResponse.json({
     ok: true,
     url: demoUrl,
+    auth: login,
     notificationDelivered,
     sessionId: claims.sessionId,
     credits: claims.credits,

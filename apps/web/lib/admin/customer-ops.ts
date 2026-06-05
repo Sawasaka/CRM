@@ -1,6 +1,7 @@
 import { auth } from '@/lib/auth'
 import { prisma, type Plan } from '@bgm/db'
 import type {
+  ContractItem,
   CustomerOpsMetrics,
   PlanTier,
   RecentTenantActivity,
@@ -8,6 +9,35 @@ import type {
   TenantRow,
   TenantUserRow,
 } from './customer-ops-types'
+
+// 契約項目の配列を安全に整形する
+function normalizeContractItems(raw: unknown): ContractItem[] {
+  if (!Array.isArray(raw)) return []
+  return raw
+    .map((item) => {
+      if (!item || typeof item !== 'object') return null
+      const rec = item as Record<string, unknown>
+      const label = typeof rec.label === 'string' ? rec.label : ''
+      const value = typeof rec.value === 'string' ? rec.value : ''
+      if (!label && !value) return null
+      return { label, value }
+    })
+    .filter((item): item is ContractItem => item !== null)
+}
+
+// DB の Json (unknown) を { memo, items } へ安全に変換する。
+// 後方互換: 旧データは配列 (= 契約項目のみ) なので、その場合 memo は空とする。
+function parseTenantMeta(raw: unknown): { memo: string; items: ContractItem[] } {
+  if (Array.isArray(raw)) {
+    return { memo: '', items: normalizeContractItems(raw) }
+  }
+  if (raw && typeof raw === 'object') {
+    const rec = raw as Record<string, unknown>
+    const memo = typeof rec.memo === 'string' ? rec.memo : ''
+    return { memo, items: normalizeContractItems(rec.items) }
+  }
+  return { memo: '', items: [] }
+}
 
 type AdminAccess =
   | { authorized: true; orgId: string; userId: string }
@@ -18,6 +48,8 @@ type AdminAccessDeniedReason = 'unauthorized' | 'forbidden'
 type OrgBase = Awaited<ReturnType<typeof fetchOrganizations>>[number]
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000
+const DEFAULT_CUSTOMER_OPS_ADMIN_EMAILS = ['h.sawasaka@rookiesmart.jp']
+const DEFAULT_LOCAL_DEV_USER_EMAIL = 'h.sawasaka@rookiesmart.jp'
 
 const PLAN_LABELS: Record<Plan, PlanTier> = {
   FREE: 'Free',
@@ -33,6 +65,7 @@ export async function getCustomerOpsOverview(): Promise<
   const access = await getCustomerOpsAdminAccess()
   if (!access.authorized) return access
 
+  await markExpiredDemoTenantsInactive()
   const tenants = sortTenantRows(await buildTenantRows())
   return { authorized: true, tenants, metrics: buildMetrics(tenants) }
 }
@@ -100,27 +133,33 @@ export async function getCustomerOpsTenantDetail(
 
 export async function getCustomerOpsAdminAccess(): Promise<AdminAccess> {
   const session = await auth()
-  let userId = (session as unknown as { userId?: string })?.userId ?? null
-  let usedDevFallback = false
+  const userId = (session as unknown as { userId?: string })?.userId ?? null
+  const sessionEmail = session?.user?.email ?? null
+  const isLocalRequest = await isLocalhostRequest()
 
-  if (!userId && process.env.NEXT_PUBLIC_DEV_MODE === 'true') {
-    const firstUser = await prisma.user.findFirst({
-      orderBy: { createdAt: 'asc' },
-      select: { id: true },
-    })
-    userId = firstUser?.id ?? null
-    usedDevFallback = Boolean(userId)
+  if (!userId) {
+    return isLocalRequest && isCustomerOpsAdminEmail(getLocalDevUserEmail())
+      ? await getLocalDeveloperAccess()
+      : { authorized: false, reason: 'unauthorized' }
   }
-
-  if (!userId) return { authorized: false, reason: 'unauthorized' }
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { id: true, orgId: true, role: true },
+    select: {
+      id: true,
+      email: true,
+      orgId: true,
+      org: { select: { slug: true, lifecycleStatus: true } },
+    },
   })
   if (!user) return { authorized: false, reason: 'unauthorized' }
-
-  if (process.env.NEXT_PUBLIC_DEV_MODE === 'true' && process.env.NODE_ENV !== 'production') {
+  if (isIssuedDemoTenant(user.org.slug)) {
+    return { authorized: false, reason: 'forbidden' }
+  }
+  if (isCustomerOpsAdminEmail(user.email) || isCustomerOpsAdminEmail(sessionEmail)) {
+    return { authorized: true, orgId: user.orgId, userId: user.id }
+  }
+  if (isLocalRequest && isCustomerOpsAdminEmail(getLocalDevUserEmail())) {
     return { authorized: true, orgId: user.orgId, userId: user.id }
   }
 
@@ -131,15 +170,67 @@ export async function getCustomerOpsAdminAccess(): Promise<AdminAccess> {
       : { authorized: false, reason: 'forbidden' }
   }
 
-  if (usedDevFallback) {
-    return { authorized: true, orgId: user.orgId, userId: user.id }
+  if (isLocalRequest && user.org.slug !== 'default') {
+    return { authorized: false, reason: 'forbidden' }
   }
 
-  if (process.env.NODE_ENV !== 'production' && user.role === 'ADMIN') {
+  if (user.org.slug === 'default') {
     return { authorized: true, orgId: user.orgId, userId: user.id }
   }
 
   return { authorized: false, reason: 'forbidden' }
+}
+
+async function getLocalDeveloperAccess(): Promise<AdminAccess> {
+  const user = await prisma.user.findFirst({
+    where: { org: { slug: 'default' } },
+    orderBy: { createdAt: 'asc' },
+    select: { id: true, orgId: true },
+  })
+  if (user) return { authorized: true, orgId: user.orgId, userId: user.id }
+
+  const fallback = await prisma.user.findFirst({
+    orderBy: { createdAt: 'asc' },
+    select: { id: true, orgId: true },
+  })
+  return fallback
+    ? { authorized: true, orgId: fallback.orgId, userId: fallback.id }
+    : { authorized: false, reason: 'unauthorized' }
+}
+
+function isCustomerOpsAdminEmail(email: string | null | undefined) {
+  if (!email) return false
+  const configured = process.env.CUSTOMER_OPS_ADMIN_EMAILS ?? process.env.CUSTOMER_OPS_ADMIN_EMAIL
+  const emails = configured
+    ? configured.split(',').map((value) => value.trim().toLowerCase()).filter(Boolean)
+    : DEFAULT_CUSTOMER_OPS_ADMIN_EMAILS
+  return emails.includes(email.trim().toLowerCase())
+}
+
+function getLocalDevUserEmail() {
+  return process.env.LOCAL_DEV_USER_EMAIL ?? DEFAULT_LOCAL_DEV_USER_EMAIL
+}
+
+function isIssuedDemoTenant(slug: string) {
+  return slug.startsWith('demo-')
+}
+
+async function isLocalhostRequest() {
+  try {
+    const { headers } = await import('next/headers')
+    const store = await headers()
+    const host = (store.get('x-forwarded-host') ?? store.get('host') ?? '').toLowerCase()
+    return (
+      host.startsWith('localhost:') ||
+      host === 'localhost' ||
+      host.startsWith('127.0.0.1:') ||
+      host === '127.0.0.1' ||
+      host.startsWith('[::1]:') ||
+      host === '[::1]'
+    )
+  } catch {
+    return false
+  }
 }
 
 async function fetchOrganizations(orgId?: string) {
@@ -151,6 +242,9 @@ async function fetchOrganizations(orgId?: string) {
       name: true,
       slug: true,
       plan: true,
+      lifecycleStatus: true,
+      demoExpiresAt: true,
+      contractInfo: true,
       createdAt: true,
       updatedAt: true,
       users: {
@@ -262,12 +356,15 @@ function toTenantRow({
 }): TenantRow {
   const primaryUser = org.users.find((user) => user.role === 'ADMIN') ?? org.users[0] ?? null
   const googleConnected = org.users.some((user) => Boolean(user.googleAccount))
+  const status = resolveTenantStatus(org)
+  const meta = parseTenantMeta(org.contractInfo)
   return {
     id: org.id,
     name: org.name,
     slug: org.slug,
     plan: PLAN_LABELS[org.plan],
-    status: org.slug === 'default' || org.plan !== 'FREE' ? 'active' : 'dormant',
+    status,
+    demoExpiresAt: org.demoExpiresAt?.toISOString() ?? null,
     userCount: org._count.users,
     activeUsers30d,
     companyCount: org._count.companies,
@@ -283,6 +380,8 @@ function toTenantRow({
     primaryContact: primaryUser
       ? { name: primaryUser.name || primaryUser.email, email: primaryUser.email }
       : null,
+    contractInfo: meta.items,
+    memo: meta.memo,
   }
 }
 
@@ -290,7 +389,9 @@ function sortTenantRows(tenants: TenantRow[]) {
   return [...tenants].sort((a, b) => {
     if (a.slug === 'default' && b.slug !== 'default') return -1
     if (b.slug === 'default' && a.slug !== 'default') return 1
-    return a.createdAt.localeCompare(b.createdAt)
+    const aTime = a.lastActivityAt ?? a.createdAt
+    const bTime = b.lastActivityAt ?? b.createdAt
+    return bTime.localeCompare(aTime)
   })
 }
 
@@ -302,7 +403,7 @@ function buildMetrics(tenants: TenantRow[]): CustomerOpsMetrics {
 
   return {
     totalTenants: tenants.length,
-    activeTenantCount: tenants.filter((tenant) => tenant.status === 'active').length,
+    activeTenantCount: tenants.filter((tenant) => tenant.status !== 'inactive').length,
     totalUsers: tenants.reduce((sum, tenant) => sum + tenant.userCount, 0),
     activeUsers30d: tenants.reduce((sum, tenant) => sum + tenant.activeUsers30d, 0),
     totalCompanies: tenants.reduce((sum, tenant) => sum + tenant.companyCount, 0),
@@ -311,6 +412,28 @@ function buildMetrics(tenants: TenantRow[]): CustomerOpsMetrics {
     totalActivities30d: tenants.reduce((sum, tenant) => sum + tenant.activityCount30d, 0),
     planCounts,
   }
+}
+
+function resolveTenantStatus(
+  org: Pick<OrgBase, 'slug' | 'plan' | 'lifecycleStatus' | 'demoExpiresAt'>
+) {
+  if (org.slug === 'default') return 'active'
+  if (org.lifecycleStatus === 'INACTIVE') return 'inactive'
+  if (org.lifecycleStatus === 'DEMO') {
+    return org.demoExpiresAt && org.demoExpiresAt <= new Date() ? 'inactive' : 'demo'
+  }
+  if (org.lifecycleStatus === 'FREE') return 'demo'
+  return org.plan === 'FREE' ? 'demo' : 'active'
+}
+
+async function markExpiredDemoTenantsInactive() {
+  await prisma.organization.updateMany({
+    where: {
+      lifecycleStatus: 'DEMO',
+      demoExpiresAt: { lte: new Date() },
+    },
+    data: { lifecycleStatus: 'INACTIVE' },
+  })
 }
 
 function countActiveUsersByOrg(rows: Array<{ orgId: string; userId: string }>) {

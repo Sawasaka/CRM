@@ -28,16 +28,53 @@ const DEV_USER = {
 }
 
 async function getSessionUser() {
-  if (process.env.NEXT_PUBLIC_DEV_MODE === 'true') {
-    return DEV_USER
-  }
   const { auth } = await import('@/lib/auth')
   const { redirect } = await import('next/navigation')
   const session = await auth()
-  if (!session?.user) {
-    redirect('/login?callbackUrl=/')
+  const user = session?.user
+  if (!user && process.env.NEXT_PUBLIC_DEV_MODE === 'true') {
+    return DEV_USER
   }
-  return (session as NonNullable<typeof session>).user
+  if (!user) {
+    redirect('/login?callbackUrl=/')
+    return DEV_USER
+  }
+  await ensureTenantAccess(user.id)
+  return user
+}
+
+async function ensureTenantAccess(userId?: string) {
+  if (!userId) return
+  const { prisma } = await import('@bgm/db')
+  const { redirect } = await import('next/navigation')
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      org: {
+        select: {
+          id: true,
+          slug: true,
+          lifecycleStatus: true,
+          demoExpiresAt: true,
+        },
+      },
+    },
+  })
+  const org = user?.org
+  if (!org) {
+    redirect('/login?error=TenantNotFound')
+    return
+  }
+  if (org.lifecycleStatus === 'INACTIVE') {
+    redirect('/demo/expired')
+  }
+  if (org.lifecycleStatus === 'DEMO' && org.demoExpiresAt && org.demoExpiresAt <= new Date()) {
+    await prisma.organization.updateMany({
+      where: { id: org.id, lifecycleStatus: 'DEMO' },
+      data: { lifecycleStatus: 'INACTIVE' },
+    })
+    redirect('/demo/expired')
+  }
 }
 
 export default async function AppLayout({ children }: { children: ReactNode }) {

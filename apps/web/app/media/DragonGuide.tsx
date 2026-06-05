@@ -7,7 +7,6 @@ import { createPortal } from 'react-dom'
 import type { LucideIcon } from 'lucide-react'
 import {
   ArrowRight,
-  BookOpen,
   BrainCircuit,
   CircleCheck,
   ShieldAlert,
@@ -490,24 +489,33 @@ export default function DragonGuide() {
                 はぐれ博士が、失注・上司・営業現場を図鑑化する営業エンタメメディア
               </p>
 
-              <div className="mt-6 flex flex-col gap-4 sm:flex-row">
-                <button
-                  type="button"
-                  onClick={handleOpenSalesDiagnosis}
-                  className="inline-flex h-16 items-center justify-center gap-3 rounded-lg border-2 border-[#d7ad59] bg-[#061727] px-7 text-base font-black text-[#f2cb77] shadow-[0_18px_40px_-26px_rgba(6,23,39,0.8)] transition-transform hover:-translate-y-0.5"
-                >
-                  <span className="text-2xl">竜</span>
-                  営業タイプ診断をする
-                  <ArrowRight size={20} />
-                </button>
+              <div className="mt-6 grid max-w-[620px] gap-3 sm:grid-cols-2">
                 <a
                   href="#dragons"
-                  className="inline-flex h-16 items-center justify-center gap-3 rounded-lg border-2 border-[#061727]/25 bg-white/80 px-7 text-base font-black text-[#07111a] transition-colors hover:bg-white"
+                  className="group rounded-lg border-2 border-[#d7ad59] bg-[#061727] p-3 text-[#f2cb77] shadow-[0_18px_40px_-26px_rgba(6,23,39,0.8)] transition-transform hover:-translate-y-0.5"
                 >
-                  <BookOpen size={22} />
-                  図鑑を見る
-                  <ArrowRight size={18} />
+                  <span className="flex h-9 items-center gap-3 text-base font-black">
+                    <span className="text-2xl">竜</span>
+                    営業ドラゴン図鑑を見る
+                    <ArrowRight size={18} className="ml-auto transition-transform group-hover:translate-x-1" />
+                  </span>
+                  <span className="mt-1 block pl-9 text-xs font-black leading-5 text-[#fff3d8]/75">
+                    組織に潜む竜を観測
+                  </span>
                 </a>
+                <Link
+                  href="/media?view=psychology"
+                  className="group rounded-lg border-2 border-[#d7ad59]/45 bg-[linear-gradient(135deg,#102b42_0%,#071927_58%,#2b2417_100%)] p-3 text-[#fff3d8] shadow-[0_18px_44px_-28px_rgba(6,23,39,0.9)] transition-transform hover:-translate-y-0.5 hover:border-[#f2cb77]/80"
+                >
+                  <span className="flex h-9 items-center gap-3 text-base font-black">
+                    <Sparkles size={22} className="text-[#f2cb77]" />
+                    営業武器庫を見る
+                    <ArrowRight size={18} className="ml-auto transition-transform group-hover:translate-x-1" />
+                  </span>
+                  <span className="mt-1 block pl-9 text-xs font-black leading-5 text-[#f7e2aa]/70">
+                    商談で使う攻略カード
+                  </span>
+                </Link>
               </div>
             </div>
 

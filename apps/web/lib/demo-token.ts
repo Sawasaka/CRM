@@ -9,7 +9,7 @@ const SECRET =
   process.env.DEMO_ACCESS_SECRET ?? 'dev-only-fallback-please-set-DEMO_ACCESS_SECRET-in-prod'
 
 export const DEMO_CREDITS_DEFAULT = 100
-export const DEMO_TOKEN_TTL_MS = 30 * 60 * 1000 // 30分
+export const DEMO_TOKEN_TTL_MS = 15 * 60 * 1000 // 15分
 
 export interface DemoClaims {
   sessionId: string

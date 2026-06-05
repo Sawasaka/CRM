@@ -10,9 +10,9 @@ import Link from 'next/link'
 import { operatorProfilePath } from '@/lib/public-site'
 
 export const Footer = () => (
-  <footer id="contact" className="relative bg-[#0e0e10] scroll-mt-24">
-    <div className="mx-auto max-w-6xl px-6 py-16">
-      <div className="grid md:grid-cols-12 gap-10 md:gap-12 items-start">
+  <footer id="contact" className="relative bg-[#0e0e10] scroll-mt-24 overflow-x-hidden">
+    <div className="mx-auto max-w-6xl px-4 sm:px-6 py-12 sm:py-16">
+      <div className="grid md:grid-cols-12 gap-8 md:gap-12 items-start">
         {/* 左: ブランド + プロフィール */}
         <div className="md:col-span-5 md:sticky md:top-24 space-y-6">
           {/* ブランド */}
@@ -101,24 +101,28 @@ export const Footer = () => (
               className="absolute right-8 top-5 h-[76px] w-[76px] rounded-full border border-white/10 object-cover shadow-[0_12px_28px_rgba(0,0,0,0.26)] sm:right-9 md:h-[88px] md:w-[88px]"
             />
 
-            <ul className="space-y-2 text-[11.5px]">
-              <li className="flex items-baseline gap-3">
-                <span className="text-[10px] uppercase tracking-[0.08em] text-[#7e7c83] w-[110px] shrink-0">
+            <ul className="space-y-3 sm:space-y-2 text-[11.5px]">
+              <li className="flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-3">
+                <span className="text-[10px] uppercase tracking-[0.08em] text-[#7e7c83] sm:w-[110px] sm:shrink-0">
                   Sales Executive
                 </span>
-                <span className="text-[#c7c5c9] whitespace-nowrap">外資 SaaS 日本法人 立ち上げ (正社員 1 人目)</span>
+                <span className="text-[#c7c5c9] whitespace-nowrap leading-snug">
+                  外資 SaaS 日本法人 立ち上げ (正社員 1 人目)
+                </span>
               </li>
-              <li className="flex items-baseline gap-3">
-                <span className="text-[10px] uppercase tracking-[0.08em] text-[#7e7c83] w-[110px] shrink-0">
+              <li className="flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-3">
+                <span className="text-[10px] uppercase tracking-[0.08em] text-[#7e7c83] sm:w-[110px] sm:shrink-0">
                   執行役員 CRO
                 </span>
-                <span className="text-[#c7c5c9] whitespace-nowrap">IT スタートアップ 立ち上げ (正社員 1 人目)</span>
+                <span className="text-[#c7c5c9] whitespace-nowrap leading-snug">
+                  IT スタートアップ 立ち上げ (正社員 1 人目)
+                </span>
               </li>
-              <li className="flex items-baseline gap-3">
-                <span className="text-[10px] uppercase tracking-[0.08em] text-[#7e7c83] w-[110px] shrink-0">
+              <li className="flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-3">
+                <span className="text-[10px] uppercase tracking-[0.08em] text-[#7e7c83] sm:w-[110px] sm:shrink-0">
                   キャリア
                 </span>
-                <span className="text-[#9b99a0] whitespace-nowrap">
+                <span className="text-[#9b99a0] whitespace-nowrap leading-snug">
                   エンジニア → IT 法人営業 → DX / AIX 業務コンサルティング
                 </span>
               </li>

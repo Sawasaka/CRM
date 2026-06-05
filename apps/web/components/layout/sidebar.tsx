@@ -419,8 +419,8 @@ const USER_MENU_SECTIONS: MenuSection[] = [
   },
 ]
 
-// ルキスマCRM テナント (開発者) のみに表示する管理者メニュー
-// 本番では NEXT_PUBLIC_BGM_TENANT_ID とログイン中テナントの一致でガード
+// 管理者メニューはサーバー側の access API で判定する。
+// localhost / 本番ともに開発者テナントのみ許可。
 const ADMIN_MENU_SECTION: MenuSection = {
   title: '開発者専用',
   items: [
@@ -433,17 +433,24 @@ function useIsBGMTenant(): boolean {
 
   useEffect(() => {
     let mounted = true
-    fetch('/api/admin/customer-ops/access', { cache: 'no-store' })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data: { allowed?: boolean } | null) => {
-        if (mounted) setAllowed(Boolean(data?.allowed))
-      })
-      .catch(() => {
-        if (mounted) setAllowed(false)
-      })
+    const refreshAccess = () => {
+      fetch('/api/admin/customer-ops/access', { cache: 'no-store' })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data: { allowed?: boolean } | null) => {
+          if (mounted) setAllowed(Boolean(data?.allowed))
+        })
+        .catch(() => {
+          if (mounted) setAllowed(false)
+        })
+    }
+    refreshAccess()
+    window.addEventListener('focus', refreshAccess)
+    document.addEventListener('visibilitychange', refreshAccess)
 
     return () => {
       mounted = false
+      window.removeEventListener('focus', refreshAccess)
+      document.removeEventListener('visibilitychange', refreshAccess)
     }
   }, [])
 

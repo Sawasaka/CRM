@@ -81,7 +81,8 @@ export function TenantDetailClient({ tenant }: { tenant: TenantDetail }) {
               onClick={() => setTab(opt.key)}
               className="px-4 h-9 rounded-[calc(var(--radius-obs-md)-2px)] text-[12.5px] font-medium transition-colors"
               style={{
-                backgroundColor: tab === opt.key ? 'var(--color-obs-surface-highest)' : 'transparent',
+                backgroundColor:
+                  tab === opt.key ? 'var(--color-obs-surface-highest)' : 'transparent',
                 color: tab === opt.key ? 'var(--color-obs-text)' : 'var(--color-obs-text-muted)',
               }}
             >
@@ -138,8 +139,18 @@ function OverviewTab({ tenant }: { tenant: TenantDetail }) {
           <DefRow label="slug" value={tenant.slug} />
           <DefRow label="作成日" value={formatDateTime(tenant.createdAt)} />
           <DefRow label="最終活動" value={formatDateTime(tenant.lastActivityAt)} />
-          <DefRow label="主担当者" value={tenant.primaryContact ? `${tenant.primaryContact.name} (${tenant.primaryContact.email})` : '-'} />
-          <DefRow label="ステータス" value={tenant.status === 'active' ? 'アクティブ' : '休眠'} />
+          <DefRow
+            label="主担当者"
+            value={
+              tenant.primaryContact
+                ? `${tenant.primaryContact.name} (${tenant.primaryContact.email})`
+                : '-'
+            }
+          />
+          <DefRow label="ステータス" value={STATUS_LABELS[tenant.status]} />
+          {tenant.demoExpiresAt && (
+            <DefRow label="デモ期限" value={formatDateTime(tenant.demoExpiresAt)} />
+          )}
           <DefRow label="コンタクト" value={`${tenant.contactCount.toLocaleString()} 件`} />
           <DefRow label="ナレッジ" value={`${tenant.knowledgeCount.toLocaleString()} 件`} />
         </dl>
@@ -179,7 +190,10 @@ function UsersTab({ tenant }: { tenant: TenantDetail }) {
         <span>作成日</span>
       </div>
       {tenant.users.length === 0 ? (
-        <p className="text-[12.5px] text-center py-8 px-5" style={{ color: 'var(--color-obs-text-muted)' }}>
+        <p
+          className="text-[12.5px] text-center py-8 px-5"
+          style={{ color: 'var(--color-obs-text-muted)' }}
+        >
           ユーザーが登録されていません。
         </p>
       ) : (
@@ -196,10 +210,14 @@ function UsersTab({ tenant }: { tenant: TenantDetail }) {
               {user.email}
             </span>
             <span style={{ color: 'var(--color-obs-text)' }}>{user.role}</span>
-            <span style={{ color: user.googleConnected ? '#4BC88C' : 'var(--color-obs-text-subtle)' }}>
+            <span
+              style={{ color: user.googleConnected ? '#4BC88C' : 'var(--color-obs-text-subtle)' }}
+            >
               {user.googleConnected ? '連携済み' : '未連携'}
             </span>
-            <span style={{ color: 'var(--color-obs-text-subtle)' }}>{formatDate(user.createdAt)}</span>
+            <span style={{ color: 'var(--color-obs-text-subtle)' }}>
+              {formatDate(user.createdAt)}
+            </span>
           </div>
         ))
       )}
@@ -211,10 +229,29 @@ function ActivityTab({ tenant }: { tenant: TenantDetail }) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <InfoStat label="総活動" value={tenant.activityCount.toLocaleString()} icon={Activity} accent="#FF8A65" />
-        <InfoStat label="30日活動" value={tenant.activityCount30d.toLocaleString()} icon={Activity} accent="#50C8FF" />
-        <InfoStat label="30日Active" value={`${tenant.activeUsers30d.toLocaleString()} 名`} icon={Users} />
-        <InfoStat label="最終活動" value={formatDate(tenant.lastActivityAt)} icon={MessageCircle} accent="#4BC88C" />
+        <InfoStat
+          label="総活動"
+          value={tenant.activityCount.toLocaleString()}
+          icon={Activity}
+          accent="#FF8A65"
+        />
+        <InfoStat
+          label="30日活動"
+          value={tenant.activityCount30d.toLocaleString()}
+          icon={Activity}
+          accent="#50C8FF"
+        />
+        <InfoStat
+          label="30日Active"
+          value={`${tenant.activeUsers30d.toLocaleString()} 名`}
+          icon={Users}
+        />
+        <InfoStat
+          label="最終活動"
+          value={formatDate(tenant.lastActivityAt)}
+          icon={MessageCircle}
+          accent="#4BC88C"
+        />
       </div>
 
       <ObsCard depth="high" padding="none" radius="xl" className="overflow-hidden">
@@ -224,7 +261,10 @@ function ActivityTab({ tenant }: { tenant: TenantDetail }) {
           </p>
         </div>
         {tenant.recentActivities.length === 0 ? (
-          <p className="text-[12.5px] text-center py-8 px-5" style={{ color: 'var(--color-obs-text-muted)' }}>
+          <p
+            className="text-[12.5px] text-center py-8 px-5"
+            style={{ color: 'var(--color-obs-text-muted)' }}
+          >
             まだ活動履歴がありません。
           </p>
         ) : (
@@ -256,7 +296,10 @@ function ActivityTab({ tenant }: { tenant: TenantDetail }) {
                   {activity.title}
                 </p>
               </div>
-              <p className="text-[10.5px] whitespace-nowrap pt-1" style={{ color: 'var(--color-obs-text-subtle)' }}>
+              <p
+                className="text-[10.5px] whitespace-nowrap pt-1"
+                style={{ color: 'var(--color-obs-text-subtle)' }}
+              >
                 {formatDateTime(activity.occurredAt)}
               </p>
             </div>
@@ -331,9 +374,7 @@ function IntegrationStat({ label, connected }: { label: string; connected: boole
       <div
         className="w-8 h-8 rounded-[var(--radius-obs-sm)] flex items-center justify-center"
         style={{
-          backgroundColor: connected
-            ? 'rgba(75,200,140,0.14)'
-            : 'var(--color-obs-surface-highest)',
+          backgroundColor: connected ? 'rgba(75,200,140,0.14)' : 'var(--color-obs-surface-highest)',
         }}
       >
         <Plug size={13} style={{ color: connected ? '#4BC88C' : 'var(--color-obs-text-subtle)' }} />
@@ -371,4 +412,9 @@ function formatDateTime(value: string | null) {
     hour: '2-digit',
     minute: '2-digit',
   })
+}
+const STATUS_LABELS: Record<TenantDetail['status'], string> = {
+  active: '有料',
+  demo: 'デモ',
+  inactive: '非アクティブ',
 }

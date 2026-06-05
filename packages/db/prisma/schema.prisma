@@ -14,12 +14,16 @@ datasource db {
 // ORGANIZATION（テナント）
 // ============================
 model Organization {
-  id        String   @id @default(cuid())
-  name      String
-  slug      String   @unique
-  plan      Plan     @default(FREE)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String                @id @default(cuid())
+  name            String
+  slug            String                @unique
+  plan            Plan                  @default(FREE)
+  lifecycleStatus TenantLifecycleStatus @default(ACTIVE)
+  demoExpiresAt   DateTime?
+  // 契約情報: 企業ごとに自由な項目を持てる [{ label, value }] の配列 (非破壊・NULL許容)
+  contractInfo    Json?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
 
   users                User[]
   companies            Company[]
@@ -44,6 +48,13 @@ enum Plan {
   STARTER
   GROWTH
   ENTERPRISE
+}
+
+enum TenantLifecycleStatus {
+  ACTIVE
+  FREE
+  DEMO
+  INACTIVE
 }
 
 // ============================

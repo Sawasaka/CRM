@@ -5,6 +5,7 @@
 
 import Link from 'next/link'
 import { ArrowRight, ShieldAlert, Sparkles } from 'lucide-react'
+import { prisma } from '@bgm/db'
 import { verifyDemoToken } from '@/lib/demo-token'
 import { DemoApp } from './_components/DemoApp'
 import { DemoShell } from './_components/DemoShell'
@@ -17,6 +18,20 @@ export default async function DemoAppPage({
   const { t } = await searchParams
   const claims = await verifyDemoToken(t)
   if (!claims) return <ExpiredPage />
+  if (claims.tenantSlug) {
+    const org = await prisma.organization.findUnique({
+      where: { slug: claims.tenantSlug },
+      select: { lifecycleStatus: true, demoExpiresAt: true },
+    })
+    if (!org || org.lifecycleStatus === 'INACTIVE') return <ExpiredPage />
+    if (org.lifecycleStatus === 'DEMO' && org.demoExpiresAt && org.demoExpiresAt <= new Date()) {
+      await prisma.organization.updateMany({
+        where: { slug: claims.tenantSlug, lifecycleStatus: 'DEMO' },
+        data: { lifecycleStatus: 'INACTIVE' },
+      })
+      return <ExpiredPage />
+    }
+  }
   return (
     <DemoShell claims={claims}>
       <DemoApp claims={claims} />
@@ -41,7 +56,7 @@ function ExpiredPage() {
           デモリンクの期限が切れています
         </h1>
         <p className="mt-3 text-[13px] text-[#9b99a0] leading-relaxed">
-          デモアクセスURLは発行から30分間のみ有効です。
+          デモアクセスURLは発行から15分間のみ有効です。
           <br />
           お手数ですが、トップページから再度発行してください。
         </p>
