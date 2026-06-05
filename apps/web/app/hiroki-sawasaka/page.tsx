@@ -5,6 +5,7 @@ import {
   companyName,
   operatorName,
   operatorNameWithSpace,
+  operatorPersonId,
   operatorProfilePath,
   operatorProfileUrl,
   operatorRomanName,
@@ -55,13 +56,14 @@ export const metadata: Metadata = {
 const profileJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Person',
-  '@id': `${operatorProfileUrl}#person`,
+  '@id': operatorPersonId,
   name: operatorName,
   alternateName: [operatorNameWithSpace, operatorRomanName],
   url: operatorProfileUrl,
   image: `${publicSiteUrl}/founder-icon.png`,
   jobTitle: `${companyName}代表 / ${serviceName} 営業実行・CRM構築支援`,
   description,
+  mainEntityOfPage: operatorProfileUrl,
   worksFor: {
     '@type': 'Organization',
     '@id': `${publicSiteUrl}/#organization`,
@@ -77,6 +79,42 @@ const profileJsonLd = {
   knowsAbout: ['営業実行', 'CRM構築', 'チャットCRM', '企業データベース', '部署直通番号'],
 }
 
+const profilePageJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'ProfilePage',
+  '@id': `${operatorProfileUrl}#profile-page`,
+  name: title,
+  url: operatorProfileUrl,
+  description,
+  inLanguage: 'ja-JP',
+  isPartOf: {
+    '@id': `${publicSiteUrl}/#website`,
+  },
+  about: {
+    '@id': operatorPersonId,
+  },
+  mainEntity: {
+    '@id': operatorPersonId,
+  },
+  breadcrumb: {
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: serviceName,
+        item: publicSiteUrl,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: operatorName,
+        item: operatorProfileUrl,
+      },
+    ],
+  },
+}
+
 const careerItems = [
   ['Sales Executive', '外資 SaaS 日本法人 立ち上げ (正社員 1 人目)'],
   ['執行役員 CRO', 'IT スタートアップ 立ち上げ (正社員 1 人目)'],
@@ -88,7 +126,7 @@ export default function HirokiSawasakaPage() {
     <main className="min-h-screen bg-obsidian text-[#e7e5ea]">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(profileJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify([profileJsonLd, profilePageJsonLd]) }}
       />
 
       <section className="relative overflow-hidden">

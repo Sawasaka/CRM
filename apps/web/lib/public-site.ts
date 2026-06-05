@@ -22,6 +22,7 @@ export const operatorNameWithSpace = '沢坂 弘樹'
 export const operatorRomanName = 'Hiroki Sawasaka'
 export const operatorProfilePath = '/hiroki-sawasaka'
 export const operatorProfileUrl = `${publicSiteUrl}${operatorProfilePath}`
+export const operatorPersonId = `${operatorProfileUrl}#person`
 
 export const publicSiteTitle = `【公式】${serviceName}｜${companyName}`
 
@@ -89,21 +90,22 @@ export const publicSiteStructuredData = [
     logo: `${publicSiteUrl}/icon.svg`,
     sameAs: [publicSiteUrl],
     founder: {
-      '@id': `${publicSiteUrl}/#person-hirokisawasaka`,
+      '@id': operatorPersonId,
     },
     member: {
-      '@id': `${publicSiteUrl}/#person-hirokisawasaka`,
+      '@id': operatorPersonId,
     },
   },
   {
     '@context': 'https://schema.org',
     '@type': 'Person',
-    '@id': `${publicSiteUrl}/#person-hirokisawasaka`,
+    '@id': operatorPersonId,
     name: operatorName,
     alternateName: [operatorNameWithSpace, operatorRomanName],
     jobTitle: `代表 / ${serviceName} 営業実行・CRM構築支援`,
     description: `${operatorName}は、${companyName}の代表として、${serviceName}の営業実行とCRM構築を支援しています。`,
     url: operatorProfileUrl,
+    mainEntityOfPage: operatorProfileUrl,
     worksFor: {
       '@id': `${publicSiteUrl}/#organization`,
     },
@@ -161,7 +163,7 @@ export const publicSiteStructuredData = [
       '@id': `${publicSiteUrl}/#software`,
     },
     author: {
-      '@id': `${publicSiteUrl}/#person-hirokisawasaka`,
+      '@id': operatorPersonId,
     },
     primaryImageOfPage: `${publicSiteUrl}/icon.svg`,
   },
