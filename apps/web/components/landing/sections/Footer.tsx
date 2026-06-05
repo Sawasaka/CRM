@@ -148,6 +148,9 @@ export const Footer = () => (
           © 2026 <span className="fo-gradient-text font-semibold">ルキスマCRM</span>
         </div>
         <div className="flex flex-wrap gap-x-5 gap-y-2">
+          <Link href="/media" className="hover:text-aurora transition-colors">
+            メディア
+          </Link>
           <Link href="/legal/terms" className="hover:text-aurora transition-colors">
             利用規約
           </Link>
