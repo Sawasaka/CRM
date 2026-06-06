@@ -55,6 +55,7 @@ export default function AppHub({
         setView('home')
       }
     }
+    sync()
     window.addEventListener('popstate', sync)
     return () => window.removeEventListener('popstate', sync)
   }, [])

@@ -21,16 +21,10 @@ export const metadata: Metadata = {
   },
 }
 
-export default async function MediaHubPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ view?: string }>
-}) {
-  const { view } = await searchParams
-  const initialView = view === 'psychology' ? 'psychology' : 'dragon'
+export default function MediaHubPage() {
   return (
     <AppHub
-      initialView={initialView}
+      initialView="dragon"
       home={<HomeView />}
       dragon={<DragonGuide />}
       psychology={<SalesPsychologyGuide />}
