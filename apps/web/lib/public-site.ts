@@ -20,6 +20,8 @@ export const serviceName = 'ルキスマCRM'
 export const operatorName = '沢坂弘樹'
 export const operatorNameWithSpace = '沢坂 弘樹'
 export const operatorRomanName = 'Hiroki Sawasaka'
+export const companyProfilePath = '/company'
+export const companyProfileUrl = `${publicSiteUrl}${companyProfilePath}`
 export const operatorProfilePath = '/hiroki-sawasaka'
 export const operatorProfileUrl = `${publicSiteUrl}${operatorProfilePath}`
 export const operatorPersonId = `${operatorProfileUrl}#person`
@@ -68,6 +70,11 @@ export const publicSiteFaqItems = [
       `${companyName}は、営業データから次の営業アクションを引き出す${serviceName}を提供しています。`,
   },
   {
+    question: '株式会社ルーキースマートジャパンの代表は誰ですか？',
+    answer:
+      `${companyName}の代表は${operatorName}です。${operatorName}が${serviceName}の営業実行とCRM構築を支援しています。`,
+  },
+  {
     question: '沢坂弘樹とルキスマCRMの関係は何ですか？',
     answer:
       `${operatorName}は、${companyName}の代表として、${serviceName}の営業実行とCRM構築を支援しています。`,
@@ -85,15 +92,23 @@ export const publicSiteStructuredData = [
     '@type': 'Organization',
     '@id': `${publicSiteUrl}/#organization`,
     name: companyName,
+    legalName: companyName,
     alternateName: ['RookieSmart Japan', 'RookieSmart', 'ルーキースマートジャパン'],
-    url: publicSiteUrl,
+    url: companyProfileUrl,
     logo: `${publicSiteUrl}/icon.svg`,
-    sameAs: [publicSiteUrl],
+    sameAs: [publicSiteUrl, companyProfileUrl],
+    mainEntityOfPage: companyProfileUrl,
     founder: {
+      '@id': operatorPersonId,
+    },
+    employee: {
       '@id': operatorPersonId,
     },
     member: {
       '@id': operatorPersonId,
+    },
+    brand: {
+      '@id': `${publicSiteUrl}/#software`,
     },
   },
   {

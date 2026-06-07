@@ -7,7 +7,7 @@
 import { ContactForm } from './ContactForm'
 import Image from 'next/image'
 import Link from 'next/link'
-import { operatorProfilePath } from '@/lib/public-site'
+import { companyProfilePath, operatorProfilePath } from '@/lib/public-site'
 
 export const Footer = () => (
   <footer id="contact" className="relative bg-[#0e0e10] scroll-mt-24 overflow-x-hidden">
@@ -49,7 +49,9 @@ export const Footer = () => (
               <span className="text-[10px] uppercase tracking-[0.10em] text-[#7e7c83] w-10 shrink-0">
                 提供
               </span>
-              <span className="text-[#c7c5c9]">株式会社ルーキースマートジャパン</span>
+              <Link href={companyProfilePath} className="text-[#c7c5c9] hover:text-aurora transition-colors">
+                株式会社ルーキースマートジャパン
+              </Link>
             </div>
             <div className="flex items-baseline gap-2">
               <span className="text-[10px] uppercase tracking-[0.10em] text-[#7e7c83] w-10 shrink-0">
@@ -154,6 +156,12 @@ export const Footer = () => (
         <div className="flex flex-wrap gap-x-5 gap-y-2">
           <Link href="/media" className="hover:text-aurora transition-colors">
             メディア
+          </Link>
+          <Link href={companyProfilePath} className="hover:text-aurora transition-colors">
+            会社情報
+          </Link>
+          <Link href={operatorProfilePath} className="hover:text-aurora transition-colors">
+            沢坂弘樹
           </Link>
           <Link href="/legal/terms" className="hover:text-aurora transition-colors">
             利用規約

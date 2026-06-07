@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next'
-import { operatorProfileUrl, publicSiteUrl } from '@/lib/public-site'
+import { companyProfileUrl, operatorProfileUrl, publicSiteUrl } from '@/lib/public-site'
 import { legalDocuments } from './legal/_content'
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -22,6 +22,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.85,
+    },
+    {
+      url: companyProfileUrl,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.9,
     },
     {
       url: `${publicSiteUrl}/media`,

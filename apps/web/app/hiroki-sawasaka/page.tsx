@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import {
   companyName,
+  companyProfilePath,
   operatorName,
   operatorNameWithSpace,
   operatorPersonId,
@@ -13,8 +14,8 @@ import {
   serviceName,
 } from '@/lib/public-site'
 
-const title = `${operatorName}｜${companyName}代表`
-const description = `${operatorName}は、${companyName}の代表として、${serviceName}の営業実行とCRM構築を支援しています。`
+const title = `${operatorName}｜${companyName}代表・${serviceName}`
+const description = `${operatorName}は、${companyName}代表として、${serviceName}の営業実行とCRM構築を支援しています。外資SaaS日本法人立ち上げ、ITスタートアップCROを経験。`
 
 export const metadata: Metadata = {
   metadataBase: new URL(publicSiteUrl),
@@ -154,8 +155,22 @@ export default function HirokiSawasakaPage() {
                 沢坂弘樹
               </h1>
               <p className="mt-5 max-w-2xl text-base leading-8 text-[#c7c5c9] md:text-lg">
-                株式会社ルーキースマートジャパン代表。営業実行とCRM構築を同時に支援します。
+                株式会社ルーキースマートジャパン代表。ルキスマCRMの営業実行とCRM構築を同時に支援します。
               </p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Link
+                  href={companyProfilePath}
+                  className="inline-flex rounded-full border border-white/15 px-5 py-2 text-sm font-semibold text-[#e7e5ea] transition-colors hover:border-aurora/60 hover:text-aurora"
+                >
+                  株式会社ルーキースマートジャパンを見る
+                </Link>
+                <Link
+                  href="/"
+                  className="inline-flex rounded-full bg-aurora px-5 py-2 text-sm font-semibold text-[#07101f] transition-transform hover:-translate-y-0.5"
+                >
+                  ルキスマCRMを見る
+                </Link>
+              </div>
             </div>
 
             <Image
@@ -174,7 +189,9 @@ export default function HirokiSawasakaPage() {
         <div className="grid gap-6 md:grid-cols-3">
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
             <p className="text-[10px] uppercase tracking-[0.14em] text-[#7e7c83]">会社</p>
-            <p className="mt-2 text-sm font-semibold">{companyName}</p>
+            <Link href={companyProfilePath} className="mt-2 block text-sm font-semibold hover:text-aurora">
+              {companyName}
+            </Link>
           </div>
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
             <p className="text-[10px] uppercase tracking-[0.14em] text-[#7e7c83]">サービス</p>
