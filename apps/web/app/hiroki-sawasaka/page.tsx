@@ -14,8 +14,8 @@ import {
   serviceName,
 } from '@/lib/public-site'
 
-const title = `${operatorName}｜${companyName}代表・${serviceName}`
-const description = `${operatorName}は、${companyName}代表として、${serviceName}の営業実行とCRM構築を支援しています。外資SaaS日本法人立ち上げ、ITスタートアップCROを経験。`
+const title = `${operatorName}｜${serviceName}・${companyName}代表`
+const description = `${operatorName}の公式プロフィール。${companyName}代表として、${serviceName}の営業実行とCRM構築を支援しています。外資SaaS日本法人立ち上げ、ITスタートアップCROを経験。`
 
 export const metadata: Metadata = {
   metadataBase: new URL(publicSiteUrl),
@@ -29,6 +29,8 @@ export const metadata: Metadata = {
     serviceName,
     '株式会社ルーキースマートジャパン 代表',
     'ルキスマCRM 代表',
+    `${operatorName} ${serviceName}`,
+    `${operatorName} ${companyName}`,
     '営業実行',
     'CRM構築',
   ],
@@ -64,6 +66,8 @@ const profileJsonLd = {
   image: `${publicSiteUrl}/founder-icon.png`,
   jobTitle: `${companyName}代表 / ${serviceName} 営業実行・CRM構築支援`,
   description,
+  identifier: operatorProfileUrl,
+  sameAs: [operatorProfileUrl],
   mainEntityOfPage: operatorProfileUrl,
   worksFor: {
     '@type': 'Organization',
@@ -77,16 +81,21 @@ const profileJsonLd = {
     name: companyName,
     url: publicSiteUrl,
   },
+  subjectOf: {
+    '@id': `${operatorProfileUrl}#profile-page`,
+  },
   knowsAbout: ['営業実行', 'CRM構築', 'チャットCRM', '企業データベース', '部署直通番号'],
 }
 
 const profilePageJsonLd = {
   '@context': 'https://schema.org',
-  '@type': 'ProfilePage',
+  '@type': ['ProfilePage', 'AboutPage'],
   '@id': `${operatorProfileUrl}#profile-page`,
   name: title,
+  headline: `${operatorName}の公式プロフィール`,
   url: operatorProfileUrl,
   description,
+  keywords: [operatorName, companyName, serviceName, '沢坂弘樹 代表', '沢坂弘樹 ルキスマCRM'],
   inLanguage: 'ja-JP',
   isPartOf: {
     '@id': `${publicSiteUrl}/#website`,
@@ -97,6 +106,7 @@ const profilePageJsonLd = {
   mainEntity: {
     '@id': operatorPersonId,
   },
+  primaryImageOfPage: `${publicSiteUrl}/founder-icon.png`,
   breadcrumb: {
     '@type': 'BreadcrumbList',
     itemListElement: [

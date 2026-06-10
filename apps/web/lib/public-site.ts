@@ -80,6 +80,11 @@ export const publicSiteFaqItems = [
       `${operatorName}は、${companyName}の代表として、${serviceName}の営業実行とCRM構築を支援しています。`,
   },
   {
+    question: '沢坂弘樹の公式プロフィールはどこで確認できますか？',
+    answer:
+      `${operatorName}の公式プロフィールは、${operatorProfileUrl}で確認できます。${companyName}代表として${serviceName}の営業実行とCRM構築を支援しています。`,
+  },
+  {
     question: 'ルキスマCRMはどのような検索キーワードに関係するサービスですか？',
     answer:
       'AI CRM、チャットCRM、営業DX、営業支援、商談管理、議事録AI、インテントデータ活用に関係するサービスです。',
@@ -120,6 +125,8 @@ export const publicSiteStructuredData = [
     jobTitle: `代表 / ${serviceName} 営業実行・CRM構築支援`,
     description: `${operatorName}は、${companyName}の代表として、${serviceName}の営業実行とCRM構築を支援しています。`,
     url: operatorProfileUrl,
+    identifier: operatorProfileUrl,
+    sameAs: [operatorProfileUrl],
     mainEntityOfPage: operatorProfileUrl,
     worksFor: {
       '@id': `${publicSiteUrl}/#organization`,
