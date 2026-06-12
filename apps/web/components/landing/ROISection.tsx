@@ -25,14 +25,14 @@ type Row = { t: string; s: string; v: string; isTotal?: boolean }
 
 const others: Row[] = [
   { t: 'HubSpot / Salesforce', s: 'CRM ／ 3,000円 × 30名',          v: '90,000円' },
-  { t: 'SalesNow',             s: '企業DB ／ 月額固定費',             v: '200,000円' },
+  { t: 'SalesNow',             s: '企業DB',                         v: '200,000円' },
   { t: '合計',                  s: '',                                v: '290,000円', isTotal: true },
 ]
 
 const inhouse: Row[] = [
-  { t: 'インフラ・API', s: 'AWS S3 ／ 企業DB (+200,000) ／ LLM (Gemini / GPT)', v: '500,000円' },
-  { t: '開発費',        s: '開発者 1 名 × 1 人月',                              v: '500,000円' },
-  { t: '合計',          s: '',                                                v: '1,000,000円', isTotal: true },
+  { t: 'インフラ・API', s: 'AWS S3 ／ 企業DB ／ LLM API 利用料',         v: '300,000円' },
+  { t: '開発費',        s: '開発者 1 名 × 1 人月',                  v: '500,000円' },
+  { t: '合計',          s: '',                                    v: '800,000円', isTotal: true },
 ]
 
 const ComparisonCard = ({
@@ -158,12 +158,12 @@ export const ROISection = () => {
           <ComparisonCard
             eyebrow="VS 他社サービス"
             rows={others}
-            pitch="使う分だけ。"
+            pitch="使うクレジット分だけ。"
           />
           <ComparisonCard
             eyebrow="VS 自社開発"
             rows={inhouse}
-            pitch="使う分だけ。"
+            pitch="使うクレジット分だけ。"
           />
         </div>
 

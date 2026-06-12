@@ -1,27 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
 import { prisma, TicketStatus } from '@bgm/db'
+import { getCurrentAppContext } from '@/lib/demo-master'
+import { getDemoTicketsForApi } from '@/lib/demo-crm-data'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
-
-async function getSessionContext() {
-  const session = await auth()
-  let userId = (session as unknown as { userId?: string })?.userId ?? null
-  if (!userId && process.env.NEXT_PUBLIC_DEV_MODE === 'true') {
-    const firstUser = await prisma.user.findFirst({
-      orderBy: { createdAt: 'asc' },
-      select: { id: true },
-    })
-    userId = firstUser?.id ?? null
-  }
-  if (!userId) return null
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { id: true, orgId: true, role: true },
-  })
-  return user
-}
 
 const VALID_STATUS = ['OPEN', 'PENDING', 'SOLVED', 'CLOSED'] as const
 const ticketListSelect = {
@@ -64,8 +47,8 @@ function canUseDevSchemaFallback(error: unknown) {
 }
 
 export async function GET(req: NextRequest) {
-  const me = await getSessionContext()
-  if (!me) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+  const context = await getCurrentAppContext({ allowDevFallback: true })
+  if (!context) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
 
   const sp = req.nextUrl.searchParams
   const statusParam = sp.get('status') ?? undefined
@@ -74,7 +57,7 @@ export async function GET(req: NextRequest) {
   const assigneeUserId = sp.get('assigneeUserId') ?? undefined
   const q = sp.get('q')?.trim() ?? ''
 
-  const where: Record<string, unknown> = { orgId: me.orgId }
+  const where: Record<string, unknown> = { orgId: context.appOrgId }
   if (statusParam && (VALID_STATUS as readonly string[]).includes(statusParam)) {
     where.status = statusParam as TicketStatus
   }
@@ -119,12 +102,29 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  if (context.isDemo && tickets.length === 0) {
+    const demoTickets = getDemoTicketsForApi().filter((ticket) => {
+      if (statusParam && statusParam !== ticket.status) return false
+      if (companyId && ticket.company?.id !== companyId) return false
+      if (dealId && ticket.deal?.id !== dealId) return false
+      if (assigneeUserId && ticket.assignee?.id !== assigneeUserId) return false
+      if (!q) return true
+      const needle = q.toLowerCase()
+      return (
+        ticket.subject.toLowerCase().includes(needle) ||
+        (ticket.deal?.name ?? '').toLowerCase().includes(needle) ||
+        (ticket.company?.name ?? '').toLowerCase().includes(needle)
+      )
+    })
+    return NextResponse.json({ tickets: demoTickets })
+  }
+
   return NextResponse.json({ tickets })
 }
 
 export async function POST(req: NextRequest) {
-  const me = await getSessionContext()
-  if (!me) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+  const context = await getCurrentAppContext({ allowDevFallback: true })
+  if (!context) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
 
   const body = await req.json().catch(() => null)
   if (!body || typeof body.subject !== 'string' || !body.subject.trim()) {
@@ -139,7 +139,7 @@ export async function POST(req: NextRequest) {
   // 採番: 組織内で最大の ticketNumber + 1
   const ticket = await prisma.$transaction(async (tx) => {
     const last = await tx.ticket.findFirst({
-      where: { orgId: me.orgId },
+      where: { orgId: context.userOrgId },
       orderBy: { ticketNumber: 'desc' },
       select: { ticketNumber: true },
     })
@@ -151,7 +151,7 @@ export async function POST(req: NextRequest) {
     let contactId: string | null = body.contactId ? String(body.contactId) : null
     if (dealId) {
       const deal = await tx.deal.findFirst({
-        where: { id: dealId, orgId: me.orgId },
+        where: { id: dealId, orgId: context.userOrgId },
         select: { id: true, companyId: true, contactId: true },
       })
       if (!deal) {
@@ -164,7 +164,7 @@ export async function POST(req: NextRequest) {
 
     return tx.ticket.create({
       data: {
-        orgId: me.orgId,
+        orgId: context.userOrgId,
         ticketNumber: nextNumber,
         subject: String(body.subject).trim(),
         description: body.description ? String(body.description) : null,
@@ -174,7 +174,7 @@ export async function POST(req: NextRequest) {
         dealId,
         companyId,
         contactId,
-        assigneeUserId: body.assigneeUserId ? String(body.assigneeUserId) : me.id,
+        assigneeUserId: body.assigneeUserId ? String(body.assigneeUserId) : context.userId,
         estimatedCompletionAt: body.estimatedCompletionAt
           ? new Date(String(body.estimatedCompletionAt))
           : null,

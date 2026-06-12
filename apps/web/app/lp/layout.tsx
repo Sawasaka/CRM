@@ -40,6 +40,14 @@ export const metadata: Metadata = {
         google: googleSiteVerification,
       }
     : undefined,
+  icons: {
+    icon: [
+      { url: '/icon.svg?v=unified-service-favicon-20260611', type: 'image/svg+xml' },
+      { url: '/favicon.ico?v=unified-service-favicon-20260611', sizes: '32x32' },
+    ],
+    shortcut: '/icon.svg?v=unified-service-favicon-20260611',
+    apple: '/icon.svg?v=unified-service-favicon-20260611',
+  },
 }
 
 export default function MarketingLayout({ children }: { children: ReactNode }) {

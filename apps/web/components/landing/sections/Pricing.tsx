@@ -33,7 +33,7 @@ const partnershipTiers: PartnershipTier[] = [
   {
     id: 'business-director',
     name: '営業責任者',
-    price: 350000,
+    price: 300000,
     slotsTotal: 1,
     slotsRemaining: 1,
     icon: Crown,
@@ -90,7 +90,7 @@ const partnershipTiers: PartnershipTier[] = [
     // Vivid emerald (#10B981) — IS 設計から引き継いだ緑系
     id: 'is-strategy',
     name: 'IS 設計',
-    price: 100000,
+    price: 150000,
     slotsTotal: 3,
     slotsRemaining: 3,
     icon: Sparkles,
@@ -141,7 +141,7 @@ const agentFeats: { key: AgentKey; items: string[] }[] = [
 // セルフサーブ CRM 単独プラン
 // 年間プランは月額から30%OFF。表示は月額換算。
 interface SelfServePlan {
-  id: 'standard' | 'plus'
+  id: 'standard' | 'plus' | 'pro'
   name: string
   credits: number // 月間クレジット (チーム合計)
   monthly: number // 月額プラン: 月額
@@ -151,12 +151,14 @@ interface SelfServePlan {
   perks: string[] // 戦略MTG / サポート など
 }
 
+// 3:4:6 比率で構成。Standard(3) : Plus(4) : Pro(6)
+// Standard ¥29,000 を 3 として固定、基準単位 ≒ ¥9,667 / 年間プラン表示
 const selfServePlans: SelfServePlan[] = [
   {
     id: 'standard',
     name: 'Standard',
     credits: 10000,
-    monthly: 41000,
+    monthly: 41000, // 29,000 / 0.7 ≈ 41,428 → 41,000 に丸め
     annualMonthly: 29000,
     maxSeats: 30,
     perks: ['Slack チャットサポート'],
@@ -164,12 +166,21 @@ const selfServePlans: SelfServePlan[] = [
   {
     id: 'plus',
     name: 'Plus',
-    credits: 30000,
-    monthly: 78000, // 55,000 / 0.7 ≈ 78,571 → 78,000 に丸め
-    annualMonthly: 55000,
+    credits: 15000,
+    monthly: 56000, // 39,000 / 0.7 ≈ 55,714 → 56,000 に丸め
+    annualMonthly: 39000,
     maxSeats: 100,
     featured: true,
     perks: ['Slack チャットサポート'],
+  },
+  {
+    id: 'pro',
+    name: 'Pro',
+    credits: 30000,
+    monthly: 83000, // 58,000 / 0.7 ≈ 82,857 → 83,000 に丸め
+    annualMonthly: 58000,
+    maxSeats: 300,
+    perks: ['Slack チャットサポート', '専属サクセス担当'],
   },
 ]
 
@@ -472,7 +483,7 @@ function SelfServeBlock() {
       </div>
 
       {/* Plan cards */}
-      <div className="grid md:grid-cols-2 gap-5">
+      <div className="grid md:grid-cols-3 gap-5">
         {selfServePlans.map((p) => {
           const displayPrice = billing === 'annual' ? p.annualMonthly : p.monthly
           return (
@@ -521,10 +532,11 @@ function SelfServeBlock() {
                   )}
                 </div>
 
-                {/* Agents + Credits chip */}
-                <div className="mt-5 flex items-center gap-2 flex-wrap">
-                  <span
-                    className="inline-flex items-center gap-2.5 rounded-full pl-2.5 pr-4 py-1.5 transition-all duration-200 hover:-translate-y-[1px]"
+                {/* Agents + Credits — 2 行スタックでカード幅に依存しない構成 */}
+                <div className="mt-5 space-y-2">
+                  {/* Row 1: 5 エージェント */}
+                  <div
+                    className="inline-flex items-center gap-2 rounded-full pl-2 pr-3 py-1 transition-all duration-200"
                     style={
                       p.featured
                         ? {
@@ -539,53 +551,32 @@ function SelfServeBlock() {
                           }
                     }
                   >
-                    {/* 5 agent orbs */}
                     <span className="inline-flex items-center -space-x-1.5">
                       {(Object.keys(AGENTS) as AgentKey[]).map((k) => (
-                        <Orb key={k} color={AGENTS[k].color} size={11} glow={0.6} />
+                        <Orb key={k} color={AGENTS[k].color} size={10} glow={0.6} />
                       ))}
                     </span>
                     <span
-                      className="text-[11.5px] font-semibold leading-none"
+                      className="text-[11.5px] font-semibold leading-none whitespace-nowrap"
                       style={{ color: p.featured ? '#e7e5ea' : '#c7c5c9' }}
                     >
                       5 エージェント
                     </span>
-                    <span
-                      className="text-[10.5px] leading-none"
-                      style={{ color: '#7e7c83' }}
-                    >
-                      ・
-                    </span>
-                    <span className="font-display text-[15.5px] font-bold tabular-nums fo-gradient-text-soft leading-none">
+                  </div>
+
+                  {/* Row 2: クレジット (大きい数字 + 単位) */}
+                  <div className="flex items-baseline gap-2">
+                    <span className="font-display text-[20px] font-bold tabular-nums fo-gradient-text-soft leading-none">
                       {p.credits.toLocaleString()}
                     </span>
                     <span
-                      className="text-[11px] leading-none"
+                      className="text-[11px] leading-none whitespace-nowrap"
                       style={{ color: p.featured ? '#cfdcff' : '#9b99a0' }}
                     >
-                      チームクレジット
+                      チームクレジット / 月
                     </span>
-                  </span>
+                  </div>
                 </div>
-
-                {/* Perks (戦略 MTG / サポート) */}
-                <ul className="mt-4 space-y-1.5">
-                  {p.perks.map((perk) => (
-                    <li
-                      key={perk}
-                      className="flex items-center gap-2 text-[12px] leading-snug"
-                      style={{ color: p.featured ? '#cfdcff' : '#c7c5c9' }}
-                    >
-                      <Check
-                        size={12}
-                        strokeWidth={2.6}
-                        style={{ color: p.featured ? '#abc7ff' : '#9b99a0' }}
-                      />
-                      {perk}
-                    </li>
-                  ))}
-                </ul>
 
                 {/* CTA */}
                 <a
@@ -704,7 +695,7 @@ function SelfServeBlock() {
             <div className="min-w-0">
               <span className="text-[#e7e5ea] font-semibold">企業データベース</span>
               <span className="mx-2 text-[#7e7c83]">·</span>
-              <span className="text-[#9b99a0]">部署番号 + 採用動向 + 採用予算</span>
+              <span className="text-[#9b99a0]">部署番号 + 採用予算</span>
             </div>
           </div>
           <div className="flex items-baseline gap-2 text-[12px] min-w-0">
@@ -742,7 +733,8 @@ function SelfServeBlock() {
           <div className="space-y-2">
             {[
               { name: 'Standard', cr: '10,000', count: '500', accent: '#abc7ff' },
-              { name: 'Plus', cr: '30,000', count: '1,500', accent: '#FFC107' },
+              { name: 'Plus', cr: '15,000', count: '750', accent: '#FFC107' },
+              { name: 'Pro', cr: '30,000', count: '1,500', accent: '#10B981' },
             ].map((p) => (
               <div
                 key={p.name}
@@ -797,8 +789,9 @@ function SelfServeBlock() {
           {/* RIGHT: 単価 */}
           <div className="space-y-2">
             {[
-              { label: '議事録 1 件取込', cr: '5 cr', sub: 'Meet / Notion から' },
-              { label: 'チャット 1 回答', cr: '1〜3 cr', sub: '質問の深さで変動' },
+              { label: '議事録 1 件取込', cr: '5 cr', sub: '' },
+              { label: 'チャット 1 回答', cr: '1〜3 cr', sub: '' },
+              { label: '企業リサーチ 1 件', cr: '5〜15 cr', sub: '' },
             ].map((u) => (
               <div
                 key={u.label}

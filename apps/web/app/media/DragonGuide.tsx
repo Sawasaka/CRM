@@ -233,7 +233,7 @@ const bossTypes: ProfileType[] = [
   {
     category: '上司タイプ診断',
     species: '管理竜',
-    name: 'キッチリ',
+    name: 'マネージャー',
     headline: '上司タイプが「管理竜」',
     copy: '計画と精度で組織を守る、安定運用型の上司。',
     type: '守備型',

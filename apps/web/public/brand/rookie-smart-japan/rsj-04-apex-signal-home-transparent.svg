@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1600" height="540" viewBox="0 0 1600 540" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>株式会社ルーキースマートジャパン Apex Signal transparent homepage banner</title>
+  <desc>背景透過版。ホームページやヒーロー上に重ねて使うための横長ロゴ。</desc>
+  <defs>
+    <linearGradient id="text-04-apex-signal-home-transparent" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0" stop-color="#f4f7ff"/>
+      <stop offset="0.58" stop-color="#b9d3ff"/>
+      <stop offset="1" stop-color="#4d9cff"/>
+    </linearGradient>
+    <linearGradient id="mark-04-apex-signal-home-transparent" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#edf5ff"/>
+      <stop offset="0.48" stop-color="#b9d3ff"/>
+      <stop offset="1" stop-color="#4d9cff"/>
+    </linearGradient>
+    <radialGradient id="glow-04-apex-signal-home-transparent" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#4d9cff" stop-opacity="0.42"/>
+      <stop offset="1" stop-color="#4d9cff" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft-04-apex-signal-home-transparent" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="10"/>
+    </filter>
+    <filter id="shadow-04-apex-signal-home-transparent" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#000" flood-opacity="0.34"/>
+    </filter>
+  </defs>
+  <g filter="url(#shadow-04-apex-signal-home-transparent)">
+    <rect x="188" y="172" width="156" height="156" rx="34.32" fill="#151a22" stroke="rgba(185,211,255,0.34)"/>
+    <circle cx="266" cy="250" r="65.52" fill="url(#glow-04-apex-signal-home-transparent)" filter="url(#soft-04-apex-signal-home-transparent)"/>
+    <path d="M 225.44 274.96 L 266 211 L 307.25 274.96" fill="none" stroke="url(#mark-04-apex-signal-home-transparent)" stroke-width="11.7" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M 241.04 274.96 L 266 241.36 L 290.96 274.96" fill="none" stroke="#f8fbff" stroke-width="6.24" stroke-linecap="round" stroke-linejoin="round" opacity="0.92"/>
+  </g>
+  <text x="390" y="206" fill="#9fbfff" font-size="16" font-weight="850" letter-spacing="5.4" font-family="'Inter','Plus Jakarta Sans',sans-serif">ROOKIE SMART JAPAN</text>
+  <text x="390" y="282" fill="url(#text-04-apex-signal-home-transparent)" font-size="64" font-weight="900" letter-spacing="0" font-family="'Hiragino Sans','Yu Gothic UI','Inter',sans-serif">株式会社ルーキースマートジャパン</text>
+  <text x="392" y="330" fill="#9aa4b5" font-size="20" font-weight="700" letter-spacing="3.4" font-family="'Inter','Plus Jakarta Sans',sans-serif">ENTERPRISE AI CRM</text>
+  <path d="M 390 360 H 1020" stroke="url(#mark-04-apex-signal-home-transparent)" stroke-width="2" stroke-linecap="round" opacity="0.75"/>
+  <text x="392" y="398" fill="#c4ccdb" font-size="17" font-weight="600" font-family="'Hiragino Sans','Yu Gothic UI','Inter',sans-serif">上場SaaSのような直線的で強いシグナル感</text>
+</svg>

@@ -1,26 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
 import { prisma } from '@bgm/db'
+import { getCurrentAppContext } from '@/lib/demo-master'
+import { getDemoTasksForApi } from '@/lib/demo-crm-data'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
-
-async function getSessionContext() {
-  const session = await auth()
-  let userId = (session as unknown as { userId?: string })?.userId ?? null
-  if (!userId && process.env.NEXT_PUBLIC_DEV_MODE === 'true') {
-    const firstUser = await prisma.user.findFirst({
-      orderBy: { createdAt: 'asc' },
-      select: { id: true },
-    })
-    userId = firstUser?.id ?? null
-  }
-  if (!userId) return null
-  return prisma.user.findUnique({
-    where: { id: userId },
-    select: { id: true, orgId: true },
-  })
-}
 
 function toUiTaskType(type: string) {
   switch (type) {
@@ -45,8 +29,8 @@ function toRank(rank?: string | null) {
 }
 
 export async function GET(req: NextRequest) {
-  const me = await getSessionContext()
-  if (!me) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+  const context = await getCurrentAppContext({ allowDevFallback: true })
+  if (!context) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
 
   const sp = req.nextUrl.searchParams
   const scope = sp.get('scope')
@@ -56,7 +40,7 @@ export async function GET(req: NextRequest) {
   const tomorrowStart = new Date(todayStart)
   tomorrowStart.setDate(tomorrowStart.getDate() + 1)
 
-  const where: Record<string, unknown> = { orgId: me.orgId }
+  const where: Record<string, unknown> = { orgId: context.appOrgId }
   if (scope === 'today') {
     where.dueAt = { gte: todayStart, lt: tomorrowStart }
   } else if (scope === 'overdue') {
@@ -93,6 +77,10 @@ export async function GET(req: NextRequest) {
       },
     },
   })
+
+  if (context.isDemo && tasks.length === 0) {
+    return NextResponse.json({ tasks: getDemoTasksForApi(scope) })
+  }
 
   return NextResponse.json({
     tasks: tasks.map((task) => {

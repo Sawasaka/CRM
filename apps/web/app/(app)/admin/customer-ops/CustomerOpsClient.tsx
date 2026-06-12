@@ -11,6 +11,11 @@ import type {
   TenantRow,
   TenantStatus,
 } from '@/lib/admin/customer-ops-types'
+import {
+  getDemoOpenUrl,
+  getPaidJoinUrl,
+  getTenantEnvironmentUrl,
+} from '@/lib/public-url'
 
 // 開発者用テナント一覧 (最小機能版 / 精緻UI)
 // - 行クリックで該当テナントの本環境を新規タブで開く
@@ -25,6 +30,11 @@ export function CustomerOpsClient({
   const router = useRouter()
   const [tenants, setTenants] = useState<TenantRow[]>(() => sortTenantsDefaultFirst(initialTenants))
   const [editingTenant, setEditingTenant] = useState<TenantRow | null>(null)
+  const masterTenants = tenants.filter(isMasterTenantRow)
+  const productionTenants = tenants.filter(
+    (tenant) => !isMasterTenantRow(tenant) && !isDemoTenantRow(tenant)
+  )
+  const demoTenants = tenants.filter(isDemoTenantRow)
 
   useEffect(() => {
     setTenants(sortTenantsDefaultFirst(initialTenants))
@@ -127,10 +137,28 @@ export function CustomerOpsClient({
             </div>
           </ObsCard>
         ) : (
-          <div className="space-y-3">
-            {tenants.map((t) => (
-              <TenantRowItem key={t.id} tenant={t} onEdit={() => setEditingTenant(t)} />
-            ))}
+          <div className="space-y-8">
+            <TenantSection
+              title="Default / マスター環境"
+              caption="開発・機能修正の基準になる環境です。顧客本番やデモとは分けて管理します。"
+              tenants={masterTenants}
+              emptyText="マスター環境はまだありません。"
+              onEdit={setEditingTenant}
+            />
+            <TenantSection
+              title="本番環境 / 顧客テナント"
+              caption="有料顧客が使う実データ環境です。デモ用ダミーデータとは分けて管理します。"
+              tenants={productionTenants}
+              emptyText="本番顧客テナントはまだありません。"
+              onEdit={setEditingTenant}
+            />
+            <TenantSection
+              title="無料デモテナント"
+              caption="15分など期限付きで共有するデモ環境です。登録リンクと直接入室リンクを分けて管理します。"
+              tenants={demoTenants}
+              emptyText="発行済みのデモテナントはまだありません。"
+              onEdit={setEditingTenant}
+            />
           </div>
         )}
       </div>
@@ -143,6 +171,70 @@ export function CustomerOpsClient({
         onDeleted={handleDeleted}
       />
     </ObsPageShell>
+  )
+}
+
+function TenantSection({
+  title,
+  caption,
+  tenants,
+  emptyText,
+  onEdit,
+}: {
+  title: string
+  caption: string
+  tenants: TenantRow[]
+  emptyText: string
+  onEdit: (tenant: TenantRow) => void
+}) {
+  return (
+    <section className="space-y-3">
+      <div className="flex items-end justify-between gap-4">
+        <div>
+          <h2
+            className="font-[family-name:var(--font-display)] text-[18px] font-semibold tracking-normal"
+            style={{ color: 'var(--color-obs-text)' }}
+          >
+            {title}
+          </h2>
+          <p
+            className="mt-1 max-w-2xl text-[12.5px] leading-relaxed"
+            style={{ color: 'var(--color-obs-text-muted)' }}
+          >
+            {caption}
+          </p>
+        </div>
+        <span
+          className="shrink-0 rounded-full px-3 py-1.5 text-[11px] font-semibold"
+          style={{
+            color: 'var(--color-obs-text-subtle)',
+            background: 'rgba(255,255,255,0.04)',
+            boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.07)',
+          }}
+        >
+          {tenants.length} 件
+        </span>
+      </div>
+
+      {tenants.length > 0 ? (
+        <div className="space-y-3">
+          {tenants.map((tenant) => (
+            <TenantRowItem key={tenant.id} tenant={tenant} onEdit={() => onEdit(tenant)} />
+          ))}
+        </div>
+      ) : (
+        <div
+          className="rounded-[18px] px-5 py-5 text-[12.5px]"
+          style={{
+            color: 'var(--color-obs-text-muted)',
+            background: 'rgba(255,255,255,0.025)',
+            boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.05)',
+          }}
+        >
+          {emptyText}
+        </div>
+      )}
+    </section>
   )
 }
 
@@ -173,6 +265,19 @@ function buildEmptyTenant(): TenantRow {
   }
 }
 
+function isDemoTenantRow(tenant: TenantRow) {
+  return (
+    tenant.status === 'demo' ||
+    tenant.plan === 'Free' ||
+    tenant.slug.startsWith('demo-') ||
+    tenant.demoExpiresAt !== null
+  )
+}
+
+function isMasterTenantRow(tenant: TenantRow) {
+  return tenant.slug === 'default'
+}
+
 function sortTenantsDefaultFirst(tenants: TenantRow[]) {
   return [...tenants].sort((a, b) => {
     if (a.slug === 'default' && b.slug !== 'default') return -1
@@ -187,7 +292,7 @@ function sortTenantsDefaultFirst(tenants: TenantRow[]) {
 
 function TenantRowItem({ tenant, onEdit }: { tenant: TenantRow; onEdit: () => void }) {
   const [hover, setHover] = useState(false)
-  const tenantUrl = buildTenantEnvironmentUrl(tenant.slug)
+  const tenantUrl = getTenantEnvironmentUrl(tenant.slug)
   const canOpenTenant = tenant.status !== 'inactive'
   return (
     <div
@@ -336,18 +441,12 @@ function TenantRowItem({ tenant, onEdit }: { tenant: TenantRow; onEdit: () => vo
   )
 }
 
-function buildTenantEnvironmentUrl(slug: string) {
-  const previewSlug =
-    process.env.NEXT_PUBLIC_DEFAULT_TENANT_PREVIEW_SLUG?.trim() || 'test'
-  return `/?tenant=${encodeURIComponent(slug === 'default' ? previewSlug : slug)}`
-}
-
 // ─── Status chip ─────────────────────────────────────────────────────────────
 
 type ContractStatus = TenantStatus
 
 const STATUS_META: Record<TenantStatus, { label: string; color: string; bg: string }> = {
-  active: { label: 'Active', color: '#5CDEA6', bg: 'rgba(75,200,140,0.12)' },
+  active: { label: '本番', color: '#5CDEA6', bg: 'rgba(75,200,140,0.12)' },
   demo: { label: 'Demo', color: '#FFC107', bg: 'rgba(255,193,7,0.12)' },
   inactive: { label: 'Inactive', color: '#9b99a0', bg: 'rgba(255,255,255,0.05)' },
 }
@@ -394,12 +493,33 @@ function formatDateTime(iso: string): string {
   }
 }
 
+function toDateTimeLocalValue(iso: string | null): string {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  const local = new Date(d.getTime() - d.getTimezoneOffset() * 60_000)
+  return local.toISOString().slice(0, 16)
+}
+
+function toDateTimeLocalFromNow(minutes: number): string {
+  const d = new Date(Date.now() + minutes * 60_000)
+  const local = new Date(d.getTime() - d.getTimezoneOffset() * 60_000)
+  return local.toISOString().slice(0, 16)
+}
+
+function fromDateTimeLocalValue(value: string): string | null {
+  if (!value) return null
+  const d = new Date(value)
+  return Number.isNaN(d.getTime()) ? null : d.toISOString()
+}
+
 // ─── Tenant edit modal (中央モーダル・画面遷移なし) ─────────────────────────
 
 type TenantDraft = {
   name: string
   slug: string
   status: ContractStatus
+  demoExpiresAt: string
   memo: string
   contractInfo: ContractItem[]
 }
@@ -422,47 +542,57 @@ function TenantEditDrawer({
     isDemoTenant && !isNew
       ? [{ value: 'demo', label: 'Demo' }]
       : [
-          { value: 'active', label: 'Active' },
+          { value: 'active', label: '本番' },
           { value: 'demo', label: 'Demo' },
         ]
   const [draft, setDraft] = useState<TenantDraft>({
     name: '',
     slug: '',
     status: 'active',
+    demoExpiresAt: '',
     memo: '',
     contractInfo: [],
   })
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [deleteArmed, setDeleteArmed] = useState(false)
-  const [copied, setCopied] = useState(false)
+  const [copiedKey, setCopiedKey] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const isDemoStatus = draft.status === 'demo'
   const isPaidStatus = draft.status === 'active'
-  const shareUrl = draft.slug
-    ? isDemoStatus
-      ? buildDemoAccessUrl(draft.slug)
-      : isPaidStatus
-        ? buildPaidJoinUrl(draft.slug)
-        : ''
-    : ''
+  const directDemoUrl = draft.slug && isDemoStatus ? getDemoOpenUrl(draft.slug) : ''
+  const paidJoinUrl = draft.slug && isPaidStatus ? getPaidJoinUrl(draft.slug) : ''
 
   // 開く度に draft を tenant の値で初期化
   useEffect(() => {
     if (tenant) {
+      // 本番 (active) かつ契約情報が空の場合は、入力欄を1行デフォルト表示する
+      const initialContract = tenant.contractInfo ?? []
+      const seededContract =
+        tenant.status === 'active' && initialContract.length === 0
+          ? [{ label: '有料', value: '' }]
+          : initialContract
       setDraft({
         name: tenant.name,
         slug: tenant.slug,
         status: tenant.status,
+        demoExpiresAt: toDateTimeLocalValue(tenant.demoExpiresAt),
         memo: tenant.memo ?? '',
-        contractInfo: tenant.contractInfo ?? [],
+        contractInfo: seededContract,
       })
-      setCopied(false)
+      setCopiedKey(null)
       setDeleteArmed(false)
       setError(null)
     }
   }, [tenant])
+
+  // 状態を「本番」に切り替えた瞬間にも、契約情報が空なら1行デフォルト表示する
+  useEffect(() => {
+    if (draft.status === 'active' && draft.contractInfo.length === 0) {
+      setDraft((d) => ({ ...d, contractInfo: [{ label: '有料', value: '' }] }))
+    }
+  }, [draft.status, draft.contractInfo.length])
 
   // Esc で閉じる
   useEffect(() => {
@@ -499,13 +629,16 @@ function TenantEditDrawer({
         .map((item) => ({ label: item.label.trim(), value: item.value.trim() }))
         .filter((item) => item.label !== '' || item.value !== '')
       const payload = {
+        id: tenant.id || undefined,
         name: draft.name.trim(),
         slug: draft.slug.trim(),
         status: draft.status,
+        demoExpiresAt:
+          draft.status === 'demo' ? fromDateTimeLocalValue(draft.demoExpiresAt) : null,
         contractInfo: cleanedContract,
         memo: draft.memo.trim(),
       }
-      const res = await fetch(isNew ? '/api/admin/tenants' : `/api/admin/tenants/${tenant.id}`, {
+      const res = await fetch('/api/admin/tenants', {
         method: isNew ? 'POST' : 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -526,7 +659,8 @@ function TenantEditDrawer({
         name: payload.name,
         slug: payload.slug,
         status: payload.status,
-        demoExpiresAt: json.demoExpiresAt ?? tenant.demoExpiresAt ?? null,
+        demoExpiresAt:
+          (json.demoExpiresAt as string | null | undefined) ?? payload.demoExpiresAt ?? null,
         createdAt: tenant.id ? tenant.createdAt : new Date().toISOString(),
         contractInfo: (json.contractInfo as ContractItem[] | undefined) ?? cleanedContract,
         memo: (json.memo as string | undefined) ?? payload.memo,
@@ -549,7 +683,9 @@ function TenantEditDrawer({
     setDeleting(true)
     setError(null)
     try {
-      const res = await fetch(`/api/admin/tenants/${tenant.id}`, { method: 'DELETE' })
+      const res = await fetch(`/api/admin/tenants?id=${encodeURIComponent(tenant.id)}`, {
+        method: 'DELETE',
+      })
       const json = await res.json().catch(() => ({}))
       if (!res.ok) {
         const message =
@@ -566,22 +702,22 @@ function TenantEditDrawer({
     }
   }
 
-  const handleCopy = async () => {
-    if (!shareUrl) return
+  const handleCopy = async (url: string, key: string) => {
+    if (!url) return
     try {
-      await navigator.clipboard.writeText(shareUrl)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      await navigator.clipboard.writeText(url)
+      setCopiedKey(key)
+      setTimeout(() => setCopiedKey(null), 2000)
     } catch {
       // クリップボード書き込み失敗時のフォールバック
       const ta = document.createElement('textarea')
-      ta.value = shareUrl
+      ta.value = url
       document.body.appendChild(ta)
       ta.select()
       document.execCommand('copy')
       document.body.removeChild(ta)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      setCopiedKey(key)
+      setTimeout(() => setCopiedKey(null), 2000)
     }
   }
 
@@ -733,12 +869,30 @@ function TenantEditDrawer({
               </div>
 
               <div className="grid grid-cols-2 gap-4 items-start">
-                <Field label="状態">
-                  <SegmentSelect
-                    options={statusOptions}
-                    value={draft.status}
-                    onChange={(v) => setDraft({ ...draft, status: v as ContractStatus })}
-                  />
+                <Field label="状態" hint={isNew ? '作成時のみ選択可' : '登録後は変更不可'}>
+                  {isNew ? (
+                    // 新規作成時のみ 本番/DEMO を選べる
+                    <SegmentSelect
+                      options={statusOptions}
+                      value={draft.status}
+                      onChange={(v) => {
+                        const nextStatus = v as ContractStatus
+                        setDraft({
+                          ...draft,
+                          status: nextStatus,
+                          demoExpiresAt:
+                            nextStatus === 'demo' && !draft.demoExpiresAt
+                              ? toDateTimeLocalFromNow(15)
+                              : draft.demoExpiresAt,
+                        })
+                      }}
+                    />
+                  ) : (
+                    // 既存テナントは状態を変更できない（読み取り専用表示）
+                    <div className="flex items-center gap-2 h-9">
+                      <StatusChip status={draft.status} />
+                    </div>
+                  )}
                   {isDemoTenant && !isNew && (
                     <p className="mt-2 text-[11px] leading-relaxed" style={{ color: 'var(--color-obs-text-muted)' }}>
                       有料化する場合は、このデモを変換せず新しい有料テナントを発行します。
@@ -761,6 +915,50 @@ function TenantEditDrawer({
                   />
                 </Field>
               </div>
+
+              {isDemoStatus && (
+                <Field label="有効期限" hint="共有リンク / デモ操作期限">
+                  <div className="space-y-2">
+                    <input
+                      type="datetime-local"
+                      value={draft.demoExpiresAt}
+                      onChange={(e) => setDraft({ ...draft, demoExpiresAt: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-[var(--radius-obs-md)] text-[13px] bg-transparent border-0 outline-none"
+                      style={{
+                        color: 'var(--color-obs-text)',
+                        background: 'rgba(255,255,255,0.03)',
+                        boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.06)',
+                      }}
+                    />
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { label: '15分後', minutes: 15 },
+                        { label: '30分後', minutes: 30 },
+                        { label: '1時間後', minutes: 60 },
+                      ].map((option) => (
+                        <button
+                          key={option.minutes}
+                          type="button"
+                          onClick={() =>
+                            setDraft({
+                              ...draft,
+                              demoExpiresAt: toDateTimeLocalFromNow(option.minutes),
+                            })
+                          }
+                          className="px-3 py-1.5 rounded-[var(--radius-obs-sm)] text-[11.5px] font-semibold transition-colors"
+                          style={{
+                            color: 'var(--color-obs-text-subtle)',
+                            background: 'rgba(255,255,255,0.04)',
+                            boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.06)',
+                          }}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </Field>
+              )}
 
               {/* 契約情報 (企業ごとに自由な項目を追加できる) */}
               <ContractEditor
@@ -864,7 +1062,10 @@ function TenantEditDrawer({
                         }}
                       >
                         <MetaRow label="会社名" value={tenant.name} />
-                        <MetaRow label="氏名" value={tenant.primaryContact.name} />
+                        <MetaRow
+                          label="氏名"
+                          value={isDefaultTenant ? 'デフォルト' : tenant.primaryContact.name}
+                        />
                         <MetaRow label="メール" value={tenant.primaryContact.email} />
                       </div>
                     ) : (
@@ -883,78 +1084,42 @@ function TenantEditDrawer({
                 </div>
               )}
 
-              {(isDemoStatus || isPaidStatus) && (
-                <div>
-                  <div className="flex items-baseline justify-between mb-1.5">
-                    <label
-                      className="text-[10.5px] font-semibold uppercase tracking-[0.12em] inline-flex items-center gap-1.5"
-                      style={{ color: 'var(--color-obs-text-subtle)' }}
-                    >
-                      <Link2 size={11} />
-                      {isDemoStatus ? 'デモ登録リンク' : '有料登録リンク'}
-                    </label>
-                    <span className="text-[10px]" style={{ color: 'var(--color-obs-text-muted)' }}>
-                      {isDemoStatus ? '15分デモ発行用' : 'Google登録用'}
-                    </span>
-                  </div>
-
-                  <div
-                    className="rounded-[var(--radius-obs-md)] p-[1px] relative"
-                    style={{
-                      background:
-                        'linear-gradient(135deg, rgba(171,199,255,0.35) 0%, rgba(0,113,227,0.18) 50%, rgba(171,199,255,0.06) 100%)',
-                    }}
+              {isDemoStatus && (
+                <div className="space-y-3">
+                  <LinkCopyBox
+                    title="共有リンク"
+                    caption={
+                      draft.demoExpiresAt
+                        ? `${formatDateTime(fromDateTimeLocalValue(draft.demoExpiresAt) ?? '')} まで`
+                        : '15分デモ用'
+                    }
+                    url={directDemoUrl}
+                    copied={copiedKey === 'direct-demo'}
+                    onCopy={() => handleCopy(directDemoUrl, 'direct-demo')}
+                  />
+                  <p
+                    className="text-[11px] -mt-1 leading-relaxed"
+                    style={{ color: 'var(--color-obs-text-muted)' }}
                   >
-                    <div
-                      className="rounded-[calc(var(--radius-obs-md)-1px)] p-3 flex items-center gap-2.5"
-                      style={{
-                        background:
-                          'linear-gradient(180deg, rgba(18,18,22,0.96) 0%, rgba(14,14,18,0.98) 100%)',
-                      }}
-                    >
-                      <div
-                        className="flex-1 min-w-0 text-[12px] font-mono truncate"
-                        style={{ color: 'var(--color-obs-text)' }}
-                        title={shareUrl}
-                      >
-                        {shareUrl || 'slug を入力するとリンクが生成されます'}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={handleCopy}
-                        disabled={!shareUrl}
-                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-[var(--radius-obs-md)] text-[12px] font-semibold shrink-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                        style={{
-                          background: copied
-                            ? 'linear-gradient(135deg, rgba(75,200,140,0.30) 0%, rgba(75,200,140,0.12) 100%)'
-                            : 'linear-gradient(135deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
-                          color: copied ? '#5CDEA6' : 'var(--color-obs-on-primary)',
-                          boxShadow: copied
-                            ? 'inset 0 0 0 1px rgba(75,200,140,0.40)'
-                            : '0 4px 12px -4px rgba(171,199,255,0.42), inset 1px 1px 0 rgba(255,255,255,0.18)',
-                        }}
-                      >
-                        {copied ? (
-                          <>
-                            <Check size={12} strokeWidth={2.6} />
-                            コピー済み
-                          </>
-                        ) : (
-                          <>
-                            <Copy size={12} strokeWidth={2.4} />
-                            コピー
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
+                    お客様に共有するリンクです。Google登録なしで、そのままこのデモテナントのサービス画面へ入ります。
+                  </p>
+                </div>
+              )}
+
+              {isPaidStatus && (
+                <div>
+                  <LinkCopyBox
+                    title="ログイン共有リンク"
+                    caption="Google登録用"
+                    url={paidJoinUrl}
+                    copied={copiedKey === 'paid'}
+                    onCopy={() => handleCopy(paidJoinUrl, 'paid')}
+                  />
                   <p
                     className="text-[11px] mt-2 leading-relaxed"
                     style={{ color: 'var(--color-obs-text-muted)' }}
                   >
-                    {isDemoStatus
-                      ? 'デモ発行用のリンクです。相手が会社名 / 氏名 / メール入力を完了すると、15分有効のデモ環境が発行されます。'
-                      : '有料登録リンクです。相手はGoogle登録から期限なしの本番環境へ入ります。デモ用のダミーデータは使いません。'}
+                    ログイン共有リンクです。相手はGoogle登録から期限なしの本番環境へ入ります。デモ用のダミーデータは使いません。
                   </p>
                 </div>
               )}
@@ -1028,23 +1193,89 @@ function TenantEditDrawer({
   )
 }
 
-function buildDemoAccessUrl(slug: string): string {
-  const origin =
-    typeof window !== 'undefined' && window.location?.origin
-      ? window.location.origin
-      : 'https://crm.rookiesmart-jp.com'
-  return `${origin}/demo/access?tenant=${slug}`
-}
-
-function buildPaidJoinUrl(slug: string): string {
-  const origin =
-    typeof window !== 'undefined' && window.location?.origin
-      ? window.location.origin
-      : 'https://crm.rookiesmart-jp.com'
-  return `${origin}/join/${slug}`
-}
-
 // ─── Drawer 内部 helpers ─────────────────────────────────────────────────────
+
+function LinkCopyBox({
+  title,
+  caption,
+  url,
+  copied,
+  onCopy,
+}: {
+  title: string
+  caption: string
+  url: string
+  copied: boolean
+  onCopy: () => void
+}) {
+  return (
+    <div>
+      <div className="flex items-baseline justify-between mb-1.5">
+        <label
+          className="text-[10.5px] font-semibold uppercase tracking-[0.12em] inline-flex items-center gap-1.5"
+          style={{ color: 'var(--color-obs-text-subtle)' }}
+        >
+          <Link2 size={11} />
+          {title}
+        </label>
+        <span className="text-[10px]" style={{ color: 'var(--color-obs-text-muted)' }}>
+          {caption}
+        </span>
+      </div>
+
+      <div
+        className="rounded-[var(--radius-obs-md)] p-[1px] relative"
+        style={{
+          background:
+            'linear-gradient(135deg, rgba(171,199,255,0.35) 0%, rgba(0,113,227,0.18) 50%, rgba(171,199,255,0.06) 100%)',
+        }}
+      >
+        <div
+          className="rounded-[calc(var(--radius-obs-md)-1px)] p-3 flex items-center gap-2.5"
+          style={{
+            background:
+              'linear-gradient(180deg, rgba(18,18,22,0.96) 0%, rgba(14,14,18,0.98) 100%)',
+          }}
+        >
+          <div
+            className="flex-1 min-w-0 text-[12px] font-mono truncate"
+            style={{ color: 'var(--color-obs-text)' }}
+            title={url}
+          >
+            {url || 'slug を入力するとリンクが生成されます'}
+          </div>
+          <button
+            type="button"
+            onClick={onCopy}
+            disabled={!url}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-[var(--radius-obs-md)] text-[12px] font-semibold shrink-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{
+              background: copied
+                ? 'linear-gradient(135deg, rgba(75,200,140,0.30) 0%, rgba(75,200,140,0.12) 100%)'
+                : 'linear-gradient(135deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
+              color: copied ? '#5CDEA6' : 'var(--color-obs-on-primary)',
+              boxShadow: copied
+                ? 'inset 0 0 0 1px rgba(75,200,140,0.40)'
+                : '0 4px 12px -4px rgba(171,199,255,0.42), inset 1px 1px 0 rgba(255,255,255,0.18)',
+            }}
+          >
+            {copied ? (
+              <>
+                <Check size={12} strokeWidth={2.6} />
+                コピー済み
+              </>
+            ) : (
+              <>
+                <Copy size={12} strokeWidth={2.4} />
+                コピー
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 function Field({
   label,
@@ -1179,14 +1410,10 @@ function ContractEditor({
         )}
 
         {items.map((item, index) => (
-          <div key={index} className="grid grid-cols-[150px_1fr_auto] gap-2 items-center">
-            <input
-              type="text"
+          <div key={index} className="grid grid-cols-[180px_1fr_auto] gap-2 items-center">
+            <ContractLabelSegment
               value={item.label}
-              onChange={(e) => onUpdate(index, { label: e.target.value })}
-              placeholder="項目名 (例: 契約プラン)"
-              className={inputClass}
-              style={inputStyle}
+              onChange={(v) => onUpdate(index, { label: v })}
             />
             <input
               type="text"
@@ -1242,6 +1469,49 @@ function MetaRow({ label, value, muted }: { label: string; value: string; muted?
       >
         {value}
       </span>
+    </div>
+  )
+}
+
+// ─── 契約情報の「項目名」: 有料 / 無料 を選択するセグメント ─────────────────
+
+function ContractLabelSegment({
+  value,
+  onChange,
+}: {
+  value: string
+  onChange: (v: string) => void
+}) {
+  const options = [
+    { value: '有料', accent: '#FFC107', activeBg: 'rgba(255,193,7,0.18)', activeRing: 'rgba(255,193,7,0.40)' },
+    { value: '無料', accent: '#5CDEA6', activeBg: 'rgba(92,222,166,0.18)', activeRing: 'rgba(92,222,166,0.40)' },
+  ] as const
+  return (
+    <div
+      className="inline-flex p-[3px] rounded-[var(--radius-obs-md)] gap-[2px] w-fit"
+      style={{
+        background: 'rgba(255,255,255,0.04)',
+        boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.06)',
+      }}
+    >
+      {options.map((o) => {
+        const active = value === o.value
+        return (
+          <button
+            key={o.value}
+            type="button"
+            onClick={() => onChange(o.value)}
+            className="px-3 h-8 rounded-[calc(var(--radius-obs-md)-3px)] text-[12px] font-semibold transition-colors"
+            style={{
+              background: active ? o.activeBg : 'transparent',
+              color: active ? o.accent : 'var(--color-obs-text-muted)',
+              boxShadow: active ? `inset 0 0 0 1px ${o.activeRing}` : 'none',
+            }}
+          >
+            {o.value}
+          </button>
+        )
+      })}
     </div>
   )
 }

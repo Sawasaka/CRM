@@ -66,11 +66,11 @@ export const metadata: Metadata = {
     : undefined,
   icons: {
     icon: [
-      { url: '/icon.svg?v=hp-black-1-20260531-final', type: 'image/svg+xml' },
-      { url: '/favicon.ico?v=hp-black-1-20260531-final', sizes: '32x32' },
+      { url: '/icon.svg?v=unified-service-favicon-20260611', type: 'image/svg+xml' },
+      { url: '/favicon.ico?v=unified-service-favicon-20260611', sizes: '32x32' },
     ],
-    shortcut: '/icon.svg?v=hp-black-1-20260531-final',
-    apple: '/icon.svg?v=hp-black-1-20260531-final',
+    shortcut: '/icon.svg?v=unified-service-favicon-20260611',
+    apple: '/icon.svg?v=unified-service-favicon-20260611',
   },
   manifest: '/manifest.webmanifest',
 }

@@ -1,0 +1,152 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1040" viewBox="0 0 1800 1040">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#020a11"/>
+      <stop offset="0.45" stop-color="#061929"/>
+      <stop offset="1" stop-color="#02070c"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#092235"/>
+      <stop offset="1" stop-color="#04111c"/>
+    </linearGradient>
+    <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff7df"/>
+      <stop offset="0.5" stop-color="#f2e5c4"/>
+      <stop offset="1" stop-color="#d9c18b"/>
+    </linearGradient>
+    <linearGradient id="water" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#9ff5ff"/>
+      <stop offset="0.55" stop-color="#1d8aa1"/>
+      <stop offset="1" stop-color="#0a3b67"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffe6a0"/>
+      <stop offset="1" stop-color="#c69332"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#000000" flood-opacity="0.45"/>
+    </filter>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.25 0 0 0 0 0.9 0 0 0 0 1 0 0 0 0.55 0"/>
+      <feBlend in="SourceGraphic"/>
+    </filter>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M 32 0 L 0 0 0 32" fill="none" stroke="#bfefff" stroke-opacity="0.06" stroke-width="1"/>
+    </pattern>
+    <style>
+      .jp { font-family: "Hiragino Sans", "Yu Gothic", "Noto Sans JP", system-ui, sans-serif; }
+      .title { font-weight: 900; fill: #fff8e7; letter-spacing: 0; }
+      .goldText { fill: #f3c967; font-weight: 900; }
+      .aquaText { fill: #7ee4f2; font-weight: 900; }
+      .small { fill: #dcecf0; font-size: 22px; font-weight: 800; }
+      .micro { fill: #c5d6d9; font-size: 17px; font-weight: 700; }
+      .paperText { fill: #082033; font-weight: 900; }
+      .muted { fill: #94aab0; font-weight: 800; }
+    </style>
+  </defs>
+
+  <rect width="1800" height="1040" fill="url(#bg)"/>
+  <rect x="0" y="0" width="1800" height="1040" fill="url(#grid)" opacity="0.7"/>
+  <circle cx="250" cy="190" r="270" fill="#1b7991" opacity="0.16"/>
+  <circle cx="1540" cy="850" r="340" fill="#d5a645" opacity="0.10"/>
+
+  <text x="80" y="92" class="jp title" font-size="44">水流ヒアリングカード デザイン候補</text>
+  <text x="80" y="130" class="jp small">ドラゴン図鑑のカード感を残しつつ、クリック後に「水竜が出現する」体験へ寄せた3案</text>
+
+  <!-- Option A -->
+  <g transform="translate(70 190)" filter="url(#shadow)">
+    <rect width="520" height="760" rx="22" fill="url(#panel)" stroke="#c99d3d" stroke-width="2"/>
+    <rect x="1" y="1" width="518" height="758" rx="21" fill="url(#grid)" opacity="0.55"/>
+    <rect x="30" y="30" width="160" height="36" rx="18" fill="#071520" stroke="#d5ad50"/>
+    <text x="52" y="55" class="jp goldText" font-size="18">案A 推奨</text>
+    <text x="30" y="118" class="jp title" font-size="34">図鑑カード拡張型</text>
+    <text x="30" y="154" class="jp micro">既存ページと最も馴染む。カードを主役に、右側で発動条件を読む。</text>
+
+    <rect x="44" y="196" width="432" height="266" rx="14" fill="url(#paper)" stroke="#f5d48a" stroke-width="6"/>
+    <rect x="60" y="212" width="400" height="104" rx="8" fill="#092032"/>
+    <path d="M78 290 C120 206, 196 210, 248 254 C298 296, 345 244, 431 223 C372 274, 344 345, 260 337 C184 331, 142 362, 86 426 C119 350, 139 319, 78 290 Z" fill="url(#water)" filter="url(#glow)"/>
+    <path d="M170 268 C211 214, 286 236, 305 289 C255 270, 222 276, 188 321" fill="none" stroke="#e9fbff" stroke-width="8" stroke-linecap="round" opacity="0.8"/>
+    <text x="284" y="292" class="jp paperText" font-size="34">水竜</text>
+    <text x="284" y="335" class="jp paperText" font-size="34">ヒアリング</text>
+    <line x1="60" y1="332" x2="460" y2="332" stroke="#c5aa72"/>
+    <text x="88" y="374" class="jp paperText" font-size="18">強み</text>
+    <text x="150" y="374" class="jp paperText" font-size="18">本音を引き出し、信頼の水温を上げる。</text>
+    <text x="88" y="414" class="jp paperText" font-size="18">弱点</text>
+    <text x="150" y="414" class="jp paperText" font-size="18">質問攻めにすると尋問になる。</text>
+
+    <rect x="44" y="490" width="432" height="92" rx="12" fill="#061522" stroke="#2d6f80"/>
+    <text x="68" y="526" class="jp aquaText" font-size="18">3連コンボ</text>
+    <text x="68" y="558" class="jp small" font-size="20">水温を上げる → 軸を聞く → 理解を返す</text>
+    <rect x="44" y="606" width="432" height="84" rx="12" fill="#071722" stroke="#8e7338"/>
+    <text x="68" y="640" class="jp goldText" font-size="17">使用例</text>
+    <text x="68" y="670" class="jp micro">「まず状況の地図を描かせてください」</text>
+    <rect x="44" y="710" width="432" height="28" rx="14" fill="#f4e7c9"/>
+    <text x="64" y="730" class="jp paperText" font-size="15">メタ分析：ヘブライ大学 Avraham N. Kluger教授 / 傾聴</text>
+  </g>
+
+  <!-- Option B -->
+  <g transform="translate(640 190)" filter="url(#shadow)">
+    <rect width="520" height="760" rx="22" fill="#03101b" stroke="#c99d3d" stroke-width="2"/>
+    <rect x="1" y="1" width="518" height="758" rx="21" fill="url(#grid)" opacity="0.75"/>
+    <rect x="30" y="30" width="210" height="36" rx="18" fill="#071520" stroke="#d5ad50"/>
+    <text x="52" y="55" class="jp goldText" font-size="18">案B 発動演出</text>
+    <text x="30" y="118" class="jp title" font-size="34">バトル召喚型</text>
+    <text x="30" y="154" class="jp micro">エンタメ感を最大化。水竜が中央に出現してから説明へ入る。</text>
+
+    <circle cx="260" cy="340" r="190" fill="#0b334d" opacity="0.65"/>
+    <circle cx="260" cy="340" r="135" fill="none" stroke="#79e4f2" stroke-width="2" stroke-opacity="0.5"/>
+    <circle cx="260" cy="340" r="98" fill="none" stroke="#f0c65a" stroke-width="2" stroke-opacity="0.5"/>
+    <path d="M116 366 C154 224, 288 174, 390 255 C456 308, 405 440, 289 429 C201 421, 153 477, 90 552 C127 461, 158 412, 116 366 Z" fill="url(#water)" filter="url(#glow)"/>
+    <path d="M171 333 C235 247, 330 257, 370 335 C310 304, 251 318, 201 384" fill="none" stroke="#ecfbff" stroke-width="10" stroke-linecap="round" opacity="0.85"/>
+    <path d="M366 250 L430 222 L395 282" fill="#7ee4f2" opacity="0.9"/>
+    <text x="72" y="560" class="jp title" font-size="48">水流ヒアリング</text>
+    <text x="74" y="604" class="jp aquaText" font-size="24">質問力の基本ドラゴン</text>
+
+    <rect x="56" y="640" width="118" height="54" rx="12" fill="#061522" stroke="#2d6f80"/>
+    <text x="82" y="672" class="jp aquaText" font-size="18">水温UP</text>
+    <rect x="198" y="640" width="118" height="54" rx="12" fill="#061522" stroke="#2d6f80"/>
+    <text x="224" y="672" class="jp aquaText" font-size="18">軸を聞く</text>
+    <rect x="340" y="640" width="118" height="54" rx="12" fill="#061522" stroke="#2d6f80"/>
+    <text x="366" y="672" class="jp aquaText" font-size="18">理解返し</text>
+    <rect x="56" y="712" width="402" height="30" rx="15" fill="#f4e7c9"/>
+    <text x="76" y="733" class="jp paperText" font-size="15">心理用語：アクティブリスニング / 認知的信頼</text>
+  </g>
+
+  <!-- Option C -->
+  <g transform="translate(1210 190)" filter="url(#shadow)">
+    <rect width="520" height="760" rx="22" fill="url(#panel)" stroke="#c99d3d" stroke-width="2"/>
+    <rect x="1" y="1" width="518" height="758" rx="21" fill="url(#grid)" opacity="0.55"/>
+    <rect x="30" y="30" width="250" height="36" rx="18" fill="#071520" stroke="#d5ad50"/>
+    <text x="52" y="55" class="jp goldText" font-size="18">案C 論文カード</text>
+    <text x="30" y="118" class="jp title" font-size="34">博士の観察ノート型</text>
+    <text x="30" y="154" class="jp micro">ガチ感と権威性を強める。博士が論文を攻略カードに翻訳。</text>
+
+    <rect x="38" y="198" width="444" height="152" rx="14" fill="#071722" stroke="#8e7338"/>
+    <circle cx="100" cy="274" r="42" fill="#f4e7c9"/>
+    <path d="M76 292 C92 250, 130 244, 145 286" fill="#0b2130" opacity="0.9"/>
+    <circle cx="105" cy="259" r="20" fill="#1e2e3b"/>
+    <rect x="154" y="230" width="286" height="24" rx="12" fill="#0c2a38"/>
+    <text x="168" y="248" class="jp aquaText" font-size="15">はぐれ博士の翻訳メモ</text>
+    <text x="154" y="288" class="jp small" font-size="20">質問は、信頼を開く前処理。</text>
+    <text x="154" y="320" class="jp micro">売る前に「理解してくれる」を作る。</text>
+
+    <rect x="50" y="384" width="420" height="220" rx="14" fill="url(#paper)" stroke="#f5d48a" stroke-width="5"/>
+    <rect x="66" y="400" width="388" height="76" rx="8" fill="#092032"/>
+    <path d="M84 464 C128 398, 212 398, 258 445 C311 500, 374 426, 440 406 C384 464, 347 542, 258 530 C177 520, 137 557, 90 596 C120 527, 132 492, 84 464 Z" fill="url(#water)" filter="url(#glow)"/>
+    <text x="258" y="456" class="jp paperText" font-size="28">水竜</text>
+    <text x="258" y="492" class="jp paperText" font-size="28">ヒアリング</text>
+    <line x1="66" y1="494" x2="454" y2="494" stroke="#c5aa72"/>
+    <text x="84" y="532" class="jp paperText" font-size="17">武器説明：話したくなる水温を作る。</text>
+    <text x="84" y="566" class="jp paperText" font-size="17">使用例：「状況の地図を描かせてください」</text>
+    <text x="84" y="596" class="jp paperText" font-size="17">効果：理解感 → 有用性 → 信頼形成</text>
+
+    <rect x="38" y="632" width="444" height="80" rx="12" fill="#f4e7c9"/>
+    <rect x="58" y="654" width="86" height="28" rx="14" fill="#0f6374"/>
+    <text x="78" y="674" class="jp" fill="#fff8e7" font-size="14" font-weight="900">メタ分析</text>
+    <text x="158" y="674" class="jp paperText" font-size="15">ヘブライ大学 Avraham N. Kluger教授</text>
+    <text x="158" y="696" class="jp paperText" font-size="15">知覚された傾聴 / アクティブリスニング</text>
+  </g>
+
+  <text x="82" y="995" class="jp muted" font-size="20">おすすめ: すぐ実装するなら案A。演出を強めるなら案B。論文ベースの信頼感を出すなら案C。</text>
+</svg>

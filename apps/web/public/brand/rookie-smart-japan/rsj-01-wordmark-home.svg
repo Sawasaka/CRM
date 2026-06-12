@@ -1,0 +1,36 @@
+<svg width="1600" height="520" viewBox="0 0 1600 520" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">株式会社ルーキースマートジャパン ホームページ用ロゴ案 01</title>
+  <desc id="desc">既存のルキスマCRMワードマークを会社ロゴとして整えた横長ビジュアル。</desc>
+  <defs>
+    <radialGradient id="rsj01HomeBgA" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(524 278) rotate(18) scale(720 340)">
+      <stop stop-color="#17263A"/>
+      <stop offset="0.58" stop-color="#111418"/>
+      <stop offset="1" stop-color="#0A0A0C"/>
+    </radialGradient>
+    <linearGradient id="rsj01HomeText" x1="342" y1="214" x2="1248" y2="316" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="0.52" stop-color="#ABC7FF"/>
+      <stop offset="1" stop-color="#0071E3"/>
+    </linearGradient>
+    <filter id="rsj01HomeGlow" x="-40%" y="-90%" width="180%" height="280%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="16" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.48 0 0 0 0 0.70 0 0 0 0 1 0 0 0 0.52 0"/>
+      <feBlend in="SourceGraphic" mode="screen"/>
+    </filter>
+  </defs>
+  <rect width="1600" height="520" fill="#0A0A0C"/>
+  <rect width="1600" height="520" fill="url(#rsj01HomeBgA)"/>
+  <circle cx="180" cy="132" r="26" fill="#E8FBFF" opacity="0.95" filter="url(#rsj01HomeGlow)"/>
+  <circle cx="1410" cy="382" r="22" fill="#FFF34A" opacity="0.9" filter="url(#rsj01HomeGlow)"/>
+  <rect x="278" y="126" width="1044" height="268" rx="42" fill="rgba(53,52,55,0.26)" stroke="rgba(171,199,255,0.16)"/>
+  <circle cx="344" cy="260" r="7" fill="#ABC7FF" filter="url(#rsj01HomeGlow)"/>
+  <text x="374" y="224" fill="#BFD3FF" font-family="'Plus Jakarta Sans','Inter','Hiragino Sans','Yu Gothic UI',sans-serif" font-size="18" font-weight="800" letter-spacing="6">
+    ROOKIE SMART JAPAN
+  </text>
+  <text x="370" y="300" fill="url(#rsj01HomeText)" filter="url(#rsj01HomeGlow)" font-family="'Plus Jakarta Sans','Inter','Hiragino Sans','Yu Gothic UI',sans-serif" font-size="58" font-weight="900" letter-spacing="-1.5">
+    株式会社ルーキースマートジャパン
+  </text>
+  <text x="374" y="342" fill="#C7C5C9" font-family="'Inter','Hiragino Sans','Yu Gothic UI',sans-serif" font-size="19" font-weight="500">
+    営業実行とCRM構築を、データとAIで前へ進める。
+  </text>
+</svg>

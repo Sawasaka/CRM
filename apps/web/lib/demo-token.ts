@@ -5,9 +5,6 @@
 
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
 
-const SECRET =
-  process.env.DEMO_ACCESS_SECRET ?? 'dev-only-fallback-please-set-DEMO_ACCESS_SECRET-in-prod'
-
 export const DEMO_CREDITS_DEFAULT = 100
 export const DEMO_TOKEN_TTL_MS = 15 * 60 * 1000 // 15分
 
@@ -31,7 +28,16 @@ function b64urlDecode(input: string): Uint8Array {
 }
 
 function hmacBase64Url(message: string): string {
-  return createHmac('sha256', SECRET).update(message).digest('base64url')
+  return createHmac('sha256', getDemoAccessSecret()).update(message).digest('base64url')
+}
+
+function getDemoAccessSecret(): string {
+  const secret = process.env.DEMO_ACCESS_SECRET
+  if (secret) return secret
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('DEMO_ACCESS_SECRET is required in production')
+  }
+  return 'dev-only-fallback-please-set-DEMO_ACCESS_SECRET-in-prod'
 }
 
 function safeEqual(a: string, b: string): boolean {
@@ -51,8 +57,9 @@ export async function buildDemoToken(input: {
   name: string
   email: string
   credits?: number
+  expiresAt?: number
 }) {
-  const expiresAt = Date.now() + DEMO_TOKEN_TTL_MS
+  const expiresAt = input.expiresAt ?? Date.now() + DEMO_TOKEN_TTL_MS
   const sessionId = generateSessionId()
   const claims: DemoClaims = {
     sessionId,

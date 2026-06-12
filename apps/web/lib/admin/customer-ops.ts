@@ -132,13 +132,21 @@ export async function getCustomerOpsTenantDetail(
 }
 
 export async function getCustomerOpsAdminAccess(): Promise<AdminAccess> {
+  // ローカル開発時(NEXT_PUBLIC_DEV_MODE=true)は常にローカル開発者として通す。
+  // ログインしているアカウントの email/orgId が admin リストや BGM_TENANT_ID と一致しなくても
+  // customer-ops 画面を開発作業中は触りたいため。本番は通常通り厳密判定。
+  if (process.env.NEXT_PUBLIC_DEV_MODE === 'true') {
+    return await getLocalDeveloperAccess()
+  }
   const session = await auth()
   const userId = (session as unknown as { userId?: string })?.userId ?? null
   const sessionEmail = session?.user?.email ?? null
   const isLocalRequest = await isLocalhostRequest()
+  const allowLocalDeveloperFallback =
+    isLocalRequest && isCustomerOpsAdminEmail(getLocalDevUserEmail())
 
   if (!userId) {
-    return isLocalRequest && isCustomerOpsAdminEmail(getLocalDevUserEmail())
+    return allowLocalDeveloperFallback
       ? await getLocalDeveloperAccess()
       : { authorized: false, reason: 'unauthorized' }
   }
@@ -149,18 +157,18 @@ export async function getCustomerOpsAdminAccess(): Promise<AdminAccess> {
       id: true,
       email: true,
       orgId: true,
-      org: { select: { slug: true, lifecycleStatus: true } },
+      org: { select: { slug: true, plan: true, lifecycleStatus: true } },
     },
   })
   if (!user) return { authorized: false, reason: 'unauthorized' }
-  if (isIssuedDemoTenant(user.org.slug)) {
+  if (isDemoAccessTenant(user.org)) {
     return { authorized: false, reason: 'forbidden' }
   }
   if (isCustomerOpsAdminEmail(user.email) || isCustomerOpsAdminEmail(sessionEmail)) {
     return { authorized: true, orgId: user.orgId, userId: user.id }
   }
-  if (isLocalRequest && isCustomerOpsAdminEmail(getLocalDevUserEmail())) {
-    return { authorized: true, orgId: user.orgId, userId: user.id }
+  if (allowLocalDeveloperFallback && user.org.slug === 'default') {
+    return await getLocalDeveloperAccess()
   }
 
   const developerTenantId = process.env.BGM_TENANT_ID ?? process.env.NEXT_PUBLIC_BGM_TENANT_ID
@@ -211,8 +219,12 @@ function getLocalDevUserEmail() {
   return process.env.LOCAL_DEV_USER_EMAIL ?? DEFAULT_LOCAL_DEV_USER_EMAIL
 }
 
-function isIssuedDemoTenant(slug: string) {
-  return slug.startsWith('demo-')
+function isDemoAccessTenant(org: {
+  slug: string
+  plan: Plan
+  lifecycleStatus: 'ACTIVE' | 'FREE' | 'DEMO' | 'INACTIVE'
+}) {
+  return org.slug.startsWith('demo-') || org.lifecycleStatus === 'DEMO' || org.plan === 'FREE'
 }
 
 async function isLocalhostRequest() {

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1600" height="540" viewBox="0 0 1600 540" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>株式会社ルーキースマートジャパン Prism Line homepage banner</title>
+  <desc>営業組織の伸びとシャープな成長感を出す案</desc>
+  
+    <defs>
+      <linearGradient id="text-07-prism-line" x1="0" x2="1" y1="0" y2="0">
+        <stop offset="0" stop-color="#f4f7ff"/>
+        <stop offset="0.58" stop-color="#f4d35e"/>
+        <stop offset="1" stop-color="#5aa7ff"/>
+      </linearGradient>
+      <linearGradient id="mark-07-prism-line" x1="0" x2="1" y1="0" y2="1">
+        <stop offset="0" stop-color="#edf5ff"/>
+        <stop offset="0.48" stop-color="#f4d35e"/>
+        <stop offset="1" stop-color="#5aa7ff"/>
+      </linearGradient>
+      <radialGradient id="glow-07-prism-line" cx="50%" cy="50%" r="50%">
+        <stop offset="0" stop-color="#5aa7ff" stop-opacity="0.45"/>
+        <stop offset="1" stop-color="#5aa7ff" stop-opacity="0"/>
+      </radialGradient>
+      <filter id="soft-07-prism-line" x="-40%" y="-40%" width="180%" height="180%">
+        <feGaussianBlur stdDeviation="10"/>
+      </filter>
+      <filter id="shadow-07-prism-line" x="-30%" y="-30%" width="160%" height="160%">
+        <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#000" flood-opacity="0.38"/>
+      </filter>
+    </defs>
+  
+  <rect width="1600" height="540" fill="#0b0d11"/>
+  <rect width="1600" height="540" fill="url(#glow-07-prism-line)" opacity="0.20"/>
+  <circle cx="180" cy="128" r="90" fill="#f4d35e" opacity="0.10" filter="url(#soft-07-prism-line)"/>
+  <circle cx="1390" cy="382" r="120" fill="#5aa7ff" opacity="0.10" filter="url(#soft-07-prism-line)"/>
+  <rect x="118" y="96" width="1364" height="348" rx="46" fill="#11151c" fill-opacity="0.72" stroke="rgba(185,211,255,0.18)" filter="url(#shadow-07-prism-line)"/>
+  
+      <g filter="url(#shadow-07-prism-line)">
+        <rect x="188" y="172" width="156" height="156" rx="28.08" fill="#151a22" stroke="rgba(185,211,255,0.30)"/>
+        <path d="M 222.32 281.2 L 253.51999999999998 220.36 L 312.8 220.36 L 281.6 281.2 Z" fill="url(#mark-07-prism-line)" opacity="0.96"/>
+        <path d="M 253.51999999999998 220.36 L 281.6 281.2" stroke="#ffffff" stroke-opacity="0.62" stroke-width="4.368"/>
+        <path d="M 236.36 256.24 H 298.76" stroke="#10131a" stroke-opacity="0.55" stroke-width="7.02"/>
+      </g>
+    
+  <text x="390" y="206" fill="#9fbfff" font-size="16" font-weight="850" letter-spacing="5.4" font-family="'Inter','Plus Jakarta Sans',sans-serif">ROOKIE SMART JAPAN</text>
+  <text x="390" y="282" fill="url(#text-07-prism-line)" font-size="64" font-weight="900" letter-spacing="0" font-family="'Hiragino Sans','Yu Gothic UI','Inter',sans-serif">株式会社ルーキースマートジャパン</text>
+  <text x="392" y="330" fill="#9aa4b5" font-size="20" font-weight="700" letter-spacing="3.4" font-family="'Inter','Plus Jakarta Sans',sans-serif">SALES OPERATING SYSTEM</text>
+  <path d="M 390 360 H 1020" stroke="url(#mark-07-prism-line)" stroke-width="2" stroke-linecap="round" opacity="0.75"/>
+  <text x="392" y="398" fill="#c4ccdb" font-size="17" font-weight="600" font-family="'Hiragino Sans','Yu Gothic UI','Inter',sans-serif">営業組織の伸びとシャープな成長感を出す案</text>
+</svg>

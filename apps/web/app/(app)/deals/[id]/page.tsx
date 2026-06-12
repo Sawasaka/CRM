@@ -42,7 +42,7 @@ import {
   AlertTriangle,
   Ticket,
 } from 'lucide-react'
-import { ObsPageShell } from '@/components/obsidian'
+import { OBS_PRIMARY_BUTTON, ObsPageShell } from '@/components/obsidian'
 // コンタクト詳細と同じアクティビティ仕様を再利用 (タブ: すべて / コール / メール / 会議)
 import { ContactHistoryTimeline } from '@/app/(app)/contacts/_components/ContactHistoryTimeline'
 // 開発優先度ページから抽出データを取り込み (議事録 + 問い合わせチケット起点)
@@ -1320,6 +1320,51 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
   }, [id])
 
   const activeMeeting = meetings.find(m => m.id === activeMeetingId) ?? null
+  const [aiCallLoading, setAiCallLoading] = useState(false)
+  const [aiCallMessage, setAiCallMessage] = useState<string | null>(null)
+
+  async function handleAiCallStart() {
+    if (!deal.contactPhone || aiCallLoading) return
+    setAiCallLoading(true)
+    setAiCallMessage(null)
+    try {
+      const res = await fetch('/api/ai-calls/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          dealId: deal.id,
+          contactId: deal.contactId || undefined,
+          companyId: deal.companyId || undefined,
+          companyName: deal.company,
+          contactName: deal.contact,
+          phone: deal.contactPhone,
+          purpose: '取引の次回アクション確認',
+          script: '現在の検討状況を確認し、必要に応じて次回商談または資料送付につなげる。',
+        }),
+      })
+      const json = (await res.json().catch(() => ({}))) as {
+        call?: { id: string; outcome: string; summary?: string | null }
+        error?: string
+        message?: string
+      }
+      if (!res.ok || !json.call) throw new Error(json.message || json.error || 'AIコールを開始できませんでした')
+      setDbActivities((prev) => [
+        {
+          id: json.call!.id,
+          type: 'call',
+          timestamp: new Date().toISOString(),
+          title: 'AIコール完了',
+          description: json.call!.summary ?? undefined,
+        },
+        ...prev,
+      ])
+      setAiCallMessage('AIコール結果を活動履歴に保存しました')
+    } catch (e) {
+      setAiCallMessage(e instanceof Error ? e.message : String(e))
+    } finally {
+      setAiCallLoading(false)
+    }
+  }
 
   return (
     <ObsPageShell>
@@ -1358,6 +1403,31 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
               </div>
             </div>
 
+            <div className="flex shrink-0 flex-col items-end gap-2">
+              <button
+                type="button"
+                disabled={!deal.contactPhone || aiCallLoading}
+                onClick={handleAiCallStart}
+                className="inline-flex h-9 items-center gap-2 rounded-[var(--radius-obs-md)] px-4 text-[12px] font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-40"
+                style={{
+                  background: OBS_PRIMARY_BUTTON.background,
+                  color: OBS_PRIMARY_BUTTON.color,
+                  boxShadow: OBS_PRIMARY_BUTTON.shadow,
+                }}
+              >
+                {aiCallLoading ? (
+                  <span className="h-3 w-3 animate-spin rounded-full border-2 border-white/60 border-t-white" />
+                ) : (
+                  <Radio size={13} />
+                )}
+                AIコール
+              </button>
+              {aiCallMessage ? (
+                <span className="text-[11px]" style={{ color: 'var(--color-obs-text-muted)' }}>
+                  {aiCallMessage}
+                </span>
+              ) : null}
+            </div>
           </div>
         </div>
 

@@ -11,6 +11,7 @@
     "lint": "PATH=$PWD/scripts/bin:$PATH turbo run lint",
     "type-check": "PATH=$PWD/scripts/bin:$PATH turbo run type-check",
     "test:smoke": "node scripts/smoke-test.mjs",
+    "check:demo-prod": "node scripts/check-demo-production-readiness.mjs",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "clean": "PATH=$PWD/scripts/bin:$PATH turbo run clean",
     "start:api": "corepack pnpm --filter @bgm/api start",

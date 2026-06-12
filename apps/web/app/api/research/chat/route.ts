@@ -23,6 +23,7 @@ import {
   recordAiChatCreditUsage,
 } from '@/lib/credit-usage'
 import type { ChatPolicyState } from '@/lib/chat-policy-presets'
+import { getDefaultMasterOrgId } from '@/lib/demo-master'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -83,13 +84,28 @@ export async function POST(req: NextRequest) {
   const user = userId
     ? await prisma.user.findUnique({
         where: { id: userId },
-        select: { orgId: true, org: { select: { plan: true } } },
+        select: {
+          orgId: true,
+          org: {
+            select: {
+              plan: true,
+              slug: true,
+              lifecycleStatus: true,
+              demoExpiresAt: true,
+            },
+          },
+        },
       })
     : null
   if (userId && !user) return NextResponse.json({ error: 'user not found' }, { status: 404 })
 
   const plan = user?.org.plan ?? 'ENTERPRISE'
-  if (process.env.NODE_ENV === 'production' && !isResearchAllowed(plan)) {
+  const isDemoResearchTenant =
+    Boolean(user?.org.slug.startsWith('demo-') || user?.org.lifecycleStatus === 'DEMO') &&
+    (!user?.org.demoExpiresAt || user.org.demoExpiresAt > new Date())
+  const appOrgId =
+    isDemoResearchTenant ? ((await getDefaultMasterOrgId()) ?? user?.orgId) : user?.orgId
+  if (process.env.NODE_ENV === 'production' && !isResearchAllowed(plan) && !isDemoResearchTenant) {
     return NextResponse.json(
       { error: 'リサーチ機能はSTARTERプラン以上で利用できます' },
       { status: 403 }
@@ -116,7 +132,10 @@ export async function POST(req: NextRequest) {
   }
 
   // モデル決定
-  const resolved = resolveResearchModel(plan, { model: reqModel, thinking: reqThinking })
+  const resolved = resolveResearchModel(isDemoResearchTenant ? 'STARTER' : plan, {
+    model: reqModel,
+    thinking: reqThinking,
+  })
 
   // プロンプト本体を組み立て
   const userPrompt = presetId
@@ -127,7 +146,7 @@ export async function POST(req: NextRequest) {
   // コンテキスト + 自社情報の組み立て
   const [ctx, ourBiz] = await Promise.all([
     hasEntityContext ? buildResearchContext(entityType!, entityId!) : Promise.resolve(null),
-    getOurBusiness(user?.orgId),
+    getOurBusiness(appOrgId),
   ])
 
   // 外部Web検索:

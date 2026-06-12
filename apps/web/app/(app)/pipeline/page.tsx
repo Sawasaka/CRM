@@ -14,6 +14,8 @@ import {
 } from 'lucide-react'
 import { OBS_HERO_CLASS, OBS_HERO_STYLE, OBS_PRODUCT_SURFACE, ObsPageShell } from '@/components/obsidian'
 import { SignalBadge } from '@/components/crm/SignalBadge'
+import { isDemoUrlSearch } from '@/lib/demo-company-data'
+import { getDemoDealsForApi } from '@/lib/demo-crm-data'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -212,15 +214,20 @@ export default function PipelinePage() {
 
   useEffect(() => {
     let aborted = false
+    const demoView = isDemoUrlSearch(window.location.search)
+    const params = new URLSearchParams(window.location.search)
+    params.set('take', '100')
     setLoading(true)
-    fetch('/api/deals?take=100', { cache: 'no-store' })
+    fetch(`/api/deals?${params.toString()}`, { cache: 'no-store' })
       .then((res) => (res.ok ? res.json() : { deals: [] }))
       .then((data: { deals?: ApiDeal[] }) => {
         if (aborted) return
-        setDeals((data.deals ?? []).map(toPipelineDeal))
+        const apiDeals = data.deals ?? []
+        const sourceDeals = demoView && apiDeals.length === 0 ? getDemoDealsForApi() : apiDeals
+        setDeals(sourceDeals.map(toPipelineDeal))
       })
       .catch(() => {
-        if (!aborted) setDeals([])
+        if (!aborted) setDeals(demoView ? getDemoDealsForApi().map(toPipelineDeal) : [])
       })
       .finally(() => {
         if (!aborted) setLoading(false)

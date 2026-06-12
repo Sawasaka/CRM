@@ -1,0 +1,24 @@
+<svg width="720" height="180" viewBox="0 0 720 180" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">株式会社ルーキースマートジャパン ロゴ案 01</title>
+  <desc id="desc">ルキスマCRMの既存ワードマークを踏襲した、シンプルな会社ロゴ。</desc>
+  <defs>
+    <linearGradient id="rsj01Text" x1="46" y1="58" x2="596" y2="132" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="0.52" stop-color="#ABC7FF"/>
+      <stop offset="1" stop-color="#0071E3"/>
+    </linearGradient>
+    <filter id="rsj01Glow" x="-20%" y="-40%" width="140%" height="180%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.48 0 0 0 0 0.70 0 0 0 0 1 0 0 0 0.50 0"/>
+      <feBlend in="SourceGraphic" mode="screen"/>
+    </filter>
+  </defs>
+  <rect x="1" y="1" width="718" height="178" rx="28" fill="rgba(19,19,21,0.18)" stroke="rgba(171,199,255,0.18)"/>
+  <circle cx="40" cy="90" r="6" fill="#ABC7FF" filter="url(#rsj01Glow)"/>
+  <text x="62" y="77" fill="#BFD3FF" font-family="'Plus Jakarta Sans','Inter','Hiragino Sans','Yu Gothic UI',sans-serif" font-size="15" font-weight="800" letter-spacing="4">
+    ROOKIE SMART JAPAN
+  </text>
+  <text x="60" y="120" fill="url(#rsj01Text)" filter="url(#rsj01Glow)" font-family="'Plus Jakarta Sans','Inter','Hiragino Sans','Yu Gothic UI',sans-serif" font-size="38" font-weight="900" letter-spacing="-1">
+    株式会社ルーキースマートジャパン
+  </text>
+</svg>

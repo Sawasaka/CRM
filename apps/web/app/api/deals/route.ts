@@ -1,38 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
 import { prisma } from '@bgm/db'
+import { getCurrentAppContext } from '@/lib/demo-master'
+import { getDemoDealsForApi } from '@/lib/demo-crm-data'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-async function getOrgId() {
-  const session = await auth()
-  let userId = (session as unknown as { userId?: string })?.userId ?? null
-  if (!userId && process.env.NEXT_PUBLIC_DEV_MODE === 'true') {
-    const firstUser = await prisma.user.findFirst({
-      orderBy: { createdAt: 'asc' },
-      select: { id: true },
-    })
-    userId = firstUser?.id ?? null
-  }
-  if (!userId) return null
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { orgId: true },
-  })
-  return user?.orgId ?? null
-}
-
 export async function GET(req: NextRequest) {
-  const orgId = await getOrgId()
-  if (!orgId) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+  const context = await getCurrentAppContext({ allowDevFallback: true })
+  if (!context) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
 
   const sp = req.nextUrl.searchParams
   const q = sp.get('q')?.trim() ?? ''
   const companyId = sp.get('companyId') ?? undefined
   const take = Math.min(parseInt(sp.get('take') ?? '20', 10), 100)
 
-  const where: Record<string, unknown> = { orgId }
+  if (context.isDemo) {
+    const demoDeals = getDemoDealsForApi().filter((deal) => {
+      if (companyId && deal.company.id !== companyId) return false
+      if (!q) return true
+      const needle = q.toLowerCase()
+      return (
+        deal.name.toLowerCase().includes(needle) ||
+        deal.company.name.toLowerCase().includes(needle) ||
+        (deal.contact?.name ?? '').toLowerCase().includes(needle)
+      )
+    })
+    return NextResponse.json({ deals: demoDeals.slice(0, take) })
+  }
+
+  const where: Record<string, unknown> = { orgId: context.appOrgId }
   if (companyId) where.companyId = companyId
   if (q) {
     where.name = { contains: q, mode: 'insensitive' }

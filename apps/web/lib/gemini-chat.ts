@@ -46,9 +46,14 @@ export async function generateGeminiChat({
   model?: string
   temperature?: number
 }): Promise<{ content: string; model: string; usageMetadata?: unknown }> {
-  const apiKey = process.env.GEMINI_API_KEY
+  const apiKey =
+    process.env.GEMINI_API_KEY ??
+    process.env.GOOGLE_GENERATIVE_AI_API_KEY ??
+    process.env.GOOGLE_AI_API_KEY
   if (!apiKey) {
-    throw new Error('GEMINI_API_KEY が未設定です')
+    throw new Error(
+      'Gemini APIキーが未設定です。GEMINI_API_KEY を本番環境変数に登録してください'
+    )
   }
 
   const systemText = messages

@@ -4,6 +4,7 @@ import type { Plan } from '@bgm/db'
 export const AI_CHAT_CREDITS_PER_REQUEST = 1
 
 const DEFAULT_MONTHLY_AI_CHAT_CREDIT_LIMIT = 10000
+const DEFAULT_DEMO_MONTHLY_AI_CHAT_CREDIT_LIMIT = 100
 const JST_OFFSET_MS = 9 * 60 * 60 * 1000
 const PLAN_MONTHLY_CREDIT_LIMITS: Record<Plan, number> = {
   FREE: 0,
@@ -116,11 +117,32 @@ async function resolveMonthlyLimit(orgId?: string) {
   if (orgId) {
     const org = await prisma.organization.findUnique({
       where: { id: orgId },
-      select: { plan: true },
+      select: { plan: true, slug: true, lifecycleStatus: true, demoExpiresAt: true },
     })
-    if (org) return PLAN_MONTHLY_CREDIT_LIMITS[org.plan]
+    if (org) {
+      if (isDemoCreditTenant(org)) {
+        const demoRaw = process.env.DEMO_AI_CHAT_MONTHLY_CREDIT_LIMIT
+        const demoLimit = demoRaw
+          ? Number.parseInt(demoRaw, 10)
+          : DEFAULT_DEMO_MONTHLY_AI_CHAT_CREDIT_LIMIT
+        return Number.isFinite(demoLimit) && demoLimit >= 0
+          ? demoLimit
+          : DEFAULT_DEMO_MONTHLY_AI_CHAT_CREDIT_LIMIT
+      }
+      return PLAN_MONTHLY_CREDIT_LIMITS[org.plan]
+    }
   }
   return DEFAULT_MONTHLY_AI_CHAT_CREDIT_LIMIT
+}
+
+function isDemoCreditTenant(org: {
+  slug: string
+  lifecycleStatus: 'ACTIVE' | 'FREE' | 'DEMO' | 'INACTIVE'
+  demoExpiresAt: Date | null
+}) {
+  const isDemo = org.slug.startsWith('demo-') || org.lifecycleStatus === 'DEMO'
+  const isUsable = !org.demoExpiresAt || org.demoExpiresAt > new Date()
+  return isDemo && isUsable
 }
 
 function getCurrentJstMonthKey() {

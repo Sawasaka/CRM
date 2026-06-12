@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1600" height="540" viewBox="0 0 1600 540" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>株式会社ルーキースマートジャパン Grid Core white homepage banner</title>
+  <desc>白背景版。ホームページ、営業資料、ホワイトペーパー上で使うための横長ロゴ。</desc>
+  <defs>
+    <linearGradient id="text-05-grid-core-home-white" x1="390" x2="1170" y1="230" y2="284" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#111827"/>
+      <stop offset="0.58" stop-color="#143a4a"/>
+      <stop offset="1" stop-color="#2563eb"/>
+    </linearGradient>
+    <linearGradient id="mark-05-grid-core-home-white" x1="198" x2="333" y1="183" y2="317" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#34d399"/>
+      <stop offset="0.52" stop-color="#22c7c7"/>
+      <stop offset="1" stop-color="#3b82f6"/>
+    </linearGradient>
+    <filter id="shadow-05-grid-core-home-white" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#0f766e" flood-opacity="0.16"/>
+    </filter>
+  </defs>
+  <rect width="1600" height="540" fill="#ffffff"/>
+  <g filter="url(#shadow-05-grid-core-home-white)">
+    <rect x="188" y="172" width="156" height="156" rx="28.08" fill="#ffffff" stroke="#d7e3f8" stroke-width="1.6"/>
+    <rect x="199.7" y="183.7" width="36.4" height="36.4" rx="10.2" fill="#e8eef8"/>
+    <rect x="247.8" y="183.7" width="36.4" height="36.4" rx="10.2" fill="#e8eef8"/>
+    <rect x="295.9" y="183.7" width="36.4" height="36.4" rx="10.2" fill="url(#mark-05-grid-core-home-white)"/>
+    <rect x="199.7" y="231.8" width="36.4" height="36.4" rx="10.2" fill="#e8eef8"/>
+    <rect x="247.8" y="231.8" width="36.4" height="36.4" rx="10.2" fill="url(#mark-05-grid-core-home-white)"/>
+    <rect x="295.9" y="231.8" width="36.4" height="36.4" rx="10.2" fill="url(#mark-05-grid-core-home-white)"/>
+    <rect x="199.7" y="279.9" width="36.4" height="36.4" rx="10.2" fill="url(#mark-05-grid-core-home-white)"/>
+    <rect x="247.8" y="279.9" width="36.4" height="36.4" rx="10.2" fill="url(#mark-05-grid-core-home-white)"/>
+    <rect x="295.9" y="279.9" width="36.4" height="36.4" rx="10.2" fill="url(#mark-05-grid-core-home-white)"/>
+  </g>
+  <text x="390" y="206" fill="#2563eb" font-size="16" font-weight="850" letter-spacing="5.4" font-family="'Inter','Plus Jakarta Sans',sans-serif">ROOKIE SMART JAPAN</text>
+  <text x="390" y="282" fill="url(#text-05-grid-core-home-white)" font-size="64" font-weight="900" letter-spacing="0" font-family="'Hiragino Sans','Yu Gothic UI','Inter',sans-serif">株式会社ルーキースマートジャパン</text>
+  <text x="392" y="330" fill="#64748b" font-size="20" font-weight="750" letter-spacing="3.4" font-family="'Inter','Plus Jakarta Sans',sans-serif">DATA INTELLIGENCE</text>
+  <path d="M 390 360 H 1020" stroke="url(#mark-05-grid-core-home-white)" stroke-width="2.2" stroke-linecap="round" opacity="0.85"/>
+  <text x="392" y="398" fill="#475569" font-size="17" font-weight="650" font-family="'Hiragino Sans','Yu Gothic UI','Inter',sans-serif">企業DB・構造化データ・基盤感を出す堅めの案</text>
+</svg>

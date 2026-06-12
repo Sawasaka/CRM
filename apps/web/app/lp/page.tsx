@@ -7,6 +7,7 @@
 import AppHub from '@/components/AppHub'
 import { HomeView } from '@/components/landing/HomeView'
 import DragonGuide from '../media/DragonGuide'
+import SalesDragonAcademyGuide from '../media/SalesDragonAcademyGuide'
 import SalesPsychologyGuide from '../media/SalesPsychologyGuide'
 import { publicSiteStructuredData } from '@/lib/public-site'
 
@@ -22,6 +23,7 @@ export default function RukismaCRMLandingPage() {
         home={<HomeView />}
         dragon={<DragonGuide />}
         psychology={<SalesPsychologyGuide />}
+        school={<SalesDragonAcademyGuide />}
       />
     </>
   )

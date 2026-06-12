@@ -2,6 +2,7 @@ import { Hero } from './Hero'
 import { AgentFabricRich } from './AgentFabricRich'
 import { MetricsBand } from './sections/MetricsBand'
 import { ROISection } from './ROISection'
+import { Testimonials } from './sections/Testimonials'
 import { CustomerVoice } from './sections/CustomerVoice'
 import { Pricing } from './sections/Pricing'
 import { Footer } from './sections/Footer'
@@ -16,6 +17,7 @@ export function HomeView() {
       <AgentFabricRich />
       <Pricing />
       <ROISection />
+      <Testimonials />
       <CustomerVoice />
       <Footer />
     </div>

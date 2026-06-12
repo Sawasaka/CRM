@@ -147,13 +147,34 @@ export const Footer = () => (
       </div>
 
       <div
-        className="mt-14 pt-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs text-[#7e7c83]"
+        className="mt-14 pt-6 grid grid-cols-1 md:grid-cols-3 items-start md:items-center gap-4 md:gap-6 text-xs text-[#7e7c83]"
         style={{ borderTop: '1px solid rgba(65,71,83,0.18)' }}
       >
-        <div>
+        {/* 左: コピーライト */}
+        <div className="md:justify-self-start">
           © 2026 <span className="fo-gradient-text font-semibold">ルキスマCRM</span>
         </div>
-        <div className="flex flex-wrap gap-x-5 gap-y-2">
+
+        {/* 中央: 提供会社ロゴ (株式会社ルーキースマートジャパン) */}
+        <a
+          href="https://rookiesmart.jp"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="株式会社ルーキースマートジャパン"
+          className="md:justify-self-center inline-flex w-full max-w-[420px] items-center justify-center rounded-[18px] border border-[#d7e4ff] bg-white px-5 py-3 shadow-[0_16px_42px_rgba(32,118,255,0.14)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_20px_52px_rgba(32,118,255,0.20)] md:max-w-[460px]"
+        >
+          <Image
+            src="/brand/rookie-smart-japan/rsj-08-sovereign-wordmark-logo-white.svg"
+            alt="株式会社ルーキースマートジャパン"
+            width={840}
+            height={210}
+            className="h-auto w-full max-w-[360px] md:max-w-[400px]"
+            unoptimized
+          />
+        </a>
+
+        {/* 右: 法務リンク */}
+        <div className="flex flex-wrap gap-x-5 gap-y-2 md:justify-self-end">
           <Link href="/media" className="hover:text-aurora transition-colors">
             メディア
           </Link>

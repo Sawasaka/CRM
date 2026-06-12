@@ -1042,10 +1042,18 @@ export const Hero = () => {
                   ],
                 },
                 {
-                  tag: '近日対応予定',        tagColor: '#ffcf4a', tagBg: 'rgba(255,207,74,0.10)',
+                  tag: '会議・グループウェア',  tagColor: '#ffcf4a', tagBg: 'rgba(255,207,74,0.10)',
                   items: [
                     { l: 'Microsoft 365',    c: '#abc7ff', sub: 'Outlook / Teams' },
                     { l: 'Zoom',             c: '#7aa4ff', sub: '議事録' },
+                  ],
+                },
+                {
+                  tag: '通話連携（Call）',     tagColor: '#7ec6ff', tagBg: 'rgba(126,198,255,0.10)',
+                  items: [
+                    { l: 'Zoom Phone',       c: '#7aa4ff', sub: '' },
+                    { l: 'MiiTel',           c: '#34d399', sub: '' },
+                    { l: 'Comdesk',          c: '#ffcf4a', sub: '' },
                   ],
                 },
                 {

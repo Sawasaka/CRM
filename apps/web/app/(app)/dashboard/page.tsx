@@ -34,10 +34,26 @@ type OwnerRow = {
 }
 
 const MOCK_OWNER_ROWS: Record<Period, OwnerRow[]> = {
-  this_month: [],
-  last_month: [],
-  this_quarter: [],
-  last_quarter: [],
+  this_month: [
+    { name: 'デモ担当', callCount: 186, mailSent: 420, appointments: 24, deals: 8, callTrend: 18, mailTrend: 12 },
+    { name: 'IS担当', callCount: 132, mailSent: 318, appointments: 17, deals: 5, callTrend: 9, mailTrend: 7 },
+    { name: 'マーケ担当', callCount: 48, mailSent: 1260, appointments: 14, deals: 4, callTrend: 6, mailTrend: 22 },
+  ],
+  last_month: [
+    { name: 'デモ担当', callCount: 158, mailSent: 376, appointments: 19, deals: 6, callTrend: 10, mailTrend: 8 },
+    { name: 'IS担当', callCount: 121, mailSent: 286, appointments: 14, deals: 4, callTrend: 4, mailTrend: 5 },
+    { name: 'マーケ担当', callCount: 42, mailSent: 1032, appointments: 10, deals: 3, callTrend: 3, mailTrend: 18 },
+  ],
+  this_quarter: [
+    { name: 'デモ担当', callCount: 512, mailSent: 1160, appointments: 64, deals: 19, callTrend: 21, mailTrend: 17 },
+    { name: 'IS担当', callCount: 384, mailSent: 904, appointments: 43, deals: 12, callTrend: 13, mailTrend: 11 },
+    { name: 'マーケ担当', callCount: 126, mailSent: 3518, appointments: 36, deals: 9, callTrend: 8, mailTrend: 27 },
+  ],
+  last_quarter: [
+    { name: 'デモ担当', callCount: 438, mailSent: 982, appointments: 51, deals: 15, callTrend: 14, mailTrend: 9 },
+    { name: 'IS担当', callCount: 322, mailSent: 794, appointments: 35, deals: 10, callTrend: 7, mailTrend: 6 },
+    { name: 'マーケ担当', callCount: 110, mailSent: 2844, appointments: 28, deals: 7, callTrend: 5, mailTrend: 20 },
+  ],
 }
 
 // ─── Mock data: マーケティング指標 ───────────────────────────────────────────
@@ -50,19 +66,39 @@ type MarketingStats = {
   docDownloaded: number
 }
 
-const EMPTY_MARKETING: MarketingStats = {
-  mailSent: 0,
-  mailDelivered: 0,
-  mailOpened: 0,
-  mailClicked: 0,
-  docOpened: 0,
-  docDownloaded: 0,
-}
 const MOCK_MARKETING: Record<Period, MarketingStats> = {
-  this_month: EMPTY_MARKETING,
-  last_month: EMPTY_MARKETING,
-  this_quarter: EMPTY_MARKETING,
-  last_quarter: EMPTY_MARKETING,
+  this_month: {
+    mailSent: 1998,
+    mailDelivered: 1932,
+    mailOpened: 742,
+    mailClicked: 218,
+    docOpened: 164,
+    docDownloaded: 52,
+  },
+  last_month: {
+    mailSent: 1694,
+    mailDelivered: 1641,
+    mailOpened: 596,
+    mailClicked: 174,
+    docOpened: 121,
+    docDownloaded: 37,
+  },
+  this_quarter: {
+    mailSent: 5578,
+    mailDelivered: 5409,
+    mailOpened: 2012,
+    mailClicked: 628,
+    docOpened: 451,
+    docDownloaded: 138,
+  },
+  last_quarter: {
+    mailSent: 4620,
+    mailDelivered: 4498,
+    mailOpened: 1544,
+    mailClicked: 482,
+    docOpened: 311,
+    docDownloaded: 98,
+  },
 }
 
 const DASH_PANEL_SURFACE =

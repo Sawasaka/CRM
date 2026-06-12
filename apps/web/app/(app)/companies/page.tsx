@@ -27,6 +27,11 @@ import {
 } from '@/components/obsidian'
 import { SignalBadge, type Signal as FirstPartySignal } from '@/components/crm/SignalBadge'
 import { getCompanyFirstPartySignal } from '@/lib/mock-data/firstPartySignals'
+import {
+  buildDemoDeptPhoneCount,
+  buildDemoHireBudgets,
+  isDemoUrlSearch,
+} from '@/lib/demo-company-data'
 
 type Signal = 'Hot' | 'Middle' | 'Low' | 'None'
 type IntentLevel = 'hot' | 'middle' | 'low'
@@ -76,6 +81,14 @@ interface IntentEntry {
   signalCount: number
 }
 
+// 採用予算 (求人インテントから抽出 / CSV 投入想定)
+// 月給ベース (円)。各部門の上限 (monthlyMax) のうち最大値を「採用予算」として表示する。
+interface HireBudget {
+  departmentType: DepartmentType | string
+  monthlyMin: number
+  monthlyMax: number
+}
+
 interface CompanyRow {
   id: string
   name: string
@@ -89,6 +102,10 @@ interface CompanyRow {
   corporateType: string
   corporateNumber: string
   officeCount: number
+  // 各拠点が持つ部署直通番号の合計件数 (offices[].dept_phones を集約)
+  deptPhoneCount: number
+  // 求人インテントから集約した部門別予算 (CSV 投入)
+  hireBudgets: HireBudget[]
   serviceTags: string[]
   intents: IntentEntry[]
   enrichmentStatus: string  // 'COMPLETED' | 'PENDING' | etc
@@ -205,6 +222,27 @@ function bucketOfOffice(n: number): Exclude<OfficeBucketKey, 'all'> | null {
   }
   return null
 }
+
+// 採用予算バケット (月給・万単位)
+// 各部門の月給上限 (monthlyMax) の最大値に対する閾値フィルタ。
+// 同じ会社が複数バケットにマッチしうるため OR 評価。
+const HIRE_BUDGET_BUCKETS = [
+  { key: 'gte-30', label: '30万以上', min: 30 },
+  { key: 'gte-50', label: '50万以上', min: 50 },
+  { key: 'gte-80', label: '80万以上', min: 80 },
+  { key: 'gte-100', label: '100万以上', min: 100 },
+] as const
+type HireBudgetBucketKey = (typeof HIRE_BUDGET_BUCKETS)[number]['key']
+
+// 部署番号バケット (件数)
+// 0 = なし / それ以外は閾値以上。
+const DEPT_PHONE_BUCKETS = [
+  { key: 'none', label: 'なし', min: 0, max: 0 },
+  { key: 'gte-1', label: '1件以上', min: 1, max: Infinity },
+  { key: 'gte-5', label: '5件以上', min: 5, max: Infinity },
+  { key: 'gte-10', label: '10件以上', min: 10, max: Infinity },
+] as const
+type DeptPhoneBucketKey = (typeof DEPT_PHONE_BUCKETS)[number]['key']
 
 // "約3,000名" 形式に統一
 function formatEmployeeCount(raw: string | null): string {
@@ -439,11 +477,30 @@ function getAvatarGlow(name: string): string {
   return `inset 0 0 0 1px color-mix(in srgb, ${color} 18%, rgba(171,199,255,0.12)), inset 1px 1px 0 rgba(255,255,255,0.055), inset -1px -1px 0 rgba(0,0,0,0.24), 0 8px 18px rgba(0,0,0,0.22)`
 }
 
-// グリッドテンプレート — チェックボックス / 企業 / 求人インテント / 1stシグナル / 都道府県 / 業種 / 従業員数 / 売上 / 拠点
+// グリッドテンプレート — チェックボックス / 企業 / 求人インテント / 1stシグナル / 都道府県 / 業種 / 従業員数 / 売上 / 採用予算 / 部署番号 / 拠点
 // 求人インテントは「HOT 3部門」程度のチップで十分なため 130px に絞り、隣の 1st シグナルとの距離を縮める
 // 都道府県・業種は固定幅にして従業員数の左に寄せる（余ったスペースは企業列が吸収）
 const GRID_TEMPLATE =
-  'grid-cols-[28px_minmax(280px,2fr)_130px_140px_88px_140px_112px_128px_72px]'
+  'grid-cols-[28px_minmax(280px,2fr)_130px_140px_88px_140px_112px_128px_104px_88px_72px]'
+
+// 採用予算: 部門別の上限 monthlyMax の最大値を抜き出す
+function computeMaxHireBudget(
+  budgets: HireBudget[]
+): { yen: number; departmentType: string } | null {
+  if (budgets.length === 0) return null
+  let top: HireBudget = budgets[0]!
+  for (const b of budgets) {
+    if (b.monthlyMax > top.monthlyMax) top = b
+  }
+  return top.monthlyMax > 0 ? { yen: top.monthlyMax, departmentType: String(top.departmentType) } : null
+}
+
+// 円 → "50万" / "1,200万" 表記
+function formatHireBudget(yen: number): string {
+  if (yen <= 0) return '—'
+  const man = Math.round(yen / 10000)
+  return `${man.toLocaleString()}万`
+}
 
 export default function CompaniesPage() {
   const router = useRouter()
@@ -451,8 +508,8 @@ export default function CompaniesPage() {
   const [total, setTotal] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const [query, setQuery] = useState('')
-  // 表示モード: 'enriched' = エンリッチ済 6,967社 / 'all' = 290万社全件（デフォルト）
-  const [scopeMode, setScopeMode] = useState<'enriched' | 'all'>('all')
+  // 表示モード: 'enriched' = 部署番号あり 6,967社 (デフォルト) / 'all' = 290万社全件
+  const [scopeMode, setScopeMode] = useState<'enriched' | 'all'>('enriched')
   const [sort, setSort] = useState<{ key: SortKey; dir: SortDir }>({ key: 'intent', dir: 'desc' })
   const toggleSort = (key: SortKey) =>
     setSort((s) => (s.key === key ? { key, dir: s.dir === 'asc' ? 'desc' : 'asc' } : { key, dir: 'desc' }))
@@ -471,10 +528,13 @@ export default function CompaniesPage() {
   const [empFilter, setEmpFilter] = useState<Exclude<EmpBucketKey, 'all'>[]>([])
   const [revFilter, setRevFilter] = useState<Exclude<RevBucketKey, 'all'>[]>([])
   const [officeFilter, setOfficeFilter] = useState<Exclude<OfficeBucketKey, 'all'>[]>([])
+  // 採用予算フィルタ (月給万) / 部署番号件数フィルタ
+  const [hireBudgetFilter, setHireBudgetFilter] = useState<HireBudgetBucketKey[]>([])
+  const [deptPhoneFilter, setDeptPhoneFilter] = useState<DeptPhoneBucketKey[]>([])
   // 1stパーティーシグナル絞り込み: 'hot' / 'middle' / 'low' / 'none'(シグナルなし)
   const [signalFilter, setSignalFilter] = useState<Array<'hot' | 'middle' | 'low' | 'none'>>([])
   const [openMenu, setOpenMenu] = useState<
-    'industry' | 'prefecture' | 'employee' | 'department' | 'revenue' | 'office' | 'signal' | null
+    'industry' | 'prefecture' | 'employee' | 'department' | 'revenue' | 'office' | 'signal' | 'hireBudget' | 'deptPhone' | null
   >(null)
   const [page, setPage] = useState(1)
   const menuRef = useRef<HTMLDivElement | null>(null)
@@ -496,23 +556,31 @@ export default function CompaniesPage() {
         }
         const json = (await res.json()) as ApiResponse
         if (cancelled) return
-        const mapped: CompanyRow[] = json.data.map((c) => ({
-          id: c.id,
-          name: c.name,
-          domain: extractDomain(c.websiteUrl),
-          industry: c.industry?.name ?? 'その他',
-          prefecture: c.prefecture || '—',
-          city: c.city,
-          employeeCount: c.employeeCount,
-          revenue: c.revenue,
-          representative: c.representative,
-          corporateType: c.corporateType,
-          corporateNumber: c.corporateNumber,
-          officeCount: c._count?.offices ?? 0,
-          serviceTags: c.serviceTags.map((t) => t.tag.name),
-          intents: c.companyIntents,
-          enrichmentStatus: c.enrichmentStatus,
-        }))
+        const demoView = isDemoUrlSearch(window.location.search)
+        const mapped: CompanyRow[] = json.data.map((c) => {
+          const officeCount = c._count?.offices ?? 0
+          return {
+            id: c.id,
+            name: c.name,
+            domain: extractDomain(c.websiteUrl),
+            industry: c.industry?.name ?? 'その他',
+            prefecture: c.prefecture || '—',
+            city: c.city,
+            employeeCount: c.employeeCount,
+            revenue: c.revenue,
+            representative: c.representative,
+            corporateType: c.corporateType,
+            corporateNumber: c.corporateNumber,
+            officeCount,
+            deptPhoneCount: demoView
+              ? buildDemoDeptPhoneCount(c.id, c.companyIntents, officeCount)
+              : 0,
+            hireBudgets: demoView ? buildDemoHireBudgets(c.id, c.companyIntents) : [],
+            serviceTags: c.serviceTags.map((t) => t.tag.name),
+            intents: c.companyIntents,
+            enrichmentStatus: c.enrichmentStatus,
+          }
+        })
         setRows(mapped)
         setTotal(json.total)
         setIsLoading(false)
@@ -624,6 +692,27 @@ export default function CompaniesPage() {
         return b !== null && officeFilter.includes(b)
       })
     }
+    if (hireBudgetFilter.length > 0) {
+      // 採用予算: 各部門 monthlyMax の最大値 (円→万に換算) が、選択された閾値のいずれかを満たすかで OR 評価
+      list = list.filter(({ row }) => {
+        const top = computeMaxHireBudget(row.hireBudgets)
+        if (!top) return false
+        const man = top.yen / 10000
+        return hireBudgetFilter.some((k) => {
+          const b = HIRE_BUDGET_BUCKETS.find((x) => x.key === k)
+          return b && man >= b.min
+        })
+      })
+    }
+    if (deptPhoneFilter.length > 0) {
+      // 部署番号: deptPhoneCount に対する閾値フィルタ ('none' は 0 件のみ)
+      list = list.filter(({ row }) =>
+        deptPhoneFilter.some((k) => {
+          const b = DEPT_PHONE_BUCKETS.find((x) => x.key === k)
+          return b && row.deptPhoneCount >= b.min && row.deptPhoneCount <= b.max
+        }),
+      )
+    }
     if (signalFilter.length > 0) {
       // 1st パーティーシグナル：行のシグナル(または無し)が選択集合に含まれるかで絞り込む
       list = list.filter(({ row }) => {
@@ -686,6 +775,8 @@ export default function CompaniesPage() {
     empFilter,
     revFilter,
     officeFilter,
+    hireBudgetFilter,
+    deptPhoneFilter,
     signalFilter,
   ])
 
@@ -697,6 +788,8 @@ export default function CompaniesPage() {
     empFilter.length > 0 ||
     revFilter.length > 0 ||
     officeFilter.length > 0 ||
+    hireBudgetFilter.length > 0 ||
+    deptPhoneFilter.length > 0 ||
     signalFilter.length > 0 ||
     query.trim() !== ''
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
@@ -712,6 +805,8 @@ export default function CompaniesPage() {
       empFilter,
       revFilter,
       officeFilter,
+      hireBudgetFilter,
+      deptPhoneFilter,
       signalFilter,
     ],
   )
@@ -725,6 +820,8 @@ export default function CompaniesPage() {
     setEmpFilter([])
     setRevFilter([])
     setOfficeFilter([])
+    setHireBudgetFilter([])
+    setDeptPhoneFilter([])
     setSignalFilter([])
     setQuery('')
   }
@@ -765,6 +862,14 @@ export default function CompaniesPage() {
     const found = OFFICE_BUCKETS.find((b) => b.key === k)
     return found ? [found.label] : []
   })
+  const hireBudgetSelectedLabels: string[] = hireBudgetFilter.flatMap((k) => {
+    const found = HIRE_BUDGET_BUCKETS.find((b) => b.key === k)
+    return found ? [found.label] : []
+  })
+  const deptPhoneSelectedLabels: string[] = deptPhoneFilter.flatMap((k) => {
+    const found = DEPT_PHONE_BUCKETS.find((b) => b.key === k)
+    return found ? [found.label] : []
+  })
 
   return (
     <ObsPageShell>
@@ -795,8 +900,8 @@ export default function CompaniesPage() {
             </h1>
             <p className={OBS_HERO_CLASS.caption} style={OBS_HERO_STYLE.caption}>
               {scopeMode === 'enriched'
-                ? `エンリッチ済${total.toLocaleString()}社を、求人インテント・業種・売上・拠点で検索。`
-                : '登記台帳290万社を、求人インテント・1stシグナル・業種・地域条件で検索。'}
+                ? `部署直通番号を保有する${total.toLocaleString()}社を、求人インテント・業種・売上・拠点で検索。`
+                : '部署番号未取得を含む290万社全件を、求人インテント・1stシグナル・業種・地域条件で検索。'}
             </p>
           </div>
           <div className="2xl:shrink-0">
@@ -827,7 +932,7 @@ export default function CompaniesPage() {
                       : undefined,
                   }}
                 >
-                  エンリッチ済
+                  部署番号あり
                 </button>
                 <button
                   type="button"
@@ -842,9 +947,9 @@ export default function CompaniesPage() {
                       ? 'inset 1px 1px 0 rgba(255,255,255,0.14), inset 0 0 0 1px rgba(171,199,255,0.22), 0 0 18px rgba(171,199,255,0.16)'
                       : undefined,
                   }}
-                  title="290万社の登記台帳全件 (未エンリッチ含む)"
+                  title="290万社の登記台帳全件 (部署番号未取得を含む)"
                 >
-                  290万社全件
+                  部署番号なし
                 </button>
               </div>
               <div
@@ -994,6 +1099,18 @@ export default function CompaniesPage() {
                 count={officeFilter.length}
                 onClick={() => setOpenMenu((m) => (m === 'office' ? null : 'office'))}
               />
+              <FilterTrigger
+                active={hireBudgetFilter.length > 0}
+                label={summarizeSelection(hireBudgetSelectedLabels, '採用予算')}
+                count={hireBudgetFilter.length}
+                onClick={() => setOpenMenu((m) => (m === 'hireBudget' ? null : 'hireBudget'))}
+              />
+              <FilterTrigger
+                active={deptPhoneFilter.length > 0}
+                label={summarizeSelection(deptPhoneSelectedLabels, '部署番号')}
+                count={deptPhoneFilter.length}
+                onClick={() => setOpenMenu((m) => (m === 'deptPhone' ? null : 'deptPhone'))}
+              />
             </div>
 
             {openMenu === 'department' && (
@@ -1057,6 +1174,24 @@ export default function CompaniesPage() {
                 onToggle={(key) => setSignalFilter((arr) => toggleInArray(arr, key))}
                 onClear={() => setSignalFilter([])}
                 allLabel="すべての1stシグナル"
+              />
+            )}
+            {openMenu === 'hireBudget' && (
+              <MultiSelectDropdown
+                items={HIRE_BUDGET_BUCKETS.map((b) => ({ key: b.key, label: b.label }))}
+                selected={hireBudgetFilter}
+                onToggle={(key) => setHireBudgetFilter((arr) => toggleInArray(arr, key))}
+                onClear={() => setHireBudgetFilter([])}
+                allLabel="すべての採用予算"
+              />
+            )}
+            {openMenu === 'deptPhone' && (
+              <MultiSelectDropdown
+                items={DEPT_PHONE_BUCKETS.map((b) => ({ key: b.key, label: b.label }))}
+                selected={deptPhoneFilter}
+                onToggle={(key) => setDeptPhoneFilter((arr) => toggleInArray(arr, key))}
+                onClear={() => setDeptPhoneFilter([])}
+                allLabel="すべての部署番号件数"
               />
             )}
           </div>
@@ -1233,6 +1368,8 @@ export default function CompaniesPage() {
                 <span>業種</span>
                 <SortHeader label="従業員数" k="employee" sort={sort} onSort={toggleSort} />
                 <SortHeader label="売上" k="revenue" sort={sort} onSort={toggleSort} />
+                <span className="text-[11px] font-medium tracking-[0.1em] uppercase" style={{ color: 'var(--color-obs-text-subtle)' }}>採用予算</span>
+                <span className="text-[11px] font-medium tracking-[0.1em] uppercase" style={{ color: 'var(--color-obs-text-subtle)' }}>部署番号</span>
                 <SortHeader label="拠点" k="office" sort={sort} onSort={toggleSort} align="right" />
               </div>
 
@@ -1255,8 +1392,8 @@ export default function CompaniesPage() {
                       })
                     }}
                     intent={intent}
-                    onClick={() => router.push(`/companies/${row.id}`)}
-                    onHover={() => router.prefetch(`/companies/${row.id}`)}
+                    onClick={() => router.push(`/companies/${row.id}${window.location.search}`)}
+                    onHover={() => router.prefetch(`/companies/${row.id}${window.location.search}`)}
                   />
                 ))
               )}
@@ -1695,6 +1832,14 @@ function CompanyRowItem({
         {formatRevenue(row.revenue)}
       </span>
 
+      {/* 採用予算 — 部門別 monthlyMax の最大値 / CSV 投入後に表示 */}
+      <HireBudgetCell budgets={row.hireBudgets} />
+
+      {/* 部署番号 — 拠点に紐づく部署直通番号の合計 */}
+      <span className="text-[12.5px] tabular-nums" style={{ color: 'var(--color-obs-text-muted)' }}>
+        {row.deptPhoneCount > 0 ? `${row.deptPhoneCount}件` : '—'}
+      </span>
+
       {/* 拠点数 */}
       <span
         className="text-[12.5px] text-right tabular-nums"
@@ -1740,6 +1885,28 @@ function SortHeader({
       <span>{label}</span>
       <Icon size={10} className={active ? '' : 'opacity-50'} />
     </button>
+  )
+}
+
+// 採用予算セル — 最大値 (例: 50万) を表示。
+// データなし or 0 円のときは "—"。値があれば accent (gold) で目を引かせる。
+function HireBudgetCell({ budgets }: { budgets: HireBudget[] }) {
+  const top = computeMaxHireBudget(budgets)
+  if (!top) {
+    return (
+      <span className="text-[12.5px] tabular-nums" style={{ color: 'var(--color-obs-text-subtle)', opacity: 0.55 }}>
+        —
+      </span>
+    )
+  }
+  return (
+    <span
+      className="text-[12.5px] tabular-nums font-semibold"
+      style={{ color: '#FFC107' }}
+      title={`${top.departmentType} の上限から算出`}
+    >
+      {formatHireBudget(top.yen)}
+    </span>
   )
 }
 
@@ -1929,6 +2096,8 @@ function AddCompanyModal({
       corporateType: '株式会社',
       corporateNumber: '',
       officeCount: 0,
+      deptPhoneCount: 0,
+      hireBudgets: [],
       serviceTags: [],
       intents: [],
       enrichmentStatus: 'PENDING',

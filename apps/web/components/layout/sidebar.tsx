@@ -1,9 +1,8 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
-import { useSession } from 'next-auth/react'
 import {
   PenSquare,
   Search,
@@ -36,6 +35,7 @@ const NAV_ITEMS: NavItemDef[] = [
   { href: '/lists',     label: 'ISリスト',         initial: 'S', color: '#abc7ff' },
   { href: '/tasks',     label: 'タスク一覧',       initial: 'S', color: '#abc7ff' },
   { href: '/dashboard', label: 'アクションボード', initial: 'S', color: '#abc7ff' },
+  { href: '/calls',     label: 'AIコール',         initial: 'S', color: '#abc7ff' },
   { href: '/tickets',   label: '問い合わせチケット', initial: 'C', color: '#ff8dcf' },
   { href: '/mail',      label: 'メール配信',       initial: 'M', color: '#ffcf4a' },
   { href: '/priority',  label: '顧客の声',         initial: 'P', color: '#8dffc9' },
@@ -130,20 +130,42 @@ function WorkspaceNavItem({
   label: string
   active: boolean
 }) {
+  const router = useRouter()
   const [hover, setHover] = useState(false)
+  // 楽観的 active: クリック直後に navigation が完了するまで pending=true → 即色を切り替える
+  const [pending, startTransition] = useTransition()
+  const visualActive = active || pending
+
+  // hover/focus で明示的に prefetch (Next.js Link 自動 prefetch のフォールバック)
+  const handlePrefetch = useCallback(() => {
+    router.prefetch(href)
+  }, [router, href])
+
   return (
-    <Link href={href}>
+    <Link
+      href={href}
+      prefetch
+      onClick={(e) => {
+        // 同じページなら何もしない
+        if (active) return
+        e.preventDefault()
+        startTransition(() => router.push(href))
+      }}
+      onMouseEnter={handlePrefetch}
+      onFocus={handlePrefetch}
+      onTouchStart={handlePrefetch}
+    >
       <div
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
         className="mx-2 flex items-center gap-2.5 px-3 py-[7px] rounded-[var(--radius-obs-md)] transition-colors duration-150"
         style={{
-          background: active
+          background: visualActive
             ? NAV_ITEM_ACTIVE_BG
             : hover
               ? NAV_ITEM_HOVER_BG
               : 'transparent',
-          boxShadow: active ? NAV_ITEM_ACTIVE_SHADOW : NAV_ITEM_IDLE_SHADOW,
+          boxShadow: visualActive ? NAV_ITEM_ACTIVE_SHADOW : NAV_ITEM_IDLE_SHADOW,
           transitionTimingFunction: 'var(--ease-liquid)',
         }}
       >
@@ -155,12 +177,12 @@ function WorkspaceNavItem({
           <span
             className="inline-block rounded-full"
             style={{
-              width: active ? 9 : 8,
-              height: active ? 9 : 8,
-              background: active
+              width: visualActive ? 9 : 8,
+              height: visualActive ? 9 : 8,
+              background: visualActive
                 ? 'radial-gradient(circle at 30% 30%, #ffffff 0%, rgba(255,255,255,0.96) 38%, rgba(171,199,255,0.72) 82%)'
                 : `radial-gradient(circle at 30% 30%, #ffffff 0%, ${color} 38%, ${color}78 82%)`,
-              boxShadow: active
+              boxShadow: visualActive
                 ? '0 0 10px rgba(255,255,255,0.78), 0 0 22px rgba(171,199,255,0.58)'
                 : `0 0 7px ${color}9c, 0 0 16px ${color}44`,
             }}
@@ -168,7 +190,7 @@ function WorkspaceNavItem({
         </span>
         <span
           className="text-[13px] tracking-[-0.01em] leading-none"
-          style={active ? NAV_TEXT_ACTIVE_STYLE : NAV_TEXT_STYLE}
+          style={visualActive ? NAV_TEXT_ACTIVE_STYLE : NAV_TEXT_STYLE}
         >
           {label}
         </span>
@@ -428,10 +450,14 @@ const ADMIN_MENU_SECTION: MenuSection = {
   ],
 }
 
-function useIsBGMTenant(): boolean {
+function useIsBGMTenant(disabled = false): boolean {
   const [allowed, setAllowed] = useState(false)
 
   useEffect(() => {
+    if (disabled) {
+      setAllowed(false)
+      return
+    }
     let mounted = true
     const refreshAccess = () => {
       fetch('/api/admin/customer-ops/access', { cache: 'no-store' })
@@ -452,16 +478,26 @@ function useIsBGMTenant(): boolean {
       window.removeEventListener('focus', refreshAccess)
       document.removeEventListener('visibilitychange', refreshAccess)
     }
-  }, [])
+  }, [disabled])
 
   return allowed
 }
 
-function UserMenu({ userName, userInitial }: { userName: string; userInitial: string }) {
+function UserMenu({
+  userName,
+  userInitial,
+  isDemoExperience,
+  buildHref,
+}: {
+  userName: string
+  userInitial: string
+  isDemoExperience: boolean
+  buildHref: (href: string) => string
+}) {
   const [open, setOpen] = useState(false)
   const [hover, setHover] = useState(false)
   const wrapRef = useRef<HTMLDivElement | null>(null)
-  const isBGMTenant = useIsBGMTenant()
+  const isBGMTenant = useIsBGMTenant(isDemoExperience)
 
   // 外側クリックで閉じる
   useEffect(() => {
@@ -475,7 +511,7 @@ function UserMenu({ userName, userInitial }: { userName: string; userInitial: st
   }, [open])
 
   // BGMテナントの場合は管理者メニューを末尾に追加
-  const sections: MenuSection[] = isBGMTenant
+  const sections: MenuSection[] = isBGMTenant && !isDemoExperience
     ? [...USER_MENU_SECTIONS, ADMIN_MENU_SECTION]
     : USER_MENU_SECTIONS
 
@@ -516,7 +552,7 @@ function UserMenu({ userName, userInitial }: { userName: string; userInitial: st
                     {section.items.map((m) => (
                       <Link
                         key={m.href}
-                        href={m.href}
+                        href={buildHref(m.href)}
                         onClick={() => setOpen(false)}
                         className="flex-1 flex items-center justify-center px-2 py-1.5 rounded-[6px] transition-colors duration-100"
                         style={{ color: 'var(--color-obs-text)' }}
@@ -550,7 +586,7 @@ function UserMenu({ userName, userInitial }: { userName: string; userInitial: st
                   {section.items.map((m) => (
                     <Link
                       key={m.href}
-                      href={m.href}
+                      href={buildHref(m.href)}
                       onClick={() => setOpen(false)}
                       className="flex items-center gap-2.5 px-3 py-[7px] mx-1 rounded-[6px] transition-colors duration-100"
                       style={{ color: 'var(--color-obs-text)' }}
@@ -639,7 +675,6 @@ export function Sidebar() {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const { data: session } = useSession()
   const chats = useChatHistory()
   const activeChatId = searchParams.get('chat')
   const [pinnedIds, setPinnedIds] = useState<Set<string>>(new Set())
@@ -690,18 +725,56 @@ export function Sidebar() {
   const isHomePathname = pathname === '/'
   const isNavActive = (href: string) =>
     href === '/' ? pathname === '/' : pathname.startsWith(href)
-  const userName = session?.user?.name || session?.user?.email || 'ユーザー'
+  const isDemoExperience = isDemoRouteState(pathname, searchParams)
+  const buildScopedHref = useCallback(
+    (href: string) => appendRouteContext(href, searchParams),
+    [searchParams],
+  )
+
+  useEffect(() => {
+    const context = buildRouteContext(searchParams)
+    if (context) {
+      window.sessionStorage.setItem(DEMO_ROUTE_CONTEXT_KEY, context)
+      return
+    }
+    if (hasAnyRouteContext(searchParams)) {
+      window.sessionStorage.removeItem(DEMO_ROUTE_CONTEXT_KEY)
+      return
+    }
+
+    const savedContext = window.sessionStorage.getItem(DEMO_ROUTE_CONTEXT_KEY)
+    if (!savedContext) return
+    if (!isAppRouteEligibleForDemoRestore(pathname)) return
+
+    router.replace(appendRouteContext(pathname, new URLSearchParams(savedContext)))
+  }, [pathname, router, searchParams])
+
+  // 下部表示は人物名ではなく「今いる環境」を示す: デフォルト / デモ環境
+  const userName = isDemoExperience ? 'デモ環境' : 'デフォルト'
   const userInitial = userName.slice(0, 1).toUpperCase()
+  const buildHomeHref = (next: Record<string, string | null> = {}) => {
+    const params = new URLSearchParams()
+    for (const key of ['tenant', 'demo', 'demoSession']) {
+      const value = searchParams.get(key)
+      if (value !== null) params.set(key, value)
+    }
+    for (const [key, value] of Object.entries(next)) {
+      if (value === null) params.delete(key)
+      else params.set(key, value)
+    }
+    const qs = params.toString()
+    return qs ? `/?${qs}` : '/'
+  }
 
   const handleNewChat = () => {
-    router.push('/')
+    router.push(buildHomeHref({ chat: null, focus: null }))
   }
   const handleSearch = () => {
     // Phase 1: 検索モーダル未実装。ホームのチャット入力にフォーカス。
-    router.push('/?focus=search')
+    router.push(buildHomeHref({ chat: null, focus: 'search' }))
   }
   const handleChatClick = (id: string) => {
-    router.push(`/?chat=${id}`)
+    router.push(buildHomeHref({ chat: id, focus: null }))
   }
   const togglePin = (id: string) => {
     setPinnedIds((prev) => {
@@ -713,7 +786,7 @@ export function Sidebar() {
   }
   const deleteChat = (id: string) => {
     deleteChatRecord(id)
-    if (activeChatId === id) router.push('/')
+    if (activeChatId === id) router.push(buildHomeHref({ chat: null, focus: null }))
   }
   const commitRename = (id: string, newTitle: string) => {
     renameChatRecord(id, newTitle)
@@ -765,7 +838,7 @@ export function Sidebar() {
         {/* ── ロゴ ── (折りたたみ時はトグルボタンの背面を通り抜けて画面外へ消える) */}
         <div className="h-[56px] shrink-0 flex items-center pl-14 pr-3">
           <Link
-            href="/"
+            href={buildHomeHref({ chat: null, focus: null })}
             className="transition-opacity duration-150 hover:opacity-80"
             aria-label="ルキスマCRM ホーム"
           >
@@ -780,7 +853,7 @@ export function Sidebar() {
           {NAV_ITEMS.map((it) => (
             <WorkspaceNavItem
               key={it.href}
-              href={it.href}
+              href={buildScopedHref(it.href)}
               initial={it.initial}
               color={it.color}
               label={it.label}
@@ -835,8 +908,71 @@ export function Sidebar() {
         </nav>
 
         {/* ── User menu (drop-up: 設定 / 連携 / プラン) ── */}
-        <UserMenu userName={userName} userInitial={userInitial} />
+        <UserMenu
+          userName={userName}
+          userInitial={userInitial}
+          isDemoExperience={isDemoExperience}
+          buildHref={buildScopedHref}
+        />
       </aside>
     </>
   )
+}
+
+function isDemoRouteState(pathname: string, searchParams: URLSearchParams) {
+  const tenant = searchParams.get('tenant') ?? ''
+  return (
+    searchParams.get('demo') !== null ||
+    tenant.startsWith('demo-') ||
+    pathname.startsWith('/demo')
+  )
+}
+
+const DEMO_ROUTE_CONTEXT_KEY = 'bgm.demoRouteContext'
+const ROUTE_CONTEXT_KEYS = ['tenant', 'demo', 'demoSession'] as const
+
+function buildRouteContext(searchParams: Pick<URLSearchParams, 'get'>) {
+  const params = new URLSearchParams()
+  for (const key of ROUTE_CONTEXT_KEYS) {
+    const value = searchParams.get(key)
+    if (value !== null) params.set(key, value)
+  }
+  const tenant = params.get('tenant') ?? ''
+  if (!tenant.startsWith('demo-') && params.get('demo') === null && params.get('demoSession') === null) {
+    return ''
+  }
+  return params.toString()
+}
+
+function hasAnyRouteContext(searchParams: Pick<URLSearchParams, 'get'>) {
+  return ROUTE_CONTEXT_KEYS.some((key) => searchParams.get(key) !== null)
+}
+
+function appendRouteContext(href: string, searchParams: Pick<URLSearchParams, 'get'>) {
+  const context = buildRouteContext(searchParams)
+  if (!context) return href
+
+  const hashIndex = href.indexOf('#')
+  const hash = hashIndex >= 0 ? href.slice(hashIndex) : ''
+  const hrefWithoutHash = hashIndex >= 0 ? href.slice(0, hashIndex) : href
+  const queryIndex = hrefWithoutHash.indexOf('?')
+  const path = queryIndex >= 0 ? hrefWithoutHash.slice(0, queryIndex) : hrefWithoutHash
+  const existingQuery = queryIndex >= 0 ? hrefWithoutHash.slice(queryIndex + 1) : ''
+  const params = new URLSearchParams(existingQuery)
+  const contextParams = new URLSearchParams(context)
+
+  for (const key of ROUTE_CONTEXT_KEYS) {
+    const value = contextParams.get(key)
+    if (value !== null) params.set(key, value)
+  }
+
+  const qs = params.toString()
+  return `${path}${qs ? `?${qs}` : ''}${hash}`
+}
+
+function isAppRouteEligibleForDemoRestore(pathname: string) {
+  if (pathname.startsWith('/admin')) return false
+  if (pathname.startsWith('/settings')) return false
+  if (pathname.startsWith('/subscription')) return false
+  return true
 }

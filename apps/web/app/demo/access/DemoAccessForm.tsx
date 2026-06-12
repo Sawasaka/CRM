@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from 'react'
 import { signIn } from 'next-auth/react'
 import { Loader2, Sparkles } from 'lucide-react'
+import { TurnstileField } from '@/components/demo/TurnstileField'
 
 type SubmitStep = 'idle' | 'issuing' | 'signing-in'
 
@@ -18,6 +19,7 @@ export function DemoAccessForm({
   const [submitting, setSubmitting] = useState(false)
   const [submitStep, setSubmitStep] = useState<SubmitStep>('idle')
   const [error, setError] = useState<string | null>(null)
+  const [turnstileToken, setTurnstileToken] = useState('')
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -38,6 +40,8 @@ export function DemoAccessForm({
           company: companyName,
           name,
           email,
+          turnstileToken,
+          website: formDataValue(event.currentTarget, 'website'),
         }),
       })
       const json = await res.json().catch(() => ({}))
@@ -61,7 +65,7 @@ export function DemoAccessForm({
       if (!result?.ok) {
         throw new Error('デモログインに失敗しました。')
       }
-      window.location.href = result.url ?? json.url
+      window.location.href = typeof json.url === 'string' ? json.url : result.url ?? '/'
     } catch (err) {
       setError(err instanceof Error ? err.message : 'デモURLの発行に失敗しました。')
       setSubmitting(false)
@@ -71,6 +75,14 @@ export function DemoAccessForm({
 
   return (
     <form onSubmit={onSubmit} className="mt-7 space-y-4">
+      <input
+        type="text"
+        name="website"
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        className="hidden"
+      />
       <DemoField label="会社名" value={companyName} readOnly />
       <DemoField label="氏名" value={name} onChange={setName} placeholder="山田 太郎" required />
       <DemoField
@@ -81,6 +93,7 @@ export function DemoAccessForm({
         placeholder="taro@example.co.jp"
         required
       />
+      <TurnstileField onTokenChange={setTurnstileToken} />
 
       {error && (
         <div
@@ -121,6 +134,11 @@ export function DemoAccessForm({
       </button>
     </form>
   )
+}
+
+function formDataValue(form: HTMLFormElement, name: string) {
+  const value = new FormData(form).get(name)
+  return typeof value === 'string' ? value : ''
 }
 
 function DemoField({

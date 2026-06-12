@@ -15,6 +15,7 @@ import { CreateTicketModal } from './_components/CreateTicketModal'
 import { StatusDropdown } from './_components/StatusDropdown'
 import { getMockTicketDetail, MOCK_TICKETS } from './_lib/mock'
 import type { TicketDetail, TicketListItem, TicketStatus } from './_types'
+import { isDemoUrlSearch } from '@/lib/demo-company-data'
 
 const TABS: { key: 'OPEN' | 'PENDING' | 'DONE' | 'ALL'; label: string }[] = [
   { key: 'ALL', label: 'すべて' },
@@ -82,16 +83,18 @@ export default function TicketsPage() {
 
   async function load() {
     setLoading(true)
+    const demoView = isDemoUrlSearch(window.location.search)
+    const params = new URLSearchParams(window.location.search)
     try {
-      const res = await fetch('/api/tickets', { cache: 'no-store' })
+      const res = await fetch(`/api/tickets?${params.toString()}`, { cache: 'no-store' })
       if (res.ok) {
         const json = (await res.json()) as { tickets: TicketListItem[] }
-        setTickets(json.tickets.length > 0 ? json.tickets : MOCK_TICKETS)
+        setTickets(demoView && json.tickets.length === 0 ? MOCK_TICKETS : json.tickets)
       } else {
-        setTickets(MOCK_TICKETS)
+        setTickets(demoView ? MOCK_TICKETS : [])
       }
     } catch {
-      setTickets(MOCK_TICKETS)
+      setTickets(demoView ? MOCK_TICKETS : [])
     } finally {
       setLoading(false)
     }

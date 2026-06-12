@@ -37,6 +37,9 @@ type DealStage =
   | 'LOST_DEAL' | 'CLOSED_WON' | 'CHURN' | 'LOST'
 
 import { SignalBadge, type Signal } from '@/components/crm/SignalBadge'
+import { isDemoUrlSearch } from '@/lib/demo-company-data'
+import { getDemoDealsForApi } from '@/lib/demo-crm-data'
+import { getCompanyFirstPartySignal } from '@/lib/mock-data/firstPartySignals'
 
 type ChipTone = 'neutral' | 'hot' | 'middle' | 'low' | 'primary'
 
@@ -99,6 +102,69 @@ interface Deal {
 // 各取引の signal は社名キーで firstPartySignals.ts と連動させる(290万社DBの 1stシグナル列と同じソース)
 
 const MOCK_DEALS: Deal[] = []
+
+type ApiDeal = {
+  id: string
+  name: string
+  stage: string
+  amount: number | null
+  probability: number | null
+  expectedCloseAt: string | null
+  createdAt: string
+  updatedAt: string
+  nextActionUs: string | null
+  desiredService: string | null
+  timeline: string | null
+  company: { id: string; name: string; rank?: string | null }
+  contact: { id: string; name: string } | null
+  owner: { id: string; name: string }
+  _count: { emailMessages: number; meetingEvents: number }
+}
+
+function toDealStage(stage: string): DealStage {
+  const map: Record<string, DealStage> = {
+    NEW_LEAD: 'IS',
+    QUALIFIED: 'MEETING_PLANNED',
+    FIRST_MEETING: 'MEETING_DONE',
+    SOLUTION_FIT: 'PROJECT_PLANNED',
+    PROPOSAL: 'MULTI_MEETING',
+    NEGOTIATION: 'POC',
+    VERBAL_COMMIT: 'POC',
+    CLOSED_WON: 'CLOSED_WON',
+    CLOSED_LOST: 'LOST_DEAL',
+  }
+  return map[stage] ?? 'IS'
+}
+
+function toRank(value?: string | null): Rank {
+  if (value === 'A' || value === 'S') return 'A'
+  if (value === 'B') return 'B'
+  return 'C'
+}
+
+function toDeal(item: ApiDeal): Deal {
+  return {
+    id: item.id,
+    name: item.name,
+    company: item.company.name,
+    contact: item.contact?.name ?? '',
+    owner: item.owner.name,
+    rank: toRank(item.company.rank),
+    stage: toDealStage(item.stage),
+    signal: getCompanyFirstPartySignal(item.company.name) ?? 'Middle',
+    amount: item.amount ?? 0,
+    probability: item.probability ?? 0,
+    expectedCloseAt: item.expectedCloseAt ? item.expectedCloseAt.slice(0, 10) : null,
+    updatedAt: item.updatedAt.slice(0, 10),
+    nextAction: null,
+    taskDueAt: item.expectedCloseAt ? item.expectedCloseAt.slice(0, 10) : null,
+    progressStatus: item.desiredService ?? item.timeline ?? '',
+    nextActionText: item.nextActionUs ?? '',
+    emailCount: item._count.emailMessages,
+    meetingCount: item._count.meetingEvents,
+    createdAt: item.createdAt.slice(0, 10),
+  }
+}
 
 // ─── Stage Config ───────────────────────────────────────────────────────────────
 
@@ -269,6 +335,27 @@ export default function DealsPage() {
     name: '', company: '', contact: '', stage: 'IS' as DealStage,
     amount: '', probability: '20', expectedCloseAt: '',
   })
+
+  useEffect(() => {
+    let aborted = false
+    const demoView = isDemoUrlSearch(window.location.search)
+    const params = new URLSearchParams(window.location.search)
+    params.set('take', '100')
+    fetch(`/api/deals?${params.toString()}`, { cache: 'no-store' })
+      .then((res) => (res.ok ? res.json() : { deals: [] }))
+      .then((data: { deals?: ApiDeal[] }) => {
+        if (aborted) return
+        const apiDeals = data.deals ?? []
+        const sourceDeals = demoView && apiDeals.length === 0 ? getDemoDealsForApi() : apiDeals
+        setDeals(sourceDeals.map(toDeal))
+      })
+      .catch(() => {
+        if (!aborted) setDeals(demoView ? getDemoDealsForApi().map(toDeal) : [])
+      })
+    return () => {
+      aborted = true
+    }
+  }, [])
 
   function handleCreateSubmit() {
     if (!createForm.name.trim() || !createForm.company.trim()) return

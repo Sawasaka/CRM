@@ -30,6 +30,8 @@ trap restart_dropbox EXIT
 
 # 1) /tmp/bgm-web-next を用意 (一度作ったら以後は再利用してビルドキャッシュを温存)
 mkdir -p "$TMP_NEXT"
+# Next.jsが pages router 用の lstat を打つことがあり、無いとENOENTで500になる
+mkdir -p "$TMP_NEXT/server/pages"
 
 # 2) /tmp/bgm-web-next/node_modules -> bgm/node_modules のシンボリックリンクを保証
 if [ ! -L "$TMP_NEXT/node_modules" ]; then

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="840" height="210" viewBox="0 0 840 210" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>株式会社ルーキースマートジャパン Prism Line logo</title>
+  <desc>営業組織の伸びとシャープな成長感を出す案</desc>
+  
+    <defs>
+      <linearGradient id="text-07-prism-line" x1="0" x2="1" y1="0" y2="0">
+        <stop offset="0" stop-color="#f4f7ff"/>
+        <stop offset="0.58" stop-color="#f4d35e"/>
+        <stop offset="1" stop-color="#5aa7ff"/>
+      </linearGradient>
+      <linearGradient id="mark-07-prism-line" x1="0" x2="1" y1="0" y2="1">
+        <stop offset="0" stop-color="#edf5ff"/>
+        <stop offset="0.48" stop-color="#f4d35e"/>
+        <stop offset="1" stop-color="#5aa7ff"/>
+      </linearGradient>
+      <radialGradient id="glow-07-prism-line" cx="50%" cy="50%" r="50%">
+        <stop offset="0" stop-color="#5aa7ff" stop-opacity="0.45"/>
+        <stop offset="1" stop-color="#5aa7ff" stop-opacity="0"/>
+      </radialGradient>
+      <filter id="soft-07-prism-line" x="-40%" y="-40%" width="180%" height="180%">
+        <feGaussianBlur stdDeviation="10"/>
+      </filter>
+      <filter id="shadow-07-prism-line" x="-30%" y="-30%" width="160%" height="160%">
+        <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#000" flood-opacity="0.38"/>
+      </filter>
+    </defs>
+  
+  <rect x="10" y="10" width="820" height="190" rx="36" fill="#0f1217" fill-opacity="0.96" stroke="rgba(185,211,255,0.18)"/>
+  <rect x="11" y="11" width="818" height="188" rx="35" fill="url(#glow-07-prism-line)" opacity="0.16"/>
+  
+      <g filter="url(#shadow-07-prism-line)">
+        <rect x="46" y="48" width="114" height="114" rx="20.52" fill="#151a22" stroke="rgba(185,211,255,0.30)"/>
+        <path d="M 71.08 127.8 L 93.88 83.34 L 137.2 83.34 L 114.39999999999999 127.8 Z" fill="url(#mark-07-prism-line)" opacity="0.96"/>
+        <path d="M 93.88 83.34 L 114.39999999999999 127.8" stroke="#ffffff" stroke-opacity="0.62" stroke-width="3.192"/>
+        <path d="M 81.34 109.56 H 126.94" stroke="#10131a" stroke-opacity="0.55" stroke-width="5.13"/>
+      </g>
+    
+  <text x="190" y="86" fill="#9fbfff" font-size="14" font-weight="800" letter-spacing="4.2" font-family="'Inter','Plus Jakarta Sans',sans-serif">ROOKIE SMART JAPAN</text>
+  <text x="190" y="132" fill="url(#text-07-prism-line)" font-size="38" font-weight="900" letter-spacing="0" font-family="'Hiragino Sans','Yu Gothic UI','Inter',sans-serif">株式会社ルーキースマートジャパン</text>
+  <text x="190" y="160" fill="#8e97a8" font-size="13" font-weight="700" letter-spacing="2.8" font-family="'Inter','Plus Jakarta Sans',sans-serif">SALES OPERATING SYSTEM</text>
+</svg>

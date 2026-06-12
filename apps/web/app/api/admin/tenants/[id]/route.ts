@@ -10,11 +10,13 @@ type ContractItemInput = { label?: unknown; value?: unknown }
 type Payload = {
   name?: string
   status?: 'active' | 'demo' | 'inactive'
+  demoExpiresAt?: unknown
   contractInfo?: unknown
   memo?: unknown
 }
 
 type CleanStatus = NonNullable<Payload['status']>
+const DEFAULT_DEMO_DURATION_MS = 15 * 60 * 1000
 
 // 契約情報の自由項目を最大30件・各文字数制限でサニタイズ (空行は除外)
 function cleanContractInfo(raw: unknown): { label: string; value: string }[] {
@@ -34,13 +36,25 @@ function cleanMemo(raw: unknown): string {
   return typeof raw === 'string' ? raw.trim().slice(0, 2000) : ''
 }
 
+function cleanDemoExpiresAt(raw: unknown): Date | null {
+  if (raw == null || raw === '') return null
+  if (typeof raw !== 'string') return null
+  const date = new Date(raw)
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
 function cleanPayload(body: Payload) {
   const name = typeof body.name === 'string' ? body.name.trim().slice(0, 120) : ''
   const status = cleanStatus(body.status)
+  const rawDemoExpiresAt = cleanDemoExpiresAt(body.demoExpiresAt)
+  const demoExpiresAt =
+    status === 'demo'
+      ? rawDemoExpiresAt ?? new Date(Date.now() + DEFAULT_DEMO_DURATION_MS)
+      : null
   const contractInfo = cleanContractInfo(body.contractInfo)
   const memo = cleanMemo(body.memo)
   if (!name) return null
-  return { name, status, contractInfo, memo }
+  return { name, status, demoExpiresAt, contractInfo, memo }
 }
 
 function cleanStatus(status: Payload['status']): CleanStatus {
@@ -50,10 +64,11 @@ function cleanStatus(status: Payload['status']): CleanStatus {
 
 function statusToUpdateData(
   status: CleanStatus,
-  existingPlan: Plan
+  existingPlan: Plan,
+  demoExpiresAt: Date | null
 ): { plan: Plan; lifecycleStatus: TenantLifecycleStatus; demoExpiresAt: Date | null } {
   if (status === 'active') return { plan: 'GROWTH', lifecycleStatus: 'ACTIVE', demoExpiresAt: null }
-  if (status === 'demo') return { plan: 'FREE', lifecycleStatus: 'DEMO', demoExpiresAt: null }
+  if (status === 'demo') return { plan: 'FREE', lifecycleStatus: 'DEMO', demoExpiresAt }
   return { plan: existingPlan, lifecycleStatus: 'INACTIVE', demoExpiresAt: null }
 }
 
@@ -80,8 +95,8 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
     return NextResponse.json({ error: 'demo_tenant_cannot_be_upgraded' }, { status: 400 })
   }
 
-  const statusData = statusToUpdateData(payload.status, existing.plan)
-  await prisma.organization.update({
+  const statusData = statusToUpdateData(payload.status, existing.plan, payload.demoExpiresAt)
+  const updated = await prisma.organization.update({
     where: { id },
     data: {
       name: payload.name,
@@ -89,11 +104,12 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
       contractInfo: { memo: payload.memo, items: payload.contractInfo },
       ...statusData,
     },
+    select: { demoExpiresAt: true },
   })
 
   return NextResponse.json({
     ok: true,
-    demoExpiresAt: null,
+    demoExpiresAt: updated.demoExpiresAt?.toISOString() ?? null,
     contractInfo: payload.contractInfo,
     memo: payload.memo,
   })

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { prisma } from '@bgm/db'
 
 export const dynamic = 'force-dynamic'
 
@@ -53,6 +54,121 @@ const TOPLEVEL: Record<string, string> = {
   operations: 'OPERATIONS', engineering: 'ENGINEERING', other: 'OTHER',
 }
 
+async function getPrismaCompanyMasterResponse(req: NextRequest) {
+  const sp = req.nextUrl.searchParams
+  const search = sp.get('search') ?? undefined
+  const intentLevel = sp.get('intentLevel') ?? undefined
+  const industryId = sp.get('industryId') ?? undefined
+  const take = Math.min(parseInt(sp.get('take') ?? '5000', 10), 10000)
+  const skip = parseInt(sp.get('skip') ?? '0', 10)
+  const onlyEnriched = sp.get('onlyEnriched') !== 'false'
+
+  const where: Record<string, unknown> = {}
+  if (search) {
+    where.OR = [
+      { name: { contains: search, mode: 'insensitive' } },
+      { corporateNumber: { contains: search } },
+    ]
+  }
+  if (industryId) where.industryId = industryId
+  if (onlyEnriched) where.enrichmentStatus = 'COMPLETED'
+  if (intentLevel) {
+    where.companyIntents = {
+      some: { intentLevel: intentLevel.toUpperCase() as 'HOT' | 'MIDDLE' | 'LOW' | 'NONE' },
+    }
+  }
+
+  const [rows, total, intents] = await Promise.all([
+    prisma.companyMaster.findMany({
+      where,
+      take,
+      skip,
+      select: {
+        id: true,
+        corporateNumber: true,
+        name: true,
+        nameKana: true,
+        websiteUrl: true,
+        prefecture: true,
+        city: true,
+        address: true,
+        corporateType: true,
+        employeeCount: true,
+        revenue: true,
+        representative: true,
+        representativePhone: true,
+        representativeEmail: true,
+        serviceSummary: true,
+        enrichmentStatus: true,
+        lastCrawledAt: true,
+        lastEnrichedAt: true,
+        industry: { select: { id: true, name: true } },
+        serviceTags: { select: { tag: { select: { id: true, name: true } } } },
+        _count: { select: { offices: true, departments: true, intentSignals: true } },
+      },
+    }),
+    prisma.companyMaster.count({ where }),
+    prisma.companyIntent.findMany({
+      where: { intentLevel: { in: ['HOT', 'MIDDLE', 'LOW'] } },
+      select: {
+        companyMasterId: true,
+        departmentType: true,
+        intentLevel: true,
+        latestSignalAt: true,
+        signalCount: true,
+      },
+      orderBy: { latestSignalAt: 'desc' },
+    }),
+  ])
+
+  const intentMap = new Map<
+    string,
+    Array<{
+      departmentType: string
+      intentLevel: string
+      latestSignalAt: Date | null
+      signalCount: number
+    }>
+  >()
+  for (const i of intents) {
+    const arr = intentMap.get(i.companyMasterId) ?? []
+    arr.push({
+      departmentType: i.departmentType,
+      intentLevel: i.intentLevel,
+      latestSignalAt: i.latestSignalAt,
+      signalCount: i.signalCount,
+    })
+    intentMap.set(i.companyMasterId, arr)
+  }
+
+  const data = rows
+    .map((r) => ({
+      ...r,
+      companyIntents: intentMap.get(r.id) ?? [],
+    }))
+    .sort((a, b) => {
+      const aTop = a.companyIntents.reduce(
+        (max, ci) => Math.max(max, INTENT_PRIORITY[ci.intentLevel] ?? 0),
+        0,
+      )
+      const bTop = b.companyIntents.reduce(
+        (max, ci) => Math.max(max, INTENT_PRIORITY[ci.intentLevel] ?? 0),
+        0,
+      )
+      if (aTop !== bTop) return bTop - aTop
+      return a.name.localeCompare(b.name, 'ja')
+    })
+
+  return NextResponse.json(
+    { data, total, take, skip },
+    {
+      headers: {
+        'Cache-Control': 'public, max-age=60, stale-while-revalidate=300',
+      },
+    },
+  )
+}
+
 export async function GET(req: NextRequest) {
   const sp = req.nextUrl.searchParams
   const search = sp.get('search') ?? undefined
@@ -63,7 +179,12 @@ export async function GET(req: NextRequest) {
   const skip = parseInt(sp.get('skip') ?? '0', 10)
   const onlyEnriched = sp.get('onlyEnriched') !== 'false' // デフォルトは completed のみ
 
-  const supabase = sb()
+  let supabase: ReturnType<typeof sb>
+  try {
+    supabase = sb()
+  } catch {
+    return getPrismaCompanyMasterResponse(req)
+  }
 
   // 290万社全件 + name部分一致 で count: 'exact' を取ると statement timeout になるため、
   // search 指定時は count を取らない。それ以外（エンリッチ済モード）は exact count を取得

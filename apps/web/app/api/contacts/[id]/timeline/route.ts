@@ -11,7 +11,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
   if (!userId) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   const { id: contactId } = await ctx.params
 
-  const [emails, meetings] = await Promise.all([
+  const [emails, meetings, calls] = await Promise.all([
     prisma.emailMessage.findMany({
       where: { contactId },
       orderBy: { sentAt: 'desc' },
@@ -43,7 +43,20 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
         attendeeEmails: true,
       },
     }),
+    prisma.activity.findMany({
+      where: { contactId, type: 'CALL' },
+      orderBy: { occurredAt: 'desc' },
+      take: 50,
+      select: {
+        id: true,
+        title: true,
+        content: true,
+        resultCode: true,
+        occurredAt: true,
+        metadata: true,
+      },
+    }),
   ])
 
-  return NextResponse.json({ emails, meetings })
+  return NextResponse.json({ emails, meetings, calls })
 }

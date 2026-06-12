@@ -1,29 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
 import { prisma, TicketStatus } from '@bgm/db'
+import { getCurrentAppContext } from '@/lib/demo-master'
+import { getDemoTicketDetail } from '@/lib/demo-crm-data'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 const VALID_STATUS = ['OPEN', 'PENDING', 'SOLVED', 'CLOSED'] as const
-
-async function getSessionContext() {
-  const session = await auth()
-  let userId = (session as unknown as { userId?: string })?.userId ?? null
-  if (!userId && process.env.NEXT_PUBLIC_DEV_MODE === 'true') {
-    const firstUser = await prisma.user.findFirst({
-      orderBy: { createdAt: 'asc' },
-      select: { id: true },
-    })
-    userId = firstUser?.id ?? null
-  }
-  if (!userId) return null
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { id: true, orgId: true, role: true },
-  })
-  return user
-}
 
 const ticketInclude = {
   deal: { select: { id: true, name: true } },
@@ -90,14 +73,14 @@ function canUseDevSchemaFallback(error: unknown) {
 }
 
 export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
-  const me = await getSessionContext()
-  if (!me) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+  const context = await getCurrentAppContext({ allowDevFallback: true })
+  if (!context) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   const { id } = await ctx.params
 
   let ticket
   try {
     ticket = await prisma.ticket.findFirst({
-      where: { id, orgId: me.orgId },
+      where: { id, orgId: context.appOrgId },
       select: ticketDetailSelect,
     })
   } catch (error) {
@@ -107,7 +90,7 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string
     if (!isMissingEstimatedCompletionAt(error)) throw error
     try {
       const fallbackTicket = await prisma.ticket.findFirst({
-        where: { id, orgId: me.orgId },
+        where: { id, orgId: context.appOrgId },
         select: ticketDetailSelectWithoutEstimate,
       })
       ticket = fallbackTicket ? { ...fallbackTicket, dealId: null, deal: null, estimatedCompletionAt: null } : null
@@ -118,17 +101,21 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string
       throw fallbackError
     }
   }
+  if (!ticket && context.isDemo) {
+    const demoTicket = getDemoTicketDetail(id)
+    if (demoTicket) return NextResponse.json({ ticket: demoTicket })
+  }
   if (!ticket) return NextResponse.json({ error: 'not found' }, { status: 404 })
   return NextResponse.json({ ticket })
 }
 
 export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
-  const me = await getSessionContext()
-  if (!me) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+  const context = await getCurrentAppContext({ allowDevFallback: true })
+  if (!context) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   const { id } = await ctx.params
 
   const existing = await prisma.ticket.findFirst({
-    where: { id, orgId: me.orgId },
+    where: { id, orgId: context.userOrgId },
     select: { id: true, status: true },
   })
   if (!existing) return NextResponse.json({ error: 'not found' }, { status: 404 })
@@ -155,7 +142,7 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
     data.dealId = newDealId
     if (newDealId) {
       const deal = await prisma.deal.findFirst({
-        where: { id: newDealId, orgId: me.orgId },
+        where: { id: newDealId, orgId: context.userOrgId },
         select: { companyId: true, contactId: true },
       })
       if (deal) {

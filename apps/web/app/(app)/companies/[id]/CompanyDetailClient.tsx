@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { ChevronLeft, ExternalLink, MapPin, Phone, Mail, Building2, Copy, Check } from 'lucide-react'
 import {
@@ -93,6 +93,13 @@ type Raw = {
     publishedAt: string | null
     departmentType: string | null
   }>
+  // 採用予算 (求人インテントから集計 / CSV 投入想定)
+  // 月給ベース・円。各部門の上限 (monthlyMax) の最大値を「採用予算」として表示する。
+  hireBudgets?: Array<{
+    departmentType: string
+    monthlyMin: number
+    monthlyMax: number
+  }>
   // CRM 連携：この企業に紐づく取引・コンタクト
   deals?: Array<{
     id: string
@@ -118,6 +125,18 @@ type Raw = {
 
 // 25部門細分化ラベル
 const DEPT_LABELS: Record<string, string> = {
+  SALES: '営業',
+  MARKETING: 'マーケティング',
+  ENGINEERING: 'エンジニアリング',
+  IT: '情報システム',
+  HR: '人事',
+  FINANCE: '経理財務',
+  LEGAL: '法務',
+  OPERATIONS: '事業推進',
+  MANAGEMENT: '経営企画',
+  RD: '研究開発',
+  CS: 'カスタマーサクセス',
+  OTHER: 'その他',
   sales_is: '営業 IS', sales_fs: '営業 FS', sales_ae: '営業 AE', sales_bdr: '営業 BDR',
   sales_legal: '営業 法人/エンプラ', sales: '営業',
   it_corp: 'IT コーポレート', it_engineer: 'IT エンジニア', it_security: 'IT セキュリティ',
@@ -225,6 +244,11 @@ export default function CompanyDetailClient({
   void id
   const c = initialData
   const [copiedEmail, setCopiedEmail] = useState<string | null>(null)
+  const [currentSearch, setCurrentSearch] = useState('')
+
+  useEffect(() => {
+    setCurrentSearch(window.location.search)
+  }, [])
 
   async function copyEmail(email: string) {
     try {
@@ -245,7 +269,7 @@ export default function CompanyDetailClient({
             企業が見つかりません
           </p>
           <div className="mt-6">
-            <Link href="/companies" className="text-sm underline" style={{ color: 'var(--color-obs-primary)' }}>
+            <Link href={`/companies${currentSearch}`} className="text-sm underline" style={{ color: 'var(--color-obs-primary)' }}>
               企業一覧に戻る
             </Link>
           </div>
@@ -263,7 +287,7 @@ export default function CompanyDetailClient({
         {/* ── Back link ── */}
         <div className="pt-6 pb-2">
           <Link
-            href="/companies"
+            href={`/companies${currentSearch}`}
             className="inline-flex items-center gap-1.5 text-sm transition-colors duration-150"
             style={{ color: 'var(--color-obs-text-subtle)' }}
           >
@@ -444,6 +468,69 @@ export default function CompanyDetailClient({
             </ObsCard>
 
 
+            {/* 採用予算 — 各部門の月給上限から最大値を抽出 (CSV 投入) */}
+            {c.hireBudgets && c.hireBudgets.length > 0 && (() => {
+              const sorted = [...c.hireBudgets].sort((a, b) => b.monthlyMax - a.monthlyMax)
+              const top = sorted[0]!
+              const maxMan = Math.round(top.monthlyMax / 10000)
+              const fmt = (yen: number) => `${Math.round(yen / 10000).toLocaleString()}万`
+              return (
+                <ObsCard depth="high" padding="lg">
+                  <ObsSectionHeader
+                    title="採用予算"
+                    caption="求人インテントから集計した部門別の月給レンジ"
+                  />
+                  {/* ヘッダ: 最大値を大きく表示 */}
+                  <div className="flex items-end gap-3 mb-5">
+                    <span
+                      className="font-display font-bold tabular-nums leading-none"
+                      style={{ fontSize: '2.2rem', color: '#FFC107' }}
+                    >
+                      {maxMan.toLocaleString()}
+                    </span>
+                    <span className="text-[14px] mb-1" style={{ color: 'var(--color-obs-text-muted)' }}>
+                      万 / 月
+                    </span>
+                    <span
+                      className="text-[11px] mb-1.5 ml-1"
+                      style={{ color: 'var(--color-obs-text-subtle)' }}
+                    >
+                      {deptLabel(top.departmentType)} の上限
+                    </span>
+                  </div>
+                  {/* 部門別内訳 */}
+                  <div className="flex flex-col gap-1.5">
+                    {sorted.map((b) => {
+                      const isTop = b.departmentType === top.departmentType
+                      return (
+                        <div
+                          key={b.departmentType}
+                          className="grid grid-cols-[1fr_auto] items-center px-3 py-2 rounded-[8px]"
+                          style={{
+                            background: isTop ? 'rgba(255,193,7,0.06)' : 'transparent',
+                            boxShadow: isTop ? 'inset 0 0 0 1px rgba(255,193,7,0.20)' : 'none',
+                          }}
+                        >
+                          <span
+                            className="text-[13px]"
+                            style={{ color: isTop ? '#FFC107' : 'var(--color-obs-text)' }}
+                          >
+                            {deptLabel(b.departmentType)}
+                          </span>
+                          <span
+                            className="text-[13px] tabular-nums font-medium"
+                            style={{ color: 'var(--color-obs-text-muted)' }}
+                          >
+                            {fmt(b.monthlyMin)} 〜 <span style={{ color: isTop ? '#FFC107' : 'var(--color-obs-text)' }}>{fmt(b.monthlyMax)}</span>
+                          </span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </ObsCard>
+              )
+            })()}
+
             {/* インテントシグナル履歴 */}
             {c.intentSignals && c.intentSignals.length > 0 && (
               <ObsCard depth="high" padding="lg">
@@ -530,13 +617,8 @@ export default function CompanyDetailClient({
                   <div className="flex flex-col gap-2">
                     {dealsToShow.map((d) => {
                       const meta = dealStageMeta(d.stage)
-                      return (
-                        <Link
-                          key={d.id}
-                          href={`/deals/${d.id}`}
-                          className="group flex flex-col gap-1 rounded-[var(--radius-obs-md)] px-3 py-2 transition-colors"
-                          style={{ backgroundColor: 'var(--color-obs-surface-low)' }}
-                        >
+                      const content = (
+                        <>
                           <div className="flex items-center gap-2 min-w-0">
                             <span
                               className="flex-1 text-sm truncate group-hover:underline"
@@ -554,7 +636,36 @@ export default function CompanyDetailClient({
                             <span className="tabular-nums">作成 {formatDate(d.createdAt)}</span>
                             <span>·</span>
                             <span>{d.ownerName ?? '—'}</span>
+                            {d.amount ? (
+                              <>
+                                <span>·</span>
+                                <span className="tabular-nums">
+                                  {Math.round(d.amount / 10000).toLocaleString()}万円
+                                </span>
+                              </>
+                            ) : null}
                           </div>
+                        </>
+                      )
+                      if (d.id.startsWith('demo-deal-')) {
+                        return (
+                          <div
+                            key={d.id}
+                            className="group flex flex-col gap-1 rounded-[var(--radius-obs-md)] px-3 py-2"
+                            style={{ backgroundColor: 'var(--color-obs-surface-low)' }}
+                          >
+                            {content}
+                          </div>
+                        )
+                      }
+                      return (
+                        <Link
+                          key={d.id}
+                          href={`/deals/${d.id}`}
+                          className="group flex flex-col gap-1 rounded-[var(--radius-obs-md)] px-3 py-2 transition-colors"
+                          style={{ backgroundColor: 'var(--color-obs-surface-low)' }}
+                        >
+                          {content}
                         </Link>
                       )
                     })}
@@ -574,74 +685,99 @@ export default function CompanyDetailClient({
                     caption={`${contactsToShow.length}名`}
                   />
                   <div className="flex flex-col gap-2">
-                    {contactsToShow.map((p) => (
-                      <div
-                        key={p.id}
-                        className="group flex items-start gap-3 rounded-[var(--radius-obs-md)] px-3 py-2 transition-colors"
-                        style={{ backgroundColor: 'var(--color-obs-surface-low)' }}
-                      >
-                        <Link
-                          href={`/contacts/${p.id}`}
-                          className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-semibold shrink-0 hover:opacity-80 transition-opacity"
-                          style={{
-                            backgroundColor: 'var(--color-obs-primary-container)',
-                            color: 'var(--color-obs-on-primary)',
-                          }}
+                    {contactsToShow.map((p) => {
+                      const isDemoContact = p.id.startsWith('demo-contact-')
+                      return (
+                        <div
+                          key={p.id}
+                          className="group flex items-start gap-3 rounded-[var(--radius-obs-md)] px-3 py-2 transition-colors"
+                          style={{ backgroundColor: 'var(--color-obs-surface-low)' }}
                         >
-                          {p.name.slice(0, 1)}
-                        </Link>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5 min-w-0">
+                          {isDemoContact ? (
+                            <div
+                              className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-semibold shrink-0"
+                              style={{
+                                backgroundColor: 'var(--color-obs-primary-container)',
+                                color: 'var(--color-obs-on-primary)',
+                              }}
+                            >
+                              {p.name.slice(0, 1)}
+                            </div>
+                          ) : (
                             <Link
                               href={`/contacts/${p.id}`}
-                              className="text-sm truncate hover:underline"
-                              style={{ color: 'var(--color-obs-text)', textUnderlineOffset: '3px' }}
+                              className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-semibold shrink-0 hover:opacity-80 transition-opacity"
+                              style={{
+                                backgroundColor: 'var(--color-obs-primary-container)',
+                                color: 'var(--color-obs-on-primary)',
+                              }}
                             >
-                              {p.name}
+                              {p.name.slice(0, 1)}
                             </Link>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              {isDemoContact ? (
+                                <span
+                                  className="text-sm truncate"
+                                  style={{ color: 'var(--color-obs-text)' }}
+                                >
+                                  {p.name}
+                                </span>
+                              ) : (
+                                <Link
+                                  href={`/contacts/${p.id}`}
+                                  className="text-sm truncate hover:underline"
+                                  style={{ color: 'var(--color-obs-text)', textUnderlineOffset: '3px' }}
+                                >
+                                  {p.name}
+                                </Link>
+                              )}
                             {p.isDecisionMaker && <ObsChip tone="hot">決裁</ObsChip>}
-                          </div>
-                          <div
-                            className="text-[11px] truncate"
-                            style={{ color: 'var(--color-obs-text-subtle)' }}
-                          >
-                            {[p.department, p.title].filter(Boolean).join(' · ') || '—'}
-                          </div>
-                          {p.email && (
+                              {isDemoContact && <ObsChip tone="neutral">デモ</ObsChip>}
+                            </div>
                             <div
-                              className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] mt-1"
+                              className="text-[11px] truncate"
                               style={{ color: 'var(--color-obs-text-subtle)' }}
                             >
-                              <button
-                                type="button"
-                                onClick={() => copyEmail(p.email!)}
-                                title={
-                                  copiedEmail === p.email
-                                    ? 'コピーしました'
-                                    : 'メールアドレスをコピー'
-                                }
-                                className="inline-flex items-center gap-1 max-w-full px-1.5 py-0.5 -mx-1.5 -my-0.5 rounded-[6px] hover:bg-[var(--color-obs-surface)] hover:text-[var(--color-obs-text)] transition-colors"
-                              >
-                                <Mail size={10} className="shrink-0" />
-                                <span className="truncate">{p.email}</span>
-                                {copiedEmail === p.email ? (
-                                  <Check
-                                    size={10}
-                                    className="shrink-0"
-                                    style={{ color: 'var(--color-obs-low)' }}
-                                  />
-                                ) : (
-                                  <Copy
-                                    size={10}
-                                    className="shrink-0 opacity-50 group-hover:opacity-100 transition-opacity"
-                                  />
-                                )}
-                              </button>
+                              {[p.department, p.title].filter(Boolean).join(' · ') || '—'}
                             </div>
-                          )}
+                            {p.email && (
+                              <div
+                                className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] mt-1"
+                                style={{ color: 'var(--color-obs-text-subtle)' }}
+                              >
+                                <button
+                                  type="button"
+                                  onClick={() => copyEmail(p.email!)}
+                                  title={
+                                    copiedEmail === p.email
+                                      ? 'コピーしました'
+                                      : 'メールアドレスをコピー'
+                                  }
+                                  className="inline-flex items-center gap-1 max-w-full px-1.5 py-0.5 -mx-1.5 -my-0.5 rounded-[6px] hover:bg-[var(--color-obs-surface)] hover:text-[var(--color-obs-text)] transition-colors"
+                                >
+                                  <Mail size={10} className="shrink-0" />
+                                  <span className="truncate">{p.email}</span>
+                                  {copiedEmail === p.email ? (
+                                    <Check
+                                      size={10}
+                                      className="shrink-0"
+                                      style={{ color: 'var(--color-obs-low)' }}
+                                    />
+                                  ) : (
+                                    <Copy
+                                      size={10}
+                                      className="shrink-0 opacity-50 group-hover:opacity-100 transition-opacity"
+                                    />
+                                  )}
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 </ObsCard>
               )

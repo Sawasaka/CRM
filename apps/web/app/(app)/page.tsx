@@ -104,10 +104,22 @@ function HomePageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const chatIdParam = searchParams.get('chat')
+  const buildHomeHref = (next: Record<string, string | null> = {}) => {
+    const params = new URLSearchParams()
+    for (const key of ['tenant', 'demo', 'demoSession']) {
+      const value = searchParams.get(key)
+      if (value !== null) params.set(key, value)
+    }
+    for (const [key, value] of Object.entries(next)) {
+      if (value === null) params.delete(key)
+      else params.set(key, value)
+    }
+    const qs = params.toString()
+    return qs ? `/?${qs}` : '/'
+  }
 
   // ホーム (`/`) を管理者ページ (Customer Operations) へリダイレクトするロジック。
-  // - ローカル開発環境: 常にリダイレクト (BGM テナント判定をスキップ)
-  // - 本番: 開発者テナント (BGM_TENANT_ID) のときだけリダイレクト
+  // - ローカル / 本番ともに access API で許可された開発者テナントだけリダイレクト
   // - 無料デモ経由 (?demo=... / ?tenant=...) や ?chat=... はリダイレクトしない
   const [adminRedirectChecked, setAdminRedirectChecked] = useState(false)
   useEffect(() => {
@@ -117,17 +129,6 @@ function HomePageContent() {
       searchParams.get('demo') !== null || searchParams.get('tenant') !== null
     if (hasChatQuery || isDemoAccess) {
       setAdminRedirectChecked(true)
-      return
-    }
-    // ローカル環境はホスト名で判定 (NODE_ENV だけでは Vercel preview 等と区別できないため)
-    const isLocalEnv =
-      typeof window !== 'undefined' &&
-      (window.location.hostname === 'localhost' ||
-        window.location.hostname === '127.0.0.1' ||
-        window.location.hostname.startsWith('192.168.') ||
-        window.location.hostname.endsWith('.local'))
-    if (isLocalEnv) {
-      router.replace('/admin/customer-ops')
       return
     }
     let cancelled = false
@@ -216,7 +217,7 @@ function HomePageContent() {
       setChatId(activeChatId)
       const nextId = activeChatId
       queueMicrotask(() => {
-        router.replace(`/?chat=${nextId}`, { scroll: false })
+        router.replace(buildHomeHref({ chat: nextId }), { scroll: false })
       })
     }
 

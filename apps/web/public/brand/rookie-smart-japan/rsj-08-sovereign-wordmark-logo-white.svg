@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="840" height="210" viewBox="0 0 840 210" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>株式会社ルーキースマートジャパン Sovereign Wordmark white logo</title>
+  <desc>白背景版。法人登記・契約書・営業資料に馴染む端正なワードマーク。</desc>
+  <defs>
+    <linearGradient id="text-08-sovereign-wordmark-white" x1="190" x2="700" y1="98" y2="132" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#111827"/>
+      <stop offset="0.66" stop-color="#1e3a5f"/>
+      <stop offset="1" stop-color="#2f8cff"/>
+    </linearGradient>
+    <linearGradient id="mark-08-sovereign-wordmark-white" x1="66" x2="135" y1="62" y2="139" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#111827"/>
+      <stop offset="0.55" stop-color="#2563eb"/>
+      <stop offset="1" stop-color="#5aa7ff"/>
+    </linearGradient>
+    <filter id="shadow-08-sovereign-wordmark-white" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#1d4ed8" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+  <rect width="840" height="210" fill="#ffffff"/>
+  <g filter="url(#shadow-08-sovereign-wordmark-white)">
+    <rect x="46" y="48" width="114" height="114" rx="18.24" fill="#ffffff" stroke="#d7e3f8" stroke-width="1.4"/>
+    <text x="103" y="123.24" text-anchor="middle" font-size="59.28" font-weight="900" fill="url(#mark-08-sovereign-wordmark-white)" font-family="'Inter','Plus Jakarta Sans',sans-serif">R</text>
+    <path d="M 74.5 132.36 H 131.5" stroke="#2f8cff" stroke-width="3.99" stroke-linecap="round"/>
+  </g>
+  <text x="190" y="86" fill="#2563eb" font-size="14" font-weight="850" letter-spacing="4.2" font-family="'Inter','Plus Jakarta Sans',sans-serif">ROOKIE SMART JAPAN</text>
+  <text x="190" y="132" fill="url(#text-08-sovereign-wordmark-white)" font-size="38" font-weight="900" letter-spacing="0" font-family="'Hiragino Sans','Yu Gothic UI','Inter',sans-serif">株式会社ルーキースマートジャパン</text>
+  <text x="190" y="160" fill="#64748b" font-size="13" font-weight="750" letter-spacing="2.8" font-family="'Inter','Plus Jakarta Sans',sans-serif">ROOKIE SMART JAPAN INC.</text>
+</svg>

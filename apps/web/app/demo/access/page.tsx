@@ -67,7 +67,7 @@ export default async function DemoAccessPage({
               {org.name}様 専用デモ登録
             </h1>
             <p className="mt-3 text-[13px] leading-relaxed text-[#9b99a0]">
-              下記を入力すると、15分有効のデモ環境URLを発行します。
+              下記を入力すると、設定された有効期限まで使えるデモ環境URLを発行します。
               デモ内のデータはサンプルデータです。
             </p>
 

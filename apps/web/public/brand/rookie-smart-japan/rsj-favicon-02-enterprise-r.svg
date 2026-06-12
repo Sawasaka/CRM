@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>Rookie Smart Japan favicon concept 02 enterprise R</title>
+  <defs>
+    <linearGradient id="rsj-favicon-02-bg" x1="86" y1="66" x2="432" y2="442" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0f172a"/>
+      <stop offset="0.58" stop-color="#17243b"/>
+      <stop offset="1" stop-color="#0b1220"/>
+    </linearGradient>
+    <linearGradient id="rsj-favicon-02-stroke" x1="112" y1="90" x2="412" y2="414" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#cfe1ff"/>
+      <stop offset="0.55" stop-color="#3b82f6"/>
+      <stop offset="1" stop-color="#5aa7ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="#ffffff"/>
+  <g>
+    <rect x="88" y="94" width="336" height="352" rx="80" fill="#bfdbfe" opacity="0.20"/>
+    <rect x="72" y="72" width="368" height="368" rx="84" fill="url(#rsj-favicon-02-bg)" stroke="url(#rsj-favicon-02-stroke)" stroke-width="7"/>
+    <circle cx="165" cy="158" r="10" fill="#9fc3ff"/>
+    <path d="M174 318V158H266C312 158 344 185 344 225C344 254 329 276 303 288L356 318H312L264 292H214V318H174ZM214 256H266C289 256 304 244 304 225C304 206 289 194 266 194H214V256Z" fill="#eff6ff"/>
+    <path d="M160 344H352" stroke="#5aa7ff" stroke-width="18" stroke-linecap="round"/>
+  </g>
+</svg>

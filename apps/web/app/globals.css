@@ -198,6 +198,12 @@ textarea:focus-visible,
   100% { transform: translateX(120%); opacity: 0; }
 }
 
+/* loading.tsx 用 — 横に流れるスケルトンシマー */
+@keyframes shimmerMove {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 /* ホバーポップオーバー用のフェードイン */
 @keyframes fadeIn {
   from { opacity: 0; transform: translate(-50%, -4px); }

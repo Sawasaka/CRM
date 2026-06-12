@@ -29,6 +29,8 @@ import {
   ObsInput,
 } from '@/components/obsidian'
 import { SignalBadge, type Signal } from '@/components/crm/SignalBadge'
+import { isDemoUrlSearch } from '@/lib/demo-company-data'
+import { getDemoTasksForApi } from '@/lib/demo-crm-data'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -1047,14 +1049,19 @@ export default function TasksPage() {
 
   useEffect(() => {
     let aborted = false
+    const demoView = isDemoUrlSearch(window.location.search)
+    const params = new URLSearchParams(window.location.search)
     setLoading(true)
-    fetch('/api/tasks', { cache: 'no-store' })
+    fetch(`/api/tasks?${params.toString()}`, { cache: 'no-store' })
       .then((res) => (res.ok ? res.json() : { tasks: [] }))
       .then((data: { tasks?: Task[] }) => {
-        if (!aborted) setTasks(data.tasks ?? [])
+        if (aborted) return
+        const apiTasks = data.tasks ?? []
+        const sourceTasks = demoView && apiTasks.length === 0 ? (getDemoTasksForApi() as Task[]) : apiTasks
+        setTasks(sourceTasks)
       })
       .catch(() => {
-        if (!aborted) setTasks([])
+        if (!aborted) setTasks(demoView ? (getDemoTasksForApi() as Task[]) : [])
       })
       .finally(() => {
         if (!aborted) setLoading(false)

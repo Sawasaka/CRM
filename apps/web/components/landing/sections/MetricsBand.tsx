@@ -5,7 +5,7 @@ export const MetricsBand = () => {
     { k: '0',     suf: '設計',  l: '入力・分析項目 プリセット済み',       c: '#abc7ff' },
     { k: '5',     suf: '体',    l: 'ドメイン特化エージェント',           c: '#d3a5ff' },
     { k: '0.1',   suf: '入力',  l: '議事録・メール・コール 自動取込',     c: '#8dffc9' },
-    { k: '290万', suf: '社',    l: '部署直通番号 × 求人インテント',                c: '#ffcf4a' },
+    { k: '180万', suf: '社',    l: '部署直通番号 × 求人インテント',                c: '#ffcf4a' },
   ]
   return (
     <Section tone="pitch" screenLabel="11 Metrics">
@@ -31,7 +31,7 @@ export const MetricsBand = () => {
         {/* Heading */}
         <div className="relative text-center mb-10">
           <div className="flex justify-center">
-            <Eyebrow color="#abc7ff">5 AGENTS + 290 DB</Eyebrow>
+            <Eyebrow color="#abc7ff">5 AGENTS + 部署直通番号</Eyebrow>
           </div>
           <h2 className="font-display font-bold tracking-[-0.025em] text-[1.8rem] md:text-[2.6rem] leading-[1.06] mt-5">
             <span className="text-[#9b99a0]">統合された5領域、</span>

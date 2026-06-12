@@ -10,6 +10,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { createPortal } from 'react-dom'
 import { signIn } from 'next-auth/react'
 import { Loader2, Sparkles, X } from 'lucide-react'
+import { TurnstileField } from '@/components/demo/TurnstileField'
 
 interface DemoModalProps {
   open: boolean
@@ -30,6 +31,7 @@ export const DemoModal = ({ open, onClose }: DemoModalProps) => {
   const [submitting, setSubmitting] = useState(false)
   const [submitStep, setSubmitStep] = useState<SubmitStep>('idle')
   const [error, setError] = useState<string | null>(null)
+  const [turnstileToken, setTurnstileToken] = useState('')
   const dialogRef = useRef<HTMLDivElement | null>(null)
 
   // ESC キーで閉じる
@@ -49,6 +51,7 @@ export const DemoModal = ({ open, onClose }: DemoModalProps) => {
       setError(null)
       setSubmitting(false)
       setSubmitStep('idle')
+      setTurnstileToken('')
     }
   }, [open])
 
@@ -74,7 +77,11 @@ export const DemoModal = ({ open, onClose }: DemoModalProps) => {
       const res = await fetch('/api/demo-access', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
+        body: JSON.stringify({
+          ...values,
+          turnstileToken,
+          website: formDataValue(e.currentTarget, 'website'),
+        }),
       })
       const json = await res.json().catch(() => ({}))
       if (!res.ok || !json.url) {
@@ -97,7 +104,7 @@ export const DemoModal = ({ open, onClose }: DemoModalProps) => {
       if (!result?.ok) {
         throw new Error('デモログインに失敗しました。')
       }
-      window.location.href = result.url ?? json.url
+      window.location.href = typeof json.url === 'string' ? json.url : result.url ?? '/'
     } catch (err) {
       setError(
         err instanceof Error
@@ -165,6 +172,14 @@ export const DemoModal = ({ open, onClose }: DemoModalProps) => {
         </p>
 
         <form onSubmit={onSubmit} className="mt-4 space-y-2.5">
+          <input
+            type="text"
+            name="website"
+            tabIndex={-1}
+            autoComplete="off"
+            aria-hidden="true"
+            className="hidden"
+          />
           <DemoField
             label="会社名"
             required
@@ -187,6 +202,7 @@ export const DemoModal = ({ open, onClose }: DemoModalProps) => {
             onChange={update('email')}
             placeholder="taro@example.co.jp"
           />
+          <TurnstileField onTokenChange={setTurnstileToken} />
 
           {error && (
             <div
@@ -235,6 +251,11 @@ export const DemoModal = ({ open, onClose }: DemoModalProps) => {
     </div>,
     document.body,
   )
+}
+
+function formDataValue(form: HTMLFormElement, name: string) {
+  const value = new FormData(form).get(name)
+  return typeof value === 'string' ? value : ''
 }
 
 function DemoField({

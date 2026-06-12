@@ -1,0 +1,46 @@
+<svg width="1600" height="520" viewBox="0 0 1600 520" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">株式会社ルーキースマートジャパン ホームページ用ロゴ案 03</title>
+  <desc id="desc">光の軌道をモチーフに、LPの浮遊感とAI感を強めた会社ロゴビジュアル。</desc>
+  <defs>
+    <radialGradient id="rsj03HomeBg" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(830 246) rotate(18) scale(720 300)">
+      <stop stop-color="#15283A"/>
+      <stop offset="0.58" stop-color="#111316"/>
+      <stop offset="1" stop-color="#0A0A0C"/>
+    </radialGradient>
+    <linearGradient id="rsj03HomeOrbit" x1="342" y1="162" x2="540" y2="344" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ABC7FF"/>
+      <stop offset="0.48" stop-color="#0071E3"/>
+      <stop offset="1" stop-color="#FFCF4A"/>
+    </linearGradient>
+    <linearGradient id="rsj03HomeText" x1="620" y1="196" x2="1290" y2="302" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="0.5" stop-color="#ABC7FF"/>
+      <stop offset="1" stop-color="#0071E3"/>
+    </linearGradient>
+    <filter id="rsj03HomeGlow" x="-60%" y="-70%" width="220%" height="240%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="18" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.50 0 0 0 0 0.70 0 0 0 0 1 0 0 0 0.48 0"/>
+      <feBlend in="SourceGraphic" mode="screen"/>
+    </filter>
+  </defs>
+  <rect width="1600" height="520" fill="#0A0A0C"/>
+  <rect width="1600" height="520" fill="url(#rsj03HomeBg)"/>
+  <circle cx="174" cy="140" r="25" fill="#E8FBFF" opacity="0.92" filter="url(#rsj03HomeGlow)"/>
+  <circle cx="1394" cy="354" r="24" fill="#FFF34A" opacity="0.9" filter="url(#rsj03HomeGlow)"/>
+  <rect x="284" y="100" width="1032" height="320" rx="50" fill="rgba(36,36,38,0.34)" stroke="rgba(171,199,255,0.13)"/>
+  <g filter="url(#rsj03HomeGlow)">
+    <path d="M348 260C389 172 498 168 536 258C485 222 409 222 348 260Z" fill="url(#rsj03HomeOrbit)" opacity="0.98"/>
+    <path d="M532 252C491 340 382 344 344 254C395 290 471 290 532 252Z" fill="#ABC7FF" opacity="0.55"/>
+    <circle cx="440" cy="256" r="38" fill="#111418" stroke="rgba(255,255,255,0.22)"/>
+    <circle cx="440" cy="256" r="14" fill="#ABC7FF"/>
+  </g>
+  <text x="600" y="208" fill="#BFD3FF" font-family="'Plus Jakarta Sans','Inter','Hiragino Sans','Yu Gothic UI',sans-serif" font-size="18" font-weight="800" letter-spacing="6">
+    ROOKIE SMART JAPAN
+  </text>
+  <text x="598" y="280" fill="url(#rsj03HomeText)" filter="url(#rsj03HomeGlow)" font-family="'Plus Jakarta Sans','Inter','Hiragino Sans','Yu Gothic UI',sans-serif" font-size="58" font-weight="900" letter-spacing="-1.5">
+    株式会社ルーキースマートジャパン
+  </text>
+  <text x="602" y="326" fill="#C7C5C9" font-family="'Inter','Hiragino Sans','Yu Gothic UI',sans-serif" font-size="19" font-weight="500">
+    営業データの軌道をつなぎ、事業成長を加速する。
+  </text>
+</svg>

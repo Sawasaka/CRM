@@ -1,33 +1,35 @@
 'use client'
 
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Nav } from './landing/Nav'
 
 // ──────────────────────────────────────────────────────────────
-// HOME(ルキスマCRM) / 営業ドラゴン図鑑 / 営業武器庫 を
+// HOME(ルキスマCRM) / 営業ドラゴン図鑑 / 営業武器庫 / 営業竜学園 を
 // 「1ページ内の state 切替」で行き来するハブ。
 //
 // 上部 chrome は全ビュー共通で固定:
 //   ブランドバー (ロゴ + 切替タブ + お問い合わせ/無料デモ) … Nav
 // その下の中身だけが切り替わる。
-// URL は履歴APIで /lp ↔ /media ↔ /media?view=psychology に裏同期し SEO/共有も維持。
+// URL は履歴APIで /lp ↔ /media ↔ /media?view=psychology ↔ /media?view=school に裏同期し SEO/共有も維持。
 //
 // 各ビューは server component のまま props で受け取る(LP本体をクライアント化しない)。
 // 固定 chrome はNav内で完結させ、ページ背景と一体化したまま切替だけを担う。
 // ──────────────────────────────────────────────────────────────
 
-type View = 'home' | 'dragon' | 'psychology'
+type View = 'home' | 'dragon' | 'psychology' | 'school'
 
 const TABS: { key: View; label: string; accent: string }[] = [
   { key: 'home', label: 'ルキスマCRM', accent: '#abc7ff' },
   { key: 'dragon', label: '営業ドラゴン図鑑', accent: '#d7ad59' },
   { key: 'psychology', label: '営業武器庫', accent: '#d7ad59' },
+  { key: 'school', label: '営業竜学園', accent: '#d7ad59' },
 ]
 
 const URL_FOR: Record<View, string> = {
   home: '/lp',
   dragon: '/media',
   psychology: '/media?view=psychology',
+  school: '/media?view=school',
 }
 
 export default function AppHub({
@@ -35,13 +37,16 @@ export default function AppHub({
   home,
   dragon,
   psychology,
+  school,
 }: {
   initialView: View
   home: ReactNode
   dragon: ReactNode
   psychology: ReactNode
+  school: ReactNode
 }) {
   const [view, setView] = useState<View>(initialView)
+  const activeTabRef = useRef<HTMLButtonElement | null>(null)
 
   // ブラウザの戻る/進むで URL → ビューを同期
   useEffect(() => {
@@ -50,7 +55,7 @@ export default function AppHub({
       const sp = new URLSearchParams(window.location.search)
       if (path.startsWith('/media')) {
         const nextView = sp.get('view')
-        setView(nextView === 'psychology' ? 'psychology' : 'dragon')
+        setView(nextView === 'psychology' ? 'psychology' : nextView === 'school' ? 'school' : 'dragon')
       } else if (path.startsWith('/lp')) {
         setView('home')
       }
@@ -67,6 +72,10 @@ export default function AppHub({
     window.history.pushState(null, '', URL_FOR[next])
     window.scrollTo({ top: 0 })
   }
+
+  useEffect(() => {
+    activeTabRef.current?.scrollIntoView({ block: 'nearest', inline: 'center' })
+  }, [view])
 
   const tabs = (
     <div
@@ -90,6 +99,7 @@ export default function AppHub({
             key={tab.key}
             type="button"
             role="tab"
+            ref={isActive ? activeTabRef : null}
             aria-selected={isActive}
             onClick={() => go(tab.key)}
             className="inline-flex h-9 shrink-0 items-center justify-center whitespace-nowrap rounded-full px-3 text-[12px] font-black transition-all duration-200 md:px-5 md:text-[13px]"
@@ -126,7 +136,7 @@ export default function AppHub({
 
       {/* 中身: key で再マウントしフェード (opacityのみ。transformは使わない) */}
       <div key={view} className="fo-fade-swap">
-        {view === 'home' ? home : view === 'dragon' ? dragon : psychology}
+        {view === 'home' ? home : view === 'dragon' ? dragon : view === 'psychology' ? psychology : school}
       </div>
     </div>
   )

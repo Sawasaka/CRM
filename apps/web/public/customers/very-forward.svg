@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 200" fill="none">
+  <defs>
+    <linearGradient id="vfBlue" x1="0" y1="0" x2="0" y2="200" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1E78D6"/>
+      <stop offset="100%" stop-color="#5AC8FA"/>
+    </linearGradient>
+  </defs>
+  <!-- Stylized V with extending top-right bar -->
+  <path d="M40 18 L150 140 L150 165 Q150 175 140 175 L130 175 L40 50 Z" fill="url(#vfBlue)"/>
+  <path d="M260 18 L150 140 L150 165 Q150 175 160 175 L170 175 L320 18 L260 18 Z" fill="url(#vfBlue)" opacity="0.95"/>
+  <!-- Top-right hook extending horizontally -->
+  <rect x="260" y="18" width="80" height="22" rx="2" fill="url(#vfBlue)"/>
+  <!-- Black dot to the right -->
+  <ellipse cx="285" cy="105" rx="35" ry="14" fill="#1f1f23"/>
+  <!-- Brand text -->
+  <text x="180" y="194" font-family="'Helvetica Neue','Arial',sans-serif" font-size="34" font-weight="700" fill="#1f1f23" text-anchor="middle" letter-spacing="-0.5">Very Forward</text>
+</svg>
