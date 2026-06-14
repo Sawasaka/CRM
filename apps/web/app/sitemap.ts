@@ -21,7 +21,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: operatorProfileUrl,
       lastModified: new Date(),
       changeFrequency: 'monthly',
-      priority: 0.85,
+      priority: 0.95,
     },
     {
       url: companyProfileUrl,

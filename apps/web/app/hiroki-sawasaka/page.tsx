@@ -87,6 +87,24 @@ const profileJsonLd = {
   knowsAbout: ['営業実行', 'CRM構築', 'チャットCRM', '企業データベース', '部署直通番号'],
 }
 
+const profileFaqItems = [
+  {
+    question: '沢坂弘樹は誰ですか？',
+    answer:
+      `沢坂弘樹は、${companyName}の代表です。${serviceName}を通じて、営業実行とCRM構築を同時に支援しています。`,
+  },
+  {
+    question: '沢坂弘樹はどのような支援をしていますか？',
+    answer:
+      '営業組織の立ち上げ、インサイドセールス設計、CRM構築、企業データベースと部署直通番号を活用した営業活動の実装を支援しています。',
+  },
+  {
+    question: '沢坂弘樹とルキスマCRMの関係は何ですか？',
+    answer:
+      `沢坂弘樹は、${companyName}代表として${serviceName}を提供し、営業データを活用した営業実行とCRM構築を支援しています。`,
+  },
+]
+
 const profilePageJsonLd = {
   '@context': 'https://schema.org',
   '@type': ['ProfilePage', 'AboutPage'],
@@ -126,10 +144,30 @@ const profilePageJsonLd = {
   },
 }
 
+const profileFaqJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: profileFaqItems.map((item) => ({
+    '@type': 'Question',
+    name: item.question,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: item.answer,
+    },
+  })),
+}
+
 const careerItems = [
   ['Sales Executive', '外資 SaaS 日本法人 立ち上げ (正社員 1 人目)'],
   ['執行役員 CRO', 'IT スタートアップ 立ち上げ (正社員 1 人目)'],
   ['キャリア', 'エンジニア → IT 法人営業 → DX / AIX 業務コンサルティング'],
+]
+
+const supportItems = [
+  '営業戦略と実行体制の設計',
+  'インサイドセールス、フィールドセールス、CSをつなぐCRM構築',
+  '企業データベースと部署直通番号を活用したターゲット選定',
+  '議事録、メール、商談データを営業アクションへ変える運用設計',
 ]
 
 export default function HirokiSawasakaPage() {
@@ -137,7 +175,7 @@ export default function HirokiSawasakaPage() {
     <main className="min-h-screen bg-obsidian text-[#e7e5ea]">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify([profileJsonLd, profilePageJsonLd]) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify([profileJsonLd, profilePageJsonLd, profileFaqJsonLd]) }}
       />
 
       <section className="relative overflow-hidden">
@@ -215,6 +253,16 @@ export default function HirokiSawasakaPage() {
 
         <div className="mt-10 rounded-3xl border border-white/10 bg-[#121216] p-6 md:p-8">
           <h2 className="font-display text-2xl font-bold tracking-[-0.01em]">プロフィール</h2>
+          <div className="mt-5 space-y-4 text-sm leading-8 text-[#c7c5c9]">
+            <p>
+              沢坂弘樹は、株式会社ルーキースマートジャパン代表として、ルキスマCRMの営業実行とCRM構築を支援しています。
+              営業データ、商談、メール、議事録、企業データベースをつなぎ、次の営業アクションを引き出す仕組みづくりを行っています。
+            </p>
+            <p>
+              外資SaaS日本法人の立ち上げ、ITスタートアップでのCRO経験、IT法人営業とDX/AIX業務コンサルティングの経験をもとに、
+              事業設計から営業現場の実装、CRM運用までを一気通貫で支援します。
+            </p>
+          </div>
           <dl className="mt-6 space-y-4">
             {careerItems.map(([label, value]) => (
               <div key={label} className="grid gap-1 border-t border-white/10 pt-4 md:grid-cols-[150px_1fr]">
@@ -223,6 +271,35 @@ export default function HirokiSawasakaPage() {
               </div>
             ))}
           </dl>
+        </div>
+
+        <div className="mt-10 grid gap-6 md:grid-cols-[1fr_1fr]">
+          <section className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 md:p-8">
+            <h2 className="font-display text-2xl font-bold tracking-[-0.01em]">
+              沢坂弘樹が支援する領域
+            </h2>
+            <ul className="mt-5 space-y-3 text-sm leading-7 text-[#c7c5c9]">
+              {supportItems.map((item) => (
+                <li key={item} className="border-t border-white/10 pt-3">
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <section className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 md:p-8">
+            <h2 className="font-display text-2xl font-bold tracking-[-0.01em]">
+              沢坂弘樹に関するFAQ
+            </h2>
+            <div className="mt-5 space-y-4">
+              {profileFaqItems.map((item) => (
+                <div key={item.question} className="border-t border-white/10 pt-4">
+                  <h3 className="text-sm font-semibold text-[#e7e5ea]">{item.question}</h3>
+                  <p className="mt-2 text-sm leading-7 text-[#c7c5c9]">{item.answer}</p>
+                </div>
+              ))}
+            </div>
+          </section>
         </div>
       </section>
     </main>
