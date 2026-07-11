@@ -1,12 +1,7 @@
 const PUBLIC_APP_URL_FALLBACK = 'https://crm.rookiesmart-jp.com'
 
 export function getPublicBaseUrl(): string {
-  const candidates = [
-    process.env.NEXT_PUBLIC_APP_URL,
-    process.env.NEXT_PUBLIC_DEMO_APP_BASE_URL,
-    process.env.DEMO_APP_BASE_URL,
-    process.env.NEXT_PUBLIC_DEMO_BASE_URL,
-  ]
+  const candidates = [process.env.NEXT_PUBLIC_APP_URL]
 
   for (const candidate of candidates) {
     const normalized = normalizePublicBaseUrl(candidate)
@@ -14,14 +9,6 @@ export function getPublicBaseUrl(): string {
   }
 
   return PUBLIC_APP_URL_FALLBACK
-}
-
-export function getDemoAccessUrl(slug: string): string {
-  return `${getPublicBaseUrl()}/demo/access?tenant=${encodeURIComponent(slug)}`
-}
-
-export function getDemoOpenUrl(slug: string): string {
-  return `${getPublicBaseUrl()}/demo/open?tenant=${encodeURIComponent(slug)}`
 }
 
 export function getPaidJoinUrl(slug: string): string {
@@ -41,9 +28,7 @@ function normalizePublicBaseUrl(value: string | undefined): string | null {
   const trimmed = value.trim().replace(/\/+$/, '')
   if (!trimmed || isLocalUrl(trimmed)) return null
 
-  // Backward compatibility: NEXT_PUBLIC_DEMO_BASE_URL previously pointed at
-  // ".../demo". The unified base is the app origin, so strip that suffix.
-  return trimmed.replace(/\/demo$/, '')
+  return trimmed
 }
 
 function isLocalUrl(value: string): boolean {

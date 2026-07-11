@@ -7,11 +7,13 @@
 
 import { useEffect, useState, type FormEvent } from 'react'
 import { Send, Loader2, CalendarCheck, Check, X, ArrowRight } from 'lucide-react'
+import { ConsultationCallButton } from '../ConsultationCallModal'
 
 interface FieldState {
   company: string
   name: string
   email: string
+  phone: string
   message: string
 }
 
@@ -19,11 +21,9 @@ const INITIAL: FieldState = {
   company: '',
   name: '',
   email: '',
+  phone: '',
   message: '',
 }
-
-const SPIR_BOOKING_URL =
-  'https://app.spirinc.com/t/3u_FXTG5abaFIZ-D7as8v/as/u1BDbJ3xnywQYp2rDZYxE/confirm'
 
 export const ContactForm = () => {
   const [values, setValues] = useState<FieldState>(INITIAL)
@@ -55,8 +55,8 @@ export const ContactForm = () => {
     e.preventDefault()
     if (submitting) return
     setError(null)
-    if (!values.company.trim() || !values.name.trim() || !values.email.trim()) {
-      setError('会社名・氏名・メールアドレスは必須です。')
+    if (!values.company.trim() || !values.name.trim() || !values.phone.trim() || !values.email.trim()) {
+      setError('会社名・氏名・電話番号・メールアドレスは必須です。')
       return
     }
     setSubmitting(true)
@@ -104,7 +104,7 @@ export const ContactForm = () => {
           onChange={update('name')}
           placeholder="田中 太郎"
         />
-        <div className="md:col-span-2">
+        <div>
           <Field
             label="メールアドレス"
             required
@@ -114,6 +114,14 @@ export const ContactForm = () => {
             placeholder="taro@example.co.jp"
           />
         </div>
+        <Field
+          label="電話番号"
+          required
+          value={values.phone}
+          onChange={update('phone')}
+          placeholder="09012345678"
+          type="tel"
+        />
       </div>
 
       <FieldArea
@@ -137,12 +145,9 @@ export const ContactForm = () => {
       )}
 
       <div
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 pt-4"
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3 sm:gap-4 pt-4"
         style={{ borderTop: '1px solid rgba(171,199,255,0.08)' }}
       >
-        <p className="text-[10.5px] text-[#7e7c83] leading-relaxed">
-          1営業日以内に代表 沢坂弘樹 より直接ご返信いたします。
-        </p>
         <button
           type="submit"
           disabled={submitting}
@@ -242,10 +247,7 @@ function SuccessModal({ onClose }: { onClose: () => void }) {
         </p>
 
         {/* 日程調整 CTA */}
-        <a
-          href={SPIR_BOOKING_URL}
-          target="_blank"
-          rel="noopener noreferrer"
+        <ConsultationCallButton
           className="group mt-7 inline-flex items-center gap-2 px-5 h-11 rounded-[12px] text-[13px] font-semibold transition-transform hover:-translate-y-0.5"
           style={{
             background:
@@ -254,11 +256,12 @@ function SuccessModal({ onClose }: { onClose: () => void }) {
             boxShadow:
               'inset 0 1px 0 rgba(255,255,255,0.18), 0 0 0 1px rgba(171,199,255,0.20), 0 8px 24px rgba(0,113,227,0.18)',
           }}
+          source="landing_contact_success"
         >
           <CalendarCheck size={15} strokeWidth={2.2} />
-          そのまま 30 分相談を予約
+          日程調整で相談を予約
           <ArrowRight size={13} strokeWidth={2.4} className="transition-transform group-hover:translate-x-0.5" />
-        </a>
+        </ConsultationCallButton>
 
         <button
           type="button"
@@ -307,7 +310,7 @@ function Field({
   value: string
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   placeholder?: string
-  type?: 'text' | 'email'
+  type?: 'text' | 'email' | 'tel'
 }) {
   return (
     <label className="block">

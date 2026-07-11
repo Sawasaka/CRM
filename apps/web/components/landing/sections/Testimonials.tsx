@@ -107,8 +107,8 @@ export const Testimonials = () => (
               営業活動を拡大していく中で、商談情報や顧客接点、提案内容が個別のツールやメモに分散し、
               <span className="text-[#cfdcff]">案件状況や次に取るべき行動を把握しづらい課題</span>
               がありました。少人数体制でも営業の再現性を高め、見込み顧客へのアプローチ精度を上げるため、
-              <span className="text-[#cfdcff]">営業実行と CRM 構築を同時に進められ、企業DB・議事録・メールなどの情報を AI で整理・活用できる</span>
-              ルキスマCRMに魅力を感じ、導入を決定しました。
+              <span className="text-[#cfdcff]">Notion・Google Workspace・Zoom・CRMにAIを組み合わせ、売上インフラとしてまとめて設計できる</span>
+              点に魅力を感じ、導入を決定しました。
             </p>
           </div>
 
@@ -132,10 +132,10 @@ export const Testimonials = () => (
             </div>
             <div className="min-w-0">
               <div className="text-[10.5px] uppercase tracking-[0.18em] text-aurora font-semibold mb-3 whitespace-nowrap">
-                ルキスマCRM 採用理由
+                採用理由
               </div>
               <div className="font-display font-bold text-[14.5px] md:text-[15.5px] text-[#e7e5ea] leading-snug whitespace-nowrap">
-                部署直通番号 + CRM 構築 を営業実行と同時実現が可能な点
+                既存SaaSをAIインフラ化できる
               </div>
             </div>
           </div>

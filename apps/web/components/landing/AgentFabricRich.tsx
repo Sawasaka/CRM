@@ -511,14 +511,13 @@ const AgentScene = ({ agent, isActive }: { agent: AgentEntry; isActive: boolean 
 // AgenticEra から移植。ヘッダ直下に「5 体が連携している」イメージを概観表示する。
 const AgentOrbCluster = () => {
   // 各オーブの中央に頭文字を重ねる
-  // 並び: Sales → Marketing → Support(C) → PDM → Knowledge(K=ナレッジ)
-  // Support は「カスタマーサポート」の C、Knowledge は ナレッジ の K を採用
-  const agents: { agent: AgentKey; x: string; initial: string }[] = [
-    { agent: 'sales',     x: '14%', initial: 'S' },
-    { agent: 'marketing', x: '32%', initial: 'M' },
-    { agent: 'support',   x: '50%', initial: 'C' },
-    { agent: 'pdm',       x: '68%', initial: 'P' },
-    { agent: 'helpdesk',  x: '86%', initial: 'K' },
+  // 並び: Marketing → Sales → Customer → Support → Knowledge
+  const agents: { agent: AgentKey; x: string; initial: string; label: string }[] = [
+    { agent: 'marketing', x: '14%', initial: 'M', label: 'Marketing' },
+    { agent: 'sales',     x: '32%', initial: 'S', label: 'Sales' },
+    { agent: 'support',   x: '50%', initial: 'C', label: 'Customer' },
+    { agent: 'pdm',       x: '68%', initial: 'S', label: 'Support' },
+    { agent: 'helpdesk',  x: '86%', initial: 'K', label: 'Knowledge' },
   ]
   return (
     <div className="relative mt-0 mx-auto max-w-4xl h-[140px] md:h-[160px]">
@@ -559,7 +558,7 @@ const AgentOrbCluster = () => {
             className="text-[8.5px] md:text-[11px] mt-2 md:mt-3 text-center uppercase tracking-[0.04em] md:tracking-[0.14em] whitespace-nowrap"
             style={{ color: AGENTS[o.agent].color }}
           >
-            {AGENTS[o.agent].name.replace(' Agent', '')}
+            {o.label}
           </div>
         </div>
       ))}

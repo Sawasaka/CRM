@@ -1,0 +1,46 @@
+<svg width="1280" height="720" viewBox="0 0 1280 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1280" height="720" rx="34" fill="#05070d"/>
+  <circle cx="190" cy="135" r="220" fill="#56aaff" opacity=".18"/>
+  <circle cx="1030" cy="590" r="260" fill="#8dffc9" opacity=".10"/>
+  <rect x="52" y="50" width="1176" height="620" rx="34" fill="#080c14" stroke="#24344b"/>
+  <rect x="84" y="82" width="1112" height="54" rx="18" fill="#101720"/>
+  <text x="118" y="116" fill="#dce8ff" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="700">Zoom Meeting</text>
+  <rect x="282" y="96" width="58" height="24" rx="12" fill="#163724"/>
+  <text x="300" y="113" fill="#8dffc9" font-family="Inter, Arial, sans-serif" font-size="12" font-weight="800">LIVE</text>
+  <text x="1002" y="116" fill="#8f9aae" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="700">文字起こし中</text>
+
+  <rect x="84" y="164" width="300" height="440" rx="28" fill="#111827" stroke="#24344b"/>
+  <circle cx="144" cy="238" r="42" fill="#2b3b58"/>
+  <text x="132" y="249" fill="#cfe0ff" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="800">C</text>
+  <text x="116" y="450" fill="#f4f7ff" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="800">Customer</text>
+  <text x="116" y="486" fill="#8f9aae" font-family="Inter, Arial, sans-serif" font-size="17">FDE AI/DX Consultation</text>
+
+  <rect x="414" y="164" width="300" height="440" rx="28" fill="#111827" stroke="#24344b"/>
+  <circle cx="474" cy="238" r="42" fill="#204539"/>
+  <text x="463" y="249" fill="#8dffc9" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="800">S</text>
+  <text x="446" y="450" fill="#f4f7ff" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="800">Sales</text>
+  <text x="446" y="486" fill="#8f9aae" font-family="Inter, Arial, sans-serif" font-size="17">AI Answer Sidebar</text>
+
+  <rect x="744" y="164" width="452" height="440" rx="28" fill="#0c111b" stroke="#2d4360"/>
+  <text x="786" y="218" fill="#9ac4ff" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="800" letter-spacing="4">AI SIDEBAR</text>
+  <text x="786" y="260" fill="#f4f7ff" font-family="Inter, Arial, sans-serif" font-size="31" font-weight="900">回答候補</text>
+
+  <rect x="786" y="296" width="368" height="146" rx="22" fill="#111827"/>
+  <text x="814" y="336" fill="#8dffc9" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="900" letter-spacing="3">SUGGESTED ANSWER</text>
+  <text x="814" y="378" fill="#eef4ff" font-family="Inter, Arial, sans-serif" font-size="21" font-weight="800">顧客の質問に合わせて、</text>
+  <text x="814" y="410" fill="#eef4ff" font-family="Inter, Arial, sans-serif" font-size="21" font-weight="800">社内ナレッジから即回答。</text>
+
+  <rect x="786" y="462" width="168" height="54" rx="16" fill="#18263a"/>
+  <text x="812" y="496" fill="#cfe0ff" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="800">料金表.md</text>
+  <rect x="972" y="462" width="182" height="54" rx="16" fill="#172a24"/>
+  <text x="998" y="496" fill="#b7fbd8" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="800">提案FAQ.md</text>
+  <rect x="786" y="532" width="368" height="34" rx="17" fill="#142033"/>
+  <rect x="786" y="532" width="260" height="34" rx="17" fill="url(#bar)"/>
+
+  <defs>
+    <linearGradient id="bar" x1="786" y1="549" x2="1046" y2="549" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#56aaff"/>
+      <stop offset="1" stop-color="#8dffc9"/>
+    </linearGradient>
+  </defs>
+</svg>

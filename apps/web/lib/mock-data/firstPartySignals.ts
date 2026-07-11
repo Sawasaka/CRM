@@ -15,14 +15,7 @@ export interface CompanyFirstPartySignalEntry {
   signal: Signal
 }
 
-export const COMPANY_FIRST_PARTY_SIGNALS: CompanyFirstPartySignalEntry[] = [
-  { companyName: '株式会社テクノリード',     signal: 'Hot' },
-  { companyName: '株式会社イノベーション',   signal: 'Hot' },
-  { companyName: '合同会社フューチャー',     signal: 'Hot' },
-  { companyName: '株式会社グロース',         signal: 'Middle' },
-  { companyName: '有限会社サクセス',         signal: 'Middle' },
-  { companyName: '株式会社ネクスト',         signal: 'Low' },
-]
+export const COMPANY_FIRST_PARTY_SIGNALS: CompanyFirstPartySignalEntry[] = []
 
 const SIGNAL_RANK: Record<Signal, number> = { Hot: 3, Middle: 2, Low: 1 }
 

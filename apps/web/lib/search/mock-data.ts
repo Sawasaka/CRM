@@ -18,32 +18,9 @@ export type SearchItem = {
   href: string
 }
 
-const COMPANIES: SearchItem[] = [
-  { id: 'co-1', kind: 'company', title: 'フューチャー株式会社',     subtitle: 'IT・SaaS / 従業員 1,200名',  href: '/companies/co-1' },
-  { id: 'co-2', kind: 'company', title: 'グロースマーケティング',   subtitle: '広告・代理店 / 従業員 320名', href: '/companies/co-2' },
-  { id: 'co-3', kind: 'company', title: 'テクノリード株式会社',     subtitle: '製造・ロボティクス / 従業員 850名', href: '/companies/co-3' },
-  { id: 'co-4', kind: 'company', title: 'ロジクラウド',             subtitle: '物流・倉庫 / 従業員 540名',  href: '/companies/co-4' },
-  { id: 'co-5', kind: 'company', title: 'メディカルパス株式会社',   subtitle: '医療・ヘルスケア / 従業員 220名', href: '/companies/co-5' },
-  { id: 'co-6', kind: 'company', title: 'ビズオート',               subtitle: 'バックオフィス SaaS / 従業員 90名', href: '/companies/co-6' },
-]
-
-const CONTACTS: SearchItem[] = [
-  { id: 'ct-1', kind: 'contact', title: '田中 太郎',   subtitle: 'フューチャー株式会社 / 営業部 部長',     href: '/contacts/ct-1' },
-  { id: 'ct-2', kind: 'contact', title: '鈴木 花子',   subtitle: 'グロースマーケティング / マーケ責任者',   href: '/contacts/ct-2' },
-  { id: 'ct-3', kind: 'contact', title: '佐藤 次郎',   subtitle: 'テクノリード株式会社 / CTO',              href: '/contacts/ct-3' },
-  { id: 'ct-4', kind: 'contact', title: '高橋 三郎',   subtitle: 'ロジクラウド / 経営企画',                 href: '/contacts/ct-4' },
-  { id: 'ct-5', kind: 'contact', title: '中村 美香',   subtitle: 'メディカルパス株式会社 / 事業開発',       href: '/contacts/ct-5' },
-  { id: 'ct-6', kind: 'contact', title: '小林 健一',   subtitle: 'ビズオート / 代表取締役',                 href: '/contacts/ct-6' },
-  { id: 'ct-7', kind: 'contact', title: '伊藤 結衣',   subtitle: 'フューチャー株式会社 / 経理',             href: '/contacts/ct-7' },
-]
-
-const DEALS: SearchItem[] = [
-  { id: 'd-1', kind: 'deal', title: 'フューチャー社 — 新規導入提案',    subtitle: '提案中 / ¥12,000,000',  href: '/deals/d-1' },
-  { id: 'd-2', kind: 'deal', title: 'グロース社 — 拡張プラン',          subtitle: '稟議中 / ¥4,800,000',   href: '/deals/d-2' },
-  { id: 'd-3', kind: 'deal', title: 'テクノリード社 — 更新交渉',        subtitle: '見積回答待ち / ¥9,300,000', href: '/deals/d-3' },
-  { id: 'd-4', kind: 'deal', title: 'ロジクラウド — POC 提案',          subtitle: '初回提案 / ¥2,400,000',  href: '/deals/d-4' },
-  { id: 'd-5', kind: 'deal', title: 'メディカルパス社 — 年契約',        subtitle: 'クロージング / ¥6,000,000', href: '/deals/d-5' },
-]
+const COMPANIES: SearchItem[] = []
+const CONTACTS: SearchItem[] = []
+const DEALS: SearchItem[] = []
 
 export const SEARCH_INDEX: SearchItem[] = [...COMPANIES, ...CONTACTS, ...DEALS]
 

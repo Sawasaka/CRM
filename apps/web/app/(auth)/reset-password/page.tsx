@@ -153,7 +153,7 @@ function ResetShell({ children }: { children?: ReactNode }) {
             <Zap size={18} className="text-white" strokeWidth={2.5} />
           </div>
           <div className="flex flex-col">
-            <span className="text-xl font-semibold text-[#111827] leading-tight">ルキスマCRM</span>
+            <span className="text-xl font-semibold text-[#111827] leading-tight">FDE CRM</span>
             <span className="text-[10px] text-[#9CA3AF] tracking-[0.02em]">for First-Party CRM</span>
           </div>
         </div>

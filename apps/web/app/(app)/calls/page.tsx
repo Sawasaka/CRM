@@ -92,7 +92,7 @@ export default function CallsPage() {
     phone: '',
     purpose: '初回接点の確認',
     script:
-      'ルキスマCRMの概要を30秒で伝え、現在の営業管理・議事録連携・問い合わせ対応の課題を確認する。',
+      'FDE CRMの概要を30秒で伝え、現在の営業管理・議事録連携・問い合わせ対応の課題を確認する。',
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)

@@ -1,5 +1,5 @@
 export type PlanTier = 'Free' | 'Lite' | 'Standard' | 'PRO'
-export type TenantStatus = 'active' | 'demo' | 'inactive'
+export type TenantStatus = 'active' | 'inactive'
 
 // 契約情報の自由項目 (企業ごとに項目名・内容を自由に持てる)
 export interface ContractItem {

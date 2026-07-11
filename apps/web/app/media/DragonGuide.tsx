@@ -7,8 +7,10 @@ import { createPortal } from 'react-dom'
 import type { LucideIcon } from 'lucide-react'
 import {
   ArrowRight,
+  BarChart3,
   BrainCircuit,
   CircleCheck,
+  RefreshCcw,
   ShieldAlert,
   Sparkles,
   X,
@@ -20,9 +22,46 @@ type DiagnosisCardItem = {
   icon: LucideIcon
   colors: [string, string]
   figure: string
-  href: string
   kind: 'sales' | 'boss' | 'member'
 }
+
+type DiagnosisAnswerState = Record<number, 0 | 1 | 2 | undefined>
+
+type ScoredProfile = {
+  species: string
+  name: string
+  copy: string
+  colors: string[]
+  accent: string
+  strengths: string[]
+  risks: string[]
+  strategy: string
+  memo: string
+}
+
+const choiceOptions = [
+  {
+    label: 'いいえ',
+    score: 0,
+    accent: '#93a4bd',
+    idle: 'linear-gradient(135deg, rgba(148,163,184,0.08), rgba(15,23,42,0.48))',
+    active: 'linear-gradient(135deg, rgba(148,163,184,0.36), rgba(51,65,85,0.72))',
+  },
+  {
+    label: 'どちらとも言えない',
+    score: 1,
+    accent: '#d7ad59',
+    idle: 'linear-gradient(135deg, rgba(215,173,89,0.08), rgba(15,23,42,0.48))',
+    active: 'linear-gradient(135deg, rgba(215,173,89,0.34), rgba(92,68,26,0.7))',
+  },
+  {
+    label: 'はい',
+    score: 2,
+    accent: '#60a5fa',
+    idle: 'linear-gradient(135deg, rgba(96,165,250,0.08), rgba(15,23,42,0.48))',
+    active: 'linear-gradient(135deg, rgba(96,165,250,0.38), rgba(30,64,175,0.72))',
+  },
+] as const
 
 const diagnosisCards: DiagnosisCardItem[] = [
   {
@@ -31,7 +70,6 @@ const diagnosisCards: DiagnosisCardItem[] = [
     icon: BrainCircuit,
     colors: ['#173e69', '#081d33'],
     figure: '営業',
-    href: '#diagnosis',
     kind: 'sales',
   },
   {
@@ -40,7 +78,6 @@ const diagnosisCards: DiagnosisCardItem[] = [
     icon: ShieldAlert,
     colors: ['#0f6b69', '#082d35'],
     figure: '上司',
-    href: '#boss-types',
     kind: 'boss',
   },
   {
@@ -49,7 +86,6 @@ const diagnosisCards: DiagnosisCardItem[] = [
     icon: BrainCircuit,
     colors: ['#4d3d72', '#1b1830'],
     figure: '部下',
-    href: '#member-types',
     kind: 'member',
   },
 ]
@@ -338,12 +374,9 @@ export default function DragonGuide() {
   const [isSalesDiagnosisOpen, setIsSalesDiagnosisOpen] = useState(false)
   const [isBossDiagnosisOpen, setIsBossDiagnosisOpen] = useState(false)
   const [isMemberDiagnosisOpen, setIsMemberDiagnosisOpen] = useState(false)
-  const [checkedQuestionIds, setCheckedQuestionIds] = useState<number[]>([])
-  const [checkedBossQuestionIds, setCheckedBossQuestionIds] = useState<number[]>([])
-  const [checkedMemberQuestionIds, setCheckedMemberQuestionIds] = useState<number[]>([])
-  const [isSalesDiagnosisSubmitted, setIsSalesDiagnosisSubmitted] = useState(false)
-  const [isBossDiagnosisSubmitted, setIsBossDiagnosisSubmitted] = useState(false)
-  const [isMemberDiagnosisSubmitted, setIsMemberDiagnosisSubmitted] = useState(false)
+  const [salesDiagnosisAnswers, setSalesDiagnosisAnswers] = useState<DiagnosisAnswerState>({})
+  const [bossDiagnosisAnswers, setBossDiagnosisAnswers] = useState<DiagnosisAnswerState>({})
+  const [memberDiagnosisAnswers, setMemberDiagnosisAnswers] = useState<DiagnosisAnswerState>({})
 
   useEffect(() => {
     if (!selectedDragon && !selectedProfile && !isSalesDiagnosisOpen && !isBossDiagnosisOpen && !isMemberDiagnosisOpen) return
@@ -391,51 +424,9 @@ export default function DragonGuide() {
     setIsMemberDiagnosisOpen(true)
   }
 
-  const handleToggleQuestion = (questionId: number) => {
-    setCheckedQuestionIds((current) =>
-      current.includes(questionId)
-        ? current.filter((id) => id !== questionId)
-        : [...current, questionId].sort((a, b) => a - b)
-    )
-    setIsSalesDiagnosisSubmitted(false)
-  }
-
-  const handleResetSalesDiagnosis = () => {
-    setCheckedQuestionIds([])
-    setIsSalesDiagnosisSubmitted(false)
-  }
-
-  const handleToggleBossQuestion = (questionId: number) => {
-    setCheckedBossQuestionIds((current) =>
-      current.includes(questionId)
-        ? current.filter((id) => id !== questionId)
-        : [...current, questionId].sort((a, b) => a - b)
-    )
-    setIsBossDiagnosisSubmitted(false)
-  }
-
-  const handleResetBossDiagnosis = () => {
-    setCheckedBossQuestionIds([])
-    setIsBossDiagnosisSubmitted(false)
-  }
-
-  const handleToggleMemberQuestion = (questionId: number) => {
-    setCheckedMemberQuestionIds((current) =>
-      current.includes(questionId)
-        ? current.filter((id) => id !== questionId)
-        : [...current, questionId].sort((a, b) => a - b)
-    )
-    setIsMemberDiagnosisSubmitted(false)
-  }
-
-  const handleResetMemberDiagnosis = () => {
-    setCheckedMemberQuestionIds([])
-    setIsMemberDiagnosisSubmitted(false)
-  }
-
   return (
     <main className="min-h-screen bg-[#071a28] text-[#07111a]">
-      <header className="sticky top-[72px] z-40 px-3 py-3 backdrop-blur-md">
+      <header className="sticky top-[68px] z-40 px-3 py-2 backdrop-blur-md sm:top-[72px] sm:py-3">
         <nav className="mx-auto flex min-h-[62px] max-w-[1500px] items-center justify-between gap-3 rounded-2xl border border-[#d7ad59]/20 bg-[#061727]/90 px-3 shadow-[0_18px_48px_-34px_rgba(0,0,0,0.95),0_0_0_1px_rgba(255,255,255,0.04)_inset] sm:px-5">
           <Link href="/media" className="group flex min-w-0 items-center gap-3">
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#d7ad59] text-2xl font-black text-[#07111a] shadow-[0_0_0_1px_rgba(255,255,255,0.18)_inset,0_10px_24px_-16px_rgba(215,173,89,0.9)] transition-transform group-hover:-rotate-3">
@@ -473,53 +464,100 @@ export default function DragonGuide() {
             竜
           </div>
 
-          <div className="relative grid min-h-[520px] gap-6 px-4 pb-0 pt-8 sm:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:px-12 lg:pt-9">
+          <div className="relative grid min-h-[auto] gap-5 px-4 pb-0 pt-6 sm:px-8 sm:pt-8 lg:min-h-[520px] lg:grid-cols-[1.1fr_0.9fr] lg:px-12 lg:pt-9">
             <div className="relative z-10 flex flex-col justify-center pb-8 lg:pb-10">
-              <div className="mb-7 inline-flex w-fit items-center gap-3 rounded-md border border-[#061727]/15 bg-white/80 px-4 py-2 text-[13px] font-black text-[#07111a] shadow-[0_14px_28px_-26px_rgba(6,23,39,0.8)]">
-                <span className="h-1.5 w-9 rounded-full bg-[#d7ad59]" />
+              <div className="mb-5 inline-flex w-fit max-w-full items-center gap-3 rounded-md border border-[#061727]/15 bg-white/80 px-3 py-2 text-[12px] font-black leading-5 text-[#07111a] shadow-[0_14px_28px_-26px_rgba(6,23,39,0.8)] sm:mb-7 sm:px-4 sm:text-[13px]">
+                <span className="h-1.5 w-7 shrink-0 rounded-full bg-[#d7ad59] sm:w-9" />
                 現場のモヤモヤを、博士がエンタメに変換する。
               </div>
 
-              <h1 className="font-display text-[3rem] font-black leading-[1.04] text-[#07111a] sm:text-[4.15rem] lg:text-[4.25rem] xl:text-[4.35rem] 2xl:text-[5.2rem]">
+              <h1 className="font-display text-[2.45rem] font-black leading-[1.05] text-[#07111a] min-[390px]:text-[2.75rem] sm:text-[4.15rem] lg:text-[4.25rem] xl:text-[4.35rem] 2xl:text-[5.2rem]">
                 <span className="sm:whitespace-nowrap">営業組織に潜む</span>
                 <span className="block text-[#a27628] sm:whitespace-nowrap">ドラゴンを観測せよ</span>
               </h1>
 
-              <p className="mt-5 max-w-[700px] text-base font-black leading-8 text-[#151f2c] sm:text-lg">
+              <p className="mt-4 max-w-[700px] text-sm font-black leading-7 text-[#151f2c] sm:mt-5 sm:text-lg sm:leading-8">
                 はぐれ博士が、失注・上司・営業現場を図鑑化する営業エンタメメディア
               </p>
 
-              <div className="mt-6 grid max-w-[620px] gap-3 sm:grid-cols-2">
-                <a
-                  href="#dragons"
-                  className="group rounded-lg border-2 border-[#d7ad59] bg-[#061727] p-3 text-[#f2cb77] shadow-[0_18px_40px_-26px_rgba(6,23,39,0.8)] transition-transform hover:-translate-y-0.5"
-                >
-                  <span className="flex h-9 items-center gap-3 text-base font-black">
-                    <span className="text-2xl">竜</span>
-                    営業ドラゴン図鑑を見る
-                    <ArrowRight size={18} className="ml-auto transition-transform group-hover:translate-x-1" />
-                  </span>
-                  <span className="mt-1 block pl-9 text-xs font-black leading-5 text-[#fff3d8]/75">
-                    組織に潜む竜を観測
-                  </span>
-                </a>
-                <Link
-                  href="/media?view=psychology"
-                  className="group rounded-lg border-2 border-[#d7ad59]/45 bg-[linear-gradient(135deg,#102b42_0%,#071927_58%,#2b2417_100%)] p-3 text-[#fff3d8] shadow-[0_18px_44px_-28px_rgba(6,23,39,0.9)] transition-transform hover:-translate-y-0.5 hover:border-[#f2cb77]/80"
-                >
-                  <span className="flex h-9 items-center gap-3 text-base font-black">
-                    <Sparkles size={22} className="text-[#f2cb77]" />
-                    営業武器庫を見る
-                    <ArrowRight size={18} className="ml-auto transition-transform group-hover:translate-x-1" />
-                  </span>
-                  <span className="mt-1 block pl-9 text-xs font-black leading-5 text-[#f7e2aa]/70">
-                    商談で使う攻略カード
-                  </span>
-                </Link>
+              <div className="mt-6 max-w-[720px] rounded-xl border border-[#061727]/15 bg-white/70 p-3 shadow-[0_24px_52px_-38px_rgba(6,23,39,0.8)] backdrop-blur">
+                <div className="mb-3 flex items-center gap-2 px-1 text-[12px] font-black tracking-[0.16em] text-[#806224]">
+                  <Sparkles size={15} />
+                  営業ドラゴン図鑑の使い方
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {diagnosisCards.map((card) => {
+                    const Icon = card.icon
+                    const onClick =
+                      card.kind === 'sales'
+                        ? handleOpenSalesDiagnosis
+                        : card.kind === 'boss'
+                          ? handleOpenBossDiagnosis
+                          : handleOpenMemberDiagnosis
+
+                    return (
+                      <button
+                        key={card.title}
+                        type="button"
+                        onClick={onClick}
+                        className="group relative min-h-[88px] overflow-hidden rounded-lg border border-[#061727]/12 bg-[#061727] p-3 text-left text-[#fff3d8] shadow-[0_16px_34px_-28px_rgba(6,23,39,0.9)] transition-transform hover:-translate-y-0.5"
+                      >
+                        <div
+                          className="absolute inset-0 opacity-90"
+                          style={{
+                            background: `radial-gradient(circle at 18% 28%, rgba(255,255,255,0.16), transparent 24%), linear-gradient(135deg, ${card.colors[0]}, ${card.colors[1]})`,
+                          }}
+                        />
+                        <div className="absolute inset-0 opacity-15 [background-image:linear-gradient(90deg,rgba(255,255,255,0.22)_1px,transparent_1px),linear-gradient(rgba(255,255,255,0.18)_1px,transparent_1px)] [background-size:18px_18px]" />
+                        <span className="relative z-10 flex items-center gap-3">
+                          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-[#f7f0e4]/20 bg-[#061727]/62 text-[#f2cb77] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]">
+                            <Icon size={19} strokeWidth={2.4} />
+                          </span>
+                          <span className="min-w-0">
+                            <span className="block text-[11px] font-black tracking-[0.16em] text-[#f2cb77]">
+                              診断する
+                            </span>
+                            <span className="mt-0.5 block truncate text-base font-black leading-5 text-white">{card.title}</span>
+                          </span>
+                          <ArrowRight size={17} className="ml-auto shrink-0 transition-transform group-hover:translate-x-1" />
+                        </span>
+                        <span className="relative z-10 mt-2 block text-xs font-bold leading-5 text-[#fff3d8]/78">{card.copy}</span>
+                      </button>
+                    )
+                  })}
+                  <Link
+                    href="/media/sales-organization-dragons#organization-health-diagnosis"
+                    className="group relative min-h-[88px] overflow-hidden rounded-lg border border-[#061727]/12 bg-[#061727] p-3 text-[#fff3d8] shadow-[0_16px_34px_-28px_rgba(6,23,39,0.9)] transition-transform hover:-translate-y-0.5"
+                  >
+                    <div
+                      className="absolute inset-0 opacity-90"
+                      style={{
+                        background:
+                          'radial-gradient(circle at 18% 28%, rgba(255,255,255,0.16), transparent 24%), linear-gradient(135deg, #15263f, #0b1625 58%, #3c2f14)',
+                      }}
+                    />
+                    <div className="absolute inset-0 opacity-15 [background-image:linear-gradient(90deg,rgba(255,255,255,0.22)_1px,transparent_1px),linear-gradient(rgba(255,255,255,0.18)_1px,transparent_1px)] [background-size:18px_18px]" />
+                    <span className="relative z-10 flex items-center gap-3">
+                      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-[#f7f0e4]/20 bg-[#061727]/62 text-[#f2cb77] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]">
+                        <ShieldAlert size={19} strokeWidth={2.4} />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block text-[11px] font-black tracking-[0.16em] text-[#f2cb77]">
+                          診断する
+                        </span>
+                        <span className="mt-0.5 block truncate text-base font-black leading-5 text-white">組織健全性診断</span>
+                      </span>
+                      <ArrowRight size={17} className="ml-auto shrink-0 transition-transform group-hover:translate-x-1" />
+                    </span>
+                    <span className="relative z-10 mt-2 block text-xs font-bold leading-5 text-[#fff3d8]/78">
+                      組織の毒と歪みを12問で観測
+                    </span>
+                  </Link>
+                </div>
               </div>
             </div>
 
-            <div id="professor" className="relative z-10 min-h-[500px] lg:min-h-[520px]">
+            <div id="professor" className="relative z-10 min-h-[430px] sm:min-h-[500px] lg:min-h-[520px]">
               <div className="absolute bottom-0 left-[12%] right-[7%] top-9 rounded-lg border border-[#d7ad59]/30 bg-[#071a28] shadow-[0_24px_70px_-44px_rgba(6,23,39,0.9)]" />
               <div className="absolute bottom-0 left-[9%] right-[10%] top-7 overflow-hidden rounded-lg border border-[#061727]/15 bg-[#fbf7ec]">
                 <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(6,23,39,0.05)_1px,transparent_1px),linear-gradient(rgba(6,23,39,0.04)_1px,transparent_1px)] bg-[length:42px_42px]" />
@@ -533,7 +571,7 @@ export default function DragonGuide() {
                 />
               </div>
 
-              <div className="absolute right-0 top-[112px] w-[276px] rounded-lg border border-[#d7ad59]/40 bg-[#061727] p-5 text-[#fff3d8] shadow-[0_20px_50px_-32px_rgba(0,0,0,0.9)] max-sm:left-4 max-sm:right-4 max-sm:top-auto max-sm:bottom-5 max-sm:w-auto">
+              <div className="absolute right-0 top-[112px] w-[276px] rounded-lg border border-[#d7ad59]/40 bg-[#061727] p-4 text-[#fff3d8] shadow-[0_20px_50px_-32px_rgba(0,0,0,0.9)] sm:p-5 max-sm:left-4 max-sm:right-4 max-sm:top-auto max-sm:bottom-5 max-sm:w-auto">
                 <div className="flex items-center gap-2 text-lg font-black text-[#f2cb77]">
                   <Sparkles size={20} />
                   はぐれ博士
@@ -561,26 +599,25 @@ export default function DragonGuide() {
           </div>
         </section>
 
-        <section id="diagnosis" className="relative border-b border-[#061727]/10 bg-[#061727] px-4 py-4 sm:px-8 md:pl-[92px] lg:px-12 lg:pl-[92px]">
+        <section id="dragons" className="relative bg-[#f7f0e4] px-4 py-5 sm:px-8 md:pl-[92px] lg:px-12 lg:pl-[92px]">
           <div className="mx-auto max-w-[1370px]">
-            <div className="mb-3 flex items-center gap-3 text-sm font-black text-[#fff3d8]">
-              <span>まずは自分を診断しよう</span>
-              <span className="h-px w-14 bg-[#d7ad59]" />
+            <div className="mb-5 overflow-hidden rounded-xl border border-[#d7ad59]/45 bg-[#061727] text-[#fff3d8] shadow-[0_22px_48px_-34px_rgba(6,23,39,0.9)]">
+              <div className="relative flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+                <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(90deg,rgba(255,255,255,0.18)_1px,transparent_1px),linear-gradient(rgba(255,255,255,0.14)_1px,transparent_1px)] [background-size:22px_22px]" />
+                <div className="relative z-10 flex items-center gap-3">
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#d7ad59] text-2xl font-black text-[#07111a] shadow-[0_0_0_1px_rgba(255,255,255,0.22)_inset]">
+                    竜
+                  </span>
+                  <div>
+                    <p className="text-[11px] font-black tracking-[0.18em] text-[#f2cb77]">DRAGON ARCHIVE</p>
+                    <h2 className="mt-0.5 text-2xl font-black leading-tight text-white sm:text-3xl">ドラゴン図鑑</h2>
+                  </div>
+                </div>
+                <p className="relative z-10 max-w-[560px] text-[13px] font-black leading-6 text-[#efe2c7] sm:text-right">
+                  診断で見つけた営業・上司・部下のタイプを、図鑑カードで確認できます。
+                </p>
+              </div>
             </div>
-            <div className="grid gap-3 lg:grid-cols-3">
-              {diagnosisCards.map((card) => (
-                <DiagnosisTile
-                  key={card.title}
-                  card={card}
-                  onClick={card.kind === 'sales' ? handleOpenSalesDiagnosis : card.kind === 'boss' ? handleOpenBossDiagnosis : handleOpenMemberDiagnosis}
-                />
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section id="dragons" className="relative bg-[#f7f0e4] px-4 py-4 sm:px-8 md:pl-[92px] lg:px-12 lg:pl-[92px]">
-          <div className="mx-auto max-w-[1370px]">
             <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <SectionTitle eyebrow="営業タイプ四竜" title="診断結果と連動する4つの営業スタイル" />
               <a href="#dragons" className="inline-flex items-center gap-2 text-sm font-black text-[#07111a]">
@@ -588,7 +625,7 @@ export default function DragonGuide() {
                 <ArrowRight size={15} />
               </a>
             </div>
-            <div className="grid gap-3 lg:grid-cols-4">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {dragons.map((dragon) => (
                 <DragonTypeCard
                   key={dragon.name}
@@ -606,7 +643,7 @@ export default function DragonGuide() {
               <SectionTitle eyebrow="上司タイプ診断" title="上司タイプが○○で見える、組織の勝ち筋と詰まり筋" />
               <span className="hidden text-sm font-black text-[#414b56] sm:inline">上司の癖を、責めずに観測する</span>
             </div>
-            <div className="grid gap-3 lg:grid-cols-4">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {bossTypes.map((profile) => (
                 <ProfileTypeCard
                   key={profile.species}
@@ -624,7 +661,7 @@ export default function DragonGuide() {
               <SectionTitle eyebrow="部下スタイル診断" title="部下タイプが○○で見える、任せ方と育て方" />
               <span className="hidden text-sm font-black text-[#414b56] sm:inline">部下の癖を、責めずに任せ方へ変える</span>
             </div>
-            <div className="grid gap-3 lg:grid-cols-4">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {memberTypes.map((profile) => (
                 <ProfileTypeCard
                   key={profile.species}
@@ -644,27 +681,31 @@ export default function DragonGuide() {
         <ProfileModal profile={selectedProfile} onClose={() => setSelectedProfile(null)} />
       ) : null}
       {isSalesDiagnosisOpen ? (
-        <SalesTypeDiagnosisModal
-          checkedQuestionIds={checkedQuestionIds}
-          isSubmitted={isSalesDiagnosisSubmitted}
+        <ChoiceDiagnosisModal
+          eyebrow="SALES TYPE DIAGNOSIS"
+          title="営業タイプ診断"
+          description="営業中の行動傾向を3択で観測し、あなたに近い営業ドラゴンタイプを判定します。"
+          profiles={dragons}
+          answers={salesDiagnosisAnswers}
           onClose={() => setIsSalesDiagnosisOpen(false)}
-          onSubmit={() => setIsSalesDiagnosisSubmitted(true)}
-          onToggleQuestion={handleToggleQuestion}
-          onReset={handleResetSalesDiagnosis}
-          onOpenDragon={(dragon) => {
+          onAnswer={(questionId, score) => setSalesDiagnosisAnswers((current) => ({ ...current, [questionId]: score }))}
+          onReset={() => setSalesDiagnosisAnswers({})}
+          onOpenProfile={(dragon) => {
             setIsSalesDiagnosisOpen(false)
             setSelectedDragon(dragon)
           }}
         />
       ) : null}
       {isBossDiagnosisOpen ? (
-        <BossTypeDiagnosisModal
-          checkedQuestionIds={checkedBossQuestionIds}
-          isSubmitted={isBossDiagnosisSubmitted}
+        <ChoiceDiagnosisModal
+          eyebrow="BOSS STYLE DIAGNOSIS"
+          title="上司スタイル診断"
+          description="上司としての判断・任せ方・関わり方を3択で観測し、出やすい上司スタイルを判定します。"
+          profiles={bossTypes}
+          answers={bossDiagnosisAnswers}
           onClose={() => setIsBossDiagnosisOpen(false)}
-          onSubmit={() => setIsBossDiagnosisSubmitted(true)}
-          onToggleQuestion={handleToggleBossQuestion}
-          onReset={handleResetBossDiagnosis}
+          onAnswer={(questionId, score) => setBossDiagnosisAnswers((current) => ({ ...current, [questionId]: score }))}
+          onReset={() => setBossDiagnosisAnswers({})}
           onOpenProfile={(profile) => {
             setIsBossDiagnosisOpen(false)
             setSelectedProfile(profile)
@@ -672,13 +713,15 @@ export default function DragonGuide() {
         />
       ) : null}
       {isMemberDiagnosisOpen ? (
-        <MemberTypeDiagnosisModal
-          checkedQuestionIds={checkedMemberQuestionIds}
-          isSubmitted={isMemberDiagnosisSubmitted}
+        <ChoiceDiagnosisModal
+          eyebrow="MEMBER STYLE DIAGNOSIS"
+          title="部下スタイル診断"
+          description="部下としての動き方・相談の仕方・仕事の進め方を3択で観測し、出やすい部下スタイルを判定します。"
+          profiles={memberTypes}
+          answers={memberDiagnosisAnswers}
           onClose={() => setIsMemberDiagnosisOpen(false)}
-          onSubmit={() => setIsMemberDiagnosisSubmitted(true)}
-          onToggleQuestion={handleToggleMemberQuestion}
-          onReset={handleResetMemberDiagnosis}
+          onAnswer={(questionId, score) => setMemberDiagnosisAnswers((current) => ({ ...current, [questionId]: score }))}
+          onReset={() => setMemberDiagnosisAnswers({})}
           onOpenProfile={(profile) => {
             setIsMemberDiagnosisOpen(false)
             setSelectedProfile(profile)
@@ -705,61 +748,6 @@ function SectionTitle({
         {title}
       </div>
     </div>
-  )
-}
-
-function DiagnosisTile({
-  card,
-  onClick,
-}: {
-  card: DiagnosisCardItem
-  onClick?: () => void
-}) {
-  const Icon = card.icon
-  const className =
-    'group relative block min-h-[116px] w-full overflow-hidden rounded-lg border border-[#f7f0e4]/25 bg-[#061727] p-4 text-left shadow-[0_18px_42px_-34px_rgba(0,0,0,0.9)] transition-transform hover:-translate-y-0.5'
-  const content = (
-    <>
-      <div
-        className="absolute inset-0"
-        style={{
-          background: `radial-gradient(circle at 18% 32%, rgba(255,255,255,0.18), transparent 24%), linear-gradient(135deg, ${card.colors[0]}, ${card.colors[1]})`,
-        }}
-      />
-      <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(90deg,rgba(255,255,255,0.28)_1px,transparent_1px),linear-gradient(rgba(255,255,255,0.2)_1px,transparent_1px)] [background-size:18px_18px]" />
-      <div className="absolute -bottom-8 -left-4 font-display text-[7rem] font-black leading-none text-white/10">
-        {card.figure}
-      </div>
-
-      <div className="relative z-10 flex h-full items-center justify-between gap-4">
-        <div className="flex min-w-0 items-center gap-4">
-          <div className="grid h-14 w-14 shrink-0 place-items-center rounded-lg border border-[#f7f0e4]/25 bg-[#061727]/65 text-[#f2cb77] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]">
-            <Icon size={26} strokeWidth={2.4} />
-          </div>
-          <div className="min-w-0">
-            <h3 className="truncate font-display text-2xl font-black leading-tight text-[#fff3d8]">{card.title}</h3>
-            <p className="mt-1 text-[13px] font-bold leading-6 text-[#f7e8c6]">{card.copy}</p>
-          </div>
-        </div>
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#f7f0e4] text-[#061727] transition-transform group-hover:translate-x-1">
-          <ArrowRight size={20} />
-        </span>
-      </div>
-    </>
-  )
-
-  if (onClick) {
-    return (
-      <button type="button" onClick={onClick} className={className}>
-        {content}
-      </button>
-    )
-  }
-
-  return (
-    <a href={card.href} className={className}>
-      {content}
-    </a>
   )
 }
 
@@ -840,6 +828,294 @@ function DragonModal({
     </div>,
     document.body
   )
+}
+
+function ChoiceDiagnosisModal<TProfile extends ScoredProfile>({
+  eyebrow,
+  title,
+  description,
+  profiles,
+  answers,
+  onAnswer,
+  onClose,
+  onReset,
+  onOpenProfile,
+}: {
+  eyebrow: string
+  title: string
+  description: string
+  profiles: TProfile[]
+  answers: DiagnosisAnswerState
+  onAnswer: (questionId: number, score: 0 | 1 | 2) => void
+  onClose: () => void
+  onReset: () => void
+  onOpenProfile: (profile: TProfile) => void
+}) {
+  const result = useMemo(() => {
+    const categoryResults = profiles.map((profile, profileIndex) => {
+      const questions = salesTypeQuestions.filter((question) => question.dragonIndex === profileIndex)
+      const values = questions.map((question) => answers[question.id])
+      const answeredCount = values.filter((value) => typeof value === 'number').length
+      const score = values.reduce<number>((total, value) => total + (typeof value === 'number' ? value : 0), 0)
+      return { profile, questions, answeredCount, score }
+    })
+
+    const answeredCount = categoryResults.reduce<number>((total, item) => total + item.answeredCount, 0)
+    const maxScore = Math.max(...categoryResults.map((item) => item.score))
+    const topResults = categoryResults.filter((item) => item.score === maxScore && item.score > 0)
+    return { categoryResults, answeredCount, maxScore, topResults }
+  }, [answers, profiles])
+
+  if (typeof document === 'undefined') return null
+
+  const totalQuestionCount = salesTypeQuestions.length
+  const isComplete = result.answeredCount === totalQuestionCount
+  const progress = Math.round((result.answeredCount / totalQuestionCount) * 100)
+  const primaryResult = isComplete ? result.topResults[0] : undefined
+  const statusLabel = isComplete ? '診断完了' : result.answeredCount > 0 ? '判定中' : '未回答'
+  const statusClassName = isComplete
+    ? 'border-[#35d399]/30 bg-[#35d399]/12 text-[#a7f3d0]'
+    : result.answeredCount > 0
+      ? 'border-[#d7ad59]/40 bg-[#d7ad59]/14 text-[#f2cb77]'
+      : 'border-white/10 bg-white/[0.04] text-[#b7c5d8]'
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-[#020a10]/78 px-4 py-5 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="choice-diagnosis-title"
+      onClick={onClose}
+    >
+      <div
+        className="relative flex max-h-[92vh] w-full max-w-[1120px] flex-col overflow-hidden rounded-lg border border-white/10 bg-[#07111d] text-[#eef6ff] shadow-[0_28px_90px_-28px_rgba(0,0,0,0.95)]"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute right-4 top-4 z-20 grid h-10 w-10 place-items-center rounded-full border border-white/10 bg-[#0b101a] text-[#dbeafe] transition-colors hover:bg-white/[0.08]"
+          aria-label="閉じる"
+        >
+          <X size={20} />
+        </button>
+
+        <div className="overflow-y-auto p-5 sm:p-7">
+          <section className="rounded-lg border border-white/10 bg-[#07111d] p-5 shadow-[0_34px_120px_-80px_rgba(96,165,250,0.5)] sm:p-7">
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+              <div className="max-w-[760px]">
+                <div className="inline-flex items-center gap-2 rounded-full border border-[#d7ad59]/25 bg-[#d7ad59]/10 px-3 py-1.5 text-[12px] font-black tracking-[0.16em] text-[#f2cb77]">
+                  <BrainCircuit size={15} />
+                  {eyebrow}
+                </div>
+                <h2 id="choice-diagnosis-title" className="mt-4 text-3xl font-black tracking-normal text-white sm:text-4xl">
+                  {title}
+                </h2>
+                <p className="mt-4 text-[15px] font-bold leading-8 text-[#b7c5d8]">{description}</p>
+              </div>
+              <div className="min-w-[240px] rounded-lg border border-white/10 bg-[#0b101a] p-5">
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-[12px] font-black tracking-[0.16em] text-[#abc7ff]">進捗</span>
+                  <span className={`rounded-full border px-2.5 py-1 text-[11px] font-black ${statusClassName}`}>
+                    {statusLabel}
+                  </span>
+                </div>
+                <div className="mt-4 flex items-end gap-2">
+                  <span className="text-4xl font-black text-white">{result.answeredCount}</span>
+                  <span className="pb-1 text-sm font-bold text-[#b7c5d8]">/ {totalQuestionCount} 問</span>
+                </div>
+                <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
+                  <div className="h-full rounded-full bg-[#60a5fa]" style={{ width: `${progress}%` }} />
+                </div>
+                <button
+                  type="button"
+                  onClick={onReset}
+                  className="mt-5 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-4 text-sm font-black text-[#dbeafe] transition-colors hover:bg-white/[0.08]"
+                >
+                  <RefreshCcw size={16} />
+                  回答をリセット
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-8 grid gap-4">
+              {result.categoryResults.map((categoryResult, categoryIndex) => (
+                <article key={categoryResult.profile.species} className="rounded-lg border border-white/10 bg-[#0b101a] p-5 sm:p-6">
+                  <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                    <div className="flex gap-3">
+                      <span
+                        className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-white/[0.06] text-xl font-black"
+                        style={{ color: categoryResult.profile.accent }}
+                      >
+                        {categoryResult.profile.species.slice(0, 1)}
+                      </span>
+                      <div>
+                        <p className="text-[12px] font-black tracking-[0.16em] text-[#abc7ff]">CATEGORY {categoryIndex + 1}</p>
+                        <h3 className="mt-1 text-xl font-black text-white">
+                          {categoryResult.profile.species} {categoryResult.profile.name}
+                        </h3>
+                        <p className="mt-2 text-[14px] font-bold leading-7 text-[#b7c5d8]">{categoryResult.profile.copy}</p>
+                      </div>
+                    </div>
+                    <span className="w-fit rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[12px] font-black text-[#dbeafe]">
+                      {categoryResult.score}/{categoryResult.questions.length * 2}
+                    </span>
+                  </div>
+
+                  <div className="mt-5 grid gap-4">
+                    {categoryResult.questions.map((question, questionIndex) => (
+                      <div key={question.id} className="rounded-lg border border-white/10 bg-[#111827] p-4">
+                        <p className="text-[14px] font-black leading-7 text-white">
+                          Q{questionIndex + 1}. {formatDiagnosisQuestion(question.text)}
+                        </p>
+                        <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                          {choiceOptions.map((option) => {
+                            const isSelected = answers[question.id] === option.score
+                            return (
+                              <button
+                                key={option.label}
+                                type="button"
+                                aria-pressed={isSelected}
+                                onClick={() => onAnswer(question.id, option.score)}
+                                className={[
+                                  'min-h-11 rounded-lg border px-3 py-2 text-left text-[13px] font-black leading-5 transition-all',
+                                  isSelected
+                                    ? 'text-white shadow-[0_12px_30px_-22px_rgba(96,165,250,0.9),inset_0_0_0_1px_rgba(255,255,255,0.12)]'
+                                    : 'border-white/10 text-[#b7c5d8] hover:border-white/20 hover:text-white',
+                                ].join(' ')}
+                                style={{
+                                  background: isSelected ? option.active : option.idle,
+                                  borderColor: isSelected ? option.accent : undefined,
+                                }}
+                              >
+                                {option.label}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </article>
+              ))}
+            </div>
+
+            <div className="mt-8 rounded-lg border border-white/10 bg-[linear-gradient(135deg,#111827_0%,#07111d_62%,#162134_100%)] p-5 sm:p-6">
+              <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
+                <div className="min-w-0 flex-1">
+                  <div className="inline-flex items-center gap-2 text-[12px] font-black tracking-[0.16em] text-[#d7ad59]">
+                    <BarChart3 size={16} />
+                    TOTAL RESULT
+                  </div>
+                  {primaryResult ? (
+                    <>
+                      <h3 className="mt-3 text-2xl font-black text-white">
+                        {result.topResults.length > 1
+                          ? `複合タイプ：${result.topResults.map((item) => item.profile.species).join(' × ')}`
+                          : `診断結果：${primaryResult.profile.species} ${primaryResult.profile.name}`}
+                      </h3>
+                      <p className="mt-3 max-w-[860px] text-[14px] font-bold leading-7 text-[#b7c5d8]">
+                        {result.topResults.length > 1
+                          ? '複数タイプが同じ強さで出ています。場面によって強みと詰まり方が変わるため、下のスコアも合わせて確認してください。'
+                          : primaryResult.profile.copy}
+                      </p>
+                      <div className="mt-5 grid gap-3 md:grid-cols-2">
+                        <div className="rounded-lg border border-white/10 bg-white/[0.03] p-4">
+                          <div className="text-[12px] font-black" style={{ color: primaryResult.profile.accent }}>
+                            強み
+                          </div>
+                          <ul className="mt-3 space-y-2">
+                            {primaryResult.profile.strengths.slice(0, 3).map((strength) => (
+                              <li key={strength} className="flex gap-2 text-[13px] font-bold leading-6 text-[#dbeafe]">
+                                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: primaryResult.profile.accent }} />
+                                {strength}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div className="rounded-lg border border-white/10 bg-white/[0.03] p-4">
+                          <div className="text-[12px] font-black" style={{ color: primaryResult.profile.accent }}>
+                            詰まりやすい癖
+                          </div>
+                          <ul className="mt-3 space-y-2">
+                            {primaryResult.profile.risks.slice(0, 3).map((risk) => (
+                              <li key={risk} className="flex gap-2 text-[13px] font-bold leading-6 text-[#dbeafe]">
+                                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: primaryResult.profile.accent }} />
+                                {risk}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                      <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+                        <button
+                          type="button"
+                          onClick={() => onOpenProfile(primaryResult.profile)}
+                          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-[#d7ad59] px-4 text-sm font-black text-[#07111a] transition-transform hover:-translate-y-0.5"
+                        >
+                          結果タイプの図鑑カードを見る
+                          <ArrowRight size={16} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={onReset}
+                          className="inline-flex min-h-11 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] px-4 text-sm font-black text-[#dbeafe] transition-colors hover:bg-white/[0.08]"
+                        >
+                          もう一度診断する
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <h3 className="mt-3 text-2xl font-black text-white">
+                        {isComplete ? '明確なタイプはまだ観測できません' : '24問すべてに回答すると診断結果が表示されます'}
+                      </h3>
+                      <p className="mt-3 max-w-[860px] text-[14px] font-bold leading-7 text-[#b7c5d8]">
+                        {isComplete
+                          ? 'すべて「いいえ」に近い回答のため、強く出ているタイプがありません。必要であれば、近い場面を思い出してもう一度回答してください。'
+                          : '各カテゴリの質問に対して、今の自分・組織の実情に近い選択肢を選んでください。'}
+                      </p>
+                    </>
+                  )}
+                </div>
+                <div className="min-w-[220px] rounded-lg border border-white/10 bg-[#05070d]/70 p-4">
+                  <span className={`inline-flex rounded-full border px-3 py-1.5 text-[12px] font-black ${statusClassName}`}>
+                    {statusLabel}
+                  </span>
+                  <div className="mt-4 space-y-3">
+                    {result.categoryResults.map((item) => (
+                      <div key={item.profile.species}>
+                        <div className="mb-1 flex items-center justify-between gap-3 text-[12px] font-black text-[#dbeafe]">
+                          <span>{item.profile.species}</span>
+                          <span>{item.score}/12</span>
+                        </div>
+                        <div className="h-2.5 overflow-hidden rounded-full bg-white/10">
+                          <div
+                            className="h-full rounded-full"
+                            style={{
+                              width: `${(item.score / 12) * 100}%`,
+                              background: `linear-gradient(90deg, ${item.profile.accent}, #60a5fa)`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>,
+    document.body
+  )
+}
+
+function formatDiagnosisQuestion(text: string) {
+  if (text.endsWith('？')) return text
+  if (text.endsWith('だ')) return `${text}と感じますか？`
+  return `${text}に当てはまりますか？`
 }
 
 function SalesTypeDiagnosisModal({
@@ -1618,6 +1894,10 @@ function MemberTypeDiagnosisModal({
     document.body
   )
 }
+
+void SalesTypeDiagnosisModal
+void BossTypeDiagnosisModal
+void MemberTypeDiagnosisModal
 
 function ProfileTypeCard({
   profile,

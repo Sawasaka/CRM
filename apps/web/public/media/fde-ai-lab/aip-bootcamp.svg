@@ -1,0 +1,25 @@
+<svg width="960" height="540" viewBox="0 0 960 540" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="960" height="540" rx="36" fill="#08090D"/>
+  <rect width="960" height="540" rx="36" fill="url(#g)"/>
+  <path d="M88 94H872" stroke="white" stroke-opacity=".16"/>
+  <text x="88" y="74" fill="#FFCF4A" font-family="Arial, sans-serif" font-size="22" font-weight="700" letter-spacing="5">CASE STUDY / AIP MODEL</text>
+  <text x="88" y="172" fill="white" font-family="Arial, sans-serif" font-size="58" font-weight="800">AIP Bootcamp</text>
+  <text x="88" y="228" fill="#D7D4DD" font-family="Arial, sans-serif" font-size="28" font-weight="700">Ontology → Agent → Workflow</text>
+  <rect x="104" y="322" width="184" height="72" rx="18" fill="black" fill-opacity=".24" stroke="white" stroke-opacity=".13"/>
+  <text x="130" y="366" fill="#FFCF4A" font-family="Arial, sans-serif" font-size="20" font-weight="800">Ontology</text>
+  <rect x="388" y="322" width="184" height="72" rx="18" fill="black" fill-opacity=".24" stroke="white" stroke-opacity=".13"/>
+  <text x="430" y="366" fill="#FFCF4A" font-family="Arial, sans-serif" font-size="20" font-weight="800">Agent</text>
+  <rect x="672" y="322" width="184" height="72" rx="18" fill="black" fill-opacity=".24" stroke="white" stroke-opacity=".13"/>
+  <text x="704" y="366" fill="#FFCF4A" font-family="Arial, sans-serif" font-size="20" font-weight="800">Workflow</text>
+  <path d="M300 358H376M584 358H660" stroke="#FFCF4A" stroke-opacity=".72" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="748" cy="170" r="82" fill="#FFCF4A" fill-opacity=".12" stroke="#FFCF4A" stroke-opacity=".42"/>
+  <path d="M708 172C730 143 770 142 793 170C772 202 729 202 708 172Z" stroke="#F4F3F7" stroke-width="8" stroke-linejoin="round"/>
+  <circle cx="750" cy="172" r="14" fill="#F4F3F7"/>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="960" y2="540">
+      <stop stop-color="#3B3115"/>
+      <stop offset=".48" stop-color="#111218"/>
+      <stop offset="1" stop-color="#05060A"/>
+    </linearGradient>
+  </defs>
+</svg>

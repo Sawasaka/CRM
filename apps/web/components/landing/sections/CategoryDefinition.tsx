@@ -5,18 +5,18 @@ export const CategoryDefinition = () => (
     <div className="relative mx-auto max-w-6xl px-6 py-32 md:py-44">
       <div className="grid md:grid-cols-12 gap-10 items-start">
         <div className="md:col-span-5">
-          <Eyebrow color="#abc7ff">CHAT CRM</Eyebrow>
+          <Eyebrow color="#abc7ff">Revenue AI/DX Infrastructure</Eyebrow>
           <h2 className="font-display font-bold tracking-[-0.025em] text-[2.4rem] md:text-[3.4rem] leading-[1.06] mt-5">
-            <span className="text-[#9b99a0]">CRMに入力する時代から、</span>
+            <span className="text-[#9b99a0]">ツールを入れる時代から、</span>
             <br />
-            <span className="fo-gradient-text">営業データに聞く時代へ。</span>
+            <span className="fo-gradient-text">売上インフラを設計する時代へ。</span>
           </h2>
         </div>
         <div className="md:col-span-7 md:pl-10 space-y-4 text-[#c7c5c9] text-[1.05rem] leading-relaxed">
-          <p>CRMは、入力するだけの台帳ではなく、営業判断を返す場所になります。</p>
-          <p>商談・メール・議事録・求人インテント・企業DBを横断し、いま動くべき企業と理由をチャットで返す。</p>
-          <p>ルキスマCRMは、株式会社ルーキースマートジャパンが提供し、沢坂弘樹が運営に関わるチャット型のAI CRMです。</p>
-          <p className="text-[#7e7c83]">営業支援、商談管理、議事録AI、インテントデータ活用をひとつの画面で扱えます。</p>
+          <p>AIやDXは、単体ツールを契約するだけでは成果につながりません。</p>
+          <p>営業・マーケ・CSの現場に合わせて、Obsidian、Notion、Google Workspace、Microsoft、ZoomなどをAIと接続します。</p>
+          <p>議事録、社内ナレッジ、ドキュメント、問い合わせ、顧客メモを横断し、次に取るべきアクションが自然に生まれるインフラへ整えます。</p>
+          <p className="text-[#7e7c83]">私自身がFDE（Forward Deployed Engineer）形式でヒアリングし、御社の状況に合わせたAI/DXインフラとして設計します。</p>
         </div>
       </div>
 
@@ -41,14 +41,14 @@ export const CategoryDefinition = () => (
               style={{ background: 'radial-gradient(circle, rgba(171,199,255,0.18), transparent 60%)', filter: 'blur(40px)' }}
             />
             <div className="font-semibold uppercase tracking-[0.14em] text-[0.72rem] text-aurora relative">
-              ルキスマCRM
+              Revenue Stack
             </div>
             <div className="font-display font-bold text-[1.6rem] mt-3 fo-gradient-text relative">聞く、判断する、動く。</div>
             <div className="mt-6 flex flex-wrap gap-2 relative">
               {[
-                ['Sales', '#abc7ff'], ['Marketing', '#ffcf4a'], ['Support', '#ff8dcf'],
-                ['Helpdesk', '#c8b9ff'], ['PDM', '#8dffc9'], ['Intent', '#7ec6ff'],
-                ['RAG', '#d3a5ff'], ['1st-party Data', '#abc7ff'],
+                ['Obsidian', '#d3a5ff'], ['Notion', '#e7e5ea'], ['Google Workspace', '#abc7ff'],
+                ['Microsoft 365', '#7ec6ff'], ['Zoom', '#7aa4ff'], ['Chatbot', '#ff8dcf'],
+                ['CRM', '#8dffc9'], ['Owned Media', '#c8b9ff'],
               ].map(([t, c]) => (
                 <span
                   key={t}
@@ -59,7 +59,7 @@ export const CategoryDefinition = () => (
                 </span>
               ))}
             </div>
-            <div className="mt-8 text-xs text-aurora/80">ルキスマCRM by 株式会社ルーキースマートジャパン / 沢坂弘樹</div>
+            <div className="mt-8 text-xs text-aurora/80">AI/DX Infrastructure by 株式会社ルーキースマートジャパン / 沢坂弘樹</div>
           </div>
         </div>
       </div>

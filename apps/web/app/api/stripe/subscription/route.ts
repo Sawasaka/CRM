@@ -13,7 +13,7 @@ function toPlanId(plan: Plan) {
     case 'GROWTH':
       return 'standard'
     case 'ENTERPRISE':
-      return 'pro'
+      return 'standard'
     case 'FREE':
       return 'free'
   }

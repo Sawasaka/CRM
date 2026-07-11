@@ -36,6 +36,7 @@ model Organization {
   faqEntries           FaqEntry[]
   driveFolders         DriveFolderConnection[]
   rulebook             KnowledgeRulebook?
+  callScenarios        CallScenario[]
   tickets              Ticket[]
   billingAccount       BillingAccount?
   billingSubscriptions BillingSubscription[]
@@ -629,6 +630,33 @@ model KnowledgeRulebook {
   updatedAt   DateTime @updatedAt
 
   org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+}
+
+// ============================
+// CALL SCENARIO — AI電話シナリオ設定
+// ============================
+model CallScenario {
+  id                 String   @id @default(cuid())
+  orgId              String
+  key                String
+  name               String
+  objective          String
+  openingTalk        String
+  requiredQuestions  String[] @default([])
+  optionalQuestions  String[] @default([])
+  ngResponses        String[] @default([])
+  schedulingPolicy   String
+  handoffConditions  String[] @default([])
+  completionCriteria String
+  ragSources         String[] @default([])
+  enabled            Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, key])
+  @@index([orgId, enabled])
 }
 
 // ============================

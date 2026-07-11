@@ -1,13 +1,6 @@
-/**
- * /demo-app — 無料デモ専用ルート (本番 NextAuth / DB ロジックを呼ばない)
- *
- * 本番のサイドバー/ヘッダーを使わないための専用レイアウト。
- * トークン検証は searchParams を受け取れる page.tsx 側で行う。
- */
-
 export const metadata = {
-  title: '無料デモ｜ルキスマCRM',
-  description: '時間限定のデモアクセスです。実環境とは分離されたサンプルデータでお試しいただけます。',
+  title: 'FDE CRM',
+  description: 'FDE CRM',
   icons: {
     icon: [
       { url: '/service-icon.svg?v=unified-service-favicon-20260611', type: 'image/svg+xml' },

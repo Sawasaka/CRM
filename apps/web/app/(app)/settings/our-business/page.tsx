@@ -101,7 +101,7 @@ export default function OurBusinessSettingsPage() {
                   label="サービス名"
                   value={data.serviceName}
                   onChange={(v) => setData((d) => ({ ...d, serviceName: v }))}
-                  placeholder="例：ルキスマCRM"
+                  placeholder="例：FDE CRM"
                 />
                 <Field
                   label="業界"

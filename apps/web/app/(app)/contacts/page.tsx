@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState, useMemo } from 'react'
+import React, { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -52,8 +52,6 @@ import {
 import type { ApproachStatus } from '@/types/crm'
 import { SignalBadge } from '@/components/crm/SignalBadge'
 import { getCompanyFirstPartySignal } from '@/lib/mock-data/firstPartySignals'
-import { isDemoUrlSearch } from '@/lib/demo-company-data'
-import { DEMO_CONTACTS } from '@/lib/demo-crm-data'
 
 // ─── 求人インテント(モック)── 会社名キーで紐付け ─────────────────────────────
 type IntentLevel = 'HOT' | 'MID' | 'LOW' | 'NONE'
@@ -525,13 +523,6 @@ export default function ContactsPage() {
   const [showStatusFilter, setShowStatusFilter] = useState(false)
   const [showRankFilter, setShowRankFilter]     = useState(false)
   const [showContactStatusFilter, setShowContactStatusFilter] = useState(false)
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    if (isDemoUrlSearch(window.location.search) && contacts.length === 0) {
-      setContacts(DEMO_CONTACTS.map((contact) => ({ ...contact, leadSource: { ...contact.leadSource } })) as Contact[])
-    }
-  }, [contacts.length])
 
   // 求人インテントフィルタ(290万社DBと同じUI)— 紐付く企業のintent levelで絞り込み
   type IntentFilterKey = 'hot' | 'mid' | 'low'

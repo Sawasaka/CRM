@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import type { ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -17,8 +17,6 @@ import {
   ObsInput,
   ObsPageShell,
 } from '@/components/obsidian'
-import { isDemoUrlSearch } from '@/lib/demo-company-data'
-import { DEMO_LISTS } from '@/lib/demo-crm-data'
 
 // ─── Mock Data ─────────────────────────────────────────────────────────────────
 
@@ -360,14 +358,7 @@ export default function ListsPage() {
   const router = useRouter()
   const [search, setSearch] = useState('')
   const [showCreate, setShowCreate] = useState(false)
-  const [lists, setLists] = useState<LocalList[]>(MOCK_LISTS)
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    if (isDemoUrlSearch(window.location.search) && lists.length === 0) {
-      setLists(DEMO_LISTS.map((list) => ({ ...list })) as LocalList[])
-    }
-  }, [lists.length])
+  const [lists] = useState<LocalList[]>(MOCK_LISTS)
 
   const filtered = useMemo(() => {
     let base = lists.filter((l) => l.kind === 'is')

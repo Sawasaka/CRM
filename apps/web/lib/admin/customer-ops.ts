@@ -65,7 +65,6 @@ export async function getCustomerOpsOverview(): Promise<
   const access = await getCustomerOpsAdminAccess()
   if (!access.authorized) return access
 
-  await markExpiredDemoTenantsInactive()
   const tenants = sortTenantRows(await buildTenantRows())
   return { authorized: true, tenants, metrics: buildMetrics(tenants) }
 }
@@ -427,25 +426,12 @@ function buildMetrics(tenants: TenantRow[]): CustomerOpsMetrics {
 }
 
 function resolveTenantStatus(
-  org: Pick<OrgBase, 'slug' | 'plan' | 'lifecycleStatus' | 'demoExpiresAt'>
+  org: Pick<OrgBase, 'slug' | 'plan' | 'lifecycleStatus'>
 ) {
   if (org.slug === 'default') return 'active'
   if (org.lifecycleStatus === 'INACTIVE') return 'inactive'
-  if (org.lifecycleStatus === 'DEMO') {
-    return org.demoExpiresAt && org.demoExpiresAt <= new Date() ? 'inactive' : 'demo'
-  }
-  if (org.lifecycleStatus === 'FREE') return 'demo'
-  return org.plan === 'FREE' ? 'demo' : 'active'
-}
-
-async function markExpiredDemoTenantsInactive() {
-  await prisma.organization.updateMany({
-    where: {
-      lifecycleStatus: 'DEMO',
-      demoExpiresAt: { lte: new Date() },
-    },
-    data: { lifecycleStatus: 'INACTIVE' },
-  })
+  if (org.lifecycleStatus === 'DEMO' || org.lifecycleStatus === 'FREE') return 'inactive'
+  return org.plan === 'FREE' ? 'inactive' : 'active'
 }
 
 function countActiveUsersByOrg(rows: Array<{ orgId: string; userId: string }>) {

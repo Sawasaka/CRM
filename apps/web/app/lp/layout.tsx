@@ -42,11 +42,11 @@ export const metadata: Metadata = {
     : undefined,
   icons: {
     icon: [
-      { url: '/icon.svg?v=unified-service-favicon-20260611', type: 'image/svg+xml' },
-      { url: '/favicon.ico?v=unified-service-favicon-20260611', sizes: '32x32' },
+      { url: '/service-icon.svg?v=unified-service-favicon-20260611', type: 'image/svg+xml' },
+      { url: '/service-favicon.ico?v=unified-service-favicon-20260611', sizes: '32x32' },
     ],
-    shortcut: '/icon.svg?v=unified-service-favicon-20260611',
-    apple: '/icon.svg?v=unified-service-favicon-20260611',
+    shortcut: '/service-icon.svg?v=unified-service-favicon-20260611',
+    apple: '/service-icon.svg?v=unified-service-favicon-20260611',
   },
 }
 

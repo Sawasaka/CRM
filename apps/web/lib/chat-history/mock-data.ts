@@ -1,5 +1,5 @@
 /**
- * ルキスマCRM Intelligence Hub — チャット履歴
+ * FDE CRM Intelligence Hub — チャット履歴
  *
  * 実利用環境では初期表示のダミー会話を出さない。
  * 将来的には userId × workspace 単位で永続化する。

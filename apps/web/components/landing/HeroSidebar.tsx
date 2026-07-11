@@ -1,39 +1,31 @@
 'use client'
 
 /**
- * Hero 内のチャットパネル左に表示する CRM 風サイドバーモック。
+ * Hero 内のチャットパネル左に表示する営業AI/DX基盤風サイドバーモック。
  * クリックで Hero 右側の表示が各機能モックに切り替わる（インタラクティブ）。
  */
 
 import { Plus, Search } from 'lucide-react'
 import type { HeroDemoKey } from './hero-demos'
 
-// アイコンは「担当エージェントの頭文字」で表示:
-//   S = Sales (aurora) / M = Marketing (amber) / C = Customer (Support, coral)
-//   H = Helpdesk (lilac) / P = PDM (mint)
 const NAV_ITEMS: { initial: string; color: string; label: string; key: HeroDemoKey }[] = [
-  { initial: 'S', color: '#abc7ff', label: '290万社DB',       key: 'companies'    },
-  { initial: 'S', color: '#abc7ff', label: 'パイプライン',     key: 'pipeline'     },
-  { initial: 'S', color: '#abc7ff', label: 'コンタクト',       key: 'contacts'     },
-  { initial: 'S', color: '#abc7ff', label: '取引',             key: 'deals'        },
-  { initial: 'S', color: '#abc7ff', label: 'ISリスト',         key: 'lists'        },
-  { initial: 'S', color: '#abc7ff', label: 'タスク一覧',       key: 'tasks'        },
-  { initial: 'S', color: '#abc7ff', label: 'アクションボード', key: 'action-board' },
-  { initial: 'C', color: '#ff8dcf', label: 'チケット',         key: 'tickets'      },
-  { initial: 'P', color: '#8dffc9', label: '開発優先度',       key: 'priority'     },
-  { initial: 'M', color: '#ffcf4a', label: 'メール配信',       key: 'mail'         },
-  { initial: 'H', color: '#c8b9ff', label: 'ナレッジ',         key: 'knowledge'    },
+  { initial: 'C', color: '#abc7ff', label: '企業', key: 'companies' },
+  { initial: 'D', color: '#abc7ff', label: '取引', key: 'deals' },
+  { initial: 'P', color: '#abc7ff', label: '商談', key: 'pipeline' },
+  { initial: 'L', color: '#abc7ff', label: 'リード', key: 'contacts' },
+  { initial: 'T', color: '#ffcf4a', label: 'タスク', key: 'tasks' },
+  { initial: 'A', color: '#8dffc9', label: 'アクションボード', key: 'action-board' },
+  { initial: 'M', color: '#ffcf4a', label: 'メール', key: 'mail' },
+  { initial: 'Q', color: '#ff8dcf', label: '問い合わせ', key: 'tickets' },
+  { initial: 'S', color: '#8dffc9', label: '優先度', key: 'priority' },
+  { initial: 'K', color: '#c8b9ff', label: 'ナレッジ', key: 'knowledge' },
+  { initial: 'AI', color: '#7ec6ff', label: 'AIアシスト', key: 'chat' },
 ]
 
 const RECENT_CHATS = [
-  '今週アプローチすべき HOT…',
-  'テクノリードの最新議事録…',
-  'パイプラインで停滞中の案件',
-  'IT 部門の採用インテント T…',
-  'フューチャー社の比較表案…',
-  '直近の議事録から共通課題…',
-  '物流業界の HOT 企業リスト',
-  '今月のチャーン候補とリス…',
+  '今週フォローすべき商談',
+  '失注リスクがある取引',
+  '商談前に見るべき情報',
 ]
 
 interface HeroSidebarProps {
@@ -57,7 +49,7 @@ export const HeroSidebar = ({ active, onSelect }: HeroSidebarProps) => {
           >
             <span className="text-[10px] font-bold text-[#0a0a0c]">R</span>
           </div>
-          <span className="text-[13px] font-medium text-[#e7e5ea]">ルキスマCRM</span>
+          <span className="text-[13px] font-medium text-[#e7e5ea]">FDE AI/DX</span>
         </button>
       </div>
 
@@ -72,13 +64,10 @@ export const HeroSidebar = ({ active, onSelect }: HeroSidebarProps) => {
                 key={key}
                 onClick={() => onSelect(key)}
                 className="w-full flex items-center gap-2.5 h-8 px-2.5 rounded-md text-[12px] transition-colors"
-                style={
-                  isActive
-                    ? { backgroundColor: `${color}1f`, color }
-                    : { color: '#9b99a0' }
-                }
+                style={isActive ? { backgroundColor: `${color}1f`, color } : { color: '#9b99a0' }}
                 onMouseEnter={(e) => {
-                  if (!isActive) (e.currentTarget as HTMLButtonElement).style.backgroundColor = `${color}10`
+                  if (!isActive)
+                    (e.currentTarget as HTMLButtonElement).style.backgroundColor = `${color}10`
                 }}
                 onMouseLeave={(e) => {
                   if (!isActive) (e.currentTarget as HTMLButtonElement).style.backgroundColor = ''
@@ -127,13 +116,19 @@ export const HeroSidebar = ({ active, onSelect }: HeroSidebarProps) => {
                 : { color: '#9b99a0' }
             }
             onMouseEnter={(e) => {
-              if (active !== 'search') (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(53,52,55,0.4)'
+              if (active !== 'search')
+                (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(53,52,55,0.4)'
             }}
             onMouseLeave={(e) => {
-              if (active !== 'search') (e.currentTarget as HTMLButtonElement).style.backgroundColor = ''
+              if (active !== 'search')
+                (e.currentTarget as HTMLButtonElement).style.backgroundColor = ''
             }}
           >
-            <Search size={14} strokeWidth={1.6} color={active === 'search' ? '#abc7ff' : '#7e7c83'} />
+            <Search
+              size={14}
+              strokeWidth={1.6}
+              color={active === 'search' ? '#abc7ff' : '#7e7c83'}
+            />
             検索
           </button>
         </div>
@@ -142,7 +137,9 @@ export const HeroSidebar = ({ active, onSelect }: HeroSidebarProps) => {
 
         {/* Recent chats */}
         <div className="overflow-hidden flex flex-col gap-[1px]">
-          <div className="px-2.5 pb-1 text-[9px] uppercase tracking-[0.14em] text-[#5d5a5f]">最近のチャット</div>
+          <div className="px-2.5 pb-1 text-[9px] uppercase tracking-[0.14em] text-[#5d5a5f]">
+            最近のチャット
+          </div>
           <div className="overflow-y-auto fo-thin-scroll pr-1">
             {RECENT_CHATS.map((t) => (
               <button

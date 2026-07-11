@@ -5,17 +5,22 @@ import {
   companyName,
   companyProfilePath,
   operatorName,
+  operatorNameHiragana,
   operatorNameWithSpace,
+  operatorExternalProfiles,
   operatorPersonId,
   operatorProfilePath,
   operatorProfileUrl,
   operatorRomanName,
+  operatorSubjectUrls,
   publicSiteUrl,
+  serviceAlternateNames,
   serviceName,
+  serviceSearchName,
 } from '@/lib/public-site'
 
-const title = `${operatorName}｜${serviceName}・${companyName}代表`
-const description = `${operatorName}の公式プロフィール。${companyName}代表として、${serviceName}の営業実行とCRM構築を支援しています。外資SaaS日本法人立ち上げ、ITスタートアップCROを経験。`
+const title = `${operatorName}｜${serviceSearchName}・${companyName}代表`
+const description = `${operatorName}の公式プロフィール。元・香川オリーブガイナーズ内野手。現在は${companyName}代表として、${serviceSearchName}（${serviceName}）のAI/DX設計・実装を支援しています。`
 
 export const metadata: Metadata = {
   metadataBase: new URL(publicSiteUrl),
@@ -25,14 +30,24 @@ export const metadata: Metadata = {
     operatorName,
     operatorNameWithSpace,
     operatorRomanName,
+    operatorNameHiragana,
+    'さわさかひろき',
     companyName,
-    serviceName,
+    serviceSearchName,
+    ...serviceAlternateNames,
+    'FDE',
+    'Forward Deployed CRM',
     '株式会社ルーキースマートジャパン 代表',
-    'ルキスマCRM 代表',
+    'FDE CRM 代表',
+    '香川オリーブガイナーズ 沢坂弘樹',
+    '沢坂弘樹 野球',
     `${operatorName} ${serviceName}`,
     `${operatorName} ${companyName}`,
     '営業実行',
+    'FDE開発',
     'CRM構築',
+    'Call AI',
+    '企業データベース',
   ],
   alternates: {
     canonical: operatorProfilePath,
@@ -61,14 +76,19 @@ const profileJsonLd = {
   '@type': 'Person',
   '@id': operatorPersonId,
   name: operatorName,
-  alternateName: [operatorNameWithSpace, operatorRomanName],
+  alternateName: [operatorNameWithSpace, operatorRomanName, operatorNameHiragana, 'さわさかひろき'],
   url: operatorProfileUrl,
   image: `${publicSiteUrl}/founder-icon.png`,
-  jobTitle: `${companyName}代表 / ${serviceName} 営業実行・CRM構築支援`,
+  jobTitle: `${companyName}代表 / ${serviceSearchName} AI/DX設計・実装支援`,
   description,
-  identifier: operatorProfileUrl,
-  sameAs: [operatorProfileUrl],
+  identifier: `${companyName}代表:${operatorName}`,
+  sameAs: operatorExternalProfiles,
   mainEntityOfPage: operatorProfileUrl,
+  disambiguatingDescription: `${companyName}代表。元・香川オリーブガイナーズ内野手の沢坂弘樹。現在は${serviceSearchName}のAI/DX設計・実装を支援しています。`,
+  alumniOf: {
+    '@type': 'CollegeOrUniversity',
+    name: '亜細亜大学',
+  },
   worksFor: {
     '@type': 'Organization',
     '@id': `${publicSiteUrl}/#organization`,
@@ -81,10 +101,16 @@ const profileJsonLd = {
     name: companyName,
     url: publicSiteUrl,
   },
-  subjectOf: {
-    '@id': `${operatorProfileUrl}#profile-page`,
-  },
-  knowsAbout: ['営業実行', 'CRM構築', 'チャットCRM', '企業データベース', '部署直通番号'],
+  subjectOf: [
+    {
+      '@id': `${operatorProfileUrl}#profile-page`,
+    },
+    ...operatorSubjectUrls.map((url) => ({
+      '@type': 'Article',
+      url,
+    })),
+  ],
+  knowsAbout: [serviceSearchName, serviceName, 'AI/DXインフラ設計', 'FDE開発', '営業実行', 'CRM構築', 'Call AI', 'AI CRM', '企業データベース'],
 }
 
 const profileFaqItems = [
@@ -113,7 +139,7 @@ const profilePageJsonLd = {
   headline: `${operatorName}の公式プロフィール`,
   url: operatorProfileUrl,
   description,
-  keywords: [operatorName, companyName, serviceName, '沢坂弘樹 代表', '沢坂弘樹 ルキスマCRM'],
+  keywords: [operatorName, companyName, serviceSearchName, serviceName, 'FDE', '沢坂弘樹 代表', `沢坂弘樹 ${serviceSearchName}`],
   inLanguage: 'ja-JP',
   isPartOf: {
     '@id': `${publicSiteUrl}/#website`,
@@ -191,7 +217,7 @@ export default function HirokiSawasakaPage() {
             href="/"
             className="inline-flex text-xs font-semibold tracking-[0.12em] text-aurora/80 hover:text-aurora"
           >
-            ルキスマCRM 公式HPへ
+            FDE CRM 公式HPへ
           </Link>
 
           <div className="mt-10 grid gap-10 md:grid-cols-[1fr_220px] md:items-end">
@@ -203,7 +229,7 @@ export default function HirokiSawasakaPage() {
                 沢坂弘樹
               </h1>
               <p className="mt-5 max-w-2xl text-base leading-8 text-[#c7c5c9] md:text-lg">
-                株式会社ルーキースマートジャパン代表。ルキスマCRMの営業実行とCRM構築を同時に支援します。
+                株式会社ルーキースマートジャパン代表。FDE CRMの営業実行、CRM構築、FDE開発を同時に支援します。
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link
@@ -216,7 +242,7 @@ export default function HirokiSawasakaPage() {
                   href="/"
                   className="inline-flex rounded-full bg-aurora px-5 py-2 text-sm font-semibold text-[#07101f] transition-transform hover:-translate-y-0.5"
                 >
-                  ルキスマCRMを見る
+                  FDE CRMを見る
                 </Link>
               </div>
             </div>
@@ -247,7 +273,7 @@ export default function HirokiSawasakaPage() {
           </div>
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
             <p className="text-[10px] uppercase tracking-[0.14em] text-[#7e7c83]">領域</p>
-            <p className="mt-2 text-sm font-semibold">営業実行 / CRM構築</p>
+            <p className="mt-2 text-sm font-semibold">営業実行 / FDE開発 / CRM構築</p>
           </div>
         </div>
 

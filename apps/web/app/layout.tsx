@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { DM_Sans, Inter, Plus_Jakarta_Sans } from 'next/font/google'
-import { SessionProvider } from 'next-auth/react'
 import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics'
+import { AppProviders } from '@/components/app-providers'
 import {
   googleSiteVerification,
   publicSiteDescription,
@@ -10,8 +10,6 @@ import {
   publicSiteUrl,
   serviceName,
 } from '@/lib/public-site'
-import { TRPCProvider } from '@/lib/trpc/provider'
-import { ViewTransitionProvider } from '@/components/view-transitions'
 import './globals.css'
 
 // Legacy（既存UI互換）
@@ -66,11 +64,11 @@ export const metadata: Metadata = {
     : undefined,
   icons: {
     icon: [
-      { url: '/icon.svg?v=unified-service-favicon-20260611', type: 'image/svg+xml' },
-      { url: '/favicon.ico?v=unified-service-favicon-20260611', sizes: '32x32' },
+      { url: '/service-icon.svg?v=unified-service-favicon-20260611', type: 'image/svg+xml' },
+      { url: '/service-favicon.ico?v=unified-service-favicon-20260611', sizes: '32x32' },
     ],
-    shortcut: '/icon.svg?v=unified-service-favicon-20260611',
-    apple: '/icon.svg?v=unified-service-favicon-20260611',
+    shortcut: '/service-icon.svg?v=unified-service-favicon-20260611',
+    apple: '/service-icon.svg?v=unified-service-favicon-20260611',
   },
   manifest: '/manifest.webmanifest',
 }
@@ -79,11 +77,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ja" suppressHydrationWarning>
       <body className={`${dmSans.variable} ${inter.variable} ${plusJakarta.variable}`}>
-        <SessionProvider>
-          <TRPCProvider>
-            <ViewTransitionProvider>{children}</ViewTransitionProvider>
-          </TRPCProvider>
-        </SessionProvider>
+        <AppProviders>{children}</AppProviders>
         <GoogleAnalytics />
       </body>
     </html>

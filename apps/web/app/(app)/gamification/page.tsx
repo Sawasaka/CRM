@@ -6,12 +6,12 @@ import { Flame, Star, Shield, Target, Heart, Crown } from 'lucide-react'
 const CARD = '0 2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(136,187,255,0.05)'
 
 const STORY_CHAPTERS = [
-  { phase: 'ORIGIN', title: '設立の原点', color: '#FF3B30', icon: Flame, body: '私たちは「営業の属人化」という課題に直面していました。優秀な営業マンが退職すると、ノウハウもナレッジも一緒に消えてしまう。この負のサイクルを断ち切るために、ルキスマCRMは生まれました。', milestone: '2024年 — 創業' },
+  { phase: 'ORIGIN', title: '設立の原点', color: '#FF3B30', icon: Flame, body: '私たちは「営業の属人化」という課題に直面していました。優秀な営業マンが退職すると、ノウハウもナレッジも一緒に消えてしまう。この負のサイクルを断ち切るために、FDE CRMは生まれました。', milestone: '2024年 — 創業' },
   { phase: 'VISION', title: '成し遂げたいこと', color: '#0071E3', icon: Star, body: '顧客の声をプロダクト開発に直結させ、営業・マーケ・プロダクト・組織すべてをひとつの基盤でつなぐ「Revenue OS」を実現する。データドリブンに意思決定し、誰もが成果を出せる組織をつくる。', milestone: '現在 — Revenue OS構築中' },
   { phase: 'BARRIER', title: '立ちはだかる壁', color: '#FF9F0A', icon: Shield, body: '営業知識の属人化、部門間のデータ分断、顧客ヒアリングの活用不足、新人の立ち上がり遅延。これらの壁を一つずつ乗り越えていく必要がある。', milestone: '課題 — 組織の壁' },
   { phase: 'ACTION', title: '今やるべきこと', color: '#34C759', icon: Target, body: '全員が日々のアクションをデータとして蓄積し、ナレッジを共有し、顧客の声に耳を傾ける。小さな積み重ねが大きな変化を生む。ひとりの英雄ではなく、チームの力で勝つ。', milestone: 'アクション — 全員参加' },
   { phase: 'CULTURE', title: '私たちの文化', color: '#5E5CE6', icon: Heart, body: '失敗を恐れず挑戦すること。学んだことを惜しみなく共有すること。仲間の成長を自分の喜びとすること。数字だけでなく、プロセスと成長を称え合う文化を育む。', milestone: '文化 — 共有と挑戦' },
-  { phase: 'FUTURE', title: '実現する未来', color: '#AF52DE', icon: Crown, body: '営業もプロダクトもCSも、全員がデータに基づいて最適な行動を取れる世界。顧客の成功が私たちの成功になり、その声が次の革新を生む。ルキスマCRMが日本のチャットCRMのスタンダードになる。', milestone: '未来 — 業界標準へ' },
+  { phase: 'FUTURE', title: '実現する未来', color: '#AF52DE', icon: Crown, body: '営業もプロダクトもCSも、全員がデータに基づいて最適な行動を取れる世界。顧客の成功が私たちの成功になり、その声が次の革新を生む。FDE CRMが日本のチャットCRMのスタンダードになる。', milestone: '未来 — 業界標準へ' },
 ]
 
 export default function StoryPage() {

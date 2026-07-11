@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@bgm/db'
-import { getCurrentAppContext } from '@/lib/demo-master'
+import { getCurrentAppContext } from '@/lib/app-context'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'

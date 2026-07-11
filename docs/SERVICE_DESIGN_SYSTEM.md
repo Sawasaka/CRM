@@ -220,7 +220,7 @@ box-shadow: 0 0 10px #abc7ff;
 
 ### Primary Button
 
-主要アクションはHPの「無料デモ」ボタンと同系統にする。
+主要アクションはHPの「日程調整」ボタンと同系統にする。
 
 ```css
 background: linear-gradient(135deg, #8fb0e8, #1e6fcc);

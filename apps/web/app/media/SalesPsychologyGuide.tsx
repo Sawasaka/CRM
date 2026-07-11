@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { createPortal } from 'react-dom'
 import { ArrowRight, BrainCircuit, Microscope, Sparkles, Target, X } from 'lucide-react'
 
@@ -10,42 +11,17 @@ type PsychologyCard = {
   label: string
   copy: string
   image: string
+  modalImage?: string
   accent: string
 }
 
-type DragonActivation = {
-  cardVariant?: 'dragon' | 'weapon'
-  cardName: string
-  species: string
-  name: string
-  type: string
-  image: string
-  accent: string
-  trait: string
-  effect: string
-  evidence: string
-  subheading?: string
-  example?: string
-  conclusion?: string
-  technicalTerm?: string
-  technicalMeaning?: string
-  fieldLine?: string
-  finisherName?: string
-  methodSteps?: {
-    label: string
-    title: string
-    copy: string
-  }[]
-  references?: {
-    label: string
-    source: string
-    university: string
-    researchers: string
-    content: string
-    evidenceLevel?: 'メタ分析' | 'RCT'
-  }[]
-  caution: string
-  memo: string
+type ArsenalLesson = {
+  hook: string
+  lecture: string
+  combo: [string, string, string]
+  script: string
+  outcome: string
+  research: string
 }
 
 const basicEquipment = [
@@ -54,6 +30,7 @@ const basicEquipment = [
     label: '水流ヒアリング',
     copy: '相手の判断軸・不安・優先順位を引き出す、全ドラゴン共通の基本装備。',
     image: '/media/psychology/weapon-framing.png',
+    modalImage: '/media/psychology/water-hearing-modal-card-v2.png',
     accent: '#6bc6d9',
   },
   {
@@ -287,213 +264,231 @@ const situations = [
 
 const professorChecks = ['論文を営業語に翻訳', '商談の感情ログを観測', '失注の心理パターンを整理', '現場で使える一言に変換']
 
-const dragonActivations: Record<string, DragonActivation> = {
+const arsenalLessons: Record<string, ArsenalLesson> = {
   質問力: {
-    cardVariant: 'weapon',
-    cardName: '水流ヒアリングカード',
-    species: '水竜',
-    name: '水流ヒアリング',
-    type: '信頼構築型',
-    image: '/media/dragon-types/water-hearing-card.png',
-    accent: '#6bc6d9',
-    trait: '質問設計・理解感・有用性・信頼形成',
-    effect: '相手に「この人はわかってくれる」「話す価値がある」と感じてもらい、信頼関係の入口を開く。',
-    evidence: '質問は情報を抜き取る作業ではなく、相手が状況・不安・優先順位を整理するための共同作業として機能する。',
-    subheading: '質問は、商談の扉をこじ開ける道具ではない。相手が自分から話したくなる道を照らす、営業の基本武器。',
-    technicalTerm: 'アクティブリスニング / 認知的信頼 / 顧客理解',
-    example: '「いきなり提案ではなく、まず状況の地図を描かせてください。最近いちばん判断しづらい商談は、どこで止まりますか？」',
-    fieldLine: '相手が話しながら整理できる場を作り、理解者・伴走者・役に立つ相手として認識される。',
-    finisherName: '理解の一閃',
-    methodSteps: [
-      {
-        label: '01',
-        title: '水温を上げる',
-        copy: '安心して話せる入口を作る。',
-      },
-      {
-        label: '02',
-        title: '軸を聞く',
-        copy: '不安・優先度・判断軸を拾う。',
-      },
-      {
-        label: '03',
-        title: '理解を返す',
-        copy: '要約で「わかっている」を作る。',
-      },
-    ],
-    caution: '質問を連打すると尋問になる。問いは刃物だ。振り回すな、道を切り開け。',
-    memo: '博士いわく、良い質問は顧客の頭の中に橋をかける。渡る前に売り込むな。',
+    hook: '相手の頭の中にある判断地図を、問いで照らす基本装備。',
+    lecture: '質問は情報回収ではなく、相手の不安・優先順位・判断軸を整理する共同作業。',
+    combo: ['問いを開く', '判断軸を拾う', '理解を返す'],
+    script: '「まず状況の地図を一緒に描かせてください。最近いちばん判断しづらいのは、予算・優先順位・社内説明のどこですか？」',
+    outcome: '話しやすさ → 理解感 → 信頼形成',
+    research: 'ヘブライ大学 / Avraham N. Kluger教授 / 知覚された傾聴',
+  },
+  傾聴スキル: {
+    hook: '聞くふりではなく、相手が深く話したくなる水温を作る。',
+    lecture: '傾聴は相手のニーズを汲み取り、距離を縮めるための技術。営業では沈黙・迷い・言い淀みを急かさず、話しやすい場を設計する。',
+    combo: ['遮らない', '感情を拾う', '要約で戻す'],
+    script: '「今の話、優先度よりも社内説明のしづらさが大きそうに聞こえました。」',
+    outcome: '警戒解除 → 本音の露出 → 関係深化',
+    research: '正式用語: アクティブリスニング / 知覚された傾聴｜メタ分析: ヘブライ大学 / Avraham N. Kluger教授',
+  },
+  理解力: {
+    hook: '発言をそのまま受け取らず、構造に分解する解析装備。',
+    lecture: '人材評価では、成果だけでなく環境・役割・強みの噛み合わせを見る。営業でも顧客発言を課題、感情、社内事情、意思決定構造に分けると打ち手が見える。',
+    combo: ['事実を分ける', '感情を読む', '構造で返す'],
+    script: '「課題は機能不足ではなく、導入後に誰が説明するかが未定な点ですね。」',
+    outcome: '混乱整理 → 論点明確化 → 次アクション',
+    research: '正式用語: 認知的共感 / 対人正確性｜メタ分析: ノースイースタン大学 / Judith A. Hall教授',
+  },
+  影響力: {
+    hook: '押し切らず、相手の見え方と判断基準を変える装備。',
+    lecture: '人は正面から説得されるほど固くなる。営業では提案の見え方を変え、相手が自分で考え直したくなる問いと共通価値を設計する。',
+    combo: ['現状を再解釈', '価値を接続', '行動理由を置く'],
+    script: '「これはツール導入というより、属人化している判断をチーム資産に変える話です。」',
+    outcome: '見え方変化 → 優先度上昇 → 行動',
+    research: '正式用語: フレーミング効果 / 心理的リアクタンス｜メタ分析: アリゾナ大学 / Stephen A. Rains教授',
   },
   初回商談: {
-    cardName: '温感メソッドカード',
-    species: '水竜',
-    name: 'ウォームヒアリング',
-    type: '温かみ発動型',
-    image: '/media/dragon-types/water-hearing-card.png',
-    accent: '#6bc6d9',
-    trait: '温かみ・有能さ・深層演技・傾聴',
-    effect: '初回商談の最初の3分だけ、水竜の聞き役を召喚する。警戒心の水門をゆるめ、専門性で押す前に「この人には話しても大丈夫かも」を発生させるカード。',
-    evidence: 'Fiske・Cuddy・GlickのSCMでは、対人評価の主要軸は温かみと有能さ。Hülsheger & Scheweのメタ分析では、表層演技より深層演技が接客成果と相性よし。',
-    subheading: '初回3分は、売り込む前に「安心して話せる人」を演じきる。',
-    example: '「いきなり提案ではなく、まず状況の地図を描かせてください。最近いちばん詰まりやすい商談は、どこで止まりますか？」',
-    conclusion: '温かみで警戒水位を下げ、有能さは要約と問いの精度でチラ見せする。',
-    technicalTerm: 'SCM（温かみ・有能さ） / 印象形成 / 深層演技',
-    technicalMeaning: 'SCMは人を温かみと有能さで評価する枠組み。Deep Actingは表情だけでなく、内側の感情から役に入る感情労働の用語。',
-    fieldLine: '売る前に、相手の警戒ゲージを下げる。水竜の仕事は「話してもいい場」を作ること。',
-    finisherName: '安心地図オープン',
-    methodSteps: [
-      {
-        label: '01',
-        title: '温かい人に変身',
-        copy: '声量・表情・相づちを半段やわらかく。表層スマイルではなく、聞く姿勢から入る。',
-      },
-      {
-        label: '02',
-        title: '状況の地図を描く',
-        copy: '課題を詰問せず、商談が止まる地点を聞く。相手の頭の中に一緒に潜る。',
-      },
-      {
-        label: '03',
-        title: '要約で牙を見せる',
-        copy: '最後に感情と論点を短く返す。温かいだけで終わらず、有能さをチラ見せする。',
-      },
-    ],
-    references: [
-      {
-        label: '社会認知モデル',
-        source: 'Universal dimensions of social cognition: warmth and competence',
-        university: 'Princeton University',
-        researchers: 'Susan T. Fiske / Amy J.C. Cuddy / Peter Glick',
-        content: '人は相手をまず温かみ、次に有能さで評価しやすいという社会認知の主要軸を整理。',
-      },
-      {
-        label: '信頼形成と影響力',
-        source: 'Connect, Then Lead',
-        university: 'Harvard Business School',
-        researchers: 'Amy J.C. Cuddy / Matthew Kohut / John Neffinger',
-        content: '影響力を出すには、能力を見せる前に温かみで信頼の土台を作るという実務向け整理。',
-      },
-      {
-        label: '感情労働メタ分析',
-        source: 'On the costs and benefits of emotional labor',
-        university: 'Maastricht University / Bielefeld University',
-        researchers: 'Ute R. Hülsheger / Anna F. Schewe',
-        content: '感情労働研究を統合し、表層演技より深層演技が接客成果と相性がよいことを示す。',
-        evidenceLevel: 'メタ分析',
-      },
-    ],
-    caution: 'ニコニコするだけの表層演技だと、相手の警戒センサーに秒で見破られる。温かみを出しつつ、有能さのチラ見せを忘れるな。',
-    memo: '博士いわく、初手から賢さで殴るな。まず水温を上げろ。そのあと剣を抜け。',
+    hook: '最初の3分で、敵ではなく伴走者だと認識してもらう。',
+    lecture: '初回は提案より場づくりが先。相手の話題を明確にし、いきなり正解を押しつけず、相手が安心して状況を話せる入口を作る。',
+    combo: ['温度を合わせる', '地図を描く', '要約で示す'],
+    script: '「いきなり提案せず、まず今の状況を一緒に整理させてください。」',
+    outcome: '警戒解除 → 会話量増加 → 信頼の入口',
+    research: '正式用語: 印象形成 / 温かみと有能さ｜メタ分析: プリンストン大学 / Susan T. Fiske教授',
   },
   価格抵抗: {
-    cardName: '価値分解カード',
-    species: '岩竜',
-    name: 'バリューガード',
-    type: '納得設計型',
-    image: '/media/dragon-types/rock-guardian-card.png',
-    accent: '#d7ad59',
-    trait: '予算・不安・優先度・社内説明',
-    effect: '「高い」をひとまとめにせず、4つの摩擦に分けて攻略ルートを作る。',
-    evidence: '価格反応は金額そのものだけでなく、損失回避・参照価格・社内説明コストの影響を受けやすい。',
-    caution: '値引きで殴ると、価値まで一緒に削れる。',
-    memo: '価格は敵ではない。説明不足の鎧を着た不安だ。',
+    hook: '「高い」を敵にせず、4つの地層に掘り分ける。',
+    lecture: '価格抵抗は金額だけではない。誘導尋問のように「安ければいいですよね」と詰めず、予算・不安・優先度・社内説明のどこが詰まるかを分解する。',
+    combo: ['高いの種類を聞く', '不安を分ける', '説明材料を渡す'],
+    script: '「金額そのもの、社内説明、優先度のどこが一番引っかかっていますか？」',
+    outcome: '値引き回避 → 摩擦特定 → 納得設計',
+    research: '正式用語: 損失回避 / 参照価格｜メタ分析: カリフォルニア工科大学 / Colin F. Camerer教授',
   },
   稟議停滞: {
-    cardName: '社内迷宮カード',
-    species: '岩竜',
-    name: 'ルートメーカー',
-    type: '摩擦可視化型',
-    image: '/media/dragon-types/rock-guardian-card.png',
-    accent: '#d7ad59',
-    trait: '社内説明・合意形成・摩擦地図',
-    effect: '止まった稟議を、担当者の怠慢ではなく社内説明の迷路として読み直す。',
-    evidence: '組織内の意思決定は、個人の納得だけでなく、関係者の評価軸と説明責任に左右される。',
-    caution: '決裁者の名前だけ聞いても迷路は抜けられない。通路と罠を聞け。',
-    memo: '稟議はドラゴンではない。だいたい通路が暗いだけだ。',
+    hook: '止まった稟議を、社内迷宮の地図として読み解く。',
+    lecture: '組織の停滞は個人のやる気だけで説明できない。人材配置と同じく、関係者・権限・評価軸・説明責任の噛み合わせを見る。',
+    combo: ['関係者を出す', '反対理由を読む', '資料を先回り'],
+    script: '「誰が反対しそうかより、誰に何を説明できれば進みそうですか？」',
+    outcome: '停滞理由の可視化 → 先回り資料 → 前進',
+    research: '正式用語: 組織コミットメント / 役割葛藤｜メタ分析: ウェスタン大学 / John P. Meyer教授',
   },
   決裁者不在: {
-    cardName: '決裁者探索カード',
-    species: '雷竜',
-    name: 'キーマンレーダー',
-    type: '評価軸探索型',
-    image: '/media/dragon-types/thunder-driver-card.png',
-    accent: '#91a1b8',
-    trait: '影響者・評価軸・不在リスク',
-    effect: '会えていない人の不安と判断軸を、目の前の担当者の言葉から逆算する。',
-    evidence: 'B2B購買では複数関係者の評価軸が絡むため、目の前の担当者だけを見ても意思決定の全体像は見えにくい。',
-    caution: '「決裁者に会えますか」だけでは芸がない。会う理由を先に作れ。',
-    memo: '空席の王座にも、だいたい座り心地の好みがある。',
+    hook: '会えていない王座の評価軸を、目の前の人から逆算する。',
+    lecture: '採用でも最終決裁者の評価軸が見えないと通らない。営業では目の前の担当者を味方にし、決裁者の不安・評価基準・関心事を探る。',
+    combo: ['評価軸を聞く', '不安を推測', '会う理由を作る'],
+    script: '「決裁者の方は、最終的に何を一番気にされそうですか？」',
+    outcome: '空席の不安把握 → 面談理由生成 → 決裁前進',
+    research: '正式用語: 社会的影響 / 意思決定単位｜メタ分析: アリゾナ州立大学 / Robert B. Cialdini教授',
   },
   価格交渉: {
-    cardName: '均衡交渉カード',
-    species: '岩竜',
-    name: 'バランサー',
-    type: '着地設計型',
-    image: '/media/dragon-types/rock-guardian-card.png',
-    accent: '#d7ad59',
-    trait: '条件・譲歩・合意・着地点',
-    effect: '値引き合戦を避け、条件交換で双方が納得できる着地点を作る。',
-    evidence: '交渉では一方的な譲歩より、条件交換と相互利益の設計が合意の質を上げやすい。',
-    caution: '最初に値段を下げると、博士のメガネも少し曇る。',
-    memo: '譲歩は投げ銭ではない。交換条件を連れてこい。',
+    hook: '値引き合戦ではなく、交換条件で着地点を作る。',
+    lecture: '人材の条件交渉と同じで、一方的な譲歩は価値を削る。価格を下げる前に、範囲・時期・支援内容・契約条件の交換設計をする。',
+    combo: ['譲れない軸を置く', '交換条件を出す', '合意点を固定'],
+    script: '「価格だけでなく、範囲と開始時期を含めて最適な着地点を作りましょう。」',
+    outcome: '値崩れ防止 → 条件交換 → 合意',
+    research: '正式用語: アンカリング効果 / 交渉における初期提示｜メタ分析: ヴァンダービルト大学 / Chris Guthrie教授',
   },
   クロージング: {
-    cardName: '決断点火カード',
-    species: '炎竜',
-    name: 'ラストワード',
-    type: '前進支援型',
-    image: '/media/dragon-types/fire-closer-card.png',
-    accent: '#d85b31',
-    trait: '不安整理・期限・次の一歩',
-    effect: '迷いを置き去りにせず、相手が自分で前へ進む最後の一文を渡す。',
-    evidence: '意思決定は合理性だけでなく、不安の整理と次の行動の明確さに左右される。',
-    caution: '詰めすぎると、炎ではなく焦げ臭さだけが残る。',
-    memo: 'クロージングは扉を蹴る技ではない。鍵穴を照らす技だ。',
+    hook: '最後の一押しではなく、迷いを片付ける決断設計。',
+    lecture: '人材が転職を決める時も、条件より最後の不安整理が効く。営業のクロージングは圧ではなく、未処理の不安と次の一歩を明確にする作業。',
+    combo: ['迷いを聞く', '未解決を潰す', '次の一歩を渡す'],
+    script: '「進めるとしたら、最後に確認しておきたい不安は何ですか？」',
+    outcome: '不安処理 → 決断準備 → 行動確定',
+    research: '正式用語: 実行意図 / 決定回避｜メタ分析: ニューヨーク大学 / Peter M. Gollwitzer教授',
   },
   信頼形成: {
-    cardName: '信頼蓄積カード',
-    species: '水竜',
-    name: 'トラストレイク',
-    type: '信用設計型',
-    image: '/media/dragon-types/water-hearing-card.png',
-    accent: '#6bc6d9',
-    trait: '一貫性・根拠・安心材料',
-    effect: '好感だけに頼らず、相手がリスクを預けてもいい根拠を積み上げる。',
-    evidence: '信頼は温かみだけでなく、能力・一貫性・誠実さの手がかりから形成される。',
-    caution: 'いい人カードだけでは稟議を突破できない。',
-    memo: '信頼は気合いではない。小さい約束の積立投資だ。',
+    hook: '好感ではなく、リスクを預けてもいい根拠を積む。',
+    lecture: '人材への信頼は人柄だけではなく、能力・一貫性・誠実さで作られる。営業も「いい人」だけでは弱く、約束の履行と根拠提示が必要。',
+    combo: ['約束を小さく守る', '根拠を出す', 'リスクを先に扱う'],
+    script: '「懸念が残る前提で、失敗しやすい点から先に整理します。」',
+    outcome: '安心材料 → 能力認知 → 信頼蓄積',
+    research: '正式用語: 信頼性知覚 / 能力・誠実性・善意｜メタ分析: フロリダ大学 / Jason A. Colquitt教授',
   },
   動機づけ: {
-    cardName: '理由点火カード',
-    species: '雷竜',
-    name: 'イグナイター',
-    type: '行動理由設計型',
-    image: '/media/dragon-types/thunder-driver-card.png',
-    accent: '#c98c4a',
-    trait: '目的・危機感・理想状態',
-    effect: '顧客と営業が前へ進みやすい理由を、ふわっとした温度感から言葉へ固定する。',
-    evidence: '人は外から押されるだけでなく、自分の目的や意味づけと接続した時に動きやすい。',
-    caution: '熱量だけを足すと、議事録がポエムになる。',
-    memo: '動く理由がない案件は、だいたい椅子から立たない。',
+    hook: '人が動く理由を、外圧ではなく内側から掘り出す。',
+    lecture: '人材は命令だけでは続かない。意味、裁量、成長実感が行動を支える。営業でも顧客の「やる理由」を本人の言葉にする。',
+    combo: ['変えたい未来を聞く', '放置リスクを置く', '本人の言葉にする'],
+    script: '「これが解決したら、チームの何が一番変わりますか？」',
+    outcome: '納得 → 優先度上昇 → 自走',
+    research: '正式用語: 自己決定理論 / 自律的動機づけ｜メタ分析: ロチェスター大学 / Edward L. Deci教授',
   },
-}
-
-const fallbackActivation: DragonActivation = {
-  cardName: '営業心理カード',
-  species: '観測竜',
-  name: 'オブザーバー',
-  type: '仮説観測型',
-  image: '/media/dragon-types/water-hearing-card.png',
-  accent: '#d7ad59',
-  trait: '観察・仮説・現場変換',
-  effect: '商談の違和感を観察し、次に使える問いへ変換する。',
-  evidence: '観察と仮説化を分けると、商談後の振り返りが再現可能な学習に変わりやすい。',
-  caution: '決めつけると、心理学ではなく思い込みになる。',
-  memo: '博士いわく、観察は強い。ただし雑な観察はただの感想だ。',
-}
-
-function getDragonActivation(card: PsychologyCard) {
-  return dragonActivations[card.title] ?? fallbackActivation
+  熱量点火: {
+    hook: '顧客の中に眠る「変えたい未来」に火を入れる。',
+    lecture: '人材育成でも、本人の欲求や成長テーマに火がつくと行動が変わる。営業では課題ではなく、変わった後の未来を言語化する。',
+    combo: ['理想を聞く', '現状との差を見る', '火種を置く'],
+    script: '「半年後、これがうまくいったら何が一番楽になりますか？」',
+    outcome: '未来像 → 熱量 → 前進',
+    research: '正式用語: 目標設定理論 / 期待価値理論｜メタ分析: メリーランド大学 / Edwin A. Locke教授',
+  },
+  先送り焼却: {
+    hook: '「今じゃなくていい」を、静かに燃やす。',
+    lecture: '人材の成長課題も放置すると固まる。営業では先送りの裏にある不安、面倒、優先度の低さを分けて扱う。',
+    combo: ['先送り理由を聞く', '放置コストを出す', '小さく始める'],
+    script: '「今やらない場合、次に困るタイミングはいつになりそうですか？」',
+    outcome: '先送り分解 → 緊急度形成 → 着手',
+    research: '正式用語: 現状維持バイアス / 時間割引｜メタ分析: カルガリー大学 / Piers Steel教授',
+  },
+  決断ファイア: {
+    hook: '迷いを責めず、選べる状態まで材料を燃えやすく整える。',
+    lecture: '優秀な人材ほど選択肢が多いと迷う。営業でも比較軸を減らし、意思決定に必要な材料だけを残す。',
+    combo: ['選択肢を減らす', '基準を決める', '決める順番を作る'],
+    script: '「比較軸を3つに絞るなら、成果・工数・社内説明のどれが最重要ですか？」',
+    outcome: '迷い縮小 → 判断基準 → 決断',
+    research: '正式用語: 選択過多 / 認知負荷｜メタ分析: コロンビア大学 / Sheena S. Iyengar教授',
+  },
+  反論ブースト: {
+    hook: '反論を敵にせず、前進エネルギーへ変換する。',
+    lecture: '反論は拒絶ではなく、不安・誤解・未整理のサイン。正面から論破せず、共通して大切にしている価値を探して前進条件に変える。',
+    combo: ['反論を歓迎', '背景を聞く', '前進条件に変える'],
+    script: '「その懸念がある前提で、進めるなら何が確認できればよさそうですか？」',
+    outcome: '反論回収 → 条件化 → 推進',
+    research: '正式用語: 心理的リアクタンス / 接種理論｜メタ分析: アリゾナ大学 / Stephen A. Rains教授',
+  },
+  水流ヒアリング: {
+    hook: '警戒心をほどき、相手が話したくなる水温まで商談をあたためる。',
+    lecture: '水竜の武器は質問攻めではなく、相手が自分の言葉で整理できる場づくり。How/Whatで開き、話題を明確にし、理解を返す。',
+    combo: ['水温を上げる', '話題を開く', '理解を返す'],
+    script: '「まず状況を整理したいです。今いちばん話しづらい論点はどこですか？」',
+    outcome: '本音 → 整理 → 信頼',
+    research: '正式用語: アクティブリスニング / オープンクエスチョン｜メタ分析: ヘブライ大学 / Avraham N. Kluger教授',
+  },
+  共感ミラー: {
+    hook: '相手の言葉と感情を映し返し、会話の水面を整える。',
+    lecture: '人材面談では、相手の言葉を正しく反射すると深い話が出る。営業でも感情の反射で、顧客は自分の論点を見つけやすくなる。',
+    combo: ['言葉を拾う', '感情を映す', '次の問いへ流す'],
+    script: '「不安というより、社内で説明しきれるかが気になっている感じですね。」',
+    outcome: '共感 → 深掘り → 整理',
+    research: '正式用語: 反射的傾聴 / 共感的正確性｜メタ分析: ノースイースタン大学 / Judith A. Hall教授',
+  },
+  沈黙リカバリー: {
+    hook: '沈黙を焦って埋めず、考えが出る余白に変える。',
+    lecture: '面接でも沈黙は失敗ではなく、考えているサインの場合がある。営業では沈黙を恐れず、相手が言葉を探す時間を守る。',
+    combo: ['沈黙を待つ', '選択肢を置く', '短く確認する'],
+    script: '「少し考える時間を取って大丈夫です。近いのは予算・社内説明・優先度のどれですか？」',
+    outcome: '圧の低下 → 本音の出現 → 前進',
+    research: '正式用語: 沈黙耐性 / 認知負荷｜メタ分析: ニューサウスウェールズ大学 / John Sweller教授',
+  },
+  納得の水路: {
+    hook: '押し切らず、相手が自然に次の一歩へ流れる道を作る。',
+    lecture: '人が動くには、納得できる順番が必要。営業では結論を急がず、理解、合意、次アクションの水路を作る。',
+    combo: ['合意点を置く', '不安を流す', '次を決める'],
+    script: '「ここまで合っていれば、次は社内説明に必要な材料を一緒に作りましょう。」',
+    outcome: '納得 → 合意 → 次の一歩',
+    research: '正式用語: 実行意図 / コミットメント｜メタ分析: ニューヨーク大学 / Peter M. Gollwitzer教授',
+  },
+  決裁サーチ: {
+    hook: '会えていない決裁者の評価軸を探知する。',
+    lecture: '採用で最終面接官の視点が重要なように、営業でも決裁者の関心を逆算する。担当者の言葉から、評価軸と不安を拾う。',
+    combo: ['誰が見るか', '何を見るか', 'どう通すか'],
+    script: '「最終的に見る方は、成果・コスト・リスクのどこを重視されますか？」',
+    outcome: '評価軸把握 → 提案調整 → 決裁接近',
+    research: '正式用語: 社会的影響 / 組織内意思決定｜メタ分析: アリゾナ州立大学 / Robert B. Cialdini教授',
+  },
+  優先度スパーク: {
+    hook: '後回し案件に、今扱う理由の電流を通す。',
+    lecture: '人材課題も緊急でないと後回しになる。営業では放置コストと今やる便益を並べ、優先順位の順位表を書き換える。',
+    combo: ['後回し理由を聞く', '放置コストを示す', '今やる意味を置く'],
+    script: '「今月扱わない場合、次にどの数字や現場負荷に出そうですか？」',
+    outcome: '放置認識 → 優先度上昇 → 着手',
+    research: '正式用語: 損失回避 / 時間割引｜メタ分析: カリフォルニア工科大学 / Colin F. Camerer教授',
+  },
+  要点圧縮: {
+    hook: '長い説明を、決裁者に刺さる一文と3根拠へ圧縮する。',
+    lecture: '人材評価でも長い推薦文より、短い根拠の束が効く。営業では決裁者の認知負荷を下げる資料設計が武器になる。',
+    combo: ['一文にする', '3根拠に絞る', 'リスクを添える'],
+    script: '「決裁者向けには、目的・効果・リスク対策の3点に圧縮します。」',
+    outcome: '理解速度UP → 社内共有 → 決裁',
+    research: '正式用語: 認知負荷理論 / ワーキングメモリ｜メタ分析: ニューサウスウェールズ大学 / John Sweller教授',
+  },
+  次アクション雷鳴: {
+    hook: '曖昧な宿題を、期限・担当・確認方法つきの次手に変える。',
+    lecture: '育成でも次に何をするかが曖昧だと動かない。営業では会議の最後に行動単位へ落とし、停滞を防ぐ。',
+    combo: ['担当を決める', '期限を置く', '確認方法を決める'],
+    script: '「次は誰が、いつまでに、何を確認できれば前に進みますか？」',
+    outcome: '曖昧さ除去 → 実行 → フォロー',
+    research: '正式用語: 実行意図 / コミットメント｜メタ分析: ニューヨーク大学 / Peter M. Gollwitzer教授',
+  },
+  価格分解: {
+    hook: '価格抵抗を、予算・不安・優先度・社内説明に掘り分ける。',
+    lecture: '人材の不満も給与だけでは説明できない。価格抵抗も金額以外の地層を掘ると、打ち手が変わる。',
+    combo: ['地層を聞く', '不安を掘る', '説明を固める'],
+    script: '「高いと感じる理由は、予算枠・比較先・社内説明のどれに近いですか？」',
+    outcome: '抵抗分解 → 対策明確化 → 納得',
+    research: '正式用語: 価格知覚 / 損失回避｜メタ分析: カリフォルニア工科大学 / Colin F. Camerer教授',
+  },
+  稟議地図: {
+    hook: '承認者・反対者・必要資料を地図化し、止まる場所を先に読む。',
+    lecture: '組織内で人が動くには、役割と関係性の地図が必要。営業も稟議の通路を見える化すれば、止まる前に手が打てる。',
+    combo: ['通路を見る', '罠を読む', '資料を置く'],
+    script: '「稟議が止まるとしたら、誰のどんな不安が一番大きそうですか？」',
+    outcome: '迷宮可視化 → 反対先回り → 稟議推進',
+    research: '正式用語: 役割葛藤 / 組織コミットメント｜メタ分析: ウェスタン大学 / John P. Meyer教授',
+  },
+  合意の石板: {
+    hook: '何で判断するかを先に刻み、あとから揺れない比較軸を作る。',
+    lecture: '人材選考で評価基準が曖昧だとブレる。営業でも比較基準を先に合意しておくと、後半の迷いが減る。',
+    combo: ['基準を決める', '重みを置く', '合意を残す'],
+    script: '「今回の判断基準を、成果・工数・リスクの3つで置いてもよいですか？」',
+    outcome: '比較軸固定 → 迷い減少 → 合意',
+    research: '正式用語: 意思決定フレーミング / 評価基準｜メタ分析: プリンストン大学 / Daniel Kahneman教授',
+  },
+  リスク耐性: {
+    hook: '導入後の失敗イメージを先に扱い、安心して進める地盤を固める。',
+    lecture: '人材採用でも失敗リスクを先に扱うほど、意思決定しやすい。営業では不安を隠さず、対策込みで見せる。',
+    combo: ['失敗を聞く', '対策を置く', '小さく始める'],
+    script: '「失敗するとしたらどこだと思いますか？そこから先に潰します。」',
+    outcome: '不安低下 → 安心材料 → 前進',
+    research: '正式用語: リスク知覚 / 事前検死｜メタ分析: オレゴン大学 / Paul Slovic教授',
+  },
 }
 
 export default function SalesPsychologyGuide() {
@@ -537,43 +532,43 @@ export default function SalesPsychologyGuide() {
             心
           </div>
 
-          <div className="relative grid min-h-[560px] gap-6 px-4 pb-0 pt-8 sm:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:px-12 lg:pt-9">
+          <div className="relative grid min-h-[auto] gap-5 px-4 pb-0 pt-6 sm:px-8 sm:pt-8 lg:min-h-[560px] lg:grid-cols-[1.05fr_0.95fr] lg:px-12 lg:pt-9">
             <div className="relative z-10 flex flex-col justify-center pb-8 lg:pb-10">
-              <div className="mb-7 inline-flex w-fit items-center gap-3 rounded-md border border-[#d7ad59]/35 bg-[#07111a]/78 px-4 py-2 text-[13px] font-black text-[#fff3d8] shadow-[0_14px_28px_-26px_rgba(0,0,0,0.9)] backdrop-blur-sm">
-                <span className="h-1.5 w-9 rounded-full bg-[#d7ad59]" />
+              <div className="mb-5 inline-flex w-fit max-w-full items-center gap-3 rounded-md border border-[#d7ad59]/35 bg-[#07111a]/78 px-3 py-2 text-[12px] font-black leading-5 text-[#fff3d8] shadow-[0_14px_28px_-26px_rgba(0,0,0,0.9)] backdrop-blur-sm sm:mb-7 sm:px-4 sm:text-[13px]">
+                <span className="h-1.5 w-7 shrink-0 rounded-full bg-[#d7ad59] sm:w-9" />
                 論文と本の知見を、博士が現場の攻略カードに変換する。
               </div>
 
-              <h1 className="font-display text-[2.8rem] font-black leading-[1.04] text-[#fffaf0] drop-shadow-[0_12px_34px_rgba(0,0,0,0.75)] sm:text-[4rem] lg:text-[4.2rem] xl:text-[4.7rem]">
+              <h1 className="font-display text-[2.45rem] font-black leading-[1.05] text-[#fffaf0] drop-shadow-[0_12px_34px_rgba(0,0,0,0.75)] min-[390px]:text-[2.75rem] sm:text-[4rem] lg:text-[4.2rem] xl:text-[4.7rem]">
                 <span className="sm:whitespace-nowrap">はぐれ博士の</span>
                 <span className="block text-[#f2cb77] sm:whitespace-nowrap">営業武器庫</span>
               </h1>
 
-              <p className="mt-5 max-w-[700px] text-base font-black leading-8 text-[#fff3d8] drop-shadow-[0_8px_22px_rgba(0,0,0,0.7)] sm:text-lg">
+              <p className="mt-4 max-w-[700px] text-sm font-black leading-7 text-[#fff3d8] drop-shadow-[0_8px_22px_rgba(0,0,0,0.7)] sm:mt-5 sm:text-lg sm:leading-8">
                 アダム・グラント系の本や行動科学の知見を、商談・失注・稟議・信頼形成で使える攻略カードに変える営業エンタメメディア。
               </p>
 
-              <div className="mt-6 flex flex-col gap-4 sm:flex-row">
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
                 <a
                   href="#psychology-situations"
-                  className="inline-flex h-16 items-center justify-center gap-3 rounded-lg border-2 border-[#d7ad59] bg-[#061727] px-7 text-base font-black text-[#f5d486] shadow-[0_18px_40px_-26px_rgba(6,23,39,0.8)] transition-transform hover:-translate-y-0.5"
+                  className="inline-flex h-14 items-center justify-center gap-3 rounded-lg border-2 border-[#d7ad59] bg-[#061727] px-5 text-sm font-black text-[#f5d486] shadow-[0_18px_40px_-26px_rgba(6,23,39,0.8)] transition-transform hover:-translate-y-0.5 sm:h-16 sm:px-7 sm:text-base"
                 >
                   <Target size={22} />
                   状況別攻略を見る
                   <ArrowRight size={20} />
                 </a>
-                <a
-                  href="/media#dragons"
-                  className="inline-flex h-16 items-center justify-center gap-3 rounded-lg border-2 border-[#d7ad59]/45 bg-[#07111a]/80 px-7 text-base font-black text-[#fff3d8] shadow-[0_18px_40px_-30px_rgba(0,0,0,0.9)] transition-colors hover:bg-[#102334]"
+                <Link
+                  href="/media/sales-dragon-academy"
+                  className="inline-flex h-14 items-center justify-center gap-3 rounded-lg border-2 border-[#d7ad59]/45 bg-[#07111a]/80 px-5 text-sm font-black text-[#fff3d8] shadow-[0_18px_40px_-30px_rgba(0,0,0,0.9)] transition-colors hover:bg-[#102334] sm:h-16 sm:px-7 sm:text-base"
                 >
                   <span className="text-2xl">竜</span>
                   営業竜学園を見る
                   <ArrowRight size={18} />
-                </a>
+                </Link>
               </div>
             </div>
 
-            <div id="psychology-professor" className="relative z-10 min-h-[520px] lg:min-h-[540px]">
+            <div id="psychology-professor" className="relative z-10 min-h-[430px] sm:min-h-[520px] lg:min-h-[540px]">
               <div className="absolute bottom-0 left-[8%] right-[6%] top-8 rounded-lg border border-[#d7ad59]/30 bg-[#071a28] shadow-[0_24px_70px_-44px_rgba(6,23,39,0.9)]" />
               <div className="absolute bottom-0 left-[5%] right-[12%] top-6 overflow-hidden rounded-lg border border-[#d7ad59]/25 bg-[#071a28]">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_72%_22%,rgba(215,173,89,0.16),transparent_18%),linear-gradient(90deg,rgba(245,212,134,0.05)_1px,transparent_1px),linear-gradient(rgba(245,212,134,0.04)_1px,transparent_1px)] bg-[length:auto,42px_42px,42px_42px]" />
@@ -593,7 +588,7 @@ export default function SalesPsychologyGuide() {
                 </div>
               </div>
 
-              <div className="absolute right-0 top-[112px] w-[292px] rounded-lg border border-[#d7ad59]/45 bg-[#061727]/95 p-5 text-[#fff3d8] shadow-[0_20px_50px_-32px_rgba(0,0,0,0.9)] backdrop-blur-sm max-sm:left-4 max-sm:right-4 max-sm:top-auto max-sm:bottom-5 max-sm:w-auto">
+              <div className="absolute right-0 top-[112px] w-[292px] rounded-lg border border-[#d7ad59]/45 bg-[#061727]/95 p-4 text-[#fff3d8] shadow-[0_20px_50px_-32px_rgba(0,0,0,0.9)] backdrop-blur-sm sm:p-5 max-sm:left-4 max-sm:right-4 max-sm:top-auto max-sm:bottom-5 max-sm:w-auto">
                 <div className="flex items-center gap-2 text-lg font-black text-[#f5d486]">
                   <Microscope size={20} />
                   はぐれ博士の研究室
@@ -644,7 +639,7 @@ export default function SalesPsychologyGuide() {
                 </div>
                 <div className="text-[12px] font-black text-[#6bc6d9]">まず持つ4つの装備</div>
               </div>
-              <div className="grid gap-3 lg:grid-cols-4">
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 {basicEquipment.map((card) => (
                   <PsychologyImageCard key={`basic-${card.title}`} card={card} onOpen={() => setSelectedCard(card)} />
                 ))}
@@ -673,7 +668,7 @@ export default function SalesPsychologyGuide() {
                   </div>
                   <div className="text-[12px] font-black text-[#f5d486]/65">8 SCENARIOS</div>
                 </div>
-                <div className="grid gap-3 lg:grid-cols-4">
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                   {situations.map((card) => (
                     <PsychologyImageCard key={card.title} card={card} onOpen={() => setSelectedCard(card)} />
                   ))}
@@ -716,7 +711,7 @@ export default function SalesPsychologyGuide() {
                         4 WEAPONS
                       </div>
                     </div>
-                    <div className="grid gap-3 lg:grid-cols-4">
+                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                       {category.cards.map((card) => (
                         <PsychologyImageCard key={`${category.title}-${card.title}`} card={card} onOpen={() => setSelectedCard(card)} />
                       ))}
@@ -778,6 +773,189 @@ function PsychologyImageCard({
   )
 }
 
+const modalArtworkByTitle: Record<string, string> = {
+  熱量点火: '/media/school/sabotage-reopen-dragon-modal-safe.png',
+  決断ファイア: '/media/school/decision-fire-dragon-modal-full.png',
+  価格分解: '/media/school/prep-semi-structure-dragon-modal-safe.png',
+  稟議停滞: '/media/psychology/approval-maze-modal-fullbleed-v2.png',
+  決裁者不在: '/media/psychology/decision-maker-absent-modal-v2.png',
+  リスク耐性: '/media/school/sabotage-overquality-dragon-modal-safe.png',
+}
+
+const modalLeftTitleByTitle: Record<string, string> = {
+  質問力: '水流の問いを放つ',
+  傾聴スキル: '水温を合わせる',
+  理解力: '構造を見抜く',
+  影響力: '意味を反転する',
+  初回商談: '警戒水位を下げる',
+  価格抵抗: '高いの地層を掘る',
+  稟議停滞: '社内迷宮を照らす',
+  決裁者不在: '空席の王座を読む',
+  価格交渉: '着地点を鍛える',
+  クロージング: '迷いを火に変える',
+  信頼形成: '信用の水路を作る',
+  動機づけ: '動く理由を灯す',
+  熱量点火: '変化の火種を入れる',
+  先送り焼却: '先送りを燃やす',
+  決断ファイア: '決断の炎を整える',
+  反論ブースト: '反論を推進力に変える',
+  水流ヒアリング: '本音の水路を開く',
+  共感ミラー: '感情を映して返す',
+  沈黙リカバリー: '沈黙を余白に変える',
+  納得の水路: '合意まで流す',
+  決裁サーチ: '決裁の雷脈を探る',
+  優先度スパーク: '優先順位に電流を通す',
+  要点圧縮: '一文へ圧縮する',
+  次アクション雷鳴: '次の一手を鳴らす',
+  価格分解: '価格の岩盤を割る',
+  稟議地図: '承認ルートを刻む',
+  合意の石板: '判断基準を刻む',
+  リスク耐性: '不安の地盤を固める',
+}
+
+const modalStrategyCopyByTitle: Record<string, { title: string; technique: string; meaning: string }> = {
+  質問力: {
+    title: '水流の問いで、判断地図を開く',
+    technique: '水流共鳴',
+    meaning: '相手が「理解されている」と感じる聞き方で、信頼の入口を開く。',
+  },
+  傾聴スキル: {
+    title: '水温を合わせ、本音の水路を開く',
+    technique: '静水チューニング',
+    meaning: '相手の言葉と感情を急かさず受け止め、話しやすい場を作る。',
+  },
+  理解力: {
+    title: '発言の奥にある構造を見抜く',
+    technique: '構造透視',
+    meaning: '課題・感情・社内事情を分けて、次に扱うべき論点を浮かび上がらせる。',
+  },
+  影響力: {
+    title: '意味を反転し、判断基準を動かす',
+    technique: '意味変換炉',
+    meaning: '押し切らず、相手の見え方を変えて自分で動きたくなる理由を作る。',
+  },
+  初回商談: {
+    title: '最初の3分で警戒水位を下げる',
+    technique: '温感フィールド',
+    meaning: '提案前に安心して話せる空気を作り、敵ではなく伴走者として入る。',
+  },
+  価格抵抗: {
+    title: '「高い」の地層を掘り分ける',
+    technique: '価値採掘',
+    meaning: '金額・不安・優先度・社内説明を分けて、値引き以外の攻略口を探す。',
+  },
+  稟議停滞: {
+    title: '止まった稟議の迷宮を照らす',
+    technique: '承認ルート照明',
+    meaning: '関係者・反対理由・必要資料を地図化し、止まる前に通路を作る。',
+  },
+  決裁者不在: {
+    title: '空席の王座から評価軸を読む',
+    technique: '雷脈サーチ',
+    meaning: '会えていない決裁者の不安と判断基準を、担当者の言葉から逆算する。',
+  },
+  価格交渉: {
+    title: '値引き合戦を条件交換に変える',
+    technique: '均衡鍛冶',
+    meaning: '価格だけで削り合わず、範囲・時期・条件を組み替えて着地点を作る。',
+  },
+  クロージング: {
+    title: '迷いを残さず、最後の一歩を渡す',
+    technique: '決断点火',
+    meaning: '未処理の不安を確認し、相手が自分で進める状態まで整える。',
+  },
+  信頼形成: {
+    title: 'リスクを預けられる根拠を積む',
+    technique: '信用結晶',
+    meaning: '好感だけに頼らず、約束・根拠・先回りで安心材料を積み上げる。',
+  },
+  動機づけ: {
+    title: '動く理由を本人の言葉にする',
+    technique: '理由点火',
+    meaning: '外から押すのではなく、相手の中にある変えたい未来を言語化する。',
+  },
+  熱量点火: {
+    title: '変えたい未来に火種を入れる',
+    technique: '未来点火',
+    meaning: '課題ではなく、変化後の理想を聞き出して前へ進む熱量を作る。',
+  },
+  先送り焼却: {
+    title: '「今じゃない」を静かに燃やす',
+    technique: '延期焼却',
+    meaning: '先送りの理由と放置コストを分け、着手できる小さな火口を作る。',
+  },
+  決断ファイア: {
+    title: '迷いを、選べる状態まで整える',
+    technique: '選択炉',
+    meaning: '選択肢と比較軸を絞り、決める順番を作って判断負荷を下げる。',
+  },
+  反論ブースト: {
+    title: '反論を前進エネルギーに変える',
+    technique: '抵抗変換',
+    meaning: '反論を拒絶と見なさず、不安の背景を聞いて前進条件へ変える。',
+  },
+  水流ヒアリング: {
+    title: '本音が流れ出す水路を開く',
+    technique: '水流開門',
+    meaning: '質問攻めにせず、相手が自分の言葉で整理できる会話の流れを作る。',
+  },
+  共感ミラー: {
+    title: '感情を映し、会話の水面を整える',
+    technique: '共鳴鏡',
+    meaning: '相手の言葉と感情を映し返し、話しながら整理できる状態を作る。',
+  },
+  沈黙リカバリー: {
+    title: '沈黙を、考えが出る余白に変える',
+    technique: '静寂保護',
+    meaning: '沈黙を焦って埋めず、相手が言葉を探す時間として守る。',
+  },
+  納得の水路: {
+    title: '押し切らず、合意まで流す',
+    technique: '納得導流',
+    meaning: '理解・合意・次アクションの順で、自然に進める会話の道を作る。',
+  },
+  決裁サーチ: {
+    title: '決裁者の評価軸を雷で探る',
+    technique: '決裁雷探',
+    meaning: '担当者の言葉から、会えていない決裁者の関心と不安を探知する。',
+  },
+  優先度スパーク: {
+    title: '後回し案件に電流を通す',
+    technique: '優先度放電',
+    meaning: '放置コストと今やる意味を並べ、優先順位の見え方を変える。',
+  },
+  要点圧縮: {
+    title: '長い説明を、一撃の要点に圧縮する',
+    technique: '一文圧縮',
+    meaning: '決裁者が判断しやすいよう、目的・効果・リスク対策に絞る。',
+  },
+  次アクション雷鳴: {
+    title: '曖昧な宿題に次の雷鳴を落とす',
+    technique: '次手雷鳴',
+    meaning: '誰が・いつまでに・何を確認するかを決めて停滞を防ぐ。',
+  },
+  価格分解: {
+    title: '価格の岩盤を割り、抵抗を分解する',
+    technique: '地層分解',
+    meaning: '予算・比較先・不安・社内説明を掘り分け、打ち手を明確にする。',
+  },
+  稟議地図: {
+    title: '承認ルートを石板に刻む',
+    technique: '稟議刻印',
+    meaning: '承認者・反対者・必要資料を見える化し、止まる場所を先に読む。',
+  },
+  合意の石板: {
+    title: '判断基準を先に刻み、迷いを止める',
+    technique: '基準刻印',
+    meaning: '何で比較するかを先に合意し、後半で判断軸が揺れないようにする。',
+  },
+  リスク耐性: {
+    title: '不安の地盤を固め、前進できる足場を作る',
+    technique: '不安固化',
+    meaning: '失敗イメージを先に扱い、対策込みで安心して進める状態を作る。',
+  },
+}
+
 function PsychologyStrategyModal({
   card,
   onClose,
@@ -785,362 +963,110 @@ function PsychologyStrategyModal({
   card: PsychologyCard
   onClose: () => void
 }) {
-  const activation = getDragonActivation(card)
-
-  if (activation.cardVariant === 'weapon') {
-    return (
-      <div
-        className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-[#02070d]/88 px-4 py-6 text-[#fff3d8] backdrop-blur-md"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="psychology-strategy-card-title"
-        onClick={onClose}
-      >
-        <div className="relative w-full max-w-[980px]" onClick={(event) => event.stopPropagation()}>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="攻略カードを閉じる"
-            className="absolute -right-3 -top-3 z-20 grid h-10 w-10 place-items-center rounded-full border border-[#d7ad59]/45 bg-[#061727]/95 text-[#fff3d8] shadow-[0_12px_30px_-20px_rgba(0,0,0,0.9)] transition-colors hover:bg-[#102334] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f5d486] sm:-right-4 sm:-top-4"
-          >
-            <X size={20} />
-          </button>
-          <WeaponStrategyCard activation={activation} />
-        </div>
-      </div>
-    )
+  const lesson = arsenalLessons[card.title] ?? {
+    hook: card.copy,
+    lecture: '現場で起きる違和感を観察し、顧客の判断軸・不安・優先順位に分けて攻略する。',
+    combo: ['観察する', '分解する', '次の一手にする'] as [string, string, string],
+    script: '「今の状況を一緒に整理すると、どこから手をつけるのが一番よさそうですか？」',
+    outcome: '観察 → 仮説 → 次アクション',
+    research: '正式用語: 行動科学 / 組織心理学｜メタ分析: ノースイースタン大学 / Judith A. Hall教授',
   }
+  const modalImage = modalArtworkByTitle[card.title] ?? card.modalImage ?? card.image
+  const leftTitle = modalLeftTitleByTitle[card.title] ?? `${card.label}を発動`
+  const modalCopy = modalStrategyCopyByTitle[card.title] ?? {
+    title: `${leftTitle}。現場の詰まりを突破する`,
+    technique: card.label,
+    meaning: lesson.hook,
+  }
+  const strategyRows = [
+    { tag: '竜技名', text: modalCopy.technique },
+    { tag: '技の意味', text: modalCopy.meaning },
+    { tag: '使用例', text: lesson.script },
+    { tag: '効果', text: lesson.outcome },
+  ]
+  const researchText = lesson.research.replace(/^正式用語:\s*/, '').replace('｜メタ分析: ', ' / ')
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-[#02070d]/86 px-4 py-6 text-[#fff3d8] backdrop-blur-md"
+      className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-[#020a10]/80 px-4 py-5 text-[#fff3d8] backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-labelledby="psychology-strategy-card-title"
       onClick={onClose}
     >
       <div
-        className="relative my-auto max-h-[88vh] w-full max-w-[1040px] overflow-y-auto overflow-x-hidden rounded-xl border border-[#d7ad59]/55 bg-[#061727] shadow-[0_34px_120px_-48px_rgba(0,0,0,1),0_0_0_1px_rgba(245,212,134,0.12)] lg:max-h-[87vh] lg:overflow-hidden"
+        className="relative grid max-h-[88vh] w-full max-w-6xl overflow-y-auto overflow-x-hidden rounded-lg border border-[#d7ad59]/45 bg-[#061727] shadow-[0_32px_90px_-34px_rgba(0,0,0,0.95)] md:grid-cols-[0.86fr_1.14fr]"
         onClick={(event) => event.stopPropagation()}
       >
         <button
           type="button"
           onClick={onClose}
           aria-label="攻略カードを閉じる"
-          className="absolute right-4 top-4 z-20 grid h-10 w-10 place-items-center rounded-full border border-[#d7ad59]/40 bg-[#061727]/92 text-[#fff3d8] shadow-[0_12px_30px_-20px_rgba(0,0,0,0.9)] transition-colors hover:bg-[#102334] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f5d486]"
+          className="absolute right-3 top-3 z-20 grid h-9 w-9 place-items-center rounded-full border border-[#d7ad59]/35 bg-[#061727]/86 text-[#fff3d8] backdrop-blur-sm transition-colors hover:bg-[#102334] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f5d486]"
         >
-          <X size={20} />
+          <X size={18} />
         </button>
 
-        <div className="relative overflow-hidden">
+        <div className="relative flex min-h-[390px] flex-col justify-between bg-[#030b12] sm:min-h-[430px] md:min-h-[500px]">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_48%_36%,rgba(107,198,217,0.24),transparent_34%),linear-gradient(180deg,rgba(5,17,27,0.92),rgba(5,17,27,0.72))]" />
           <Image
-            src={activation.image}
-            alt={`${activation.species} ${activation.name}のカード背景`}
+            src={modalImage}
+            alt={`${card.title}を象徴する戦略アート`}
             fill
-            sizes="(min-width: 1024px) 920px, 100vw"
-            className="object-cover opacity-18"
+            sizes="(min-width: 768px) 40vw, 100vw"
+            className="object-cover object-center opacity-95"
             priority
           />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_28%,rgba(107,198,217,0.16),transparent_18%),radial-gradient(circle_at_28%_76%,rgba(215,173,89,0.18),transparent_20%),linear-gradient(115deg,rgba(2,10,16,0.98),rgba(6,23,39,0.95)_54%,rgba(3,12,19,0.98))]" />
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(245,212,134,0.055)_1px,transparent_1px),linear-gradient(rgba(245,212,134,0.045)_1px,transparent_1px)] bg-[length:42px_42px]" />
-
-          <div className="relative z-10 grid gap-0 lg:grid-cols-[0.95fr_1.05fr]">
-            <div className="flex flex-col p-5 pr-16 sm:p-6 sm:pr-20 lg:p-5 lg:pr-6">
-              <div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-[#d7ad59]/45 bg-[#061727]/78 px-3 py-1.5 text-[12px] font-black text-[#f5d486]">
-                  <Sparkles size={14} />
-                  はぐれ博士の営業武器庫
-                </div>
-                <div className="ml-0 mt-3 inline-flex rounded-full px-3 py-1.5 text-[12px] font-black text-[#04111d] sm:ml-2 sm:mt-0" style={{ background: activation.accent }}>
-                  {card.title}で発動
-                </div>
-              </div>
-
-              <div className="mt-4 max-w-[520px] lg:mt-5">
-                <div className="mb-3 h-1.5 w-16 rounded-full" style={{ background: activation.accent }} />
-                <h2 id="psychology-strategy-card-title" className="flex flex-wrap items-end gap-2 font-display text-[2.35rem] font-black leading-none text-[#fffaf0] drop-shadow-[0_12px_34px_rgba(0,0,0,0.72)] sm:text-[2.85rem]">
-                  <span>{card.title}</span>
-                  <span className="mb-1 rounded-full border border-[#d7ad59]/45 bg-[#d7ad59] px-2.5 py-1 text-[12px] font-black leading-none text-[#04111d]">
-                    {activation.cardName}
-                  </span>
-                </h2>
-                <div className="mt-2 truncate text-[11px] font-black text-[#f2cb77]">
-                  {activation.technicalTerm ?? activation.trait}
-                </div>
-                <p className="mt-2 text-[13px] font-black leading-6 text-[#fff3d8] drop-shadow-[0_8px_22px_rgba(0,0,0,0.7)]">
-                  {activation.subheading ?? activation.effect}
-                </p>
-              </div>
-
-              <div className="mt-3 rounded-lg border border-[#d7ad59]/35 bg-[#020a10]/72 p-2.5 backdrop-blur-sm">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="text-[11px] font-black text-[#f5d486]">3連コンボ</div>
-                  <div className="text-[10px] font-black text-[#fff3d8]/55">初回3分</div>
-                </div>
-                <div className="mt-2 grid gap-1.5 sm:grid-cols-3">
-                  {(activation.methodSteps ?? [
-                    { label: '01', title: '観察', copy: activation.effect },
-                    { label: '02', title: '変換', copy: activation.memo },
-                    { label: '03', title: '発動', copy: activation.caution },
-                  ]).map((step) => (
-                    <div key={step.label} className="flex min-w-0 items-center gap-1.5 rounded-md border border-[#d7ad59]/18 bg-[#061727]/78 px-2 py-2">
-                      <span className="shrink-0 rounded-full bg-[#d7ad59] px-1.5 py-0.5 text-[9px] font-black leading-none text-[#04111d]">
-                        {step.label}
-                      </span>
-                      <span className="truncate text-[10px] font-black text-[#fffaf0]">{step.title}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mt-2 rounded-lg border border-[#d7ad59]/40 bg-[#061727]/86 p-2.5 backdrop-blur-sm">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2 text-[11px] font-black text-[#f5d486]">
-                    <BrainCircuit size={14} />
-                    決め技
-                  </div>
-                  <div className="rounded-full bg-[#d7ad59] px-2 py-1 text-[10px] font-black text-[#04111d]">
-                    {activation.finisherName ?? '最終一言'}
-                  </div>
-                </div>
-                <p className="mt-2 line-clamp-2 text-[12px] font-black leading-5 text-[#fff3d8]">
-                  {activation.example ?? activation.memo}
-                </p>
-              </div>
-
-              <div className="mt-2 rounded-lg border border-[#d7ad59]/35 bg-[#061727]/82 p-2.5 backdrop-blur-sm">
-                <div className="flex items-start gap-2.5">
-                  <div className="grid h-7 w-7 shrink-0 place-items-center rounded-md border border-[#6bc6d9]/45 bg-[#6bc6d9]/16 text-[#8cecff]">
-                    <Target size={14} />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-[11px] font-black text-[#f5d486]">効果</div>
-                    <p className="mt-1 line-clamp-2 text-[12px] font-black leading-5 text-[#fff3d8]">
-                      {activation.fieldLine ?? activation.effect}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              {activation.references?.length ? (
-                <div className="mt-2 rounded-lg border border-[#d7ad59]/35 bg-[#020a10]/76 p-2.5 backdrop-blur-sm">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <div className="text-[11px] font-black text-[#f5d486]">参照文献・研究根拠</div>
-                      <div className="mt-0.5 text-[10px] font-bold text-[#fff3d8]/62">温かみ・有能さ・深層演技を営業場面へ応用</div>
-                    </div>
-                    <div className="rounded-full border border-[#d7ad59]/35 px-2 py-1 text-[10px] font-black text-[#f5d486]">
-                      論文ベース
-                    </div>
-                  </div>
-                  <div className="mt-2 grid gap-1.5 sm:grid-cols-3">
-                    {activation.references.map((reference) => (
-                      <div key={reference.source} className="min-w-0 rounded-md border border-[#d7ad59]/20 bg-[#061727]/78 p-2">
-                        <div className="flex min-h-5 items-start justify-between gap-1.5">
-                          <div className="line-clamp-1 text-[10px] font-black leading-4 text-[#f5d486]">{reference.label}</div>
-                          {reference.evidenceLevel ? (
-                            <div className="shrink-0 rounded-full bg-[#d7ad59] px-1.5 py-0.5 text-[8px] font-black leading-3 text-[#04111d]">
-                              {reference.evidenceLevel}
-                            </div>
-                          ) : null}
-                        </div>
-                        <div className="mt-1 line-clamp-1 text-[8px] font-black leading-3 text-[#fffaf0]">{reference.source}</div>
-                        <div className="mt-1 line-clamp-1 text-[8px] font-bold leading-3 text-[#fff3d8]/72">
-                          機関: {reference.university}
-                        </div>
-                        <div className="line-clamp-1 text-[8px] font-bold leading-3 text-[#fff3d8]/72">
-                          研究者: {reference.researchers}
-                        </div>
-                        <div className="mt-1 line-clamp-2 text-[8px] font-bold leading-3 text-[#fff3d8]/78">
-                          要旨: {reference.content}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,17,27,0.02),rgba(5,17,27,0.16)_44%,rgba(5,17,27,0.97))]" />
+          <div className="relative mt-auto p-5">
+            <div className="w-fit rounded-full px-3 py-1 text-[11px] font-black text-[#04111d]" style={{ background: card.accent }}>
+              {card.label}
             </div>
-
-            <div className="relative min-h-[450px] border-t border-[#d7ad59]/25 bg-[#020a10]/42 p-5 sm:p-6 lg:min-h-0 lg:border-l lg:border-t-0 lg:p-5">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_28%,rgba(245,212,134,0.18),transparent_20%)]" />
-              <div className="relative mx-auto flex h-full max-w-[430px] flex-col items-center justify-center">
-                <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#d7ad59]/45 bg-[#061727]/85 px-3 py-1.5 text-[12px] font-black text-[#f5d486]">
-                  <span className="text-base">{activation.species.includes('竜') ? '竜' : '伴'}</span>
-                  {activation.type}
-                </div>
-                <div className="relative w-full max-w-[334px] overflow-hidden rounded-lg border border-[#d7ad59]/55 bg-[#061727] p-2 shadow-[0_26px_80px_-38px_rgba(0,0,0,1)]">
-                  <Image
-                    src={activation.image}
-                    alt={`${activation.species} ${activation.name}カード`}
-                    width={392}
-                    height={622}
-                    priority
-                    className="h-auto max-h-[56vh] w-full rounded-md object-contain"
-                  />
-                </div>
-                <div className="mt-3 w-full max-w-[322px] rounded-lg border border-[#d7ad59]/35 bg-[#061727]/88 p-3">
-                  <div className="text-[11px] font-black text-[#f5d486]">属性</div>
-                  <div className="mt-1.5 text-[13px] font-black leading-5 text-[#fff3d8]">{activation.trait}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function WeaponStrategyCard({ activation }: { activation: DragonActivation }) {
-  const steps = activation.methodSteps ?? [
-    { label: '01', title: '水温を上げる', copy: 'いきなり提案せず、相手が話してもいい場を作る。' },
-    { label: '02', title: '判断軸を聞く', copy: '困りごと・優先順位・不安を、質問で水路に流す。' },
-    { label: '03', title: '理解を返す', copy: '要約して返し、理解者として信頼の足場を作る。' },
-  ]
-
-  return (
-    <div className="relative max-h-[88vh] overflow-y-auto overflow-x-hidden rounded-2xl border border-[#d7ad59]/60 bg-[#061727] shadow-[0_34px_120px_-48px_rgba(0,0,0,1),0_0_0_1px_rgba(245,212,134,0.12)]">
-      <Image
-        src={activation.image}
-        alt=""
-        fill
-        sizes="980px"
-        priority
-        className="object-cover opacity-[0.13]"
-      />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_22%,rgba(107,198,217,0.20),transparent_22%),radial-gradient(circle_at_82%_78%,rgba(215,173,89,0.18),transparent_24%),linear-gradient(115deg,rgba(2,10,16,0.98),rgba(6,23,39,0.94)_48%,rgba(3,12,19,0.98))]" />
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(245,212,134,0.055)_1px,transparent_1px),linear-gradient(rgba(245,212,134,0.045)_1px,transparent_1px)] bg-[length:42px_42px]" />
-
-      <div className="relative z-10 grid gap-0 lg:grid-cols-[360px_1fr]">
-        <div className="border-b border-[#d7ad59]/25 p-4 sm:p-5 lg:border-b-0 lg:border-r lg:p-6">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#d7ad59]/45 bg-[#020a10]/74 px-3 py-1.5 text-[12px] font-black text-[#f5d486]">
-              <span className="text-base">竜</span>
-              水流ドラゴン出現
-            </div>
-            <div className="rounded-full bg-[#6bc6d9] px-3 py-1.5 text-[12px] font-black text-[#04111d]">
-              {activation.type}
-            </div>
-          </div>
-
-          <div className="relative mx-auto max-w-[300px] overflow-hidden rounded-xl border border-[#d7ad59]/60 bg-[#f8efe0] p-2 shadow-[0_26px_80px_-38px_rgba(0,0,0,1)]">
-            <Image
-              src={activation.image}
-              alt={`${activation.name}のドラゴンカード`}
-              width={392}
-              height={622}
-              priority
-              className="h-auto w-full rounded-lg object-contain"
-            />
-          </div>
-
-          <div className="mx-auto mt-3 max-w-[300px] rounded-lg border border-[#d7ad59]/35 bg-[#020a10]/70 p-3">
-            <div className="text-[11px] font-black text-[#f5d486]">属性</div>
-            <div className="mt-1 text-[13px] font-black leading-5 text-[#fff3d8]">{activation.trait}</div>
+            <h2 className="mt-3 truncate whitespace-nowrap font-display text-3xl font-black leading-tight text-white drop-shadow-[0_10px_26px_rgba(0,0,0,0.9)] sm:text-4xl">
+              {leftTitle}
+            </h2>
+            <p className="mt-2 max-w-[390px] truncate whitespace-nowrap text-[13px] font-black leading-6 text-[#fff3d8]">{lesson.hook}</p>
           </div>
         </div>
 
-        <div className="relative overflow-hidden p-4 sm:p-6 lg:p-7">
-          <div className="pointer-events-none absolute -right-16 top-8 h-56 w-56 rounded-full bg-[#6bc6d9]/16 blur-3xl" />
-          <div className="pointer-events-none absolute bottom-8 left-10 h-44 w-44 rounded-full bg-[#d7ad59]/12 blur-3xl" />
-          <div className="pointer-events-none absolute inset-x-6 top-20 h-px bg-gradient-to-r from-transparent via-[#6bc6d9]/55 to-transparent" />
-          <div className="pointer-events-none absolute right-8 top-8 h-28 w-28 rounded-full border border-[#6bc6d9]/15" />
-          <div className="pointer-events-none absolute right-16 top-16 h-16 w-16 rounded-full border border-[#f5d486]/18" />
-          <div className="relative max-w-[560px]">
-            <div className="mb-4 flex items-center gap-3">
-              <div className="h-1.5 w-16 rounded-full bg-[#6bc6d9] shadow-[0_0_22px_rgba(107,198,217,0.85)]" />
-              <div className="h-px flex-1 bg-gradient-to-r from-[#6bc6d9]/55 to-transparent" />
-              <span className="rounded-full border border-[#6bc6d9]/45 bg-[#6bc6d9]/14 px-3 py-1 text-[10px] font-black tracking-[0.16em] text-[#9cefff]">
-                DRAGON CARD ACTIVATED
-              </span>
-            </div>
-
+        <div className="relative p-5 sm:p-6">
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(245,212,134,0.04)_1px,transparent_1px),linear-gradient(rgba(245,212,134,0.035)_1px,transparent_1px)] bg-[length:34px_34px]" />
+          <div className="relative flex h-full flex-col justify-center">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full border border-[#d7ad59]/45 bg-[#020a10]/78 px-3 py-1.5 text-[12px] font-black text-[#f5d486] shadow-[0_0_22px_rgba(215,173,89,0.16)]">
-                はぐれ博士の営業武器庫
-              </span>
-              <span className="rounded-full bg-[#6bc6d9] px-3 py-1.5 text-[12px] font-black text-[#04111d] shadow-[0_0_22px_rgba(107,198,217,0.55)]">
-                質問力で発動
-              </span>
+              <div className="max-w-full truncate whitespace-nowrap rounded-full border border-[#6bc6d9]/45 bg-[#6bc6d9]/14 px-3 py-1 text-[11px] font-black text-[#bfefff]">
+                はぐれ博士の営業武器庫 / {card.title}
+              </div>
             </div>
+            <h3
+              id="psychology-strategy-card-title"
+              className="mt-4 truncate whitespace-nowrap font-display text-[clamp(28px,2.7vw,40px)] font-black leading-tight text-[#fff3d8]"
+            >
+              {modalCopy.title}
+            </h3>
 
-            <div className="relative mt-5 overflow-hidden rounded-2xl border border-[#6bc6d9]/35 bg-[linear-gradient(135deg,rgba(3,21,33,0.92),rgba(7,38,54,0.62)_42%,rgba(6,17,27,0.92))] p-4 shadow-[inset_0_0_38px_rgba(107,198,217,0.08),0_24px_60px_-48px_rgba(107,198,217,1)]">
-              <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full border border-[#6bc6d9]/28" />
-              <div className="absolute right-8 top-7 h-10 w-10 rotate-45 border border-[#f5d486]/24" />
-              <div className="relative">
-                <h2
-                  id="psychology-strategy-card-title"
-                  className="font-display text-[2.75rem] font-black leading-[0.98] text-[#fffaf0] drop-shadow-[0_14px_34px_rgba(0,0,0,0.75)] sm:text-[3.45rem]"
+            <div className="mt-5 grid gap-2.5">
+              {strategyRows.map((row) => (
+                <div
+                  key={row.tag}
+                  className="flex items-center gap-3 rounded-md border border-[#d7ad59]/20 bg-[#07111a]/76 px-3 py-3"
                 >
-                  {activation.name}
-                </h2>
-                <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <span className="text-lg font-black leading-7 text-[#6bc6d9] drop-shadow-[0_0_18px_rgba(107,198,217,0.36)]">質問力の基本ドラゴン</span>
-                  <span className="rounded-full border border-[#d7ad59]/40 px-2.5 py-1 text-[10px] font-black tracking-[0.14em] text-[#f5d486]">
-                    TRUST BUILD
+                  <span className="shrink-0 rounded-full bg-[#d7ad59] px-2.5 py-1 text-[10px] font-black text-[#07111a]">
+                    {row.tag}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate whitespace-nowrap text-[13px] font-bold leading-6 text-[#fff3f5]">
+                    {row.text}
                   </span>
                 </div>
-                <p className="mt-4 max-w-[520px] text-[15px] font-black leading-7 text-[#fff3d8]">
-                  売る前に、警戒心をほどく。相手が話し出す水温を作るドラゴン。
-                </p>
-              </div>
+              ))}
             </div>
 
-            <div className="relative mt-4 rounded-2xl border border-[#d7ad59]/35 bg-[#020a10]/62 p-3.5 shadow-[inset_0_0_28px_rgba(215,173,89,0.06)]">
-              <div className="absolute left-6 right-6 top-[54px] hidden h-px bg-gradient-to-r from-[#6bc6d9]/20 via-[#f5d486]/70 to-[#6bc6d9]/20 sm:block" />
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2 text-[12px] font-black tracking-[0.14em] text-[#f5d486]">
-                  <Sparkles size={15} />
-                  3連コンボ
-                </div>
-                <div className="text-[11px] font-black text-[#fff3d8]/58">水流発動シークエンス</div>
-              </div>
-              <div className="mt-3 grid gap-2 sm:grid-cols-3">
-                {steps.map((step) => (
-                  <div
-                    key={step.label}
-                    className="relative rounded-xl border border-[#6bc6d9]/30 bg-[linear-gradient(180deg,rgba(9,42,59,0.92),rgba(3,16,27,0.94))] p-3 text-center shadow-[inset_0_0_22px_rgba(107,198,217,0.10),0_14px_28px_-24px_rgba(107,198,217,0.9)]"
-                  >
-                    <div className="mx-auto grid h-8 w-8 place-items-center rounded-full border border-[#6bc6d9]/45 bg-[#6bc6d9] text-[11px] font-black leading-none text-[#04111d] shadow-[0_0_18px_rgba(107,198,217,0.58)]">
-                      {step.label}
-                    </div>
-                    <div className="mt-2 text-[15px] font-black text-[#fffaf0]">{step.title}</div>
-                    <p className="mx-auto mt-1 max-w-[130px] text-[10px] font-bold leading-4 text-[#fff3d8]/72">{step.copy}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="mt-4 grid gap-3 sm:grid-cols-[1.1fr_0.9fr]">
-              <div className="relative overflow-hidden rounded-2xl border border-[#d7ad59]/42 bg-[linear-gradient(135deg,rgba(215,173,89,0.18),rgba(2,10,16,0.7))] p-4">
-                <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-[#d7ad59]/20 blur-2xl" />
-                <div className="absolute bottom-0 left-0 h-px w-full bg-gradient-to-r from-[#f5d486]/70 to-transparent" />
-                <div className="flex items-center gap-2 text-[12px] font-black text-[#f5d486]">
-                  <Sparkles size={15} />
-                  使用例
-                </div>
-                <p className="mt-2 text-[14px] font-black leading-6 text-[#fffaf0]">
-                  「まず状況の地図を描かせてください」
-                </p>
-              </div>
-              <div className="relative overflow-hidden rounded-2xl border border-[#6bc6d9]/40 bg-[linear-gradient(135deg,rgba(107,198,217,0.18),rgba(2,10,16,0.72))] p-4">
-                <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-[#6bc6d9]/20 blur-2xl" />
-                <div className="absolute bottom-0 left-0 h-px w-full bg-gradient-to-r from-[#6bc6d9]/70 to-transparent" />
-                <div className="flex items-center gap-2 text-[12px] font-black text-[#6bc6d9]">
-                  <Target size={15} />
-                  効果
-                </div>
-                <p className="mt-2 text-[14px] font-black leading-6 text-[#fffaf0]">
-                  話しやすさ → 理解感 → 信頼形成
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-4 rounded-2xl border border-[#f7efe0]/30 bg-[#f7efe0] p-3 text-[#102334] shadow-[0_18px_48px_-34px_rgba(245,212,134,0.8)]">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded-full bg-[#0f5c70] px-2.5 py-1 text-[10px] font-black text-white">メタ分析</span>
-                <span className="text-[11px] font-black leading-5">
-                  ヘブライ大学 Avraham N. Kluger教授｜知覚された傾聴
+            <div className="mt-5 overflow-hidden rounded-md border border-[#6bc6d9]/20 bg-[#020a10]/72 px-3.5 py-3 text-[11px] font-black leading-5 text-[#bfefff]">
+              <div className="flex min-w-0 items-center gap-2">
+                <BrainCircuit size={16} className="shrink-0" />
+                <span className="shrink-0 rounded-full bg-[#6bc6d9] px-2.5 py-1 text-[10px] font-black leading-none text-[#04111d]">
+                  メタ分析
                 </span>
+                <span className="min-w-0 flex-1 truncate">{researchText}</span>
               </div>
             </div>
           </div>

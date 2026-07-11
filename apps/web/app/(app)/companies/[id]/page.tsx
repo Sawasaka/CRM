@@ -1,35 +1,17 @@
 import { prisma } from '@bgm/db'
 import CompanyDetailClient from './CompanyDetailClient'
 import { getAbmCompanyDetail, isAbmUuid } from '@/lib/abm-supabase'
-import {
-  buildDemoContacts,
-  buildDemoDeals,
-  buildDemoDeptPhones,
-  buildDemoHireBudgets,
-  isDemoUrlSearch,
-} from '@/lib/demo-company-data'
 
 // SSR：id 形式で分岐
 //  - UUID（companies テーブル / 290万社・v2エンリッチ済）→ ABM Supabase 直読み
 //  - cuid（CompanyMaster / Prisma 管理）→ 従来の Prisma クエリ
 export default async function CompanyDetailPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ id: string }>
   searchParams?: Promise<Record<string, string | string[] | undefined>>
 }) {
   const { id } = await params
-  const sp = await searchParams
-  const demoSearchParams = new URLSearchParams()
-  for (const [key, value] of Object.entries(sp ?? {})) {
-    if (Array.isArray(value)) {
-      for (const item of value) demoSearchParams.append(key, item)
-    } else if (value) {
-      demoSearchParams.set(key, value)
-    }
-  }
-  const isDemoView = isDemoUrlSearch(demoSearchParams)
 
   if (isAbmUuid(id)) {
     const abm = await getAbmCompanyDetail(id).catch(() => null)
@@ -44,7 +26,7 @@ export default async function CompanyDetailPage({
       return (
         <CompanyDetailClient
           id={id}
-          initialData={withDemoCompanyData(withCrm, isDemoView) as never}
+          initialData={withCrm as never}
         />
       )
     }
@@ -105,55 +87,7 @@ export default async function CompanyDetailPage({
     initialData = { ...initialData, deals: linked.deals, contacts: linked.contacts }
   }
 
-  return <CompanyDetailClient id={id} initialData={withDemoCompanyData(initialData, isDemoView)} />
-}
-
-type DemoCompanyData = {
-  id: string
-  name: string
-  offices?: Array<{
-    deptPhones?: Record<string, string> | null
-  }>
-  companyIntents?: Array<{
-    departmentType: string | null
-    intentLevel?: string | null
-    signalCount?: number | null
-  }>
-  hireBudgets?: Array<unknown>
-  deals?: Array<unknown>
-  contacts?: Array<unknown>
-} | null
-
-function withDemoCompanyData<T extends DemoCompanyData>(company: T, isDemoView: boolean): T {
-  if (!company || !isDemoView) return company
-
-  const intents = company.companyIntents ?? []
-  const offices = company.offices?.map((office, index) => ({
-    ...office,
-    deptPhones:
-      office.deptPhones && Object.keys(office.deptPhones).length > 0
-        ? office.deptPhones
-        : index === 0
-          ? buildDemoDeptPhones(company.id, intents)
-          : office.deptPhones,
-  }))
-
-  return {
-    ...company,
-    offices,
-    hireBudgets:
-      company.hireBudgets && company.hireBudgets.length > 0
-        ? company.hireBudgets
-        : buildDemoHireBudgets(company.id, intents),
-    deals:
-      company.deals && company.deals.length > 0
-        ? company.deals
-        : buildDemoDeals(company.id, company.name),
-    contacts:
-      company.contacts && company.contacts.length > 0
-        ? company.contacts
-        : buildDemoContacts(company.id, company.name, intents),
-  }
+  return <CompanyDetailClient id={id} initialData={initialData} />
 }
 
 // 法人番号 → Prisma の Company に紐づく Deal / Contact を取得

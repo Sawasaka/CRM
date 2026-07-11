@@ -14,7 +14,7 @@ export type OurBusiness = {
 }
 
 const DEFAULT_OUR_BUSINESS: OurBusiness = {
-  serviceName: 'ルキスマCRM',
+  serviceName: 'FDE CRM',
   industry: 'B2B SaaS / 営業支援',
   strengths: [
     '日本の株式会社290万社の登記台帳をベースにした網羅性',

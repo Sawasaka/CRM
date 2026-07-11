@@ -1,4 +1,12 @@
-export type AiCallProvider = 'mock' | 'twilio_openai' | 'external'
+export type JsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | JsonValue[]
+  | { [key: string]: JsonValue }
+
+export type AiCallProvider = 'mock' | 'twilio_openai' | 'amazon_connect_openai' | 'external'
 
 export type AiCallStatus =
   | 'queued'
@@ -34,6 +42,7 @@ export type AiCallMetadata = {
   model?: string | null
   costHint?: string | null
   externalCallId?: string | null
+  rawProviderPayload?: JsonValue
   updatedAt: string
 }
 

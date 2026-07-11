@@ -5,9 +5,6 @@ import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Mail,
-  MousePointer,
-  FileDown,
-  Globe,
   Check,
   Copy,
   Plus,
@@ -33,12 +30,7 @@ interface ChannelMetric {
   status: ChannelStatus
 }
 
-const CHANNELS: ChannelMetric[] = [
-  { key: 'open',  label: 'メール開封',    Icon: Mail,         last7Days: 1284, last24h: 187, trend: [120, 165, 142, 198, 211, 174, 187], status: 'healthy' },
-  { key: 'click', label: 'リンククリック', Icon: MousePointer, last7Days: 412,  last24h: 56,  trend: [38, 52, 48, 67, 74, 51, 56],         status: 'healthy' },
-  { key: 'doc',   label: '資料DL',        Icon: FileDown,     last7Days: 87,   last24h: 11,  trend: [8, 14, 9, 16, 18, 13, 11],            status: 'healthy' },
-  { key: 'site',  label: 'サイト訪問',    Icon: Globe,        last7Days: 0,    last24h: 0,   trend: [0, 0, 0, 0, 0, 0, 0],                 status: 'inactive' },
-]
+const CHANNELS: ChannelMetric[] = []
 
 const STATUS_COLOR: Record<ChannelStatus, { fg: string; bg: string; ring: string; label: string }> = {
   healthy:  { fg: '#6ee7a1',                       bg: 'rgba(110,231,161,0.12)', ring: 'rgba(110,231,161,0.32)', label: '正常' },
@@ -56,11 +48,7 @@ interface TrackedUrl {
   lastClickedRelative: string
 }
 
-const INITIAL_TRACKED_URLS: TrackedUrl[] = [
-  { id: 'tu-1', label: '春の新製品LP',         originalUrl: 'https://zooba.io/spring2026',     trackingUrl: 'https://zooba.docview.io/c/abc123', clicks30d: 247,   uniqueUsers30d: 89,  lastClickedRelative: '3時間前' },
-  { id: 'tu-2', label: 'ウェビナー申込フォーム', originalUrl: 'https://zooba.io/webinar/0512',  trackingUrl: 'https://zooba.docview.io/c/def456', clicks30d: 1124,  uniqueUsers30d: 412, lastClickedRelative: '12分前' },
-  { id: 'tu-3', label: '導入事例集ページ',       originalUrl: 'https://zooba.io/cases',          trackingUrl: 'https://zooba.docview.io/c/ghi789', clicks30d: 318,   uniqueUsers30d: 142, lastClickedRelative: '1時間前' },
-]
+const INITIAL_TRACKED_URLS: TrackedUrl[] = []
 
 interface TrackedDomain {
   id: string
@@ -70,10 +58,7 @@ interface TrackedDomain {
 }
 
 // タグが検出されたドメインのみを保持(自動発見)
-const INITIAL_TRACKED_DOMAINS: TrackedDomain[] = [
-  { id: 'td-1', domain: 'zooba.io',      pv7d: 2847, uu7d: 612 },
-  { id: 'td-2', domain: 'blog.zooba.io', pv7d: 421,  uu7d: 198 },
-]
+const INITIAL_TRACKED_DOMAINS: TrackedDomain[] = []
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -431,4 +416,3 @@ export function FirstPartyView() {
     </div>
   )
 }
-

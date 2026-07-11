@@ -56,37 +56,39 @@ interface Plan {
 // 変更時は両方を必ず揃える。
 const PLANS: Plan[] = [
   {
-    id: 'standard',
+    id: 'lite',
     name: 'Standard',
-    tagline: 'まず実運用を始めるための標準プラン',
-    priceMonthly: 41000,
-    priceAnnual: 29000,
-    credits: 10000,
+    tagline: 'CRM単独利用のシートプラン',
+    priceMonthly: 3000,
+    priceAnnual: 3000,
+    credits: 300,
     minSeats: 1,
     additions: [
-      '月10,000クレジット込み (チーム合計)',
+      '1人あたり月300クレジット込み',
+      '企業データ取得枠なし',
       'Gmail / Google Meet / Notion 議事録連携',
       '企業・コンタクト・取引・チケット管理',
       'Slack チャットサポート',
     ],
     icon: Star,
-    popular: true,
   },
   {
-    id: 'pro',
-    name: 'Plus',
-    tagline: 'AI利用量が多いチーム向けの上位プラン',
-    priceMonthly: 78000,
-    priceAnnual: 55000,
+    id: 'standard',
+    name: 'Growth',
+    tagline: '一番売れ筋のCRM単独運用プラン',
+    priceMonthly: 158000,
+    priceAnnual: 98000,
     credits: 30000,
     minSeats: 1,
     baseLabel: 'Standard全機能',
     additions: [
       '月30,000クレジット込み (チーム合計)',
+      '企業データ取得目安 月1,500件',
       '高頻度なAIリサーチ・議事録活用',
-      'Slack チャットサポート',
+      '専属サクセス担当',
     ],
     icon: Zap,
+    popular: true,
   },
 ]
 
@@ -127,7 +129,7 @@ interface NotionIntegrationStatus {
   lastSyncAt: string | null
 }
 
-const MONTHLY_TEAM_CREDIT_LIMIT = 10000
+const MONTHLY_TEAM_CREDIT_LIMIT = 300
 const INTEGRATION_ACTION_CLASS =
   'inline-flex h-9 min-w-[154px] items-center justify-center gap-1.5 whitespace-nowrap rounded-[var(--radius-obs-md)] px-3 text-[12px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60'
 const INTEGRATION_ACTION_STYLE = {
@@ -393,7 +395,7 @@ function SubscriptionPageContent() {
     void refreshIntegrations()
   }, [tab])
 
-  const [currentPlan, setCurrentPlan] = useState('standard')
+  const [currentPlan, setCurrentPlan] = useState('lite')
   const [confirmDialog, setConfirmDialog] = useState<{
     title: string
     message: string
@@ -586,7 +588,7 @@ function SubscriptionPageContent() {
   const subscriptionUsagePct =
     subscriptionTotal > 0 ? (subscriptionRemaining / subscriptionTotal) * 100 : 0
 
-  const CREDIT_UNIT_PRICE = 5 // ¥5 per credit (¥5,000 / 1,000cr)
+  const CREDIT_UNIT_PRICE = 10 // ¥10 per credit (¥10,000 / 1,000cr)
   const CREDIT_STEP = 1000 // 1,000-unit step
 
   const startCreditCheckout = async () => {

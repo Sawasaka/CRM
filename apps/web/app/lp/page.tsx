@@ -1,30 +1,24 @@
 /**
- * ルキスマCRM Landing Page (/lp)
- * AppHub の 'home' ビューとして表示。上部スイッチで図鑑/武器庫へ
- * ページ遷移なしで切り替わる(URLは履歴APIで /media 等に同期)。
+ * FDE CRM Landing Page (/lp)
  */
 
-import AppHub from '@/components/AppHub'
 import { HomeView } from '@/components/landing/HomeView'
-import DragonGuide from '../media/DragonGuide'
-import SalesDragonAcademyGuide from '../media/SalesDragonAcademyGuide'
-import SalesPsychologyGuide from '../media/SalesPsychologyGuide'
+import { Nav } from '@/components/landing/Nav'
 import { publicSiteStructuredData } from '@/lib/public-site'
 
-export default function RukismaCRMLandingPage() {
+export default function FDECRMLandingPage() {
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(publicSiteStructuredData) }}
       />
-      <AppHub
-        initialView="home"
-        home={<HomeView />}
-        dragon={<DragonGuide />}
-        psychology={<SalesPsychologyGuide />}
-        school={<SalesDragonAcademyGuide />}
-      />
+      <div className="relative">
+        <div className="sticky top-0 z-[60] backdrop-blur-xl" style={{ background: 'transparent' }}>
+          <Nav />
+        </div>
+        <HomeView />
+      </div>
     </>
   )
 }

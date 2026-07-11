@@ -1,0 +1,29 @@
+<svg width="960" height="540" viewBox="0 0 960 540" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="960" height="540" rx="36" fill="#080A0D"/>
+  <rect width="960" height="540" rx="36" fill="url(#g)"/>
+  <path d="M88 94H872" stroke="white" stroke-opacity=".16"/>
+  <text x="88" y="74" fill="#8DFFC9" font-family="Arial, sans-serif" font-size="22" font-weight="700" letter-spacing="5">CASE STUDY / PUBLIC DATA</text>
+  <text x="88" y="166" fill="white" font-family="Arial, sans-serif" font-size="52" font-weight="800">Federated</text>
+  <text x="88" y="224" fill="white" font-family="Arial, sans-serif" font-size="52" font-weight="800">Data Platform</text>
+  <text x="88" y="278" fill="#D7D4DD" font-family="Arial, sans-serif" font-size="26" font-weight="700">NHS England × Palantir</text>
+  <g opacity=".92">
+    <rect x="626" y="136" width="232" height="250" rx="24" fill="black" fill-opacity=".25" stroke="white" stroke-opacity=".14"/>
+    <circle cx="684" cy="202" r="28" fill="#8DFFC9" fill-opacity=".16"/>
+    <circle cx="800" cy="202" r="28" fill="#8DFFC9" fill-opacity=".16"/>
+    <circle cx="742" cy="302" r="28" fill="#8DFFC9" fill-opacity=".16"/>
+    <path d="M708 202H776M695 226L731 282M789 226L753 282" stroke="#8DFFC9" stroke-opacity=".72" stroke-width="6" stroke-linecap="round"/>
+  </g>
+  <rect x="88" y="330" width="218" height="74" rx="16" fill="black" fill-opacity=".24" stroke="white" stroke-opacity=".12"/>
+  <text x="112" y="362" fill="#8DFFC9" font-family="Arial, sans-serif" font-size="17" font-weight="800">waiting lists</text>
+  <text x="112" y="388" fill="#D7D4DD" font-family="Arial, sans-serif" font-size="16">operations flow</text>
+  <rect x="324" y="330" width="218" height="74" rx="16" fill="black" fill-opacity=".24" stroke="white" stroke-opacity=".12"/>
+  <text x="348" y="362" fill="#8DFFC9" font-family="Arial, sans-serif" font-size="17" font-weight="800">trust design</text>
+  <text x="348" y="388" fill="#D7D4DD" font-family="Arial, sans-serif" font-size="16">governance matters</text>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="960" y2="540">
+      <stop stop-color="#143329"/>
+      <stop offset=".5" stop-color="#101419"/>
+      <stop offset="1" stop-color="#05060A"/>
+    </linearGradient>
+  </defs>
+</svg>

@@ -1,13 +1,5 @@
-import { DemoOpenClient } from './DemoOpenClient'
+import { redirect } from 'next/navigation'
 
-export const dynamic = 'force-dynamic'
-
-export default async function DemoOpenPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ tenant?: string }>
-}) {
-  const { tenant } = await searchParams
-  const tenantSlug = typeof tenant === 'string' ? tenant.trim().toLowerCase() : ''
-  return <DemoOpenClient tenantSlug={tenantSlug} />
+export default function DemoOpenPage() {
+  redirect('/lp')
 }

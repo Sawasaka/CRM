@@ -72,7 +72,6 @@ function startWebServer(port) {
         ...process.env,
         NEXT_PUBLIC_DEV_MODE: 'true',
         NEXT_PUBLIC_API_URL: `http://localhost:${port}/api`,
-        DEMO_ACCESS_SECRET: process.env.DEMO_ACCESS_SECRET ?? 'smoke-test-secret',
         NODE_ENV: 'development',
       },
       stdio: ['ignore', 'pipe', 'pipe'],
@@ -182,14 +181,7 @@ async function visitRoute(page, baseUrl, route) {
 }
 
 async function checkApis(baseUrl) {
-  const invalidDemo = await fetch(`${baseUrl}/api/demo-access`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ email: 'bad' }),
-  })
-  assert(invalidDemo.status === 400, `invalid demo status was ${invalidDemo.status}`)
-
-  const demo = await fetch(`${baseUrl}/api/demo-access`, {
+  const demoAccess = await fetch(`${baseUrl}/api/demo-access`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({
@@ -198,9 +190,9 @@ async function checkApis(baseUrl) {
       email: 'smoke@example.com',
     }),
   })
-  const demoJson = await demo.json()
-  assert(demo.ok, `demo-access failed: ${demo.status}`)
-  assert(demoJson.ok === true && typeof demoJson.url === 'string', 'demo-access response was invalid')
+  const demoJson = await demoAccess.json()
+  assert(demoAccess.status === 410, `demo-access status was ${demoAccess.status}`)
+  assert(demoJson.ok === false, 'demo-access deprecation response was invalid')
 
   const contact = await fetch(`${baseUrl}/api/contact`, {
     method: 'POST',
@@ -216,7 +208,7 @@ async function checkApis(baseUrl) {
   assert(contact.ok, `contact failed: ${contact.status}`)
   assert(contactJson.ok === true, 'contact response was invalid')
 
-  return demoJson.url
+  return '/lp'
 }
 
 async function main() {
@@ -230,11 +222,11 @@ async function main() {
     await waitForServer(baseUrl)
     browser = await chromium.launch({ headless: true })
 
-    await check('API: demo-access and contact', async () => {
+    await check('API: disabled demo-access and contact', async () => {
       const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } })
-      const demoUrl = await checkApis(baseUrl)
+      const route = await checkApis(baseUrl)
       try {
-        await visitRoute(page, baseUrl, demoUrl)
+        await visitRoute(page, baseUrl, route)
       } finally {
         await page.close()
       }

@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ApproachStatus, CallResult, prisma } from '@bgm/db'
 import { z } from 'zod'
-import { getCurrentAppContext } from '@/lib/demo-master'
+import { getCurrentAppContext } from '@/lib/app-context'
+import { buildInquiryCallScript, getCallScenario } from '@/lib/ai-calls/call-scenario'
 import { createAiCallMetadata } from '@/lib/ai-calls/provider'
+import type { AiCallStatus } from '@/lib/ai-calls/types'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -16,6 +18,7 @@ const startSchema = z.object({
   phone: z.string().optional(),
   purpose: z.string().optional(),
   script: z.string().optional(),
+  scenarioKey: z.string().optional(),
 })
 
 export async function POST(req: NextRequest) {
@@ -79,22 +82,28 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'phone_required', message: '電話番号を指定してください' }, { status: 400 })
   }
 
+  const scenario = body.script ? null : await getCallScenario(context.appOrgId, body.scenarioKey)
   const metadata = await createAiCallMetadata({
     target,
-    purpose: body.purpose,
-    script: body.script,
+    purpose: body.purpose ?? scenario?.name,
+    script: body.script ?? (scenario ? buildInquiryCallScript(scenario) : undefined),
   })
   const activityOrgId = deal?.orgId ?? contact?.orgId ?? context.userOrgId
-  const { approachStatus, resultCode } = mapOutcome(metadata.outcome)
+  const terminal = isTerminalStatus(metadata.status)
+  const mapped = terminal ? mapOutcome(metadata.outcome) : null
 
   if (target.contactId && !context.isDemo) {
     await prisma.contact.updateMany({
       where: { id: target.contactId, orgId: activityOrgId },
       data: {
-        approachStatus,
-        lastCallResult: resultCode,
         callAttempts: { increment: 1 },
         lastCallAt: new Date(),
+        ...(mapped
+          ? {
+              approachStatus: mapped.approachStatus,
+              lastCallResult: mapped.resultCode,
+            }
+          : {}),
         ...(metadata.outcome === 'do_not_call' ? { doNotContact: true } : {}),
       },
     })
@@ -108,9 +117,9 @@ export async function POST(req: NextRequest) {
       companyId: target.companyId,
       userId: context.userId,
       type: 'CALL',
-      title: metadata.status === 'completed' ? 'AIコール完了' : 'AIコール開始エラー',
+      title: titleFromStatus(metadata.status),
       content: metadata.summary,
-      resultCode,
+      resultCode: mapped?.resultCode ?? null,
       metadata,
       occurredAt: new Date(),
     },
@@ -127,8 +136,21 @@ export async function POST(req: NextRequest) {
       nextAction: metadata.nextAction,
       provider: metadata.provider,
       costHint: metadata.costHint,
+      externalCallId: metadata.externalCallId,
     },
   })
+}
+
+function isTerminalStatus(status: AiCallStatus) {
+  return status === 'completed' || status === 'failed' || status === 'no_answer' || status === 'needs_human'
+}
+
+function titleFromStatus(status: AiCallStatus) {
+  if (status === 'completed') return 'AIコール完了'
+  if (status === 'failed') return 'AIコール開始エラー'
+  if (status === 'no_answer') return 'AIコール不通'
+  if (status === 'needs_human') return 'AIコール要確認'
+  return 'AIコール発信開始'
 }
 
 function mapOutcome(outcome: string): { approachStatus: ApproachStatus; resultCode: CallResult } {

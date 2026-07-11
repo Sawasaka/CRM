@@ -28,6 +28,8 @@ import { useChatHistory } from '@/lib/chat-history/use-chat-history'
 //   P = PDM Agent       (mint)   — 開発優先度・要望集計
 type NavItemDef = { href: string; label: string; initial: string; color: string }
 const NAV_ITEMS: NavItemDef[] = [
+  { href: '/call-settings', label: 'コール設定',   initial: 'C', color: '#8fd8ff' },
+  { href: '/call-settings/model-test', label: 'AIモデル試験', initial: 'C', color: '#8fd8ff' },
   { href: '/companies', label: '企業DB',           initial: 'S', color: '#abc7ff' },
   { href: '/pipeline',  label: 'パイプライン',     initial: 'S', color: '#abc7ff' },
   { href: '/contacts',  label: 'コンタクト',       initial: 'S', color: '#abc7ff' },
@@ -35,7 +37,6 @@ const NAV_ITEMS: NavItemDef[] = [
   { href: '/lists',     label: 'ISリスト',         initial: 'S', color: '#abc7ff' },
   { href: '/tasks',     label: 'タスク一覧',       initial: 'S', color: '#abc7ff' },
   { href: '/dashboard', label: 'アクションボード', initial: 'S', color: '#abc7ff' },
-  { href: '/calls',     label: 'AIコール',         initial: 'S', color: '#abc7ff' },
   { href: '/tickets',   label: '問い合わせチケット', initial: 'C', color: '#ff8dcf' },
   { href: '/mail',      label: 'メール配信',       initial: 'M', color: '#ffcf4a' },
   { href: '/priority',  label: '顧客の声',         initial: 'P', color: '#8dffc9' },
@@ -725,39 +726,13 @@ export function Sidebar() {
   const isHomePathname = pathname === '/'
   const isNavActive = (href: string) =>
     href === '/' ? pathname === '/' : pathname.startsWith(href)
-  const isDemoExperience = isDemoRouteState(pathname, searchParams)
-  const buildScopedHref = useCallback(
-    (href: string) => appendRouteContext(href, searchParams),
-    [searchParams],
-  )
+  const buildScopedHref = useCallback((href: string) => href, [])
 
-  useEffect(() => {
-    const context = buildRouteContext(searchParams)
-    if (context) {
-      window.sessionStorage.setItem(DEMO_ROUTE_CONTEXT_KEY, context)
-      return
-    }
-    if (hasAnyRouteContext(searchParams)) {
-      window.sessionStorage.removeItem(DEMO_ROUTE_CONTEXT_KEY)
-      return
-    }
-
-    const savedContext = window.sessionStorage.getItem(DEMO_ROUTE_CONTEXT_KEY)
-    if (!savedContext) return
-    if (!isAppRouteEligibleForDemoRestore(pathname)) return
-
-    router.replace(appendRouteContext(pathname, new URLSearchParams(savedContext)))
-  }, [pathname, router, searchParams])
-
-  // 下部表示は人物名ではなく「今いる環境」を示す: デフォルト / デモ環境
-  const userName = isDemoExperience ? 'デモ環境' : 'デフォルト'
+  // 下部表示は人物名ではなく「今いる環境」を示す。
+  const userName = 'デフォルト'
   const userInitial = userName.slice(0, 1).toUpperCase()
   const buildHomeHref = (next: Record<string, string | null> = {}) => {
     const params = new URLSearchParams()
-    for (const key of ['tenant', 'demo', 'demoSession']) {
-      const value = searchParams.get(key)
-      if (value !== null) params.set(key, value)
-    }
     for (const [key, value] of Object.entries(next)) {
       if (value === null) params.delete(key)
       else params.set(key, value)
@@ -840,10 +815,10 @@ export function Sidebar() {
           <Link
             href={buildHomeHref({ chat: null, focus: null })}
             className="transition-opacity duration-150 hover:opacity-80"
-            aria-label="ルキスマCRM ホーム"
+            aria-label="FDE CRM ホーム"
           >
             <span className="fo-gradient-text font-[family-name:var(--font-display)] text-[16px] font-semibold tracking-[-0.015em]">
-              ルキスマCRM
+              FDE CRM
             </span>
           </Link>
         </div>
@@ -911,68 +886,10 @@ export function Sidebar() {
         <UserMenu
           userName={userName}
           userInitial={userInitial}
-          isDemoExperience={isDemoExperience}
+          isDemoExperience={false}
           buildHref={buildScopedHref}
         />
       </aside>
     </>
   )
-}
-
-function isDemoRouteState(pathname: string, searchParams: URLSearchParams) {
-  const tenant = searchParams.get('tenant') ?? ''
-  return (
-    searchParams.get('demo') !== null ||
-    tenant.startsWith('demo-') ||
-    pathname.startsWith('/demo')
-  )
-}
-
-const DEMO_ROUTE_CONTEXT_KEY = 'bgm.demoRouteContext'
-const ROUTE_CONTEXT_KEYS = ['tenant', 'demo', 'demoSession'] as const
-
-function buildRouteContext(searchParams: Pick<URLSearchParams, 'get'>) {
-  const params = new URLSearchParams()
-  for (const key of ROUTE_CONTEXT_KEYS) {
-    const value = searchParams.get(key)
-    if (value !== null) params.set(key, value)
-  }
-  const tenant = params.get('tenant') ?? ''
-  if (!tenant.startsWith('demo-') && params.get('demo') === null && params.get('demoSession') === null) {
-    return ''
-  }
-  return params.toString()
-}
-
-function hasAnyRouteContext(searchParams: Pick<URLSearchParams, 'get'>) {
-  return ROUTE_CONTEXT_KEYS.some((key) => searchParams.get(key) !== null)
-}
-
-function appendRouteContext(href: string, searchParams: Pick<URLSearchParams, 'get'>) {
-  const context = buildRouteContext(searchParams)
-  if (!context) return href
-
-  const hashIndex = href.indexOf('#')
-  const hash = hashIndex >= 0 ? href.slice(hashIndex) : ''
-  const hrefWithoutHash = hashIndex >= 0 ? href.slice(0, hashIndex) : href
-  const queryIndex = hrefWithoutHash.indexOf('?')
-  const path = queryIndex >= 0 ? hrefWithoutHash.slice(0, queryIndex) : hrefWithoutHash
-  const existingQuery = queryIndex >= 0 ? hrefWithoutHash.slice(queryIndex + 1) : ''
-  const params = new URLSearchParams(existingQuery)
-  const contextParams = new URLSearchParams(context)
-
-  for (const key of ROUTE_CONTEXT_KEYS) {
-    const value = contextParams.get(key)
-    if (value !== null) params.set(key, value)
-  }
-
-  const qs = params.toString()
-  return `${path}${qs ? `?${qs}` : ''}${hash}`
-}
-
-function isAppRouteEligibleForDemoRestore(pathname: string) {
-  if (pathname.startsWith('/admin')) return false
-  if (pathname.startsWith('/settings')) return false
-  if (pathname.startsWith('/subscription')) return false
-  return true
 }

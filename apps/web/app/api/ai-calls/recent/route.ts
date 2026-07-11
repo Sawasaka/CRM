@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@bgm/db'
-import { getCurrentAppContext } from '@/lib/demo-master'
+import { getCurrentAppContext } from '@/lib/app-context'
 import { getAiCallProviderReadiness } from '@/lib/ai-calls/provider'
 import type { AiCallMetadata } from '@/lib/ai-calls/types'
 

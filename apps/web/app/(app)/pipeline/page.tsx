@@ -14,8 +14,6 @@ import {
 } from 'lucide-react'
 import { OBS_HERO_CLASS, OBS_HERO_STYLE, OBS_PRODUCT_SURFACE, ObsPageShell } from '@/components/obsidian'
 import { SignalBadge } from '@/components/crm/SignalBadge'
-import { isDemoUrlSearch } from '@/lib/demo-company-data'
-import { getDemoDealsForApi } from '@/lib/demo-crm-data'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -214,7 +212,6 @@ export default function PipelinePage() {
 
   useEffect(() => {
     let aborted = false
-    const demoView = isDemoUrlSearch(window.location.search)
     const params = new URLSearchParams(window.location.search)
     params.set('take', '100')
     setLoading(true)
@@ -223,11 +220,10 @@ export default function PipelinePage() {
       .then((data: { deals?: ApiDeal[] }) => {
         if (aborted) return
         const apiDeals = data.deals ?? []
-        const sourceDeals = demoView && apiDeals.length === 0 ? getDemoDealsForApi() : apiDeals
-        setDeals(sourceDeals.map(toPipelineDeal))
+        setDeals(apiDeals.map(toPipelineDeal))
       })
       .catch(() => {
-        if (!aborted) setDeals(demoView ? getDemoDealsForApi().map(toPipelineDeal) : [])
+        if (!aborted) setDeals([])
       })
       .finally(() => {
         if (!aborted) setLoading(false)

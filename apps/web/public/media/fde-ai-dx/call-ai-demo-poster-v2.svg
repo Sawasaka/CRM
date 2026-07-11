@@ -1,0 +1,96 @@
+<svg width="1280" height="720" viewBox="0 0 1280 720" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Call AI demo poster</title>
+  <desc id="desc">Call AIの電話受付と日程調整を表すシンプルなデモ画像</desc>
+  <defs>
+    <radialGradient id="blueGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(980 92) rotate(128) scale(700 520)">
+      <stop stop-color="#2E8CFF" stop-opacity="0.54"/>
+      <stop offset="0.48" stop-color="#14213B" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#070A11" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="greenGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(265 520) rotate(-22) scale(420 260)">
+      <stop stop-color="#55F0B0" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#070A11" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="screen" x1="80" y1="72" x2="1185" y2="644" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#172640"/>
+      <stop offset="0.48" stop-color="#0A101B"/>
+      <stop offset="1" stop-color="#10182A"/>
+    </linearGradient>
+    <linearGradient id="accentBlue" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#8BBEFF"/>
+      <stop offset="1" stop-color="#2387FF"/>
+    </linearGradient>
+    <linearGradient id="accentGreen" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#25D78B"/>
+      <stop offset="1" stop-color="#8DFFC9"/>
+    </linearGradient>
+    <filter id="shadow" x="0" y="0" width="1280" height="720" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="28" stdDeviation="34" flood-color="#000000" flood-opacity="0.46"/>
+    </filter>
+  </defs>
+
+  <rect width="1280" height="720" rx="28" fill="#070A11"/>
+  <rect width="1280" height="720" rx="28" fill="url(#blueGlow)"/>
+  <rect width="1280" height="720" rx="28" fill="url(#greenGlow)"/>
+
+  <g filter="url(#shadow)">
+    <rect x="74" y="58" width="1132" height="604" rx="38" fill="url(#screen)" stroke="#26395E" stroke-width="1.5"/>
+    <rect x="102" y="84" width="1076" height="552" rx="30" fill="#080D16" fill-opacity="0.58" stroke="#223554"/>
+
+    <g transform="translate(130 114)">
+      <rect width="154" height="34" rx="17" fill="#0B1828" stroke="#477EC6" stroke-opacity="0.45"/>
+      <circle cx="21" cy="17" r="4" fill="#8DFFC9"/>
+      <text x="35" y="22" fill="#BBD4FF" font-family="Inter, Arial, sans-serif" font-size="13" font-weight="800" letter-spacing="1.5">CALL AI</text>
+    </g>
+
+    <text x="130" y="216" fill="#F5F8FF" font-family="'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', sans-serif" font-size="54" font-weight="800" letter-spacing="-1.3">電話AIが、</text>
+    <text x="130" y="282" fill="#F5F8FF" font-family="'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', sans-serif" font-size="54" font-weight="800" letter-spacing="-1.3">商談日程まで。</text>
+    <text x="132" y="326" fill="#A8B6CC" font-family="'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', sans-serif" font-size="19" font-weight="600">確認電話から日程調整までを、AIでスマートに。</text>
+
+    <g transform="translate(128 382)">
+      <rect width="330" height="168" rx="26" fill="#0B111D" stroke="#29466D" stroke-width="1.2"/>
+      <circle cx="76" cy="76" r="42" fill="url(#accentBlue)"/>
+      <text x="76" y="88" text-anchor="middle" fill="#FFFFFF" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="850">AI</text>
+      <text x="140" y="68" fill="#F4F7FF" font-family="'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', sans-serif" font-size="27" font-weight="800">FDE AI受付</text>
+      <text x="141" y="99" fill="#8DFFC9" font-family="'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', sans-serif" font-size="15" font-weight="800">日程調整中</text>
+      <rect x="44" y="126" width="242" height="28" rx="14" fill="#10213A"/>
+      <rect x="44" y="126" width="176" height="28" rx="14" fill="url(#accentBlue)" opacity="0.9"/>
+    </g>
+
+    <g transform="translate(506 148)">
+      <rect width="610" height="372" rx="30" fill="#070B12" stroke="#263D61" stroke-width="1.4"/>
+      <g transform="translate(34 34)">
+        <rect width="250" height="42" rx="21" fill="#183C6B"/>
+        <text x="25" y="27" fill="#BBD4FF" font-family="Inter, Arial, sans-serif" font-size="13" font-weight="850">AI</text>
+        <text x="66" y="28" fill="#F3F7FF" font-family="'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', sans-serif" font-size="18" font-weight="800">初回確認</text>
+      </g>
+      <g transform="translate(34 102)">
+        <rect width="542" height="48" rx="24" fill="#1A1E29"/>
+        <text x="27" y="31" fill="#D5DAE5" font-family="'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', sans-serif" font-size="17" font-weight="800">顧客</text>
+        <rect x="100" y="17" width="348" height="14" rx="7" fill="#707888" opacity="0.4"/>
+      </g>
+      <g transform="translate(34 176)">
+        <rect width="542" height="48" rx="24" fill="#183C6B"/>
+        <text x="27" y="31" fill="#BBD4FF" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="850">AI</text>
+        <rect x="100" y="17" width="278" height="14" rx="7" fill="#BBD4FF" opacity="0.54"/>
+      </g>
+      <g transform="translate(34 250)">
+        <rect width="542" height="54" rx="27" fill="url(#accentGreen)" fill-opacity="0.2" stroke="#62F2B6" stroke-opacity="0.28"/>
+        <text x="27" y="35" fill="#8DFFC9" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="850">AI</text>
+        <text x="101" y="35" fill="#E9FFF6" font-family="'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', sans-serif" font-size="19" font-weight="850">商談日程を確定</text>
+      </g>
+    </g>
+
+    <g transform="translate(564 574)">
+      <line x1="0" y1="0" x2="478" y2="0" stroke="#294466" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="0" cy="0" r="8" fill="#8DFFC9"/>
+      <circle cx="160" cy="0" r="8" fill="#8CBcff"/>
+      <circle cx="320" cy="0" r="8" fill="#8CBcff"/>
+      <circle cx="478" cy="0" r="8" fill="#8DFFC9"/>
+      <text x="-18" y="33" fill="#8B95A8" font-family="'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', sans-serif" font-size="13">確認</text>
+      <text x="132" y="33" fill="#8B95A8" font-family="'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', sans-serif" font-size="13">課題整理</text>
+      <text x="292" y="33" fill="#8B95A8" font-family="'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', sans-serif" font-size="13">候補提示</text>
+      <text x="453" y="33" fill="#8DFFC9" font-family="'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', sans-serif" font-size="13" font-weight="850">確定</text>
+    </g>
+  </g>
+</svg>

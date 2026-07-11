@@ -1,23 +1,24 @@
 'use client'
 
 /**
- * Hero — ルキスマCRM ライブチャットデモ
+ * Hero — Revenue AI/DX Infrastructure ライブデモ
  * チャット入力 + 5体のサジェストチップで RAG 風の回答を擬似ストリーミング表示。
  */
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
-import { Sparkles, Send, Check, Copy, Paperclip, ChevronDown, Mic, Layers, User, Globe } from 'lucide-react'
+import { Sparkles, Send, Check, Copy } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from 'recharts'
 import { AGENTS, type AgentKey, Eyebrow, Orb, ParticleField, Section } from './atoms'
+import { ConsultationCallButton } from './ConsultationCallModal'
 import { HeroSidebar } from './HeroSidebar'
 import { HeroDemoView, type HeroDemoKey } from './hero-demos'
 
 const PLACEHOLDERS = [
-  'ルキスマCRM について、ここで何でも聞いてください',
-  '料金プランや 5社限定パートナーシップの詳細を知りたい',
-  '導入までの流れ・どんな相談ができるか教えて',
-  '今週アプローチすべき HOT 企業を教えて',
-  '先週の議事録から要望機能を集計して',
+  'FDE AI/DXでは何を支援できますか？',
+  '既存のNotionやGoogle Workspaceは使えますか？',
+  'Call AIはどこまで対応できますか？',
+  '導入は何から始めるのがよいですか？',
+  '料金や進め方を相談できますか？',
 ]
 
 const LP_DEMO_DAILY_CREDIT_LIMIT = 10
@@ -44,18 +45,26 @@ interface Suggestion {
 }
 
 const SUGGESTIONS: Suggestion[] = [
-  { id: 'hot',    label: '今週アプローチすべきHOT企業を教えて',   agent: 'sales' },
-  { id: 'pdm',    label: '先週の議事録から要望機能を集計して',     agent: 'pdm' },
-  { id: 'ticket', label: '未対応チケットを担当者ごとに集計して',   agent: 'support' },
-  { id: 'intent', label: '採用インテントが伸びてる企業 TOP10',      agent: 'marketing' },
-  { id: 'tmpl',   label: 'ベテランの提案テンプレートを教えて',     agent: 'helpdesk' },
+  { id: 'hot', label: 'FDE型のAI/DX支援とは？', agent: 'sales' },
+  { id: 'pdm', label: 'FDE AI/DXの強みは？', agent: 'pdm' },
+  { id: 'ticket', label: '従来のコンサルとの違いは？', agent: 'support' },
+  { id: 'intent', label: '誰が設計・実装しますか？', agent: 'marketing' },
+  { id: 'tmpl', label: 'どこまで伴走してもらえますか？', agent: 'helpdesk' },
 ]
+
+const DEMO_AGENT_LABELS: Record<AgentKey, string> = {
+  sales: 'FDE Model',
+  marketing: 'Delivery Team',
+  support: 'FDE Comparison',
+  pdm: 'FDE Strength',
+  helpdesk: 'Support Scope',
+}
 
 // ---------- Realtime signal badge (Hot / Mid / Low) ----------
 type SignalLevel = 'Hot' | 'Mid' | 'Low'
 const SIGNAL_STYLE: Record<SignalLevel, { bg: string; fg: string; pulse: boolean }> = {
   Hot: { bg: 'rgba(255,107,107,0.15)', fg: '#ff6b6b', pulse: true },
-  Mid: { bg: 'rgba(255,207,74,0.14)',  fg: '#ffcf4a', pulse: false },
+  Mid: { bg: 'rgba(255,207,74,0.14)', fg: '#ffcf4a', pulse: false },
   Low: { bg: 'rgba(155,153,160,0.10)', fg: '#9b99a0', pulse: false },
 }
 const SignalBadge = ({ level }: { level: SignalLevel }) => {
@@ -77,35 +86,95 @@ const SignalBadge = ({ level }: { level: SignalLevel }) => {
 // ---------- Rich content blocks ----------
 const HotCompaniesTable = () => {
   const rows: Array<{
-    c: string; i: string;
-    jobs: string; jobsLv: SignalLevel;
-    dept: string; rev: string; emp: string;
-    sig: string; sigLv: SignalLevel;
+    c: string
+    i: string
+    jobs: string
+    jobsLv: SignalLevel
+    dept: string
+    rev: string
+    emp: string
+    sig: string
+    sigLv: SignalLevel
   }> = [
-    { c: 'アクトラス株式会社',   i: 'SaaS',    jobs: '+12', jobsLv: 'Hot', dept: '営業 / CS',   rev: '¥18.4B', emp: '120名',   sig: '資料DL ×3',    sigLv: 'Hot' },
-    { c: '株式会社メリディアン', i: '製造',    jobs: '+8',  jobsLv: 'Mid', dept: '生産 / 技術', rev: '¥124B',  emp: '850名',   sig: 'IR訪問 ×2',    sigLv: 'Mid' },
-    { c: 'PoltCraft Inc.',       i: 'FinTech', jobs: '+5',  jobsLv: 'Mid', dept: 'プロダクト',  rev: '¥4.2B',  emp: '240名',   sig: 'ウェビナー',   sigLv: 'Mid' },
-    { c: 'セレナーデ商事',       i: '商社',    jobs: '+9',  jobsLv: 'Hot', dept: '営業 / IT',   rev: '¥220B',  emp: '1,200名', sig: '問合せ / DL',  sigLv: 'Hot' },
-    { c: 'ベルガモット工業',     i: '化学',    jobs: '+6',  jobsLv: 'Mid', dept: 'R&D / IT',    rev: '¥58B',   emp: '560名',   sig: '採用滞在',     sigLv: 'Low' },
+    {
+      c: 'FDEヒアリング',
+      i: 'Discovery',
+      jobs: '+12',
+      jobsLv: 'Hot',
+      dept: '営業 / CS',
+      rev: '設計前',
+      emp: '現場確認',
+      sig: '課題整理',
+      sigLv: 'Hot',
+    },
+    {
+      c: 'Notion再設計',
+      i: 'Portal',
+      jobs: '+8',
+      jobsLv: 'Mid',
+      dept: '全社ナレッジ',
+      rev: '設計中',
+      emp: '構造整理',
+      sig: '権限確認',
+      sigLv: 'Mid',
+    },
+    {
+      c: 'Obsidian AI検索',
+      i: 'Knowledge',
+      jobs: '+5',
+      jobsLv: 'Mid',
+      dept: '個人 / チーム',
+      rev: 'PoC',
+      emp: 'メモ統合',
+      sig: '要約',
+      sigLv: 'Mid',
+    },
+    {
+      c: 'Workspace連携',
+      i: 'Workflow',
+      jobs: '+9',
+      jobsLv: 'Hot',
+      dept: '営業 / 管理',
+      rev: '実装中',
+      emp: 'Drive',
+      sig: 'Docs連携',
+      sigLv: 'Hot',
+    },
+    {
+      c: 'Zoom議事録AI',
+      i: 'Meeting',
+      jobs: '+6',
+      jobsLv: 'Mid',
+      dept: '商談 / MTG',
+      rev: '検証中',
+      emp: '録画',
+      sig: 'FAQ化',
+      sigLv: 'Low',
+    },
   ]
   return (
     <div className="mt-3 rounded-xl bg-pitch/80 p-4 fo-glass-rim overflow-x-auto fo-thin-scroll">
       {/* live indicator */}
       <div className="flex items-center justify-between mb-2 min-w-[680px]">
-        <span className="text-[0.62rem] uppercase tracking-[0.14em] text-[#7e7c83]">HOT 企業 TOP5</span>
+        <span className="text-[0.62rem] uppercase tracking-[0.14em] text-[#7e7c83]">
+          AI インフラ設計 TOP5
+        </span>
         <span className="inline-flex items-center gap-1.5 text-[9px] font-mono text-[#8dffc9]">
-          <span className="w-1.5 h-1.5 rounded-full bg-mint animate-pulse" style={{ boxShadow: '0 0 6px #8dffc9' }} />
+          <span
+            className="w-1.5 h-1.5 rounded-full bg-mint animate-pulse"
+            style={{ boxShadow: '0 0 6px #8dffc9' }}
+          />
           LIVE · 60秒前更新
         </span>
       </div>
       <div className="grid grid-cols-[2fr_0.9fr_1.4fr_1.2fr_1fr_0.9fr_1.6fr] gap-x-3 text-[0.62rem] uppercase tracking-[0.14em] text-[#9b99a0] pb-2 min-w-[680px]">
-        <div>会社名</div>
-        <div>業界</div>
-        <div>求人インテント</div>
+        <div>設計テーマ</div>
+        <div>領域</div>
+        <div>優先度</div>
         <div>部門</div>
-        <div className="text-right">売上</div>
-        <div className="text-right">従業員</div>
-        <div>1stパーティ・シグナル</div>
+        <div className="text-right">状態</div>
+        <div className="text-right">対象</div>
+        <div>次アクション</div>
       </div>
       {rows.map((r, i) => (
         <div
@@ -134,11 +203,15 @@ const HotCompaniesTable = () => {
 
 const FeatureRequestsList = () => {
   const items = [
-    { t: 'Salesforce 双方向連携の双方向フィールドマッピング', n: 14, src: 'B2B SaaS / 製造 / 商社' },
-    { t: '議事録の話者分離と発言サマリー要約レベル設定',       n: 11, src: 'BPO / 金融 / SaaS' },
-    { t: 'PDM ダッシュボードの要望機能スコア閾値カスタム',     n: 9,  src: 'ProductOps / PdM' },
-    { t: 'Marketo / HubSpot 双方向シーケンス起動',           n: 8,  src: 'マーケ / セールス' },
-    { t: '監査ログ CSV エクスポート (90日 → 24ヶ月)',        n: 7,  src: 'セキュリティ / 法務' },
+    {
+      t: 'Salesforce 双方向連携の双方向フィールドマッピング',
+      n: 14,
+      src: 'B2B SaaS / 製造 / 商社',
+    },
+    { t: '議事録の話者分離と発言サマリー要約レベル設定', n: 11, src: 'BPO / 金融 / SaaS' },
+    { t: 'PDM ダッシュボードの要望機能スコア閾値カスタム', n: 9, src: 'ProductOps / PdM' },
+    { t: 'Marketo / HubSpot 双方向シーケンス起動', n: 8, src: 'マーケ / セールス' },
+    { t: '監査ログ CSV エクスポート (90日 → 24ヶ月)', n: 7, src: 'セキュリティ / 法務' },
   ]
   return (
     <div className="mt-3 rounded-xl bg-pitch/80 p-4 fo-glass-rim space-y-2.5">
@@ -170,12 +243,14 @@ const TicketChart = () => {
   const tickets = [
     { id: 'T-1042', t: 'ログイン2段階認証が突然要求される', as: '佐藤', age: '3h', sev: 'high' },
     { id: 'T-1041', t: 'CSV出力で文字化け (Shift_JIS要望)', as: '田中', age: '5h', sev: 'med' },
-    { id: 'T-1037', t: 'Webhook 再送が実行されない',         as: '鈴木', age: '8h', sev: 'med' },
+    { id: 'T-1037', t: 'Webhook 再送が実行されない', as: '鈴木', age: '8h', sev: 'med' },
   ]
   return (
     <div className="mt-3 space-y-3 fo-recharts">
       <div className="rounded-xl bg-pitch/80 p-4 fo-glass-rim">
-        <div className="text-[0.68rem] uppercase tracking-[0.14em] text-[#9b99a0] mb-2">担当者別 未対応チケット</div>
+        <div className="text-[0.68rem] uppercase tracking-[0.14em] text-[#9b99a0] mb-2">
+          担当者別 未対応チケット
+        </div>
         <div style={{ width: '100%', height: 140 }}>
           <ResponsiveContainer>
             <BarChart data={data} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
@@ -215,8 +290,15 @@ const TicketChart = () => {
 
 const IntentTopList = () => {
   const items = [
-    'アクトラス株式会社', '株式会社オリオン技研', 'PoltCraft Inc.', 'メリディアン製作所',
-    'ベルガモット工業', 'セレナーデ商事', 'ノクターン物流', 'リフラクトラボ', 'ヴィアスポーラ',
+    'アクトラス株式会社',
+    '株式会社オリオン技研',
+    'PoltCraft Inc.',
+    'メリディアン製作所',
+    'ベルガモット工業',
+    'セレナーデ商事',
+    'ノクターン物流',
+    'リフラクトラボ',
+    'ヴィアスポーラ',
     'サフロン株式会社',
   ]
   const deltas = [42, 31, 28, 24, 22, 19, 17, 14, 12, 10]
@@ -226,7 +308,9 @@ const IntentTopList = () => {
         <div key={i} className="flex items-center gap-3 py-1">
           <div className="font-mono text-xs text-amber w-6">{String(i + 1).padStart(2, '0')}</div>
           <div className="flex-1 text-sm truncate">{c}</div>
-          <span className="text-xs font-mono" style={{ color: '#ffcf4a' }}>↑+{deltas[i]}人</span>
+          <span className="text-xs font-mono" style={{ color: '#ffcf4a' }}>
+            ↑+{deltas[i]}人
+          </span>
         </div>
       ))}
     </div>
@@ -267,7 +351,9 @@ const TemplateBlock = () => {
           {copied ? 'コピー済み' : 'コピー'}
         </button>
       </div>
-      <pre className="font-mono text-[12.5px] leading-relaxed text-[#c7c5c9] whitespace-pre-wrap">{tmpl}</pre>
+      <pre className="font-mono text-[12.5px] leading-relaxed text-[#c7c5c9] whitespace-pre-wrap">
+        {tmpl}
+      </pre>
     </div>
   )
 }
@@ -284,37 +370,37 @@ interface CannedResponse {
 const RESPONSES: Record<'hot' | 'pdm' | 'ticket' | 'intent' | 'tmpl', CannedResponse> = {
   hot: {
     agent: 'sales',
-    text: '今週注目すべき HOT 企業 TOP5 を抽出しました。1stパーティのサイト行動と、求人・公式IRから生成した 4 部門インテントを掛け合わせています。最上位の「アクトラス株式会社」は、本日朝に IR ページ + 価格ページを 12 分閲覧しています。今週中の打診を推奨。',
-    rich: 'hotTable',
+    text: 'FDE（Forward Deployed Engineer）とは、顧客の現場で課題を直接ヒアリングし、その本人が設計・実装・改善まで担当するエンジニアです。従来は「要望を聞く人」と「システムを作る人」が分かれ、認識のずれや手戻りが起こりがちでした。FDE型では、現場を理解した本人が実装まで一気通貫で進めるため、必要な仕組みを速く正確に形にできます。この形式で既存のSaaSや社内ナレッジをつなぎ、会社専用のAI/DXインフラとして実装します。',
+    rich: null,
   },
   pdm: {
     agent: 'pdm',
-    text: '先週の商談・サポート議事録 134 件を解析し、頻出度・重要度でスコアリングしました。Salesforce 双方向連携の要望が突出しています（14社 / 製造・商社・SaaS 横断）。次回ロードマップで優先度 P0 候補です。',
-    rich: 'featureList',
+    text: '最大の強みは、FDE形式でヒアリングした本人が設計・構築・運用改善まで一気通貫で担当することです。営業、マーケティング、CSと開発実装の両方を理解しているため、構想資料だけで終わらず、現場で実際に使われる仕組みまで落とし込めます。',
+    rich: null,
   },
   ticket: {
     agent: 'support',
-    text: '現在 24 件の未対応チケットがあります。佐藤さんに 8 件偏重しており、SLA 違反 1 件（T-1042）を検知しました。担当再配分を推奨します。',
-    rich: 'ticketChart',
+    text: '従来のコンサルティングは、ヒアリングや要件整理を行い、実装は別の担当者や開発会社へ引き継ぐケースが一般的です。FDE型では、現場をヒアリングした本人が設計・実装・改善まで担当するため、認識のずれを抑えながら、提案を実際に使われる仕組みへ素早く落とし込めます。',
+    rich: null,
   },
   intent: {
     agent: 'marketing',
-    text: '求人公開数 × 新規ハイヤー職種から、過去30日で採用インテントが急上昇している企業 TOP10 です。ICP 一致率 80%以上のみフィルタしました。「アクトラス株式会社」は SaaS 営業職 +42人で、上位パイプライン候補です。',
-    rich: 'intentList',
+    text: '課題をヒアリングしたFDE本人が、業務設計からAI・SaaS連携の構築、現場への定着まで一貫して担当します。説明する人と作る人を分けず、判断の背景や現場のニュアンスを保ったまま実装へ進めます。',
+    rich: null,
   },
   tmpl: {
     agent: 'helpdesk',
-    text: 'ベテラン営業 (勝率 TOP 5%) が直近 90日 で利用した提案テンプレートを抽出しました。共通パターン「課題3点 → 提案2案 → KPI明示 → Next Step期限」をベースにしています。下記をベースに、{{company}} などのプレースホルダを置き換えてご利用ください。',
-    rich: 'template',
+    text: '現状のヒアリング、業務フローの整理、AI/DXインフラの設計、実装、既存ツールとの連携、運用ルールづくり、導入後の改善まで伴走します。構想資料を作って終わるのではなく、現場で使われ、改善が回る状態まで支援します。',
+    rich: null,
   },
 }
 
 const RichBlock = ({ kind }: { kind: RichKind }) => {
-  if (kind === 'hotTable')    return <HotCompaniesTable />
+  if (kind === 'hotTable') return <HotCompaniesTable />
   if (kind === 'featureList') return <FeatureRequestsList />
   if (kind === 'ticketChart') return <TicketChart />
-  if (kind === 'intentList')  return <IntentTopList />
-  if (kind === 'template')    return <TemplateBlock />
+  if (kind === 'intentList') return <IntentTopList />
+  if (kind === 'template') return <TemplateBlock />
   return null
 }
 
@@ -352,8 +438,12 @@ const ChatMessage = ({ m, streaming }: { m: ChatMsg; streaming: boolean }) => {
       </div>
       <div className="flex-1 max-w-[88%]">
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-[0.78rem] font-semibold" style={{ color: a.color }}>{a.name}</span>
-          <span className="text-[10px] uppercase tracking-[0.16em] text-[#7e7c83]">RAG demo</span>
+          <span className="text-[0.78rem] font-semibold" style={{ color: a.color }}>
+            {DEMO_AGENT_LABELS[m.agent ?? 'sales']}
+          </span>
+          <span className="text-[10px] uppercase tracking-[0.16em] text-[#7e7c83]">
+            service answer
+          </span>
         </div>
         <div className="rounded-2xl rounded-tl-md px-4 py-3 bg-shimmer/40 fo-glass-rim">
           <div className="text-[0.95rem] leading-relaxed text-[#e7e5ea] whitespace-pre-wrap">
@@ -364,8 +454,10 @@ const ChatMessage = ({ m, streaming }: { m: ChatMsg; streaming: boolean }) => {
           {!streaming && (
             <div className="mt-3 text-[11px] text-[#7e7c83] flex items-center gap-1.5">
               <Sparkles size={12} color="#abc7ff" />
-              これは ルキスマCRM のRAGデモです。実データで試すには{' '}
-              <a href="/login?mode=register&callbackUrl=/dashboard" className="text-aurora hover:underline ml-1">無料アカウント発行 →</a>
+              FDE AI/DXのサービスFAQデモです。個別の構成相談は{' '}
+              <a href="#contact" className="text-aurora hover:underline ml-1">
+                お問い合わせへ →
+              </a>
             </div>
           )}
         </div>
@@ -375,101 +467,24 @@ const ChatMessage = ({ m, streaming }: { m: ChatMsg; streaming: boolean }) => {
 }
 
 // ---------- Hero ----------
-// ---------- Dropdown menu primitives ----------
-const DropdownMenu = ({ children, wide }: { children: React.ReactNode; wide?: boolean }) => (
-  <div
-    className={`absolute bottom-full left-0 mb-2 rounded-xl bg-pitch fo-glass-rim py-1 z-50 ${wide ? 'w-[260px]' : 'w-[200px]'}`}
-    style={{ boxShadow: '0 10px 30px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(171,199,255,0.15)' }}
-    onClick={(e) => e.stopPropagation()}
-  >
-    {children}
-  </div>
-)
-
-const DropdownHeader = ({ children }: { children: React.ReactNode }) => (
-  <div className="px-3 py-1.5 text-[9px] uppercase tracking-[0.14em] text-[#7e7c83] border-b border-white/[0.04] mb-1">
-    {children}
-  </div>
-)
-
-const DropdownItem = ({
-  children,
-  selected,
-  onClick,
-  meta,
-}: { children: React.ReactNode; selected?: boolean; onClick: () => void; meta?: string }) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className="w-full text-left px-3 py-2 text-[12px] flex items-center justify-between gap-3 rounded-md hover:bg-shimmer/40 transition-colors"
-    style={{ color: selected ? '#abc7ff' : '#c7c5c9' }}
-  >
-    <span className="flex flex-col min-w-0">
-      <span className="truncate">{children}</span>
-      {meta && <span className="text-[10px] text-[#7e7c83] mt-0.5">{meta}</span>}
-    </span>
-    {selected && <Check size={12} color="#abc7ff" className="shrink-0" />}
-  </button>
-)
-
-// ---------- Option chips (model / scope / person / external) ----------
-type ModelKey      = 'gemini-3-flash-preview' | 'gpt-5.5'
-type FeatureAgentId = 'sales' | 'marketing' | 'support' | 'helpdesk' | 'pdm'
-
-// サービス側 AssigneeFilter と整合させる: バッジ色 / イニシャル / 表示名
-const FEATURE_AGENTS: { id: FeatureAgentId; name: string; initial: string; color: string }[] = [
-  { id: 'sales',     name: 'Sales Agent',     initial: 'S', color: '#abc7ff' },
-  { id: 'marketing', name: 'Marketing Agent', initial: 'M', color: '#ffcf4a' },
-  { id: 'support',   name: 'Customer Agent',  initial: 'C', color: '#ff8dcf' },
-  { id: 'pdm',       name: 'Product Agent',   initial: 'P', color: '#8dffc9' },
-  { id: 'helpdesk',  name: 'Knowledge Agent', initial: 'K', color: '#c8b9ff' },
-]
-const ALL_FEATURE_AGENT_IDS: FeatureAgentId[] = FEATURE_AGENTS.map((a) => a.id)
-type PersonScope   = 'all' | 'tanaka' | 'suzuki' | 'sato' | 'takahashi' | 'watanabe'
-type ExternalScope = 'off' | 'web'
-
-const MODEL_LABELS: Record<ModelKey, string> = {
-  'gemini-3-flash-preview': 'Gemini 3 Flash Preview',
-  'gpt-5.5':                'GPT-5.5',
-}
-const PERSON_LABELS: Record<PersonScope, string> = {
-  all: '全て',
-  tanaka: '田中 太郎',
-  suzuki: '鈴木 花子',
-  sato: '佐藤 次郎',
-  takahashi: '高橋 美咲',
-  watanabe: '渡辺 健二',
-}
-const PERSON_ROLES: Record<PersonScope, string> = {
-  all: '',
-  tanaka: 'エンタープライズ営業',
-  suzuki: 'マーケ／インサイドセールス',
-  sato: 'カスタマーサポート',
-  takahashi: 'PdM',
-  watanabe: 'ヘルプデスク',
-}
-const EXTERNAL_LABELS: Record<ExternalScope, string> = {
-  off: 'OFF',
-  web: '外部リサーチ',
-}
-const EXTERNAL_SHORT: Record<ExternalScope, string> = {
-  off: 'OFF',
-  web: 'ON',
-}
-const EXTERNAL_DESC: Record<ExternalScope, string> = {
-  off: '内部データのみを参照',
-  web: 'Web検索結果も併用',
-}
 
 export const Hero = () => {
   const [messages, setMessages] = useState<ChatMsg[]>([
-    { id: 'm-init-u', role: 'user', text: '今週アプローチすべきHOT企業を教えて' },
+    { id: 'm-init-u', role: 'user', text: 'FDE型のAI/DX支援とは？' },
     {
       id: 'm-init-a',
       role: 'agent',
       agent: 'sales',
       text: RESPONSES.hot.text,
       rich: RESPONSES.hot.rich,
+    },
+    { id: 'm-init-u-2', role: 'user', text: 'FDE AI/DXの強みは？' },
+    {
+      id: 'm-init-a-2',
+      role: 'agent',
+      agent: 'pdm',
+      text: RESPONSES.pdm.text,
+      rich: RESPONSES.pdm.rich,
     },
   ])
   const [streamingId, setStreamingId] = useState<string | null>(null)
@@ -478,36 +493,14 @@ export const Hero = () => {
   const [phIdx, setPhIdx] = useState(0)
   const [phShow, setPhShow] = useState(true)
   const [demoView, setDemoView] = useState<HeroDemoKey>('chat')
-  const [model, setModel] = useState<ModelKey>('gemini-3-flash-preview')
-  const [featureAgents, setFeatureAgents] = useState<Set<FeatureAgentId>>(
-    () => new Set(ALL_FEATURE_AGENT_IDS),
-  )
-  const allFeaturesOn = featureAgents.size === ALL_FEATURE_AGENT_IDS.length
-  const featureChipLabel = allFeaturesOn ? '全て' : `${featureAgents.size}/${ALL_FEATURE_AGENT_IDS.length}`
-  const [personScope, setPersonScope] = useState<PersonScope>('all')
-  const [externalScope, setExternalScope] = useState<ExternalScope>('web')
-  const [openMenu, setOpenMenu] = useState<'model' | 'feature' | 'person' | 'external' | null>(null)
   const [demoUsage, setDemoUsage] = useState<DemoUsage>(() => ({
     dateKey: getJstDateKey(),
     credits: 0,
   }))
   const threadRef = useRef<HTMLDivElement | null>(null)
   const inputRef = useRef<HTMLInputElement | null>(null)
-  const menuRootRef = useRef<HTMLDivElement | null>(null)
   const demoCreditsUsed = demoUsage.dateKey === getJstDateKey() ? demoUsage.credits : 0
   const demoLimitReached = demoCreditsUsed >= LP_DEMO_DAILY_CREDIT_LIMIT
-
-  // Close dropdowns on outside click
-  useEffect(() => {
-    if (!openMenu) return
-    const onDocClick = (e: MouseEvent) => {
-      if (menuRootRef.current && !menuRootRef.current.contains(e.target as Node)) {
-        setOpenMenu(null)
-      }
-    }
-    document.addEventListener('mousedown', onDocClick)
-    return () => document.removeEventListener('mousedown', onDocClick)
-  }, [openMenu])
 
   // Rotate placeholder
   useEffect(() => {
@@ -536,10 +529,10 @@ export const Hero = () => {
 
   // Autoscroll
   useEffect(() => {
-    if (threadRef.current) {
+    if (threadRef.current && streamingId) {
       threadRef.current.scrollTo({ top: threadRef.current.scrollHeight, behavior: 'smooth' })
     }
-  })
+  }, [messages, streamingId])
 
   const consumeDemoCredit = useCallback(() => {
     const dateKey = getJstDateKey()
@@ -557,20 +550,7 @@ export const Hero = () => {
 
   const streamResponse = useCallback((agent: AgentKey, baseText: string, rich: RichKind) => {
     const id = 'a' + Date.now()
-    const personPrefix = personScope !== 'all'
-      ? `${PERSON_LABELS[personScope]}さん（${PERSON_ROLES[personScope]}）の担当データから抽出しました。\n\n`
-      : ''
-    const externalPrefix = externalScope === 'web'
-      ? '※ 外部リサーチ（Web検索）の最新情報も反映しています。\n\n'
-      : ''
-    const featureScopeLabel = allFeaturesOn
-      ? '全て'
-      : FEATURE_AGENTS.filter((a) => featureAgents.has(a.id)).map((a) => a.name).join('・') || 'なし'
-    const scopeNote = allFeaturesOn && personScope === 'all' && externalScope === 'off'
-      ? ''
-      : `\n\n（参照スコープ：機能=${featureScopeLabel} ／ 人=${PERSON_LABELS[personScope]} ／ 外部=${EXTERNAL_LABELS[externalScope]}）`
-    const modelNote = `\n— Powered by ${MODEL_LABELS[model]}`
-    const text = personPrefix + externalPrefix + baseText + scopeNote + modelNote
+    const text = baseText
     setMessages((ms) => [...ms, { id, role: 'agent', agent, text: '', rich }])
     setStreamingId(id)
     setActiveAgent(agent)
@@ -588,7 +568,7 @@ export const Hero = () => {
     }
     timer = setTimeout(step, 220)
     return () => clearTimeout(timer)
-  }, [model, featureAgents, personScope, externalScope, allFeaturesOn])
+  }, [])
 
   const sendChip = useCallback(
     (sug: Suggestion) => {
@@ -615,8 +595,8 @@ export const Hero = () => {
         streamResponse(r.agent, r.text, r.rich)
       } else {
         const fallback =
-          'こちらは静的デモ環境のため、自由入力には実データで回答できません。実際にあなたの組織のデータで試すには、リリース後にアカウントを発行いただけるよう先行予約をお願いします → 先行予約に登録'
-        streamResponse('sales', `Sales Agent: ${fallback}`, null)
+          'このデモはFDE AI/DXのサービスFAQとして動作しています。営業・マーケティングのAI/DXインフラ設計、既存SaaS連携、CRM、社内ナレッジ、Call AI、商談アシストなどについて確認できます。'
+        streamResponse('sales', fallback, null)
       }
     }, 350)
   }, [consumeDemoCredit, demoLimitReached, input, streamingId, streamResponse])
@@ -629,14 +609,14 @@ export const Hero = () => {
   }
 
   const orbs: Array<{ agent: AgentKey; pos: string; size: number }> = [
-    { agent: 'sales',     pos: 'top-[8%] left-[6%] hidden md:block',      size: 38 },
-    { agent: 'marketing', pos: 'top-[14%] right-[7%] hidden md:block',    size: 44 },
-    { agent: 'pdm',       pos: 'bottom-[18%] left-[4%] hidden md:block',  size: 36 },
-    { agent: 'support',   pos: 'bottom-[10%] right-[6%] hidden md:block', size: 42 },
-    { agent: 'helpdesk',  pos: 'top-[48%] left-[2%] hidden lg:block',     size: 32 },
+    { agent: 'sales', pos: 'top-[8%] left-[6%] hidden md:block', size: 38 },
+    { agent: 'marketing', pos: 'top-[14%] right-[7%] hidden md:block', size: 44 },
+    { agent: 'pdm', pos: 'bottom-[18%] left-[4%] hidden md:block', size: 36 },
+    { agent: 'support', pos: 'bottom-[10%] right-[6%] hidden md:block', size: 42 },
+    { agent: 'helpdesk', pos: 'top-[48%] left-[2%] hidden lg:block', size: 32 },
   ]
 
-  const heroWords = ['CRMも', '部署番号も、', '無償。']
+  const heroWords = ['現場とAIでつくる、売上インフラ。']
   const heroLine2: string[] = []
 
   return (
@@ -644,20 +624,35 @@ export const Hero = () => {
       <ParticleField count={48} seed={11} />
 
       {orbs.map((o, i) => (
-        <div key={i} className={`absolute ${o.pos} fo-orb-drift`} style={{ animationDelay: `-${i * 1.4}s` }}>
-          <Orb color={AGENTS[o.agent].color} size={o.size} active={activeAgent === o.agent} glow={1.4} />
+        <div
+          key={i}
+          className={`absolute ${o.pos} fo-orb-drift`}
+          style={{ animationDelay: `-${i * 1.4}s` }}
+        >
+          <Orb
+            color={AGENTS[o.agent].color}
+            size={o.size}
+            active={activeAgent === o.agent}
+            glow={1.4}
+          />
         </div>
       ))}
 
       <div className="relative mx-auto max-w-6xl px-6 pt-10 md:pt-16 pb-24 md:pb-32 min-h-[calc(100vh-72px)] flex flex-col justify-center">
         <div className="text-center">
           <div className="flex justify-center mb-6">
-            <Eyebrow color="#abc7ff">次世代型チャットCRM ／ 株式会社ルーキースマートジャパン</Eyebrow>
+            <Eyebrow color="#abc7ff">
+              FDE Architect ／ 株式会社ルーキースマートジャパン
+            </Eyebrow>
           </div>
-          <h1 className="font-display font-bold tracking-[-0.025em] text-[2.1rem] sm:text-[2.9rem] md:text-[3.8rem] leading-[1.08]">
+          <h1 className="font-display font-bold tracking-[-0.02em] text-[2.05rem] sm:text-[2.75rem] md:text-[3.45rem] leading-[1.08]">
             <span className="block sm:whitespace-nowrap">
               {heroWords.map((w, i) => (
-                <span key={i} className="fo-word-in inline-block fo-gradient-text" style={{ animationDelay: `${i * 80}ms` }}>
+                <span
+                  key={i}
+                  className="fo-word-in inline-block fo-gradient-text"
+                  style={{ animationDelay: `${i * 80}ms` }}
+                >
                   {w}
                 </span>
               ))}
@@ -676,36 +671,52 @@ export const Hero = () => {
               </span>
             )}
           </h1>
-          <p className="mt-6 text-[#c7c5c9] max-w-2xl mx-auto text-[1.05rem] leading-relaxed fo-word-in" style={{ animationDelay: '650ms' }}>
-            営業実行とCRM構築を同時に。
+          <p
+            className="mt-5 text-[#c7c5c9] max-w-xl mx-auto text-[0.98rem] leading-relaxed fo-word-in"
+            style={{ animationDelay: '650ms' }}
+          >
+            現場を理解したFDEが、AIとITでレベニューインフラを設計します。
           </p>
 
-          {/* Top trust strip — 数値プルーフ */}
-          <div className="mt-8 flex flex-wrap justify-center items-center gap-x-6 sm:gap-x-10 gap-y-3 fo-word-in" style={{ animationDelay: '780ms' }}>
+          {/* Top trust strip — コンセプト訴求 */}
+          <div
+            className="mt-8 flex flex-wrap justify-center items-center gap-x-6 sm:gap-x-10 gap-y-3 fo-word-in"
+            style={{ animationDelay: '780ms' }}
+          >
             <div className="flex items-baseline gap-2">
-              <span className="font-display font-bold fo-gradient-text text-[1.5rem] sm:text-[1.8rem] leading-none">290万</span>
-              <span className="text-[10px] uppercase tracking-[0.14em] text-[#9b99a0]">社 企業DB</span>
+              <span className="font-display font-bold fo-gradient-text text-[1.25rem] sm:text-[1.5rem] leading-none">
+                FDE型開発
+              </span>
+              <span className="text-[10px] uppercase tracking-[0.14em] text-[#9b99a0]">
+                現場を聞き、そのまま開発
+              </span>
             </div>
             <span className="hidden sm:inline-block h-6 w-px bg-white/[0.08]" />
             <div className="flex items-baseline gap-2">
-              <span className="font-display font-bold fo-gradient-text text-[1.5rem] sm:text-[1.8rem] leading-none">180万</span>
-              <span className="text-[10px] uppercase tracking-[0.14em] text-[#9b99a0]">件 部署直通番号</span>
+              <span className="font-display font-bold fo-gradient-text text-[1.25rem] sm:text-[1.5rem] leading-none">
+                ITツール選定
+              </span>
+              <span className="text-[10px] uppercase tracking-[0.14em] text-[#9b99a0]">
+                最適なSaaSを選び、構築
+              </span>
             </div>
             <span className="hidden sm:inline-block h-6 w-px bg-white/[0.08]" />
             <div className="flex items-baseline gap-2">
-              <span className="font-display font-bold fo-gradient-text text-[1.5rem] sm:text-[1.8rem] leading-none">25</span>
-              <span className="text-[10px] uppercase tracking-[0.14em] text-[#9b99a0]">部門 求人インテント</span>
-            </div>
-            <span className="hidden sm:inline-block h-6 w-px bg-white/[0.08]" />
-            <div className="flex items-baseline gap-2">
-              <span className="font-display font-bold fo-gradient-text text-[1.1rem] sm:text-[1.3rem] leading-none">採用予算</span>
-              <span className="text-[10px] uppercase tracking-[0.14em] text-[#9b99a0]">部門別に可視化</span>
+              <span className="font-display font-bold fo-gradient-text text-[1.25rem] sm:text-[1.5rem] leading-none">
+                AI実装
+              </span>
+              <span className="text-[10px] uppercase tracking-[0.14em] text-[#9b99a0]">
+                業務に組み込み、運用まで
+              </span>
             </div>
           </div>
         </div>
 
         {/* Chat panel */}
-        <div className="relative mt-10 md:mt-14 fo-word-in" style={{ animationDelay: '900ms' } as CSSProperties}>
+        <div
+          className="relative mt-10 md:mt-14 fo-word-in"
+          style={{ animationDelay: '900ms' } as CSSProperties}
+        >
           <div
             className="absolute -inset-2 md:-inset-6 rounded-[2.2rem] fo-halo pointer-events-none"
             style={{
@@ -713,315 +724,144 @@ export const Hero = () => {
               filter: 'blur(40px)',
             }}
           />
-          <div className="relative rounded-[1.2rem] md:rounded-[1.8rem] fo-glass-strong fo-glass-rim overflow-hidden md:fo-tilt-1400" style={{ transformStyle: 'preserve-3d' }}>
+          <div
+            className="relative rounded-[1.2rem] md:rounded-[1.8rem] fo-glass-strong fo-glass-rim overflow-hidden md:fo-tilt-1400"
+            style={{ transformStyle: 'preserve-3d' }}
+          >
             <div className="flex">
               <HeroSidebar active={demoView} onSelect={setDemoView} />
-              <div className="flex-1 min-w-0 flex flex-col min-h-[480px] md:min-h-[540px]">
+              <div className="flex-1 min-w-0 flex flex-col min-h-[430px] md:min-h-[500px]">
                 {demoView !== 'chat' && <HeroDemoView kind={demoView} />}
-                {demoView === 'chat' && (<>
-            {/* Top bar */}
-            <div className="px-3 md:px-7 pt-4 md:pt-5 pb-3 flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 md:gap-2.5 min-w-0">
-                <div className="flex -space-x-1.5 shrink-0">
-                  {(Object.keys(AGENTS) as AgentKey[]).map((k) => (
-                    <span key={k} className="rounded-full" style={{ padding: 1, background: '#1b1b1d' }}>
-                      <Orb color={AGENTS[k].color} size={14} active={activeAgent === k} />
-                    </span>
-                  ))}
-                </div>
-                <span className="text-xs md:text-sm text-[#c7c5c9] truncate">
-                  ルキスマCRM <span className="text-[#7e7c83] hidden sm:inline">／ Live RAG demo</span>
-                </span>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <span
-                  className="rounded-full px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] font-mono"
-                  style={{ background: 'rgba(141,255,201,0.10)', color: '#8dffc9' }}
-                >
-                  ● online
-                </span>
-                <span className="text-xs text-[#7e7c83] font-mono hidden sm:block">tnt_demo · region:apne1</span>
-              </div>
-            </div>
-
-            {/* Thread */}
-            <div
-              ref={threadRef}
-              className="px-3 md:px-7 py-4 space-y-5 overflow-y-auto fo-thin-scroll"
-              style={{ minHeight: 280, maxHeight: 480 }}
-            >
-              {messages.map((m) => (
-                <ChatMessage key={m.id} m={m} streaming={m.id === streamingId} />
-              ))}
-            </div>
-
-            {/* Input */}
-            <div className="px-3 md:px-7 pb-4 md:pb-5 pt-2">
-              <div className="relative">
-                <div
-                  className="absolute -inset-2 rounded-2xl pointer-events-none"
-                  style={{
-                    background: 'linear-gradient(90deg, rgba(171,199,255,0.18), rgba(0,113,227,0.18))',
-                    filter: 'blur(18px)',
-                  }}
-                />
-                <div
-                  className="relative rounded-2xl bg-pitch px-3 md:px-5 pt-3 md:pt-4 pb-3"
-                  style={{ boxShadow: 'inset 0 0 0 1px rgba(65,71,83,0.18)' }}
-                  onClick={() => inputRef.current?.focus()}
-                >
-                  {/* Row 1: input */}
-                  <div className="flex items-center gap-3 mb-3">
-                    <Sparkles size={18} color="#abc7ff" className="shrink-0" />
-                    <div className="flex-1 relative min-w-0 overflow-hidden">
-                      <input
-                        ref={inputRef}
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        onKeyDown={onKeyDown}
-                        className="w-full bg-transparent outline-none text-[1rem] md:text-[1.05rem] text-[#e7e5ea]"
-                        style={{ caretColor: '#abc7ff' }}
-                        readOnly={demoLimitReached}
-                        aria-label="ask ルキスマCRM"
-                      />
-                      {!input && (
-                        <div className="absolute inset-y-0 left-0 right-0 flex items-center pointer-events-none overflow-hidden">
-                          <span className="fo-cursor-blink shrink-0" />
-                          <span
-                            className={`ml-2 text-[#7e7c83] text-[1rem] md:text-[1.05rem] transition-all duration-[600ms] whitespace-nowrap overflow-hidden text-ellipsis min-w-0 ${phShow ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-1'}`}
-                          >
-                            {demoLimitReached ? '本日のデモ質問上限に達しました' : PLACEHOLDERS[phIdx]}
-                          </span>
+                {demoView === 'chat' && (
+                  <>
+                    {/* Top bar */}
+                    <div className="px-3 md:px-7 pt-3 md:pt-4 pb-2 flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 md:gap-2.5 min-w-0">
+                        <div className="flex -space-x-1.5 shrink-0">
+                          {(Object.keys(AGENTS) as AgentKey[]).map((k) => (
+                            <span
+                              key={k}
+                              className="rounded-full"
+                              style={{ padding: 1, background: '#1b1b1d' }}
+                            >
+                              <Orb color={AGENTS[k].color} size={14} active={activeAgent === k} />
+                            </span>
+                          ))}
                         </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Row 2: option chips + actions */}
-                  <div ref={menuRootRef} className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                    <div className="flex items-center gap-1.5 flex-wrap min-w-0">
-                      <button
-                        type="button"
-                        className="w-8 h-8 rounded-full inline-flex items-center justify-center text-[#9b99a0] hover:bg-shimmer/40 transition-colors shrink-0"
-                        onClick={(e) => e.stopPropagation()}
-                        aria-label="添付"
-                      >
-                        <Paperclip size={14} />
-                      </button>
-
-                      {/* Model dropdown */}
-                      <div className="relative">
-                        <button
-                          type="button"
-                          className={`h-8 px-2.5 rounded-full inline-flex items-center gap-1.5 text-[11.5px] text-[#c7c5c9] transition-colors whitespace-nowrap ${openMenu === 'model' ? 'bg-shimmer/70' : 'bg-shimmer/40 hover:bg-shimmer/60'}`}
-                          onClick={(e) => { e.stopPropagation(); setOpenMenu(openMenu === 'model' ? null : 'model') }}
-                        >
-                          <Sparkles size={11} color="#abc7ff" />
-                          <span className="hidden sm:inline">{MODEL_LABELS[model]}</span>
-                          <span className="sm:hidden">{model === 'gemini-3-flash-preview' ? 'Gemini 3' : 'GPT-5.5'}</span>
-                          <ChevronDown size={11} color="#7e7c83" />
-                        </button>
-                        {openMenu === 'model' && (
-                          <DropdownMenu>
-                            <DropdownHeader>モデル選択</DropdownHeader>
-                            {(Object.keys(MODEL_LABELS) as ModelKey[]).map((k) => (
-                              <DropdownItem
-                                key={k}
-                                selected={model === k}
-                                onClick={() => { setModel(k); setOpenMenu(null) }}
-                              >
-                                {MODEL_LABELS[k]}
-                              </DropdownItem>
-                            ))}
-                          </DropdownMenu>
-                        )}
+                        <span className="text-xs md:text-sm text-[#c7c5c9] truncate">
+                          Revenue CRM{' '}
+                          <span className="text-[#7e7c83] hidden sm:inline">／ AI workspace</span>
+                        </span>
                       </div>
-
-                      {/* Feature scope dropdown — サービス側 AssigneeFilter と同UI(エージェント別マルチセレクト) */}
-                      <div className="relative">
-                        <button
-                          type="button"
-                          className={`h-8 px-2.5 rounded-full inline-flex items-center gap-1.5 text-[11.5px] text-[#c7c5c9] transition-colors ${openMenu === 'feature' ? 'bg-shimmer/70' : 'bg-shimmer/40 hover:bg-shimmer/60'}`}
-                          onClick={(e) => { e.stopPropagation(); setOpenMenu(openMenu === 'feature' ? null : 'feature') }}
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span
+                          className="rounded-full px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] font-mono"
+                          style={{ background: 'rgba(141,255,201,0.10)', color: '#8dffc9' }}
                         >
-                          <Layers size={11} color="#abc7ff" />
-                          機能 <span className="text-[#7e7c83]">{featureChipLabel}</span>
-                          <ChevronDown size={11} color="#7e7c83" />
-                        </button>
-                        {openMenu === 'feature' && (
-                          <DropdownMenu wide>
-                            <div className="flex items-center justify-between px-3 pt-2 pb-1">
-                              <span className="text-[10px] font-semibold tracking-[0.06em] uppercase text-[#9b99a0]">
-                                機能
-                                <span className="ml-1.5 tabular-nums opacity-70">
-                                  {featureAgents.size}/{ALL_FEATURE_AGENT_IDS.length}
-                                </span>
-                              </span>
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  setFeatureAgents(
-                                    allFeaturesOn ? new Set() : new Set(ALL_FEATURE_AGENT_IDS),
-                                  )
-                                }}
-                                className="text-[10.5px] font-semibold px-1.5 py-0.5 rounded-[4px] transition-colors"
-                                style={{
-                                  color: allFeaturesOn ? '#abc7ff' : '#9b99a0',
-                                  backgroundColor: allFeaturesOn ? 'rgba(171,199,255,0.12)' : 'transparent',
-                                }}
-                              >
-                                {allFeaturesOn ? '全てON' : '全て選択'}
-                              </button>
-                            </div>
-                            {FEATURE_AGENTS.map((a) => {
-                              const checked = featureAgents.has(a.id)
-                              return (
-                                <button
-                                  key={a.id}
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    setFeatureAgents((prev) => {
-                                      const next = new Set(prev)
-                                      if (next.has(a.id)) next.delete(a.id)
-                                      else next.add(a.id)
-                                      return next
-                                    })
-                                  }}
-                                  className="w-full flex items-center gap-2.5 px-3 py-1.5 transition-colors hover:bg-shimmer/40 text-left"
-                                >
-                                  {/* Orb スタイルのドット — クリックで光が消える */}
-                                  <span
-                                    className="inline-flex items-center justify-center w-[20px] h-[20px] shrink-0"
-                                    aria-hidden
-                                  >
-                                    <span
-                                      className="inline-block rounded-full transition-all duration-200"
-                                      style={{
-                                        width: 11,
-                                        height: 11,
-                                        background: checked
-                                          ? `radial-gradient(circle at 30% 30%, #ffffff 0%, ${a.color} 35%, ${a.color}80 80%)`
-                                          : `radial-gradient(circle at 30% 30%, #2a2a2e 0%, #1a1a1c 60%, ${a.color}30 100%)`,
-                                        boxShadow: checked
-                                          ? `0 0 8px ${a.color}aa, 0 0 20px ${a.color}55`
-                                          : `inset 0 0 0 1px ${a.color}40`,
-                                      }}
-                                    />
-                                  </span>
-                                  <span
-                                    className="text-[12.5px] transition-colors duration-200"
-                                    style={{ color: checked ? '#e7e5ea' : '#7e7c83' }}
-                                  >
-                                    {a.name}
-                                  </span>
-                                </button>
-                              )
-                            })}
-                          </DropdownMenu>
-                        )}
-                      </div>
-
-                      {/* Person scope dropdown */}
-                      <div className="relative">
-                        <button
-                          type="button"
-                          className={`h-8 px-2.5 rounded-full inline-flex items-center gap-1.5 text-[11.5px] text-[#c7c5c9] transition-colors ${openMenu === 'person' ? 'bg-shimmer/70' : 'bg-shimmer/40 hover:bg-shimmer/60'}`}
-                          onClick={(e) => { e.stopPropagation(); setOpenMenu(openMenu === 'person' ? null : 'person') }}
-                        >
-                          <User size={11} color="#abc7ff" />
-                          人 <span className="text-[#7e7c83]">{PERSON_LABELS[personScope]}</span>
-                          <ChevronDown size={11} color="#7e7c83" />
-                        </button>
-                        {openMenu === 'person' && (
-                          <DropdownMenu wide>
-                            <DropdownHeader>参照する人</DropdownHeader>
-                            {(Object.keys(PERSON_LABELS) as PersonScope[]).map((k) => (
-                              <DropdownItem
-                                key={k}
-                                selected={personScope === k}
-                                onClick={() => { setPersonScope(k); setOpenMenu(null) }}
-                                meta={PERSON_ROLES[k]}
-                              >
-                                {PERSON_LABELS[k]}
-                              </DropdownItem>
-                            ))}
-                          </DropdownMenu>
-                        )}
-                      </div>
-
-                      {/* External data toggle */}
-                      <div className="relative">
-                        <button
-                          type="button"
-                          className={`h-8 px-2.5 rounded-full inline-flex items-center gap-1.5 text-[11.5px] text-[#c7c5c9] transition-colors ${openMenu === 'external' ? 'bg-shimmer/70' : 'bg-shimmer/40 hover:bg-shimmer/60'}`}
-                          onClick={(e) => { e.stopPropagation(); setOpenMenu(openMenu === 'external' ? null : 'external') }}
-                        >
-                          <Globe size={11} color={externalScope === 'off' ? '#7e7c83' : '#abc7ff'} />
-                          外部 <span className={externalScope === 'off' ? 'text-[#7e7c83]' : 'text-aurora'}>{EXTERNAL_SHORT[externalScope]}</span>
-                          <ChevronDown size={11} color="#7e7c83" />
-                        </button>
-                        {openMenu === 'external' && (
-                          <DropdownMenu wide>
-                            <DropdownHeader>外部データ連携</DropdownHeader>
-                            {(Object.keys(EXTERNAL_LABELS) as ExternalScope[]).map((k) => (
-                              <DropdownItem
-                                key={k}
-                                selected={externalScope === k}
-                                onClick={() => { setExternalScope(k); setOpenMenu(null) }}
-                                meta={EXTERNAL_DESC[k]}
-                              >
-                                {EXTERNAL_LABELS[k]}
-                              </DropdownItem>
-                            ))}
-                          </DropdownMenu>
-                        )}
+                          ● online
+                        </span>
+                        <span className="text-xs text-[#7e7c83] font-mono hidden sm:block">
+                          crm_workspace · static demo
+                        </span>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1.5 w-full md:w-auto md:shrink-0">
-                      <button
-                        type="button"
-                        className="w-8 h-8 shrink-0 rounded-full inline-flex items-center justify-center text-[#9b99a0] hover:bg-shimmer/40 transition-colors"
-                        onClick={(e) => e.stopPropagation()}
-                        aria-label="音声入力"
-                      >
-                        <Mic size={14} />
-                      </button>
-                      <button
-                        onClick={sendInput}
-                        disabled={!input.trim() || !!streamingId || demoLimitReached}
-                        className="flex-1 justify-center md:flex-none md:justify-start rounded-lg px-3.5 h-9 inline-flex items-center gap-1.5 text-[12.5px] font-medium disabled:opacity-40 whitespace-nowrap"
-                        style={{ background: 'linear-gradient(135deg, #abc7ff, #0071e3)', color: '#0a0a0c' }}
-                      >
-                        送信 <Send size={13} color="#0a0a0c" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Suggested chips */}
-              <div className="mt-4 flex flex-wrap justify-center gap-2">
-                {SUGGESTIONS.map((s) => {
-                  const a = AGENTS[s.agent]
-                  return (
-                    <button
-                      key={s.id}
-                      onClick={() => sendChip(s)}
-                      disabled={!!streamingId || demoLimitReached}
-                      className="group inline-flex items-center gap-2 rounded-full pl-2 pr-3 py-1.5 text-xs bg-dusk hover:bg-shimmer transition-colors disabled:opacity-40 fo-chip-shimmer"
+                    {/* Thread */}
+                    <div
+                      ref={threadRef}
+                      className="flex-1 px-3 md:px-7 py-3 space-y-4 overflow-y-auto fo-thin-scroll"
+                      style={{ minHeight: 300, maxHeight: 410 }}
                     >
-                      <Orb color={a.color} size={10} />
-                      <span className="text-[#e7e5ea]">{s.label}</span>
-                      <span className="text-[#7e7c83] hidden sm:inline">→ {a.name}</span>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-                </>)}
+                      {messages.map((m) => (
+                        <ChatMessage key={m.id} m={m} streaming={m.id === streamingId} />
+                      ))}
+                    </div>
+
+                    {/* Input */}
+                    <div className="mt-auto px-3 md:px-7 pb-4 md:pb-5 pt-5 md:pt-7">
+                      <div className="relative">
+                        <div
+                          className="absolute -inset-2 rounded-2xl pointer-events-none"
+                          style={{
+                            background:
+                              'linear-gradient(90deg, rgba(171,199,255,0.18), rgba(0,113,227,0.18))',
+                            filter: 'blur(18px)',
+                          }}
+                        />
+                        <div
+                          className="relative rounded-2xl bg-pitch px-3 md:px-5 pt-3 pb-3"
+                          style={{ boxShadow: 'inset 0 0 0 1px rgba(65,71,83,0.18)' }}
+                          onClick={() => inputRef.current?.focus()}
+                        >
+                          {/* Row 1: input */}
+                          <div className="flex items-center gap-3 mb-3">
+                            <Sparkles size={18} color="#abc7ff" className="shrink-0" />
+                            <div className="flex-1 relative min-w-0 overflow-hidden">
+                              <input
+                                ref={inputRef}
+                                value={input}
+                                onChange={(e) => setInput(e.target.value)}
+                                onKeyDown={onKeyDown}
+                                className="w-full bg-transparent outline-none text-[1rem] md:text-[1.05rem] text-[#e7e5ea]"
+                                style={{ caretColor: '#abc7ff' }}
+                                readOnly={demoLimitReached}
+                                aria-label="ask about revenue AI DX infrastructure"
+                              />
+                              {!input && (
+                                <div className="absolute inset-y-0 left-0 right-0 flex items-center pointer-events-none overflow-hidden">
+                                  <span className="fo-cursor-blink shrink-0" />
+                                  <span
+                                    className={`ml-2 text-[#7e7c83] text-[1rem] md:text-[1.05rem] transition-all duration-[600ms] whitespace-nowrap overflow-hidden text-ellipsis min-w-0 ${phShow ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-1'}`}
+                                  >
+                                    {demoLimitReached
+                                      ? '本日のデモ質問上限に達しました'
+                                      : PLACEHOLDERS[phIdx]}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Row 2: action */}
+                          <div className="flex justify-end">
+                            <button
+                              onClick={sendInput}
+                              disabled={!input.trim() || !!streamingId || demoLimitReached}
+                              className="inline-flex h-9 items-center gap-1.5 rounded-lg px-3.5 text-[12.5px] font-medium whitespace-nowrap disabled:opacity-40"
+                              style={{
+                                background: 'linear-gradient(135deg, #abc7ff, #0071e3)',
+                                color: '#0a0a0c',
+                              }}
+                            >
+                              送信 <Send size={13} color="#0a0a0c" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Suggested chips */}
+                      <div className="mt-3 flex flex-wrap justify-center gap-2">
+                        {SUGGESTIONS.map((s) => {
+                          const a = AGENTS[s.agent]
+                          return (
+                            <button
+                              key={s.id}
+                              onClick={() => sendChip(s)}
+                              disabled={!!streamingId || demoLimitReached}
+                              className="group inline-flex items-center gap-2 rounded-full pl-2 pr-3 py-1.5 text-xs bg-dusk hover:bg-shimmer transition-colors disabled:opacity-40 fo-chip-shimmer"
+                            >
+                              <Orb color={a.color} size={10} />
+                              <span className="text-[#e7e5ea]">{s.label}</span>
+                              <span className="text-[#7e7c83] hidden sm:inline">
+                                → {DEMO_AGENT_LABELS[s.agent]}
+                              </span>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -1031,50 +871,65 @@ export const Hero = () => {
         <div className="mt-12 md:mt-16 text-center space-y-7">
           {/* 連携サービス（カテゴリ別） */}
           <div>
-            <div className="text-[10px] uppercase tracking-[0.18em] text-[#7e7c83] mb-5">CONNECTS WITH ／ 連携サービス</div>
+            <div className="text-[10px] uppercase tracking-[0.18em] text-[#7e7c83] mb-5">
+              CONNECTS WITH ／ 連携サービス
+            </div>
             <div className="max-w-4xl mx-auto space-y-3">
               {[
                 {
-                  tag: '標準連携',           tagColor: '#8dffc9', tagBg: 'rgba(141,255,201,0.10)',
+                  tag: 'ナレッジ基盤',
+                  tagColor: '#8dffc9',
+                  tagBg: 'rgba(141,255,201,0.10)',
                   items: [
-                    { l: 'Google Workspace', c: '#abc7ff', sub: 'Gmail / Meet / Calendar' },
-                    { l: 'Notion',           c: '#e7e5ea', sub: '議事録' },
+                    { l: 'Obsidian', c: '#d3a5ff', sub: '思考・議事録・調査メモ' },
+                    { l: 'Notion', c: '#e7e5ea', sub: '社内ポータル / ワークフロー' },
                   ],
                 },
                 {
-                  tag: '会議・グループウェア',  tagColor: '#ffcf4a', tagBg: 'rgba(255,207,74,0.10)',
+                  tag: 'グループウェア',
+                  tagColor: '#ffcf4a',
+                  tagBg: 'rgba(255,207,74,0.10)',
                   items: [
-                    { l: 'Microsoft 365',    c: '#abc7ff', sub: 'Outlook / Teams' },
-                    { l: 'Zoom',             c: '#7aa4ff', sub: '議事録' },
+                    { l: 'Google Workspace', c: '#abc7ff', sub: 'Gmail / Drive / Calendar' },
+                    { l: 'Microsoft 365', c: '#abc7ff', sub: 'Outlook / Teams / SharePoint' },
                   ],
                 },
                 {
-                  tag: '通話連携（Call）',     tagColor: '#7ec6ff', tagBg: 'rgba(126,198,255,0.10)',
+                  tag: '会議・音声',
+                  tagColor: '#7ec6ff',
+                  tagBg: 'rgba(126,198,255,0.10)',
                   items: [
-                    { l: 'Zoom Phone',       c: '#7aa4ff', sub: '' },
-                    { l: 'MiiTel',           c: '#34d399', sub: '' },
-                    { l: 'Comdesk',          c: '#ffcf4a', sub: '' },
+                    { l: 'Zoom', c: '#7aa4ff', sub: '録画 / 議事録 / 要約' },
+                    { l: 'Teams', c: '#7ec6ff', sub: '会議 / チャット' },
                   ],
                 },
                 {
-                  tag: 'CRMデータ移行（CSV）', tagColor: '#abc7ff', tagBg: 'rgba(171,199,255,0.10)',
+                  tag: 'CRM',
+                  tagColor: '#abc7ff',
+                  tagBg: 'rgba(171,199,255,0.10)',
                   items: [
-                    { l: 'Salesforce',       c: '#7ec6ff' },
-                    { l: 'HubSpot',          c: '#ff9f6b' },
-                    { l: 'その他 CRM',         c: '#9b99a0' },
+                    { l: 'Salesforce', c: '#7ec6ff' },
+                    { l: 'HubSpot', c: '#ff9f6b' },
                   ],
                 },
                 {
-                  tag: 'カスタム連携', tagColor: '#d3a5ff', tagBg: 'rgba(211,165,255,0.10)',
-                  items: [
-                    { l: 'その他カスタム連携',  c: '#9b99a0', sub: 'お気軽にご相談ください' },
-                  ],
+                  tag: 'カスタム連携',
+                  tagColor: '#d3a5ff',
+                  tagBg: 'rgba(211,165,255,0.10)',
+                  items: [{ l: 'その他カスタム連携', c: '#9b99a0', sub: 'お気軽にご相談ください' }],
                 },
               ].map((group) => (
-                <div key={group.tag} className="flex flex-wrap items-center justify-center gap-2 md:gap-3">
+                <div
+                  key={group.tag}
+                  className="flex flex-wrap items-center justify-center gap-2 md:gap-3"
+                >
                   <span
-                    className="inline-flex items-center text-[9px] font-mono uppercase tracking-[0.14em] px-2 py-1 rounded-full"
-                    style={{ background: group.tagBg, color: group.tagColor, boxShadow: `inset 0 0 0 1px ${group.tagColor}30` }}
+                    className="inline-flex items-center rounded-full px-2 py-1 font-mono text-[9px] uppercase tracking-[0.14em]"
+                    style={{
+                      background: group.tagBg,
+                      color: group.tagColor,
+                      boxShadow: `inset 0 0 0 1px ${group.tagColor}30`,
+                    }}
                   >
                     {group.tag}
                   </span>
@@ -1086,10 +941,15 @@ export const Hero = () => {
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-pitch/60 fo-glass-rim text-[12px] text-[#c7c5c9] hover:text-[#e7e5ea] hover:bg-shimmer/40 transition-colors"
                         title={sub}
                       >
-                        <span className="w-1.5 h-1.5 rounded-full" style={{ background: s.c, boxShadow: `0 0 6px ${s.c}` }} />
+                        <span
+                          className="w-1.5 h-1.5 rounded-full"
+                          style={{ background: s.c, boxShadow: `0 0 6px ${s.c}` }}
+                        />
                         {s.l}
                         {sub && (
-                          <span className="text-[10px] text-[#7e7c83] hidden md:inline">／ {sub}</span>
+                          <span className="text-[10px] text-[#7e7c83] hidden md:inline">
+                            ／ {sub}
+                          </span>
                         )}
                       </span>
                     )
@@ -1100,14 +960,12 @@ export const Hero = () => {
           </div>
 
           <div className="text-[#c7c5c9] text-sm">
-            <a
-              href="https://app.spirinc.com/t/3u_FXTG5abaFIZ-D7as8v/as/u1BDbJ3xnywQYp2rDZYxE/confirm"
-              target="_blank"
-              rel="noopener noreferrer"
+            <ConsultationCallButton
               className="text-aurora underline-offset-4 hover:underline"
+              source="landing_hero_text"
             >
               CRM構築を相談する →
-            </a>
+            </ConsultationCallButton>
           </div>
         </div>
       </div>

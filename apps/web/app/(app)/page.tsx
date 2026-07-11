@@ -106,10 +106,6 @@ function HomePageContent() {
   const chatIdParam = searchParams.get('chat')
   const buildHomeHref = (next: Record<string, string | null> = {}) => {
     const params = new URLSearchParams()
-    for (const key of ['tenant', 'demo', 'demoSession']) {
-      const value = searchParams.get(key)
-      if (value !== null) params.set(key, value)
-    }
     for (const [key, value] of Object.entries(next)) {
       if (value === null) params.delete(key)
       else params.set(key, value)
@@ -120,14 +116,12 @@ function HomePageContent() {
 
   // ホーム (`/`) を管理者ページ (Customer Operations) へリダイレクトするロジック。
   // - ローカル / 本番ともに access API で許可された開発者テナントだけリダイレクト
-  // - 無料デモ経由 (?demo=... / ?tenant=...) や ?chat=... はリダイレクトしない
+  // - ?chat=... はリダイレクトしない
   const [adminRedirectChecked, setAdminRedirectChecked] = useState(false)
   useEffect(() => {
     if (adminRedirectChecked) return
     const hasChatQuery = chatIdParam !== null
-    const isDemoAccess =
-      searchParams.get('demo') !== null || searchParams.get('tenant') !== null
-    if (hasChatQuery || isDemoAccess) {
+    if (hasChatQuery) {
       setAdminRedirectChecked(true)
       return
     }
@@ -501,7 +495,7 @@ function HomePageContent() {
                   void handleSubmit()
                 }
               }}
-              placeholder="ルキスマCRMに何でも尋ねる — 企業・商談・議事録を横断検索"
+              placeholder="FDE CRMに何でも尋ねる — 企業・商談・議事録を横断検索"
               rows={2}
               className="w-full bg-transparent resize-none outline-none px-5 pt-4 pb-2 text-[15px] leading-relaxed"
               style={{

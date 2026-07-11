@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>株式会社ルーキースマートジャパン</title>
+    <meta name="description" content="HTML first sales portal and lightweight CRM cockpit for FDE CRM.">
+    <link rel="icon" type="image/png" href="./assets/favicon.png">
+    <link rel="apple-touch-icon" href="./assets/favicon.png">
+    <link rel="stylesheet" href="./assets/styles.css">
+  </head>
+  <body>
+    <div class="portal-shell">
+      <header class="topbar">
+        <a class="brand" href="#pipeline" aria-label="株式会社ルーキースマートジャパン home">
+          <span class="brand-mark" aria-hidden="true">R</span>
+          <span class="brand-copy">
+            <strong>株式会社ルーキースマートジャパン</strong>
+            <small>HTML first CRM cockpit</small>
+          </span>
+        </a>
+
+        <nav id="tabNav" class="top-nav" aria-label="Portal navigation"></nav>
+
+        <div class="topbar-actions">
+          <label class="search-box">
+            <span aria-hidden="true">⌕</span>
+            <input id="globalSearch" type="search" placeholder="検索...">
+          </label>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <section id="pipeline" class="view is-active" data-view="pipeline"></section>
+        <section id="call" class="view" data-view="call"></section>
+        <section id="deals" class="view" data-view="deals"></section>
+      </main>
+      <div id="modalRoot"></div>
+    </div>
+
+    <script src="./data/portal-data.js"></script>
+    <script src="./assets/app.js"></script>
+  </body>
+</html>

@@ -4,13 +4,15 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Nav } from './landing/Nav'
 
 // ──────────────────────────────────────────────────────────────
-// HOME(ルキスマCRM) / 営業ドラゴン図鑑 / 営業武器庫 / 営業竜学園 を
+// HOME(FDE CRM) / 営業ドラゴン図鑑 を
 // 「1ページ内の state 切替」で行き来するハブ。
+// 営業武器庫 / 営業竜学園 は営業ドラゴン図鑑内の子コンテンツとして導線化する。
 //
 // 上部 chrome は全ビュー共通で固定:
-//   ブランドバー (ロゴ + 切替タブ + お問い合わせ/無料デモ) … Nav
+//   ブランドバー (ロゴ + 切替タブ + 日程調整) … Nav
 // その下の中身だけが切り替わる。
-// URL は履歴APIで /lp ↔ /media ↔ /media?view=psychology ↔ /media?view=school に裏同期し SEO/共有も維持。
+// URL は履歴APIで /lp ↔ SEO用の /media/* に裏同期。
+// 旧 /media?view=... も共有URLとして引き続き読み取る。
 //
 // 各ビューは server component のまま props で受け取る(LP本体をクライアント化しない)。
 // 固定 chrome はNav内で完結させ、ページ背景と一体化したまま切替だけを担う。
@@ -18,18 +20,18 @@ import { Nav } from './landing/Nav'
 
 type View = 'home' | 'dragon' | 'psychology' | 'school'
 
-const TABS: { key: View; label: string; accent: string }[] = [
-  { key: 'home', label: 'ルキスマCRM', accent: '#abc7ff' },
-  { key: 'dragon', label: '営業ドラゴン図鑑', accent: '#d7ad59' },
-  { key: 'psychology', label: '営業武器庫', accent: '#d7ad59' },
-  { key: 'school', label: '営業竜学園', accent: '#d7ad59' },
+const TABS: { key: View; label: string; shortLabel: string; accent: string }[] = [
+  { key: 'home',       label: 'FDE CRM',          shortLabel: 'CRM',     accent: '#abc7ff' },
+  { key: 'dragon',     label: '営業ドラゴン図鑑',  shortLabel: '図鑑',    accent: '#d7ad59' },
+  { key: 'psychology', label: '営業武器庫',        shortLabel: '武器庫',  accent: '#d7ad59' },
+  { key: 'school',     label: '営業竜学園',        shortLabel: '竜学園',  accent: '#d7ad59' },
 ]
 
 const URL_FOR: Record<View, string> = {
   home: '/lp',
-  dragon: '/media',
-  psychology: '/media?view=psychology',
-  school: '/media?view=school',
+  dragon: '/media/sales-type-diagnosis',
+  psychology: '/media/sales-weapon',
+  school: '/media/sales-dragon-academy',
 }
 
 export default function AppHub({
@@ -53,7 +55,13 @@ export default function AppHub({
     const sync = () => {
       const path = window.location.pathname
       const sp = new URLSearchParams(window.location.search)
-      if (path.startsWith('/media')) {
+      if (path.startsWith('/media/sales-weapon')) {
+        setView('psychology')
+      } else if (path.startsWith('/media/sales-dragon-academy')) {
+        setView('school')
+      } else if (path.startsWith('/media/sales-type-diagnosis')) {
+        setView('dragon')
+      } else if (path.startsWith('/media')) {
         const nextView = sp.get('view')
         setView(nextView === 'psychology' ? 'psychology' : nextView === 'school' ? 'school' : 'dragon')
       } else if (path.startsWith('/lp')) {
@@ -79,7 +87,7 @@ export default function AppHub({
 
   const tabs = (
     <div
-      className="inline-flex min-w-max items-center gap-1 rounded-full p-1"
+      className="inline-flex w-max max-w-full items-center gap-1 rounded-full p-1"
       style={{
         // クリーム背景(図鑑)でも黒背景(LP)でも沈まないニュートラルなコンテナ
         background:
@@ -102,7 +110,7 @@ export default function AppHub({
             ref={isActive ? activeTabRef : null}
             aria-selected={isActive}
             onClick={() => go(tab.key)}
-            className="inline-flex h-9 shrink-0 items-center justify-center whitespace-nowrap rounded-full px-3 text-[12px] font-black transition-all duration-200 md:px-5 md:text-[13px]"
+            className="inline-flex h-8 shrink-0 items-center justify-center whitespace-nowrap rounded-full px-3 text-[11px] font-black transition-all duration-200 sm:h-9 sm:px-3 sm:text-[12px] lg:px-4 xl:px-5 xl:text-[13px]"
             style={
               isActive
                 ? {
@@ -114,7 +122,8 @@ export default function AppHub({
                 : { color: 'rgba(245,238,220,0.82)', background: 'transparent' }
             }
           >
-            {tab.label}
+            <span className="sm:hidden">{tab.shortLabel}</span>
+            <span className="hidden sm:inline">{tab.label}</span>
           </button>
         )
       })}
@@ -125,13 +134,12 @@ export default function AppHub({
     <div className="relative">
       {/* 固定 chrome (全ビュー共通): ブランドバー内にタブを内包
           背景は持たせず透過にして、ページ背景と一体化させる(独立した帯を作らない)。
-          スクロール時の可読性のため backdrop-blur のみ残す。
-          DemoModal はポータル化済みなので blur があっても fixed は壊れない */}
+          スクロール時の可読性のため backdrop-blur のみ残す。 */}
       <div
         className="sticky top-0 z-[60] backdrop-blur-xl"
         style={{ background: 'transparent' }}
       >
-        <Nav centerSlot={tabs} />
+        <Nav centerSlot={TABS.length > 1 ? tabs : undefined} />
       </div>
 
       {/* 中身: key で再マウントしフェード (opacityのみ。transformは使わない) */}

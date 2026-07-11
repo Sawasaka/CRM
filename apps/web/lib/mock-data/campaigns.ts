@@ -8,11 +8,11 @@ export type CampaignStatus = 'draft' | 'scheduled' | 'sending' | 'sent'
 export type LinkKind = 'homepage' | 'schedule' | 'doc' | 'other'
 
 export interface CampaignLink {
-  id: string                  // ルキスマCRM 中継URLに使う識別子
+  id: string                  // FDE CRM 中継URLに使う識別子
   kind: LinkKind
   label: string               // 本文上の表示テキスト
   originalUrl: string         // 実際の遷移先
-  trackingUrl: string         // ルキスマCRM 中継URL: https://track.bgm.app/c/<id>
+  trackingUrl: string         // FDE CRM 中継URL: https://track.bgm.app/c/<id>
   clicks: number              // この回のクリック数
 }
 
@@ -93,127 +93,10 @@ const FILTER_LABEL: Record<ResendFilterKind, string> = {
 }
 export { FILTER_LABEL }
 
-export const MOCK_CAMPAIGNS: MailCampaign[] = [
-  {
-    id: 'demo-campaign-1',
-    name: 'HOT企業向け 部署番号活用提案',
-    listId: 'demo-list-hot-enterprise',
-    listName: 'HOT企業_今週架電',
-    totalRecipients: 84,
-    status: 'sent',
-    createdAt: '2026-06-01',
-    sends: [
-      {
-        round: 1,
-        sentAt: '2026-06-03 09:30',
-        subject: '採用インテントが出ている部署へ、直接アプローチしませんか',
-        body: '求人インテントと部署直通番号を組み合わせ、今動いている部門へ優先接触する提案です。',
-        recipients: 84,
-        filter: 'all',
-        metrics: { replied: 5 },
-        links: [
-          {
-            id: 'demo-link-1-schedule',
-            kind: 'schedule',
-            label: '15分相談の日程調整',
-            originalUrl: 'https://calendar.example.com/demo',
-            trackingUrl: 'https://track.rookiesmart-jp.com/c/demo-link-1-schedule',
-            clicks: 12,
-          },
-          {
-            id: 'demo-link-1-doc',
-            kind: 'doc',
-            label: '部署番号DBの活用資料',
-            originalUrl: 'https://crm.rookiesmart-jp.com/demo/doc/department-phone',
-            trackingUrl: 'https://track.rookiesmart-jp.com/c/demo-link-1-doc',
-            clicks: 21,
-          },
-          {
-            id: 'demo-link-1-home',
-            kind: 'homepage',
-            label: 'サービスサイト',
-            originalUrl: 'https://crm.rookiesmart-jp.com',
-            trackingUrl: 'https://track.rookiesmart-jp.com/c/demo-link-1-home',
-            clicks: 18,
-          },
-        ],
-      },
-      {
-        round: 2,
-        sentAt: '2026-06-06 10:00',
-        subject: '資料をご覧いただいた企業様へ、優先リストのサンプルをお送りします',
-        body: '前回資料をクリックいただいた企業様向けに、部門別の優先接触リスト例をご案内しています。',
-        recipients: 43,
-        filter: 'no_reply',
-        metrics: { replied: 4 },
-        links: [
-          {
-            id: 'demo-link-2-schedule',
-            kind: 'schedule',
-            label: 'デモ相談を予約',
-            originalUrl: 'https://calendar.example.com/demo',
-            trackingUrl: 'https://track.rookiesmart-jp.com/c/demo-link-2-schedule',
-            clicks: 9,
-          },
-          {
-            id: 'demo-link-2-doc',
-            kind: 'doc',
-            label: 'HOT企業リストサンプル',
-            originalUrl: 'https://crm.rookiesmart-jp.com/demo/doc/hot-list',
-            trackingUrl: 'https://track.rookiesmart-jp.com/c/demo-link-2-doc',
-            clicks: 16,
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'demo-campaign-2',
-    name: '採用予算あり企業 フォロー配信',
-    listId: 'demo-list-hr-budget',
-    listName: '採用予算あり_人事部門',
-    totalRecipients: 128,
-    status: 'scheduled',
-    createdAt: '2026-06-05',
-    sends: [
-      {
-        round: 1,
-        sentAt: '2026-06-07 08:45',
-        subject: '採用予算が動くタイミングで、優先企業を絞り込みませんか',
-        body: '採用予算・求人インテント・部署情報をもとに、IS対象企業を自動で絞り込みます。',
-        recipients: 128,
-        filter: 'all',
-        metrics: { replied: 7 },
-        links: [
-          {
-            id: 'demo-link-3-doc',
-            kind: 'doc',
-            label: '採用予算ダッシュボード例',
-            originalUrl: 'https://crm.rookiesmart-jp.com/demo/doc/budget',
-            trackingUrl: 'https://track.rookiesmart-jp.com/c/demo-link-3-doc',
-            clicks: 29,
-          },
-          {
-            id: 'demo-link-3-schedule',
-            kind: 'schedule',
-            label: '相談する',
-            originalUrl: 'https://calendar.example.com/demo',
-            trackingUrl: 'https://track.rookiesmart-jp.com/c/demo-link-3-schedule',
-            clicks: 14,
-          },
-        ],
-      },
-    ],
-  },
-]
+export const MOCK_CAMPAIGNS: MailCampaign[] = []
 
 export const MOCK_CAMPAIGNS_BY_ID: Record<string, MailCampaign> = Object.fromEntries(
   MOCK_CAMPAIGNS.map((campaign) => [campaign.id, campaign]),
 )
 
-export const AVAILABLE_LISTS: { id: string; name: string; recipientCount: number }[] = [
-  { id: 'list-1', name: '今週のコール対象',     recipientCount: 240 },
-  { id: 'list-2', name: '再フォローリスト',      recipientCount: 1820 },
-  { id: 'list-3', name: 'セミナー参加者リスト',  recipientCount: 156 },
-  { id: 'list-4', name: 'Aランク未着手',         recipientCount: 420 },
-]
+export const AVAILABLE_LISTS: { id: string; name: string; recipientCount: number }[] = []

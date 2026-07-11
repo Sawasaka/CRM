@@ -3500,7 +3500,7 @@ function ProposalEditModal({
                 type="text"
                 value={draft.service}
                 onChange={(e) => patch('service', e.target.value)}
-                placeholder="例: ルキスマCRM Pro / Slack連携アドオン"
+                placeholder="例: FDE CRM Pro / Slack連携アドオン"
                 className="modal-input"
               />
             </Field>

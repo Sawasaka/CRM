@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma, TicketStatus } from '@bgm/db'
-import { getCurrentAppContext } from '@/lib/demo-master'
-import { getDemoTicketDetail } from '@/lib/demo-crm-data'
+import { getCurrentAppContext } from '@/lib/app-context'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -100,10 +99,6 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string
       }
       throw fallbackError
     }
-  }
-  if (!ticket && context.isDemo) {
-    const demoTicket = getDemoTicketDetail(id)
-    if (demoTicket) return NextResponse.json({ ticket: demoTicket })
   }
   if (!ticket) return NextResponse.json({ error: 'not found' }, { status: 404 })
   return NextResponse.json({ ticket })

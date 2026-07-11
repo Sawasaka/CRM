@@ -8,11 +8,13 @@ import {
   operatorPersonId,
   operatorProfilePath,
   publicSiteUrl,
+  serviceAlternateNames,
   serviceName,
+  serviceSearchName,
 } from '@/lib/public-site'
 
-const title = `${companyName}｜${serviceName}公式`
-const description = `${companyName}は、${serviceName}を提供する営業実行・CRM構築支援会社です。代表は${operatorName}。CRMも部署番号も無償で、営業活動を支援します。`
+const title = `${companyName}｜${serviceSearchName}公式`
+const description = `${companyName}は、${serviceSearchName}を提供するAI/DX設計・実装支援会社です。代表は${operatorName}。${serviceName}として営業・マーケティングの業務基盤を構築します。`
 
 export const metadata: Metadata = {
   metadataBase: new URL(publicSiteUrl),
@@ -22,12 +24,18 @@ export const metadata: Metadata = {
     companyName,
     'ルーキースマートジャパン',
     'RookieSmart Japan',
-    serviceName,
+    serviceSearchName,
+    ...serviceAlternateNames,
+    'FDE',
+    'Forward Deployed CRM',
     operatorName,
     `${companyName} 公式`,
     `${companyName} 代表`,
     '営業実行',
+    'FDE開発',
     'CRM構築',
+    'Call AI',
+    '企業データベース',
   ],
   alternates: {
     canonical: companyProfilePath,
@@ -57,7 +65,7 @@ const companyJsonLd = {
   '@id': `${publicSiteUrl}/#organization`,
   name: companyName,
   legalName: companyName,
-  alternateName: ['ルーキースマートジャパン', 'RookieSmart Japan', 'RookieSmart'],
+  alternateName: ['ルーキースマートジャパン', 'RookieSmart Japan', 'RookieSmart', serviceSearchName],
   url: companyProfileUrl,
   logo: `${publicSiteUrl}/icon.svg`,
   description,
@@ -70,7 +78,8 @@ const companyJsonLd = {
   brand: {
     '@type': 'SoftwareApplication',
     '@id': `${publicSiteUrl}/#software`,
-    name: serviceName,
+    name: serviceSearchName,
+    alternateName: serviceAlternateNames,
     applicationCategory: 'BusinessApplication',
     applicationSubCategory: 'CRM',
     url: publicSiteUrl,
@@ -119,7 +128,7 @@ const companyFacts = [
   ['提供サービス', serviceName],
   ['代表', operatorName],
   ['所在地', '東京都 中央区'],
-  ['事業領域', '営業実行 / CRM構築 / AI CRM / 企業データベース'],
+  ['事業領域', '営業実行 / FDE開発 / CRM構築 / Call AI / 企業データベース'],
 ]
 
 export default function CompanyPage() {
@@ -143,7 +152,7 @@ export default function CompanyPage() {
             href="/"
             className="inline-flex text-xs font-semibold tracking-[0.12em] text-aurora/80 hover:text-aurora"
           >
-            ルキスマCRM 公式HPへ
+            FDE CRM 公式HPへ
           </Link>
 
           <div className="mt-10 max-w-3xl">
@@ -154,8 +163,8 @@ export default function CompanyPage() {
               株式会社ルーキースマートジャパン
             </h1>
             <p className="mt-5 text-base leading-8 text-[#c7c5c9] md:text-lg">
-              株式会社ルーキースマートジャパンは、ルキスマCRMを提供する営業実行・CRM構築支援会社です。
-              代表の沢坂弘樹が、営業データ活用、企業データベース、部署直通番号を組み合わせた営業活動を支援します。
+              株式会社ルーキースマートジャパンは、FDE CRMを提供する営業実行・FDE開発支援会社です。
+              代表の沢坂弘樹が、CRM・Call AI・企業データベース・部署直通番号を組み合わせた営業活動を支援します。
             </p>
           </div>
         </div>
@@ -176,15 +185,15 @@ export default function CompanyPage() {
             {companyName}が提供する{serviceName}
           </h2>
           <p className="mt-4 text-sm leading-8 text-[#c7c5c9]">
-            {serviceName}は、CRMも部署番号も無償で使えるチャット型AI CRMです。営業データ、商談、メール、議事録、企業DBを横断し、
-            次の営業アクションをチャットで引き出します。
+            {serviceName}は、CRM・Call AI・企業データベースを統合し、営業実行とFDE開発を同時に進めるAI CRMです。
+            営業データ、商談、メール、議事録、企業DBを横断し、次の営業アクションを引き出します。
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
               href="/"
               className="inline-flex rounded-full bg-aurora px-5 py-2 text-sm font-semibold text-[#07101f] transition-transform hover:-translate-y-0.5"
             >
-              ルキスマCRMを見る
+              FDE CRMを見る
             </Link>
             <Link
               href={operatorProfilePath}

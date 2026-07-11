@@ -7,7 +7,7 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 const CREDIT_UNIT = 1000
-const CREDIT_UNIT_AMOUNT_YEN = 5000
+const CREDIT_UNIT_AMOUNT_YEN = 10000
 const MAX_CREDIT_PURCHASE = 100000
 
 type CreditCheckoutPayload = {

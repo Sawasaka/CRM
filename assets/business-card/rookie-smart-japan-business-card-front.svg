@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1050" height="600" viewBox="0 0 1050 600">
+  <rect width="1050" height="600" rx="0" fill="#08111f"/>
+  <path d="M0 450 C220 390 310 300 500 360 C700 424 785 256 1050 198 L1050 600 L0 600 Z" fill="#0e2239"/>
+  <path d="M716 -80 C840 70 948 134 1100 136" fill="none" stroke="#2de0a5" stroke-width="2.5" opacity=".55"/>
+  <path d="M676 -88 C812 112 918 180 1100 188" fill="none" stroke="#58a6ff" stroke-width="2" opacity=".45"/>
+  <rect x="70" y="70" width="910" height="460" rx="18" fill="none" stroke="#24344c" stroke-width="1.5"/>
+  <image href="../../apps/web/public/brand/rookie-smart-japan/rsj-04-apex-signal-logo-transparent.svg" x="66" y="58" width="470" height="118" preserveAspectRatio="xMinYMid meet"/>
+  <text x="86" y="302" fill="#ffffff" font-family="'Hiragino Sans','Yu Gothic','Noto Sans JP',sans-serif" font-size="40" font-weight="800">株式会社ルーキースマートジャパン</text>
+  <text x="88" y="348" fill="#9fb2ca" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700" letter-spacing="3">ENTERPRISE AI CRM</text>
+  <line x1="86" y1="398" x2="442" y2="398" stroke="#2de0a5" stroke-width="3"/>
+  <text x="88" y="448" fill="#d9e5f5" font-family="Inter, Arial, sans-serif" font-size="23" font-weight="600">h.sawasaka@rookiesmart.jp</text>
+  <text x="88" y="488" fill="#93a4bb" font-family="Inter, Arial, sans-serif" font-size="21" font-weight="600">www.rookiesmart-jp.com</text>
+  <text x="865" y="472" fill="#d9e5f5" font-family="Inter, Arial, sans-serif" font-size="72" font-weight="900">RSJ</text>
+  <text x="870" y="502" fill="#63748c" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="700" letter-spacing="2">AI CRM</text>
+</svg>

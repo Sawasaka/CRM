@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getOurBusiness, setOurBusiness, type OurBusiness } from '@/lib/our-business'
-import { getCurrentAppContext } from '@/lib/demo-master'
+import { getCurrentAppContext } from '@/lib/app-context'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'

@@ -148,9 +148,6 @@ function OverviewTab({ tenant }: { tenant: TenantDetail }) {
             }
           />
           <DefRow label="ステータス" value={STATUS_LABELS[tenant.status]} />
-          {tenant.demoExpiresAt && (
-            <DefRow label="デモ期限" value={formatDateTime(tenant.demoExpiresAt)} />
-          )}
           <DefRow label="コンタクト" value={`${tenant.contactCount.toLocaleString()} 件`} />
           <DefRow label="ナレッジ" value={`${tenant.knowledgeCount.toLocaleString()} 件`} />
         </dl>
@@ -415,6 +412,5 @@ function formatDateTime(value: string | null) {
 }
 const STATUS_LABELS: Record<TenantDetail['status'], string> = {
   active: '有料',
-  demo: 'デモ',
   inactive: '非アクティブ',
 }

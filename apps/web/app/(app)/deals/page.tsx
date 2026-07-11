@@ -37,8 +37,6 @@ type DealStage =
   | 'LOST_DEAL' | 'CLOSED_WON' | 'CHURN' | 'LOST'
 
 import { SignalBadge, type Signal } from '@/components/crm/SignalBadge'
-import { isDemoUrlSearch } from '@/lib/demo-company-data'
-import { getDemoDealsForApi } from '@/lib/demo-crm-data'
 import { getCompanyFirstPartySignal } from '@/lib/mock-data/firstPartySignals'
 
 type ChipTone = 'neutral' | 'hot' | 'middle' | 'low' | 'primary'
@@ -338,7 +336,6 @@ export default function DealsPage() {
 
   useEffect(() => {
     let aborted = false
-    const demoView = isDemoUrlSearch(window.location.search)
     const params = new URLSearchParams(window.location.search)
     params.set('take', '100')
     fetch(`/api/deals?${params.toString()}`, { cache: 'no-store' })
@@ -346,11 +343,10 @@ export default function DealsPage() {
       .then((data: { deals?: ApiDeal[] }) => {
         if (aborted) return
         const apiDeals = data.deals ?? []
-        const sourceDeals = demoView && apiDeals.length === 0 ? getDemoDealsForApi() : apiDeals
-        setDeals(sourceDeals.map(toDeal))
+        setDeals(apiDeals.map(toDeal))
       })
       .catch(() => {
-        if (!aborted) setDeals(demoView ? getDemoDealsForApi().map(toDeal) : [])
+        if (!aborted) setDeals([])
       })
     return () => {
       aborted = true

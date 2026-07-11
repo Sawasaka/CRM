@@ -20,48 +20,7 @@ export const KIND_META: Record<NotificationKind, { label: string; tone: 'primary
   alert:       { label: '重要',    tone: 'hot'     },
 }
 
-export const NOTIFICATIONS: NotificationItem[] = [
-  {
-    id: 'n_2026_05_01',
-    kind: 'release',
-    title: 'Google 連携(Gmail / Calendar / Meet)正式リリース',
-    body:
-      'Gmail・Google カレンダー・Meet 議事録の自動取込が利用可能になりました。アカウント連携は [設定 → 連携] から数クリックで完了します。',
-    createdAt: '2026-05-01T10:00:00+09:00',
-    read: false,
-    ctaLabel: '連携を始める',
-    ctaHref: '/settings/integrations',
-  },
-  {
-    id: 'n_2026_04_28',
-    kind: 'tip',
-    title: 'インテントスコアの「部門別ビュー」が追加されました',
-    body:
-      '企業詳細画面のインテントタブに、IT / Sales / HR / Marketing の 4 部門別ヒートマップを追加しました。「どの部門で動きが出ているか」をひと目で把握できます。',
-    createdAt: '2026-04-28T15:30:00+09:00',
-    read: false,
-    ctaLabel: 'サンプルを見る',
-    ctaHref: '/companies',
-  },
-  {
-    id: 'n_2026_04_25',
-    kind: 'maintenance',
-    title: '5 月 6 日 (火) 02:00–03:00 メンテナンス予定',
-    body:
-      'インフラ更新のため一時的にアクセスできなくなる時間帯があります。データの整合性に影響はありません。',
-    createdAt: '2026-04-25T09:00:00+09:00',
-    read: true,
-  },
-  {
-    id: 'n_2026_04_22',
-    kind: 'release',
-    title: '企業 DB が 290 万社に拡大、4,560 社のフルエンリッチを完了',
-    body:
-      'gBizINFO 連携を含む新しいエンリッチパイプラインを稼働。本社電話・SNS・部署×役職×名前・全求人インテント・PR TIMES などを自動収集します。',
-    createdAt: '2026-04-22T18:00:00+09:00',
-    read: true,
-  },
-]
+export const NOTIFICATIONS: NotificationItem[] = []
 
 // 相対時刻の簡易フォーマッタ(「3分前 / 2時間前 / 4日前」)。
 export function formatRelative(iso: string, nowMs = Date.now()): string {

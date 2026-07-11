@@ -45,7 +45,7 @@ async function getSessionUser() {
 
 async function ensureTenantAccess(userId?: string) {
   if (!userId) return
-  // ローカル開発時はDEMO期限判定をスキップ(本番データのdemoExpiresAtが過去でも開発体験を妨げない)
+  // ローカル開発時はテナント停止判定をスキップする。
   if (process.env.NEXT_PUBLIC_DEV_MODE === 'true') return
   const { prisma } = await import('@bgm/db')
   const { redirect } = await import('next/navigation')
@@ -68,14 +68,14 @@ async function ensureTenantAccess(userId?: string) {
     return
   }
   if (org.lifecycleStatus === 'INACTIVE') {
-    redirect('/demo/expired')
+    redirect('/login?error=TenantInactive')
   }
   if (org.lifecycleStatus === 'DEMO' && org.demoExpiresAt && org.demoExpiresAt <= new Date()) {
     await prisma.organization.updateMany({
       where: { id: org.id, lifecycleStatus: 'DEMO' },
       data: { lifecycleStatus: 'INACTIVE' },
     })
-    redirect('/demo/expired')
+    redirect('/login?error=TenantInactive')
   }
 }
 

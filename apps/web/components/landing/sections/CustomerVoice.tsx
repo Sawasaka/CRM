@@ -1,21 +1,13 @@
 'use client'
 
-import { useState } from 'react'
-import { Sparkles, Calendar, Mail } from 'lucide-react'
+import { Calendar, Mail } from 'lucide-react'
 import { Eyebrow, Section } from '../atoms'
-import { DemoModal } from '../DemoModal'
-
-// Spir 予約 URL (Nav / Pricing と統一)
-const SPIR_BOOKING_URL =
-  'https://app.spirinc.com/t/3u_FXTG5abaFIZ-D7as8v/as/u1BDbJ3xnywQYp2rDZYxE/confirm'
+import { ConsultationCallButton } from '../ConsultationCallModal'
 
 /**
  * PARTNER PROGRAM — 販売パートナー募集セクション。
- * Nav と同じ DemoModal を再利用して「無料デモ」を起動する。
  */
 export const CustomerVoice = () => {
-  const [demoOpen, setDemoOpen] = useState(false)
-
   return (
     <Section id="waitlist" tone="obsidian" screenLabel="14 Partner Program">
       <div className="relative mx-auto max-w-6xl px-6 py-28 md:py-36">
@@ -63,47 +55,25 @@ export const CustomerVoice = () => {
               </p>
 
               <div className="mt-8 flex items-center justify-center gap-3 flex-wrap">
-                <a
-                  href={SPIR_BOOKING_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <ConsultationCallButton
                   className="inline-flex items-center gap-2 px-5 py-3 rounded-lg text-sm font-semibold text-[#0a0a0c] transition-all duration-200 hover:-translate-y-0.5"
                   style={{
                     background: 'linear-gradient(135deg, #8fb0e8, #1e6fcc)',
                     boxShadow:
                       'inset 0 1px 0 rgba(255,255,255,0.22), 0 0 0 1px rgba(171,199,255,0.16), 0 6px 20px -6px rgba(0,113,227,0.30)',
                   }}
+                  source="landing_partner_cta"
+                  message="販売パートナー制度について相談したいです。"
                 >
                   <Mail size={14} strokeWidth={2.2} />
                   導入相談
-                </a>
-                <button
-                  type="button"
-                  onClick={() => setDemoOpen(true)}
-                  className="inline-flex items-center gap-2 px-5 py-3 rounded-lg text-sm font-medium text-[#cfdcff] transition-all duration-200 hover:-translate-y-0.5 hover:text-[#e7e5ea]"
-                  style={{
-                    background: 'rgba(171,199,255,0.08)',
-                    boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.28)',
-                  }}
-                  onMouseOver={(e) => {
-                    ;(e.currentTarget as HTMLButtonElement).style.background =
-                      'rgba(171,199,255,0.14)'
-                  }}
-                  onMouseOut={(e) => {
-                    ;(e.currentTarget as HTMLButtonElement).style.background =
-                      'rgba(171,199,255,0.08)'
-                  }}
-                >
-                  <Sparkles size={14} strokeWidth={2.2} style={{ color: '#abc7ff' }} />
-                  無料デモ
-                </button>
+                </ConsultationCallButton>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <DemoModal open={demoOpen} onClose={() => setDemoOpen(false)} />
     </Section>
   )
 }

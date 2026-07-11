@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma, TicketStatus } from '@bgm/db'
-import { getCurrentAppContext } from '@/lib/demo-master'
-import { getDemoTicketsForApi } from '@/lib/demo-crm-data'
+import { getCurrentAppContext } from '@/lib/app-context'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -100,23 +99,6 @@ export async function GET(req: NextRequest) {
       }
       throw fallbackError
     }
-  }
-
-  if (context.isDemo && tickets.length === 0) {
-    const demoTickets = getDemoTicketsForApi().filter((ticket) => {
-      if (statusParam && statusParam !== ticket.status) return false
-      if (companyId && ticket.company?.id !== companyId) return false
-      if (dealId && ticket.deal?.id !== dealId) return false
-      if (assigneeUserId && ticket.assignee?.id !== assigneeUserId) return false
-      if (!q) return true
-      const needle = q.toLowerCase()
-      return (
-        ticket.subject.toLowerCase().includes(needle) ||
-        (ticket.deal?.name ?? '').toLowerCase().includes(needle) ||
-        (ticket.company?.name ?? '').toLowerCase().includes(needle)
-      )
-    })
-    return NextResponse.json({ tickets: demoTickets })
   }
 
   return NextResponse.json({ tickets })

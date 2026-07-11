@@ -23,7 +23,6 @@ import {
   recordAiChatCreditUsage,
 } from '@/lib/credit-usage'
 import type { ChatPolicyState } from '@/lib/chat-policy-presets'
-import { getDefaultMasterOrgId } from '@/lib/demo-master'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -86,26 +85,15 @@ export async function POST(req: NextRequest) {
         where: { id: userId },
         select: {
           orgId: true,
-          org: {
-            select: {
-              plan: true,
-              slug: true,
-              lifecycleStatus: true,
-              demoExpiresAt: true,
-            },
-          },
+          org: { select: { plan: true } },
         },
       })
     : null
   if (userId && !user) return NextResponse.json({ error: 'user not found' }, { status: 404 })
 
   const plan = user?.org.plan ?? 'ENTERPRISE'
-  const isDemoResearchTenant =
-    Boolean(user?.org.slug.startsWith('demo-') || user?.org.lifecycleStatus === 'DEMO') &&
-    (!user?.org.demoExpiresAt || user.org.demoExpiresAt > new Date())
-  const appOrgId =
-    isDemoResearchTenant ? ((await getDefaultMasterOrgId()) ?? user?.orgId) : user?.orgId
-  if (process.env.NODE_ENV === 'production' && !isResearchAllowed(plan) && !isDemoResearchTenant) {
+  const appOrgId = user?.orgId
+  if (process.env.NODE_ENV === 'production' && !isResearchAllowed(plan)) {
     return NextResponse.json(
       { error: 'リサーチ機能はSTARTERプラン以上で利用できます' },
       { status: 403 }
@@ -132,7 +120,7 @@ export async function POST(req: NextRequest) {
   }
 
   // モデル決定
-  const resolved = resolveResearchModel(isDemoResearchTenant ? 'STARTER' : plan, {
+  const resolved = resolveResearchModel(plan, {
     model: reqModel,
     thinking: reqThinking,
   })
@@ -160,7 +148,7 @@ export async function POST(req: NextRequest) {
   }
 
   const systemPrompt =
-    `あなたはルキスマCRMのB2B営業リサーチAIです。社内データ・外部Web検索結果・当社情報を踏まえ、営業実務で使える具体的・構造化された回答を生成してください。\n` +
+    `あなたはFDE CRMのB2B営業リサーチAIです。社内データ・外部Web検索結果・当社情報を踏まえ、営業実務で使える具体的・構造化された回答を生成してください。\n` +
     `推測には必ず「根拠 / 推測 / 仮説」のラベルを付けてください。出典が分かる場合はURLや発信元を付記してください。\n` +
     `データが不足している場合は、断定せず、次に確認すべき情報を短く提示してください。\n\n` +
     formatAnswerStylePrompt() +

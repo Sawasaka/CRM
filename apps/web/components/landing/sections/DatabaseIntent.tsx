@@ -36,14 +36,14 @@ export const DatabaseIntent = () => {
   }, [nodes])
 
   return (
-    <Section tone="obsidian" screenLabel="08 Database">
+    <Section tone="obsidian" screenLabel="08 Infrastructure Map">
       <div className="relative mx-auto max-w-6xl px-6 py-32 md:py-44">
         <div className="max-w-3xl">
-          <Eyebrow color="#7ec6ff">DATABASE × INTENT</Eyebrow>
+          <Eyebrow color="#7ec6ff">FDE × AI INFRASTRUCTURE</Eyebrow>
           <h2 className="font-display font-bold tracking-[-0.025em] text-[2.4rem] md:text-[3.4rem] leading-[1.06] mt-5">
-            <span className="fo-gradient-text">290万社</span>の企業データと、
+            <span className="fo-gradient-text">現場の業務</span>と、
             <br />
-            4部門の「動いている」シグナル。
+            既存SaaSをAIでつなぐ。
           </h2>
         </div>
 
@@ -83,15 +83,15 @@ export const DatabaseIntent = () => {
               ))}
             </svg>
             <div className="absolute bottom-3 left-4 text-[10px] uppercase tracking-[0.16em] text-[#7e7c83]">
-              live · jp.gbiz.constellation
+              live · fde.infrastructure.map
             </div>
           </div>
           <div className="md:col-span-5 grid grid-cols-2 gap-4">
             {[
-              { k: '2,900,000', l: '収録企業数',          c: '#abc7ff' },
-              { k: '4,560',     l: '累計エンリッチ社数',  c: '#8dffc9' },
-              { k: '4部門',     l: 'インテント・シグナル', c: '#ffcf4a' },
-              { k: '3つ',       l: '公式連携 (gBizINFO 他)', c: '#c8b9ff' },
+              { k: 'FDE',       l: 'ヒアリングから設計',          c: '#abc7ff' },
+              { k: 'AI',        l: 'ナレッジ検索・要約',  c: '#8dffc9' },
+              { k: 'SaaS',      l: 'Obsidian / Notion / Workspace', c: '#ffcf4a' },
+              { k: 'Ops',       l: '現場運用まで実装', c: '#c8b9ff' },
             ].map((s, i) => (
               <div key={i} className="rounded-2xl bg-dusk p-5 fo-glass-rim">
                 <div className="font-display font-bold text-[1.7rem]" style={{ color: s.c }}>{s.k}</div>

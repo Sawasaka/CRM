@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@bgm/db'
-import { getCurrentAppContext } from '@/lib/demo-master'
-import { getDemoTasksForApi } from '@/lib/demo-crm-data'
+import { getCurrentAppContext } from '@/lib/app-context'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -77,10 +76,6 @@ export async function GET(req: NextRequest) {
       },
     },
   })
-
-  if (context.isDemo && tasks.length === 0) {
-    return NextResponse.json({ tasks: getDemoTasksForApi(scope) })
-  }
 
   return NextResponse.json({
     tasks: tasks.map((task) => {

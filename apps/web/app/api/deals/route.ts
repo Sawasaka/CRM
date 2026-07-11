@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@bgm/db'
-import { getCurrentAppContext } from '@/lib/demo-master'
-import { getDemoDealsForApi } from '@/lib/demo-crm-data'
+import { getCurrentAppContext } from '@/lib/app-context'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -14,20 +13,6 @@ export async function GET(req: NextRequest) {
   const q = sp.get('q')?.trim() ?? ''
   const companyId = sp.get('companyId') ?? undefined
   const take = Math.min(parseInt(sp.get('take') ?? '20', 10), 100)
-
-  if (context.isDemo) {
-    const demoDeals = getDemoDealsForApi().filter((deal) => {
-      if (companyId && deal.company.id !== companyId) return false
-      if (!q) return true
-      const needle = q.toLowerCase()
-      return (
-        deal.name.toLowerCase().includes(needle) ||
-        deal.company.name.toLowerCase().includes(needle) ||
-        (deal.contact?.name ?? '').toLowerCase().includes(needle)
-      )
-    })
-    return NextResponse.json({ deals: demoDeals.slice(0, take) })
-  }
 
   const where: Record<string, unknown> = { orgId: context.appOrgId }
   if (companyId) where.companyId = companyId

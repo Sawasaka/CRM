@@ -38,49 +38,17 @@ interface RepData {
 
 // ─── Mock Data ───────────────────────────────────────────────────────────────
 
-const LEAD_SOURCES: LeadSource[] = [
-  { id: 'hp',       label: 'HP問い合わせ', leads: 50,  deals: 12, pocs: 8,  won: 6, avgDealAmount: 1500000 },
-  { id: 'pricing',  label: '料金ページ',   leads: 30,  deals: 10, pocs: 7,  won: 5, avgDealAmount: 800000  },
-  { id: 'seminar',  label: 'セミナー主催', leads: 80,  deals: 20, pocs: 12, won: 8, avgDealAmount: 2000000 },
-  { id: 'referral', label: '紹介',         leads: 15,  deals: 10, pocs: 9,  won: 8, avgDealAmount: 3200000 },
-  { id: 'paid_ads', label: '有料広告',     leads: 100, deals: 8,  pocs: 3,  won: 1, avgDealAmount: 600000  },
-  { id: 'partner',  label: 'パートナー',   leads: 20,  deals: 9,  pocs: 7,  won: 6, avgDealAmount: 2500000 },
-]
+const LEAD_SOURCES: LeadSource[] = []
 
-const REPS: RepData[] = [
-  { name: '田中太郎', deals: 18, won: 8, avgAmount: 3200000, avgCycleDays: 42, color: 'var(--color-obs-primary)' },
-  { name: '鈴木花子', deals: 14, won: 7, avgAmount: 2800000, avgCycleDays: 38, color: 'var(--color-obs-low)' },
-  { name: '佐藤次郎', deals: 12, won: 4, avgAmount: 1900000, avgCycleDays: 56, color: 'var(--color-obs-middle)' },
-]
+const REPS: RepData[] = []
 
 // ─── GA4 Mock Data ──────────────────────────────────────────────────────────
 
-const GA4_PAGES: GA4PageData[] = [
-  { path: '/', title: 'トップページ', pageViews: 12500, uniqueUsers: 8200, avgSessionDuration: 45, bounceRate: 42, conversions: 85 },
-  { path: '/pricing', title: '料金ページ', pageViews: 3800, uniqueUsers: 2900, avgSessionDuration: 120, bounceRate: 28, conversions: 52 },
-  { path: '/features', title: '機能紹介', pageViews: 5200, uniqueUsers: 3100, avgSessionDuration: 90, bounceRate: 35, conversions: 23 },
-  { path: '/case-studies', title: '導入事例', pageViews: 2100, uniqueUsers: 1600, avgSessionDuration: 180, bounceRate: 22, conversions: 18 },
-  { path: '/contact', title: 'お問い合わせ', pageViews: 1800, uniqueUsers: 1500, avgSessionDuration: 60, bounceRate: 15, conversions: 120 },
-  { path: '/blog', title: 'ブログ', pageViews: 8900, uniqueUsers: 6500, avgSessionDuration: 75, bounceRate: 55, conversions: 8 },
-]
+const GA4_PAGES: GA4PageData[] = []
 
-const GA4_DAILY: GA4DailyTraffic[] = [
-  { date: '3/20', sessions: 450, users: 380, pageViews: 1200, cvRate: 2.1 },
-  { date: '3/21', sessions: 520, users: 420, pageViews: 1450, cvRate: 2.5 },
-  { date: '3/22', sessions: 380, users: 310, pageViews: 980,  cvRate: 1.8 },
-  { date: '3/23', sessions: 610, users: 490, pageViews: 1680, cvRate: 3.2 },
-  { date: '3/24', sessions: 480, users: 400, pageViews: 1350, cvRate: 2.4 },
-  { date: '3/25', sessions: 550, users: 440, pageViews: 1520, cvRate: 2.8 },
-  { date: '3/26', sessions: 590, users: 470, pageViews: 1600, cvRate: 3.0 },
-]
+const GA4_DAILY: GA4DailyTraffic[] = []
 
-const GA4_SOURCES: GA4SourceMedium[] = [
-  { source: 'google',   medium: 'organic',  sessions: 1200, users: 980,  cvRate: 2.8 },
-  { source: 'google',   medium: 'cpc',      sessions: 800,  users: 650,  cvRate: 3.5 },
-  { source: '(direct)',  medium: '(none)',   sessions: 600,  users: 500,  cvRate: 4.2 },
-  { source: 'linkedin',  medium: 'social',  sessions: 300,  users: 250,  cvRate: 1.9 },
-  { source: 'referral',  medium: 'partner', sessions: 200,  users: 180,  cvRate: 5.1 },
-]
+const GA4_SOURCES: GA4SourceMedium[] = []
 
 // ─── Tracking Mock Data ─────────────────────────────────────────────────────
 
@@ -293,7 +261,7 @@ function TeamPerformanceTab() {
       </ObsCard>
 
       {/* Next Action 推奨 */}
-      <div className="space-y-2">
+      {REPS.length > 0 && <div className="space-y-2">
         <h4
           className="text-[13px] font-semibold mb-2"
           style={{ color: 'var(--color-obs-text)' }}
@@ -324,7 +292,7 @@ function TeamPerformanceTab() {
             <span className="font-semibold">佐藤:</span> 平均サイクル56日 — 他メンバー（38-42日）対比で長い。ボトルネック確認推奨
           </p>
         </div>
-      </div>
+      </div>}
     </motion.div>
   )
 }
@@ -335,7 +303,9 @@ function GATab() {
   const totalSessions = GA4_DAILY.reduce((s, d) => s + d.sessions, 0)
   const totalUsers = GA4_DAILY.reduce((s, d) => s + d.users, 0)
   const totalPV = GA4_DAILY.reduce((s, d) => s + d.pageViews, 0)
-  const avgCV = (GA4_DAILY.reduce((s, d) => s + d.cvRate, 0) / GA4_DAILY.length).toFixed(1)
+  const avgCV = GA4_DAILY.length
+    ? (GA4_DAILY.reduce((s, d) => s + d.cvRate, 0) / GA4_DAILY.length).toFixed(1)
+    : '0.0'
 
   return (
     <motion.div
@@ -767,13 +737,14 @@ export default function AnalyticsPage() {
   // Summary KPIs
   const totalLeads = LEAD_SOURCES.reduce((s, x) => s + x.leads, 0)
   const totalWon   = LEAD_SOURCES.reduce((s, x) => s + x.won, 0)
-  const avgWinRate = Math.round((totalWon / LEAD_SOURCES.reduce((s, x) => s + x.deals, 0)) * 100)
+  const totalDeals = LEAD_SOURCES.reduce((s, x) => s + x.deals, 0)
+  const avgWinRate = totalDeals > 0 ? Math.round((totalWon / totalDeals) * 100) : 0
   const roiSorted = [...LEAD_SOURCES].sort((a, b) => {
     const ra = parseInt(costMap[a.id] || '0') > 0 ? (a.won * a.avgDealAmount) / parseInt(costMap[a.id] || '0') : 0
     const rb = parseInt(costMap[b.id] || '0') > 0 ? (b.won * b.avgDealAmount) / parseInt(costMap[b.id] || '0') : 0
     return rb - ra
   })
-  const bestROI = roiSorted[0] ?? LEAD_SOURCES[0]!
+  const bestROI = roiSorted[0] ?? null
 
   const TABS: { key: AnalyticsTab; label: string; icon: React.ElementType }[] = [
     { key: 'channel',  label: 'IS経路分析',      icon: TrendingUp },
@@ -811,8 +782,10 @@ export default function AnalyticsPage() {
             },
             {
               label: '最高ROI経路',
-              value: bestROI.label,
-              sub: `受注${bestROI.won}件 / 受注額${formatAmount(bestROI.won * bestROI.avgDealAmount)}`,
+              value: bestROI?.label ?? '—',
+              sub: bestROI
+                ? `受注${bestROI.won}件 / 受注額${formatAmount(bestROI.won * bestROI.avgDealAmount)}`
+                : 'データなし',
               icon: TrendingUp,
               color: 'var(--color-obs-primary-container)',
             },

@@ -1,0 +1,26 @@
+<svg width="960" height="540" viewBox="0 0 960 540" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="960" height="540" rx="36" fill="#090A0F"/>
+  <rect width="960" height="540" rx="36" fill="url(#g)"/>
+  <path d="M88 94H872" stroke="white" stroke-opacity=".16"/>
+  <text x="88" y="74" fill="#C8B9FF" font-family="Arial, sans-serif" font-size="22" font-weight="700" letter-spacing="5">CASE STUDY / HEALTHCARE</text>
+  <text x="88" y="172" fill="white" font-family="Arial, sans-serif" font-size="58" font-weight="800">Sepsis Hub</text>
+  <text x="88" y="228" fill="#D7D4DD" font-family="Arial, sans-serif" font-size="28" font-weight="700">Tampa General × Palantir</text>
+  <rect x="88" y="300" width="252" height="92" rx="18" fill="black" fill-opacity=".28" stroke="white" stroke-opacity=".14"/>
+  <text x="112" y="338" fill="#C8B9FF" font-family="Arial, sans-serif" font-size="18" font-weight="800">68%</text>
+  <text x="112" y="370" fill="#D7D4DD" font-family="Arial, sans-serif" font-size="18">early mortality down</text>
+  <rect x="368" y="300" width="252" height="92" rx="18" fill="black" fill-opacity=".28" stroke="white" stroke-opacity=".14"/>
+  <text x="392" y="338" fill="#C8B9FF" font-family="Arial, sans-serif" font-size="18" font-weight="800">900+</text>
+  <text x="392" y="370" fill="#D7D4DD" font-family="Arial, sans-serif" font-size="18">lives saved reported</text>
+  <rect x="648" y="300" width="224" height="92" rx="18" fill="black" fill-opacity=".28" stroke="white" stroke-opacity=".14"/>
+  <text x="672" y="338" fill="#C8B9FF" font-family="Arial, sans-serif" font-size="18" font-weight="800">C3</text>
+  <text x="672" y="370" fill="#D7D4DD" font-family="Arial, sans-serif" font-size="18">operation center</text>
+  <circle cx="756" cy="170" r="74" fill="#C8B9FF" fill-opacity=".13" stroke="#C8B9FF" stroke-opacity=".45"/>
+  <path d="M718 170H794M756 132V208" stroke="#F4F3F7" stroke-width="12" stroke-linecap="round"/>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="960" y2="540">
+      <stop stop-color="#322B48"/>
+      <stop offset=".48" stop-color="#111218"/>
+      <stop offset="1" stop-color="#05060A"/>
+    </linearGradient>
+  </defs>
+</svg>

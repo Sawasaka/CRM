@@ -20,7 +20,7 @@ export default async function CustomerOpsPage() {
             アクセス権限がありません
           </h2>
           <p className="text-[13px]" style={{ color: 'var(--color-obs-text-muted)' }}>
-            このページは ルキスマCRM 開発者テナント専用です。
+            このページは FDE CRM 開発者テナント専用です。
           </p>
         </div>
       </ObsPageShell>

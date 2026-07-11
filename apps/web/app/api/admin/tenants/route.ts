@@ -11,14 +11,12 @@ type Payload = {
   id?: unknown
   name?: string
   slug?: string
-  status?: 'active' | 'demo' | 'inactive'
-  demoExpiresAt?: unknown
+  status?: 'active' | 'inactive'
   contractInfo?: unknown
   memo?: unknown
 }
 
 type CleanStatus = NonNullable<Payload['status']>
-const DEFAULT_DEMO_DURATION_MS = 15 * 60 * 1000
 
 // 契約情報の自由項目を最大30件・各文字数制限でサニタイズ (空行は除外)
 function cleanContractInfo(raw: unknown): { label: string; value: string }[] {
@@ -38,22 +36,10 @@ function cleanMemo(raw: unknown): string {
   return typeof raw === 'string' ? raw.trim().slice(0, 2000) : ''
 }
 
-function cleanDemoExpiresAt(raw: unknown): Date | null {
-  if (raw == null || raw === '') return null
-  if (typeof raw !== 'string') return null
-  const date = new Date(raw)
-  return Number.isNaN(date.getTime()) ? null : date
-}
-
 function cleanPayload(body: Payload) {
   const name = typeof body.name === 'string' ? body.name.trim().slice(0, 120) : ''
   const slug = typeof body.slug === 'string' ? body.slug.trim().toLowerCase().slice(0, 80) : ''
   const status = cleanStatus(body.status)
-  const rawDemoExpiresAt = cleanDemoExpiresAt(body.demoExpiresAt)
-  const demoExpiresAt =
-    status === 'demo'
-      ? rawDemoExpiresAt ?? new Date(Date.now() + DEFAULT_DEMO_DURATION_MS)
-      : null
   const contractInfo = cleanContractInfo(body.contractInfo)
   const memo = cleanMemo(body.memo)
   if (!name || !slug) return null
@@ -62,7 +48,6 @@ function cleanPayload(body: Payload) {
     name,
     slug,
     status,
-    demoExpiresAt,
     contractInfo,
     memo,
     ...statusToCreateData(status),
@@ -73,19 +58,14 @@ function cleanUpdatePayload(body: Payload) {
   const id = typeof body.id === 'string' ? body.id.trim() : ''
   const name = typeof body.name === 'string' ? body.name.trim().slice(0, 120) : ''
   const status = cleanStatus(body.status)
-  const rawDemoExpiresAt = cleanDemoExpiresAt(body.demoExpiresAt)
-  const demoExpiresAt =
-    status === 'demo'
-      ? rawDemoExpiresAt ?? new Date(Date.now() + DEFAULT_DEMO_DURATION_MS)
-      : null
   const contractInfo = cleanContractInfo(body.contractInfo)
   const memo = cleanMemo(body.memo)
   if (!id || !name) return null
-  return { id, name, status, demoExpiresAt, contractInfo, memo }
+  return { id, name, status, contractInfo, memo }
 }
 
 function cleanStatus(status: Payload['status']): CleanStatus {
-  if (status === 'demo' || status === 'inactive') return status
+  if (status === 'inactive') return status
   return 'active'
 }
 
@@ -94,17 +74,14 @@ function statusToCreateData(status: CleanStatus): {
   lifecycleStatus: TenantLifecycleStatus
 } {
   if (status === 'active') return { plan: 'GROWTH', lifecycleStatus: 'ACTIVE' }
-  if (status === 'demo') return { plan: 'FREE', lifecycleStatus: 'DEMO' }
   return { plan: 'GROWTH', lifecycleStatus: 'INACTIVE' }
 }
 
 function statusToUpdateData(
   status: CleanStatus,
-  existingPlan: Plan,
-  demoExpiresAt: Date | null
+  existingPlan: Plan
 ): { plan: Plan; lifecycleStatus: TenantLifecycleStatus; demoExpiresAt: Date | null } {
   if (status === 'active') return { plan: 'GROWTH', lifecycleStatus: 'ACTIVE', demoExpiresAt: null }
-  if (status === 'demo') return { plan: 'FREE', lifecycleStatus: 'DEMO', demoExpiresAt }
   return { plan: existingPlan, lifecycleStatus: 'INACTIVE', demoExpiresAt: null }
 }
 
@@ -128,7 +105,7 @@ export async function POST(req: NextRequest) {
       slug: payload.slug,
       plan: payload.plan,
       lifecycleStatus: payload.lifecycleStatus,
-      demoExpiresAt: payload.demoExpiresAt,
+      demoExpiresAt: null,
       // メモと契約項目を同じJSONカラムにまとめて保存する
       contractInfo: { memo: payload.memo, items: payload.contractInfo },
     },
@@ -162,11 +139,7 @@ export async function PATCH(req: NextRequest) {
   if (existing.slug === 'default') {
     return NextResponse.json({ error: 'default_tenant_is_readonly' }, { status: 400 })
   }
-  if (existing.lifecycleStatus === 'DEMO' && payload.status === 'active') {
-    return NextResponse.json({ error: 'demo_tenant_cannot_be_upgraded' }, { status: 400 })
-  }
-
-  const statusData = statusToUpdateData(payload.status, existing.plan, payload.demoExpiresAt)
+  const statusData = statusToUpdateData(payload.status, existing.plan)
   const updated = await prisma.organization.update({
     where: { id: payload.id },
     data: {

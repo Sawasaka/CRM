@@ -13,7 +13,7 @@ export interface SendMailInput {
   to: string                       // 単一の宛先メールアドレス
   subject: string
   body: string                     // プレーンテキスト or 軽量HTML
-  fromName?: string                // 表示名 (例: '田中太郎 <ルキスマCRM>')
+  fromName?: string                // 表示名 (例: '田中太郎 <FDE CRM>')
   links?: CampaignLinkSummary[]    // 中継URLに置換済みのキャンペーンリンク (本文末尾に追記)
 }
 

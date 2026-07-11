@@ -27,11 +27,6 @@ import {
 } from '@/components/obsidian'
 import { SignalBadge, type Signal as FirstPartySignal } from '@/components/crm/SignalBadge'
 import { getCompanyFirstPartySignal } from '@/lib/mock-data/firstPartySignals'
-import {
-  buildDemoDeptPhoneCount,
-  buildDemoHireBudgets,
-  isDemoUrlSearch,
-} from '@/lib/demo-company-data'
 
 type Signal = 'Hot' | 'Middle' | 'Low' | 'None'
 type IntentLevel = 'hot' | 'middle' | 'low'
@@ -556,7 +551,6 @@ export default function CompaniesPage() {
         }
         const json = (await res.json()) as ApiResponse
         if (cancelled) return
-        const demoView = isDemoUrlSearch(window.location.search)
         const mapped: CompanyRow[] = json.data.map((c) => {
           const officeCount = c._count?.offices ?? 0
           return {
@@ -572,10 +566,8 @@ export default function CompaniesPage() {
             corporateType: c.corporateType,
             corporateNumber: c.corporateNumber,
             officeCount,
-            deptPhoneCount: demoView
-              ? buildDemoDeptPhoneCount(c.id, c.companyIntents, officeCount)
-              : 0,
-            hireBudgets: demoView ? buildDemoHireBudgets(c.id, c.companyIntents) : [],
+            deptPhoneCount: 0,
+            hireBudgets: [],
             serviceTags: c.serviceTags.map((t) => t.tag.name),
             intents: c.companyIntents,
             enrichmentStatus: c.enrichmentStatus,

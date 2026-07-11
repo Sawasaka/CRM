@@ -11,11 +11,7 @@ import type {
   TenantRow,
   TenantStatus,
 } from '@/lib/admin/customer-ops-types'
-import {
-  getDemoOpenUrl,
-  getPaidJoinUrl,
-  getTenantEnvironmentUrl,
-} from '@/lib/public-url'
+import { getPaidJoinUrl, getTenantEnvironmentUrl } from '@/lib/public-url'
 
 // 開発者用テナント一覧 (最小機能版 / 精緻UI)
 // - 行クリックで該当テナントの本環境を新規タブで開く
@@ -31,10 +27,7 @@ export function CustomerOpsClient({
   const [tenants, setTenants] = useState<TenantRow[]>(() => sortTenantsDefaultFirst(initialTenants))
   const [editingTenant, setEditingTenant] = useState<TenantRow | null>(null)
   const masterTenants = tenants.filter(isMasterTenantRow)
-  const productionTenants = tenants.filter(
-    (tenant) => !isMasterTenantRow(tenant) && !isDemoTenantRow(tenant)
-  )
-  const demoTenants = tenants.filter(isDemoTenantRow)
+  const productionTenants = tenants.filter((tenant) => !isMasterTenantRow(tenant))
 
   useEffect(() => {
     setTenants(sortTenantsDefaultFirst(initialTenants))
@@ -140,23 +133,16 @@ export function CustomerOpsClient({
           <div className="space-y-8">
             <TenantSection
               title="Default / マスター環境"
-              caption="開発・機能修正の基準になる環境です。顧客本番やデモとは分けて管理します。"
+              caption="開発・機能修正の基準になる環境です。本番環境とは分けて管理します。"
               tenants={masterTenants}
               emptyText="マスター環境はまだありません。"
               onEdit={setEditingTenant}
             />
             <TenantSection
               title="本番環境 / 顧客テナント"
-              caption="有料顧客が使う実データ環境です。デモ用ダミーデータとは分けて管理します。"
+              caption="顧客が使う実データ環境です。"
               tenants={productionTenants}
               emptyText="本番顧客テナントはまだありません。"
-              onEdit={setEditingTenant}
-            />
-            <TenantSection
-              title="無料デモテナント"
-              caption="15分など期限付きで共有するデモ環境です。登録リンクと直接入室リンクを分けて管理します。"
-              tenants={demoTenants}
-              emptyText="発行済みのデモテナントはまだありません。"
               onEdit={setEditingTenant}
             />
           </div>
@@ -263,15 +249,6 @@ function buildEmptyTenant(): TenantRow {
     contractInfo: [],
     memo: '',
   }
-}
-
-function isDemoTenantRow(tenant: TenantRow) {
-  return (
-    tenant.status === 'demo' ||
-    tenant.plan === 'Free' ||
-    tenant.slug.startsWith('demo-') ||
-    tenant.demoExpiresAt !== null
-  )
 }
 
 function isMasterTenantRow(tenant: TenantRow) {
@@ -447,7 +424,6 @@ type ContractStatus = TenantStatus
 
 const STATUS_META: Record<TenantStatus, { label: string; color: string; bg: string }> = {
   active: { label: '本番', color: '#5CDEA6', bg: 'rgba(75,200,140,0.12)' },
-  demo: { label: 'Demo', color: '#FFC107', bg: 'rgba(255,193,7,0.12)' },
   inactive: { label: 'Inactive', color: '#9b99a0', bg: 'rgba(255,255,255,0.05)' },
 }
 
@@ -484,42 +460,12 @@ function formatDate(iso: string): string {
   }
 }
 
-function formatDateTime(iso: string): string {
-  try {
-    const d = new Date(iso)
-    return `${formatDate(iso)} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
-  } catch {
-    return iso
-  }
-}
-
-function toDateTimeLocalValue(iso: string | null): string {
-  if (!iso) return ''
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return ''
-  const local = new Date(d.getTime() - d.getTimezoneOffset() * 60_000)
-  return local.toISOString().slice(0, 16)
-}
-
-function toDateTimeLocalFromNow(minutes: number): string {
-  const d = new Date(Date.now() + minutes * 60_000)
-  const local = new Date(d.getTime() - d.getTimezoneOffset() * 60_000)
-  return local.toISOString().slice(0, 16)
-}
-
-function fromDateTimeLocalValue(value: string): string | null {
-  if (!value) return null
-  const d = new Date(value)
-  return Number.isNaN(d.getTime()) ? null : d.toISOString()
-}
-
 // ─── Tenant edit modal (中央モーダル・画面遷移なし) ─────────────────────────
 
 type TenantDraft = {
   name: string
   slug: string
   status: ContractStatus
-  demoExpiresAt: string
   memo: string
   contractInfo: ContractItem[]
 }
@@ -537,19 +483,11 @@ function TenantEditDrawer({
 }) {
   const isNew = tenant?.id === ''
   const isDefaultTenant = tenant?.slug === 'default'
-  const isDemoTenant = tenant?.status === 'demo'
-  const statusOptions =
-    isDemoTenant && !isNew
-      ? [{ value: 'demo', label: 'Demo' }]
-      : [
-          { value: 'active', label: '本番' },
-          { value: 'demo', label: 'Demo' },
-        ]
+  const statusOptions = [{ value: 'active', label: '本番' }]
   const [draft, setDraft] = useState<TenantDraft>({
     name: '',
     slug: '',
     status: 'active',
-    demoExpiresAt: '',
     memo: '',
     contractInfo: [],
   })
@@ -559,9 +497,7 @@ function TenantEditDrawer({
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const isDemoStatus = draft.status === 'demo'
   const isPaidStatus = draft.status === 'active'
-  const directDemoUrl = draft.slug && isDemoStatus ? getDemoOpenUrl(draft.slug) : ''
   const paidJoinUrl = draft.slug && isPaidStatus ? getPaidJoinUrl(draft.slug) : ''
 
   // 開く度に draft を tenant の値で初期化
@@ -577,7 +513,6 @@ function TenantEditDrawer({
         name: tenant.name,
         slug: tenant.slug,
         status: tenant.status,
-        demoExpiresAt: toDateTimeLocalValue(tenant.demoExpiresAt),
         memo: tenant.memo ?? '',
         contractInfo: seededContract,
       })
@@ -633,8 +568,6 @@ function TenantEditDrawer({
         name: draft.name.trim(),
         slug: draft.slug.trim(),
         status: draft.status,
-        demoExpiresAt:
-          draft.status === 'demo' ? fromDateTimeLocalValue(draft.demoExpiresAt) : null,
         contractInfo: cleanedContract,
         memo: draft.memo.trim(),
       }
@@ -659,8 +592,7 @@ function TenantEditDrawer({
         name: payload.name,
         slug: payload.slug,
         status: payload.status,
-        demoExpiresAt:
-          (json.demoExpiresAt as string | null | undefined) ?? payload.demoExpiresAt ?? null,
+        demoExpiresAt: (json.demoExpiresAt as string | null | undefined) ?? null,
         createdAt: tenant.id ? tenant.createdAt : new Date().toISOString(),
         contractInfo: (json.contractInfo as ContractItem[] | undefined) ?? cleanedContract,
         memo: (json.memo as string | undefined) ?? payload.memo,
@@ -871,32 +803,16 @@ function TenantEditDrawer({
               <div className="grid grid-cols-2 gap-4 items-start">
                 <Field label="状態" hint={isNew ? '作成時のみ選択可' : '登録後は変更不可'}>
                   {isNew ? (
-                    // 新規作成時のみ 本番/DEMO を選べる
                     <SegmentSelect
                       options={statusOptions}
                       value={draft.status}
-                      onChange={(v) => {
-                        const nextStatus = v as ContractStatus
-                        setDraft({
-                          ...draft,
-                          status: nextStatus,
-                          demoExpiresAt:
-                            nextStatus === 'demo' && !draft.demoExpiresAt
-                              ? toDateTimeLocalFromNow(15)
-                              : draft.demoExpiresAt,
-                        })
-                      }}
+                      onChange={(v) => setDraft({ ...draft, status: v as ContractStatus })}
                     />
                   ) : (
                     // 既存テナントは状態を変更できない（読み取り専用表示）
                     <div className="flex items-center gap-2 h-9">
                       <StatusChip status={draft.status} />
                     </div>
-                  )}
-                  {isDemoTenant && !isNew && (
-                    <p className="mt-2 text-[11px] leading-relaxed" style={{ color: 'var(--color-obs-text-muted)' }}>
-                      有料化する場合は、このデモを変換せず新しい有料テナントを発行します。
-                    </p>
                   )}
                 </Field>
 
@@ -915,50 +831,6 @@ function TenantEditDrawer({
                   />
                 </Field>
               </div>
-
-              {isDemoStatus && (
-                <Field label="有効期限" hint="共有リンク / デモ操作期限">
-                  <div className="space-y-2">
-                    <input
-                      type="datetime-local"
-                      value={draft.demoExpiresAt}
-                      onChange={(e) => setDraft({ ...draft, demoExpiresAt: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-[var(--radius-obs-md)] text-[13px] bg-transparent border-0 outline-none"
-                      style={{
-                        color: 'var(--color-obs-text)',
-                        background: 'rgba(255,255,255,0.03)',
-                        boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.06)',
-                      }}
-                    />
-                    <div className="flex flex-wrap gap-2">
-                      {[
-                        { label: '15分後', minutes: 15 },
-                        { label: '30分後', minutes: 30 },
-                        { label: '1時間後', minutes: 60 },
-                      ].map((option) => (
-                        <button
-                          key={option.minutes}
-                          type="button"
-                          onClick={() =>
-                            setDraft({
-                              ...draft,
-                              demoExpiresAt: toDateTimeLocalFromNow(option.minutes),
-                            })
-                          }
-                          className="px-3 py-1.5 rounded-[var(--radius-obs-sm)] text-[11.5px] font-semibold transition-colors"
-                          style={{
-                            color: 'var(--color-obs-text-subtle)',
-                            background: 'rgba(255,255,255,0.04)',
-                            boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.06)',
-                          }}
-                        >
-                          {option.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </Field>
-              )}
 
               {/* 契約情報 (企業ごとに自由な項目を追加できる) */}
               <ContractEditor
@@ -1006,54 +878,26 @@ function TenantEditDrawer({
                         value={tenant.lastActivityAt ? formatDate(tenant.lastActivityAt) : '—'}
                       />
                       <MetaRow label="作成日" value={formatDate(tenant.createdAt)} />
-                      {tenant.demoExpiresAt && (
-                        <MetaRow label="デモ期限" value={formatDateTime(tenant.demoExpiresAt)} />
-                      )}
                     </div>
                   </div>
 
-                  {/* 主担当 / デモ登録者 */}
+                  {/* 主担当 */}
                   <div className="space-y-2">
                     <div className="flex items-baseline justify-between">
                       <div
                         className="text-[10.5px] font-semibold uppercase tracking-[0.12em]"
                         style={{ color: 'var(--color-obs-text-subtle)' }}
                       >
-                        {isDemoTenant ? 'デモ登録者' : '登録情報'}
+                        登録情報
                       </div>
                       <span
                         className="text-[10px]"
                         style={{ color: 'var(--color-obs-text-muted)' }}
                       >
-                        {isDemoTenant ? 'デモ申込で入力' : '登録済みユーザー'}
+                        登録済みユーザー
                       </span>
                     </div>
-                    {isDemoTenant ? (
-                      // デモは3項目を最初から用意し、申込が入ると値が埋まる
-                      <div
-                        className="rounded-[var(--radius-obs-md)] px-4 py-3 space-y-2"
-                        style={{
-                          background: 'rgba(255,255,255,0.02)',
-                          boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.05)',
-                        }}
-                      >
-                        <MetaRow
-                          label="会社名"
-                          value={tenant.primaryContact ? tenant.name : '未入力'}
-                          muted={!tenant.primaryContact}
-                        />
-                        <MetaRow
-                          label="氏名"
-                          value={tenant.primaryContact?.name || '未入力'}
-                          muted={!tenant.primaryContact}
-                        />
-                        <MetaRow
-                          label="メール"
-                          value={tenant.primaryContact?.email || '未入力'}
-                          muted={!tenant.primaryContact}
-                        />
-                      </div>
-                    ) : tenant.primaryContact ? (
+                    {tenant.primaryContact ? (
                       <div
                         className="rounded-[var(--radius-obs-md)] px-4 py-3 space-y-2"
                         style={{
@@ -1084,28 +928,6 @@ function TenantEditDrawer({
                 </div>
               )}
 
-              {isDemoStatus && (
-                <div className="space-y-3">
-                  <LinkCopyBox
-                    title="共有リンク"
-                    caption={
-                      draft.demoExpiresAt
-                        ? `${formatDateTime(fromDateTimeLocalValue(draft.demoExpiresAt) ?? '')} まで`
-                        : '15分デモ用'
-                    }
-                    url={directDemoUrl}
-                    copied={copiedKey === 'direct-demo'}
-                    onCopy={() => handleCopy(directDemoUrl, 'direct-demo')}
-                  />
-                  <p
-                    className="text-[11px] -mt-1 leading-relaxed"
-                    style={{ color: 'var(--color-obs-text-muted)' }}
-                  >
-                    お客様に共有するリンクです。Google登録なしで、そのままこのデモテナントのサービス画面へ入ります。
-                  </p>
-                </div>
-              )}
-
               {isPaidStatus && (
                 <div>
                   <LinkCopyBox
@@ -1119,7 +941,7 @@ function TenantEditDrawer({
                     className="text-[11px] mt-2 leading-relaxed"
                     style={{ color: 'var(--color-obs-text-muted)' }}
                   >
-                    ログイン共有リンクです。相手はGoogle登録から期限なしの本番環境へ入ります。デモ用のダミーデータは使いません。
+                    ログイン共有リンクです。相手はGoogle登録から本番環境へ入ります。
                   </p>
                 </div>
               )}

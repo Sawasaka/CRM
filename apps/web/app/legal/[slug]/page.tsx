@@ -21,13 +21,13 @@ export const generateMetadata = async ({ params }: LegalPageProps): Promise<Meta
 
   if (!document) {
     return {
-      title: 'Legal | ルキスマCRM',
+      title: 'Legal | ルキスマLAB',
     }
   }
 
   return {
     metadataBase: new URL(publicSiteUrl),
-    title: `${document.title} | ルキスマCRM | 株式会社ルーキースマートジャパン`,
+    title: `${document.title} | ルキスマLAB | 株式会社ルーキースマートジャパン`,
     description: document.description,
     alternates: {
       canonical: `/legal/${document.slug}`,
@@ -48,7 +48,7 @@ export default async function LegalDocumentPage({ params }: LegalPageProps) {
       <article className="mx-auto max-w-3xl px-6 py-16 md:py-24">
         <nav className="flex items-center gap-3 text-sm text-[#8f8c90]">
           <Link href="/" className="text-[#abc7ff] hover:text-white">
-            ルキスマCRM
+            ルキスマLAB
           </Link>
           <span>/</span>
           <Link href="/legal" className="hover:text-white">

@@ -2,10 +2,11 @@ import { Eyebrow, Section } from '../atoms'
 
 export const MetricsBand = () => {
   const stats = [
-    { k: '0',     suf: '設計',  l: '入力・分析項目 プリセット済み',       c: '#abc7ff' },
-    { k: '5',     suf: '体',    l: 'ドメイン特化エージェント',           c: '#d3a5ff' },
-    { k: '0.1',   suf: '入力',  l: '議事録・メール・コール 自動取込',     c: '#8dffc9' },
-    { k: '180万', suf: '社',    l: '部署直通番号 × 求人インテント',                c: '#ffcf4a' },
+    { k: 'CRM AI', l: '現場と数字を整理', c: '#ffcf4a' },
+    { k: 'ナレッジ AI', l: '社内知見を活用', c: '#d3a5ff' },
+    { k: 'CALL AI', l: '電話から日程調整', c: '#8dffc9' },
+    { k: 'アシスタント AI', l: '商談中に即回答', c: '#ff8dcf' },
+    { k: 'SEO AI', l: '記事から相談導線へ', c: '#7ec6ff' },
   ]
   return (
     <Section tone="pitch" screenLabel="11 Metrics">
@@ -31,32 +32,56 @@ export const MetricsBand = () => {
         {/* Heading */}
         <div className="relative text-center mb-10">
           <div className="flex justify-center">
-            <Eyebrow color="#abc7ff">5 AGENTS + 部署直通番号</Eyebrow>
+            <Eyebrow color="#abc7ff">REVENUE AI/DX INFRASTRUCTURE</Eyebrow>
           </div>
-          <h2 className="font-display font-bold tracking-[-0.025em] text-[1.8rem] md:text-[2.6rem] leading-[1.06] mt-5">
-            <span className="text-[#9b99a0]">統合された5領域、</span>
-            <span className="fo-gradient-text">ひとつのCRMで。</span>
+          <h2 className="mx-auto mt-5 max-w-3xl font-display text-[1.7rem] font-bold leading-[1.08] tracking-[-0.02em] md:text-[2.35rem]">
+            <span className="text-[#d7d5dc]">売上インフラを、</span>
+            <span className="fo-gradient-text">AIで育てる。</span>
           </h2>
         </div>
 
-        {/* Stats grid */}
-        <div className="relative grid grid-cols-2 md:grid-cols-4 gap-px rounded-3xl overflow-hidden bg-[#1f1f21] fo-glass-rim">
+        {/* Service map */}
+        <div className="relative mx-auto max-w-5xl rounded-[30px] bg-[#111217]/70 p-2 shadow-2xl shadow-black/25 fo-glass-rim">
+          <div
+            className="pointer-events-none absolute inset-x-8 top-0 h-px"
+            style={{
+              background:
+                'linear-gradient(90deg, transparent, rgba(171,199,255,0.34), rgba(255,255,255,0.20), transparent)',
+            }}
+          />
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
           {stats.map((s, i) => (
-            <div key={i} className="bg-pitch p-8 md:p-10 relative overflow-hidden">
+            <div
+              key={i}
+              className="group relative min-h-[126px] overflow-hidden rounded-[22px] bg-[#0c0e13]/82 p-5 transition duration-300 hover:-translate-y-0.5 hover:bg-[#11151d]"
+              style={{ boxShadow: `inset 0 0 0 1px rgba(255,255,255,0.055), inset 0 18px 46px ${s.c}08` }}
+            >
               <div
-                className="absolute -top-8 -right-8 w-24 h-24 rounded-full"
-                style={{ background: `radial-gradient(circle, ${s.c}14, transparent 70%)`, filter: 'blur(10px)' }}
+                className="absolute inset-x-5 top-0 h-px opacity-80"
+                style={{ background: `linear-gradient(90deg, transparent, ${s.c}90, transparent)` }}
               />
               <div
-                className="relative font-display font-bold text-[2.6rem] md:text-[3.4rem] leading-none"
-                style={{ color: s.c }}
-              >
-                {s.k}
-                <span className="text-[1.2rem] ml-1 text-[#9b99a0]">{s.suf}</span>
+                className="absolute -right-12 -top-12 h-32 w-32 rounded-full opacity-60 transition duration-300 group-hover:opacity-90"
+                style={{ background: `radial-gradient(circle, ${s.c}20, transparent 68%)`, filter: 'blur(12px)' }}
+              />
+              <div className="relative mb-5 flex items-center justify-between">
+                <span className="font-mono text-[10px] tracking-[0.08em] text-[#5d5a5f]">{String(i + 1).padStart(2, '0')}</span>
+                <span
+                  className="h-2 w-2 rounded-full shadow-[0_0_18px_currentColor]"
+                  style={{ color: s.c, background: s.c }}
+                />
               </div>
-              <div className="relative text-xs text-[#9b99a0] mt-3 leading-relaxed">{s.l}</div>
+              <div className="relative font-display font-bold leading-none">
+                <span className="block whitespace-nowrap text-[1.18rem] tracking-normal md:text-[1.30rem]" style={{ color: s.c }}>
+                  {s.k}
+                </span>
+              </div>
+              <div className="relative mt-3 text-[11px] leading-relaxed text-[#8f8c94]">
+                {s.l}
+              </div>
             </div>
           ))}
+          </div>
         </div>
       </div>
 

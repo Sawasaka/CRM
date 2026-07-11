@@ -1,24 +1,43 @@
 import { Hero } from './Hero'
-import { AgentFabricRich } from './AgentFabricRich'
-import { MetricsBand } from './sections/MetricsBand'
+import { PortfolioDemos, type FeaturedAINews } from './sections/PortfolioDemos'
 import { ROISection } from './ROISection'
 import { Testimonials } from './sections/Testimonials'
-import { CustomerVoice } from './sections/CustomerVoice'
-import { Pricing } from './sections/Pricing'
+import { FounderProfile } from './sections/FounderProfile'
+import { FAQ } from './sections/FAQ'
 import { Footer } from './sections/Footer'
+import { aiTipsColumns } from '@/lib/ai-tips-columns'
 
-// ルキスマCRM LP 本体。AppHub の 'home' ビューとして差し替えられる。
-// スイッチバーは AppHub 側にあるので、ここの Nav はバーを持たない。
+const featuredAINews: FeaturedAINews[] = aiTipsColumns
+  .filter((article) => article.category === 'AI Trend')
+  .sort((a, b) => {
+    const publishedDiff = b.publishedAt.localeCompare(a.publishedAt)
+    return publishedDiff !== 0 ? publishedDiff : b.newsPublishedAt.localeCompare(a.newsPublishedAt)
+  })
+  .slice(0, 2)
+  .map(({ slug, genre, title, description, newsPublishedAt, sourceName, accent, image }) => ({
+    slug,
+    genre,
+    title,
+    description,
+    newsPublishedAt,
+    sourceName,
+    accent,
+    image,
+  }))
+
+const SHOW_FAQ_SECTION = false
+
+// FDE AI/DX LP 本体。Nav は /lp 側で固定表示する。
 export function HomeView() {
   return (
     <div className="relative">
       <Hero />
-      <MetricsBand />
-      <AgentFabricRich />
-      <Pricing />
+      <PortfolioDemos featuredAINews={featuredAINews} />
       <ROISection />
       <Testimonials />
-      <CustomerVoice />
+      <FounderProfile />
+      {SHOW_FAQ_SECTION && <FAQ />}
+      {/* <CustomerVoice /> — 販売パートナー募集セクション。一旦非表示 */}
       <Footer />
     </div>
   )

@@ -1,7 +1,7 @@
 /**
  * Liquid Obsidian — Brand & Gamification Primitives
  *
- * - ObsLogo        : ルキスマCRM の "R" ロゴ（多層グラデーションの obsidian crystal 上に配置）
+ * - ObsLogo        : FDE CRM の "R" ロゴ（多層グラデーションの obsidian crystal 上に配置）
  * - ObsLevelBadge  : LVxx バッジ（プレイヤーレベル）
  * - ObsXpRing      : 進捗リング（SVG、 primary gradient）
  * - ObsStreak      : 連続日数の炎（静かな発光）
@@ -19,7 +19,7 @@ function cx(...p: Array<string | false | null | undefined>): string {
 export function ObsLogo({
   size = 30,
   withLabel = false,
-  labelPrimary = 'ルキスマCRM',
+  labelPrimary = 'FDE CRM',
   labelSecondary = 'Chat CRM',
   className,
 }: {
