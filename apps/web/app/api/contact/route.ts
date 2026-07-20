@@ -3,6 +3,7 @@ import { prisma } from '@bgm/db'
 import { createAiCallMetadata } from '@/lib/ai-calls/provider'
 import { buildInquiryCallScript, getInquiryCallScenario } from '@/lib/ai-calls/call-scenario'
 import { getDefaultMasterOrgId } from '@/lib/app-context'
+import { CONSULTATION_BOOKING_URL } from '@/lib/consultation-calendar'
 
 /**
  * LP のお問い合わせフォーム送信先。
@@ -14,7 +15,7 @@ import { getDefaultMasterOrgId } from '@/lib/app-context'
 
 const CONTACT_INBOX = process.env.CONTACT_INBOX ?? 'h.sawasaka@rookiesmart.jp'
 const FROM_ADDRESS = process.env.CONTACT_FROM
-const DEFAULT_BOOKING_URL = 'https://calendar.app.google/ynf4EmUoZEEKjuja8'
+const DEFAULT_BOOKING_URL = CONSULTATION_BOOKING_URL
 
 interface ContactPayload {
   company: string

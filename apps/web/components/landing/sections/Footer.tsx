@@ -5,10 +5,10 @@
 
 import Link from 'next/link'
 import { ArrowUpRight } from 'lucide-react'
-
-const consultationCalendarUrl = 'https://calendar.app.google/ynf4EmUoZEEKjuja8'
-const consultationCalendarEmbedUrl =
-  'https://calendar.google.com/calendar/appointments/schedules/AcZssZ34p2Lh9e2sqZ1fIn7LE3ILxFW8lSpDVP69eRtjfdhBUfASYw_ab5-Eg3G5iT1GJSgXbr2HkzcW?gv=true'
+import {
+  CONSULTATION_BOOKING_URL,
+  CONSULTATION_CALENDAR_EMBED_URL,
+} from '@/lib/consultation-calendar'
 
 export const Footer = () => (
   <footer id="contact" className="relative bg-[#0e0e10] scroll-mt-24 overflow-x-hidden">
@@ -25,7 +25,7 @@ export const Footer = () => (
           </div>
           <div className="mt-3 flex items-center md:mt-0">
             <a
-              href={consultationCalendarUrl}
+              href={CONSULTATION_BOOKING_URL}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#abc7ff] transition-colors hover:text-white"
@@ -38,7 +38,7 @@ export const Footer = () => (
 
         <div className="overflow-hidden rounded-xl border border-white/[0.09] bg-white shadow-[0_20px_60px_rgba(0,0,0,0.28)]">
           <iframe
-            src={consultationCalendarEmbedUrl}
+            src={CONSULTATION_CALENDAR_EMBED_URL}
             title="沢坂弘樹との無料相談予約カレンダー"
             className="block h-[650px] w-full bg-white sm:h-[700px]"
             loading="lazy"

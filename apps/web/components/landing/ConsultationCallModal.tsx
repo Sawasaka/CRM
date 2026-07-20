@@ -2,8 +2,9 @@
 
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { CalendarCheck, Check, Loader2, PhoneCall, X } from 'lucide-react'
+import { CONSULTATION_BOOKING_URL } from '@/lib/consultation-calendar'
 
-export const CONSULTATION_BOOKING_URL = 'https://calendar.app.google/ynf4EmUoZEEKjuja8'
+export { CONSULTATION_BOOKING_URL }
 
 type ConsultationPayload = {
   company: string
