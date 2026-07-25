@@ -4,8 +4,8 @@ import {
   BadgeCheck,
   BriefcaseBusiness,
   Code2,
+  Gauge,
   Handshake,
-  Headphones,
   Megaphone,
   Settings2,
 } from 'lucide-react'
@@ -31,12 +31,12 @@ const skillItems = [
   {
     label: '統計モデル',
     detail: 'Monte Carlo / Bayesian / A/B Test',
-    icon: Headphones,
+    icon: Settings2,
   },
   {
     label: '実験配分',
     detail: 'Bandit / Thompson Sampling / Allocation',
-    icon: Settings2,
+    icon: Gauge,
   },
 ]
 
@@ -98,7 +98,7 @@ export const FounderProfile = () => (
     <div className="relative mx-auto max-w-6xl px-6 py-10 md:py-14">
       <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
         <div>
-          <Eyebrow color="#abc7ff">Founder / FDE Architect</Eyebrow>
+          <Eyebrow color="#abc7ff">Founder / Revenue Experiment Architect</Eyebrow>
           <h2 className="mt-4 font-display text-[2.1rem] font-bold leading-[1.04] tracking-[-0.025em] md:text-[2.75rem]">
             <span className="fo-gradient-text">現場を聞き、</span>
             <br />
@@ -224,7 +224,7 @@ export const FounderProfile = () => (
                     <div className="text-[0.76rem] font-bold leading-5 text-[#f2f0f5]">
                       {item.title}
                     </div>
-                    <div className="text-[0.6rem] leading-5 text-[#9f9ca6] sm:whitespace-nowrap">
+                    <div className="whitespace-nowrap text-[0.6rem] leading-5 text-[#9f9ca6]">
                       {item.body}
                     </div>
                   </div>

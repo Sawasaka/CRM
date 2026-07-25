@@ -1,7 +1,7 @@
 'use client'
 
 /**
- * Hero 内のチャットパネル左に表示する営業AI/DX基盤風サイドバーモック。
+ * Hero 内のチャットパネル左に表示する売上実験基盤風サイドバーモック。
  * クリックで Hero 右側の表示が各機能モックに切り替わる（インタラクティブ）。
  */
 
@@ -9,24 +9,20 @@ import { Plus, Search } from 'lucide-react'
 import type { HeroDemoKey } from './hero-demos'
 
 const NAV_ITEMS: { initial: string; color: string; label: string; key: HeroDemoKey }[] = [
-  { initial: 'C', color: '#abc7ff', label: '企業', key: 'companies' },
-  { initial: 'D', color: '#abc7ff', label: '取引', key: 'deals' },
-  { initial: 'P', color: '#abc7ff', label: '商談', key: 'pipeline' },
-  { initial: 'L', color: '#abc7ff', label: 'リード', key: 'contacts' },
-  { initial: 'T', color: '#ffcf4a', label: 'タスク', key: 'tasks' },
-  { initial: 'A', color: '#8dffc9', label: 'アクションボード', key: 'action-board' },
-  { initial: 'M', color: '#ffcf4a', label: 'メール', key: 'mail' },
-  { initial: 'Q', color: '#ff8dcf', label: '問い合わせ', key: 'tickets' },
-  { initial: 'S', color: '#8dffc9', label: '優先度', key: 'priority' },
-  { initial: 'K', color: '#c8b9ff', label: 'ナレッジ', key: 'knowledge' },
-  { initial: 'AI', color: '#7ec6ff', label: 'AIアシスト', key: 'chat' },
+  { initial: 'F', color: '#abc7ff', label: '売上導線', key: 'companies' },
+  { initial: 'H', color: '#abc7ff', label: '仮説', key: 'deals' },
+  { initial: 'E', color: '#abc7ff', label: '実験', key: 'pipeline' },
+  { initial: 'D', color: '#abc7ff', label: 'データ', key: 'contacts' },
+  { initial: 'K', color: '#ffcf4a', label: 'KPI', key: 'tasks' },
+  { initial: 'A', color: '#8dffc9', label: '配分ボード', key: 'action-board' },
+  { initial: 'C', color: '#ffcf4a', label: 'キャンペーン', key: 'mail' },
+  { initial: 'Q', color: '#ff8dcf', label: 'データ品質', key: 'tickets' },
+  { initial: 'P', color: '#8dffc9', label: '成功確率', key: 'priority' },
+  { initial: 'L', color: '#c8b9ff', label: '学習ログ', key: 'knowledge' },
+  { initial: 'AI', color: '#7ec6ff', label: 'モデル相談', key: 'chat' },
 ]
 
-const RECENT_CHATS = [
-  '今週フォローすべき商談',
-  '失注リスクがある取引',
-  '商談前に見るべき情報',
-]
+const RECENT_CHATS = ['次に試すべき仮説', 'CVRとCACの変化', '勝ち施策への配分']
 
 interface HeroSidebarProps {
   active: HeroDemoKey
@@ -49,7 +45,7 @@ export const HeroSidebar = ({ active, onSelect }: HeroSidebarProps) => {
           >
             <span className="text-[10px] font-bold text-[#0a0a0c]">R</span>
           </div>
-          <span className="text-[13px] font-medium text-[#e7e5ea]">FDE AI/DX</span>
+          <span className="text-[13px] font-medium text-[#e7e5ea]">ルキスマLAB</span>
         </button>
       </div>
 

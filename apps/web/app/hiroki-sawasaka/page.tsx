@@ -45,9 +45,8 @@ export const metadata: Metadata = {
     `${operatorName} ${companyName}`,
     'レベニューインフラ設計',
     '確率モデル',
-    'データ収集インフラ',
     'ベイズ統計',
-    'バンディットアルゴリズム',
+    'バンディット配分',
   ],
   alternates: {
     canonical: operatorProfilePath,
@@ -56,7 +55,7 @@ export const metadata: Metadata = {
     title,
     description,
     url: operatorProfilePath,
-    siteName: serviceName,
+    siteName: serviceSearchName,
     type: 'profile',
     locale: 'ja_JP',
   },
@@ -84,7 +83,7 @@ const profileJsonLd = {
   identifier: `${companyName}代表:${operatorName}`,
   sameAs: operatorExternalProfiles,
   mainEntityOfPage: operatorProfileUrl,
-  disambiguatingDescription: `${companyName}代表。元・香川オリーブガイナーズ内野手。現在は営業・マーケティング領域のデータ収集、統計分析、実験基盤を設計しています。`,
+  disambiguatingDescription: `${companyName}代表。元・香川オリーブガイナーズ内野手の沢坂弘樹。現在は${serviceSearchName}の売上実験インフラを設計・実装しています。`,
   alumniOf: {
     '@type': 'CollegeOrUniversity',
     name: '亜細亜大学',
@@ -118,22 +117,23 @@ const profileJsonLd = {
     'データ収集インフラ',
     'ベイズ統計',
     'バンディットアルゴリズム',
+    'FDE',
   ],
 }
 
 const profileFaqItems = [
   {
     question: '沢坂弘樹は誰ですか？',
-    answer: `沢坂弘樹は、${companyName}の代表です。${serviceName}を通じて、売上導線の計測、仮説検証、配分改善を支援しています。`,
+    answer: `沢坂弘樹は、${companyName}の代表です。${serviceName}を通じて、営業・マーケティング領域の売上実験インフラを設計しています。`,
   },
   {
     question: '沢坂弘樹はどのような支援をしていますか？',
     answer:
-      '営業・マーケティングの導線設計、データ収集基盤、確率シミュレーション、ベイズ統計、バンディット配分の実装を支援しています。',
+      '売上導線の可視化、確率モデルによる試算、計測基盤、ベイズ統計による並行検証、バンディット配分の実装を支援しています。',
   },
   {
     question: '沢坂弘樹とルキスマLABの関係は何ですか？',
-    answer: `沢坂弘樹は、${companyName}代表として${serviceName}を設計し、現場のヒアリングから実装・運用改善まで担当しています。`,
+    answer: `沢坂弘樹は、${companyName}代表として${serviceName}を提供し、データに基づく仮説検証と資源配分を支援しています。`,
   },
 ]
 
@@ -204,10 +204,10 @@ const careerItems = [
 ]
 
 const supportItems = [
-  '広告・Web・CRM・受注をつなぐレベニューインフラ設計',
-  'CVR・商談化率・受注率・CAC・LTVの計測設計',
-  '確率シミュレーションとベイズ統計による仮説検証',
-  'バンディットアルゴリズムによる予算・営業工数の配分改善',
+  '広告・Web・CRM・商談・受注をつなぐ売上導線の設計',
+  'CVR、CAC、LTV、商談化率、受注率の計測設計',
+  '確率モデル、ベイズ統計、A/Bテストによる仮説検証',
+  'バンディットアルゴリズムによる予算・営業工数の配分設計',
 ]
 
 export default function HirokiSawasakaPage() {
@@ -245,7 +245,7 @@ export default function HirokiSawasakaPage() {
                 沢坂弘樹
               </h1>
               <p className="mt-5 max-w-2xl text-base leading-8 text-[#c7c5c9] md:text-lg">
-                株式会社ルーキースマートジャパン代表。営業現場と開発実装の両方を理解し、売上実験インフラを設計します。
+                株式会社ルーキースマートジャパン代表。売上導線の設計からデータ収集、統計分析、実験配分までを支援します。
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link
@@ -292,7 +292,7 @@ export default function HirokiSawasakaPage() {
           </div>
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
             <p className="text-[10px] uppercase tracking-[0.14em] text-[#7e7c83]">領域</p>
-            <p className="mt-2 text-sm font-semibold">売上実験 / 統計分析 / FDE実装</p>
+            <p className="mt-2 text-sm font-semibold">売上実験インフラ / 統計モデル / FDE実装</p>
           </div>
         </div>
 
@@ -300,12 +300,12 @@ export default function HirokiSawasakaPage() {
           <h2 className="font-display text-2xl font-bold tracking-[-0.01em]">プロフィール</h2>
           <div className="mt-5 space-y-4 text-sm leading-8 text-[#c7c5c9]">
             <p>
-              沢坂弘樹は、株式会社ルーキースマートジャパン代表として、営業・マーケティング領域の売上実験インフラを設計しています。
-              広告、Web、CRM、商談、受注データをつなぎ、仮説検証と配分改善を繰り返せる仕組みづくりを行っています。
+              沢坂弘樹は、株式会社ルーキースマートジャパン代表として、ルキスマLABの売上実験インフラを設計しています。
+              広告・Web・CRM・商談・受注データをつなぎ、仮説を試し、勝ち筋へ資源を配分できる仕組みづくりを行っています。
             </p>
             <p>
               外資SaaS日本法人の立ち上げ、ITスタートアップでのCRO経験、IT法人営業とDX/AIX業務コンサルティングの経験をもとに、
-              現場のヒアリングからデータ設計、統計モデル、実装、運用改善までを一気通貫で支援します。
+              事業設計からデータ収集、統計モデル、営業・マーケティング現場の実装までを一気通貫で支援します。
             </p>
           </div>
           <dl className="mt-6 space-y-4">

@@ -25,17 +25,17 @@ export type HeroDemoKey =
   | 'search'
 
 const DEMO_TITLES: Record<Exclude<HeroDemoKey, 'chat' | 'new-chat' | 'search'>, string> = {
-  companies: '企業',
-  pipeline: '商談',
-  contacts: 'リード',
-  deals: '取引',
-  lists: '営業リスト',
-  tasks: 'タスク',
-  tickets: '問い合わせ',
-  'action-board': 'アクションボード',
-  mail: 'メール',
-  priority: '優先度',
-  knowledge: 'ナレッジ',
+  companies: '売上導線',
+  pipeline: '実験',
+  contacts: 'データ',
+  deals: '仮説',
+  lists: '検証リスト',
+  tasks: 'KPI',
+  tickets: 'データ品質',
+  'action-board': '配分ボード',
+  mail: 'キャンペーン',
+  priority: '成功確率',
+  knowledge: '学習ログ',
 }
 
 // ===== Shared header =====
@@ -84,22 +84,26 @@ const DemoHeader = ({
 // ===== FDE design intake =====
 export const CompaniesDemo = () => {
   const rows = [
-    { n: '業務ヒアリング', cat: 'FDE', emp: '営業 / CS', score: 92, intent: '優先' },
-    { n: '既存ツール棚卸し', cat: 'DX', emp: 'Notion / Google', score: 88, intent: '優先' },
-    { n: 'ナレッジ構造設計', cat: 'AI', emp: 'Obsidian / Docs', score: 86, intent: '設計中' },
-    { n: '議事録・会議導線', cat: 'Workflow', emp: 'Zoom / Teams', score: 81, intent: '整理' },
-    { n: '問い合わせAI導線', cat: 'Support', emp: 'FAQ / Chatbot', score: 77, intent: 'PoC' },
-    { n: 'Revenue Ops設計', cat: 'Revenue', emp: 'CRM / Sheet', score: 73, intent: '検討' },
-    { n: '運用定着ロードマップ', cat: 'Ops', emp: 'Manual / KPI', score: 69, intent: '次回' },
+    { n: '広告からLP', cat: '探索', emp: 'Google Ads', score: 92, intent: '優先' },
+    { n: 'LPから問い合わせ', cat: '計測', emp: 'GA4 / UTM', score: 88, intent: '接続済' },
+    { n: '問い合わせから商談', cat: '検証', emp: 'HubSpot', score: 86, intent: '実験中' },
+    { n: '商談から受注', cat: '分析', emp: 'CRM / 売上DB', score: 81, intent: '整理' },
+    { n: 'キーワード別CAC', cat: '統計', emp: 'BigQuery', score: 77, intent: 'モデル' },
+    { n: '施策別LTV', cat: '継続', emp: '顧客DB', score: 73, intent: '検討' },
+    { n: '勝ち施策への配分', cat: '配分', emp: 'Bandit', score: 69, intent: '次回' },
   ]
   return (
     <div className="flex-1 flex flex-col">
-      <DemoHeader title="FDE設計ボード" count="ヒアリング項目 7 / 設計中" accent="#7aa4ff" />
+      <DemoHeader
+        title="Revenue Experiment 設計ボード"
+        count="売上導線 7 / 計測中"
+        accent="#7aa4ff"
+      />
       <div className="flex-1 overflow-y-auto fo-thin-scroll px-5 md:px-7 py-3">
         <div className="grid grid-cols-12 text-[10px] uppercase tracking-[0.14em] text-[#7e7c83] pb-2">
-          <div className="col-span-4">設計テーマ</div>
+          <div className="col-span-4">売上導線</div>
           <div className="col-span-2">領域</div>
-          <div className="col-span-2">対象ツール</div>
+          <div className="col-span-2">計測基盤</div>
           <div className="col-span-2">状態</div>
           <div className="col-span-2 text-right">優先度</div>
         </div>
