@@ -14,28 +14,28 @@ import { Eyebrow, NebulaBG, Section } from '../atoms'
 
 const skillItems = [
   {
-    label: 'SEO / マーケティング',
-    detail: 'Search Console / GA4 / SE ランキング / SNS / セミナー / 広告 / 比較メディア',
+    label: '計測 / マーケティング',
+    detail: 'GA4 / Search Console / Google Ads / UTM / CVR',
     icon: Megaphone,
   },
   {
-    label: '開発',
-    detail: 'Codex / Cloud Code / GitHub / AWS',
+    label: 'データ / 開発',
+    detail: 'HubSpot / BigQuery / Codex / GitHub / AWS',
     icon: Code2,
   },
   {
     label: '営業',
-    detail: 'HubSpot / Salesforce / Slack / Notion',
+    detail: 'HubSpot / Salesforce / 商談化率 / 受注率',
     icon: Handshake,
   },
   {
-    label: 'CS',
-    detail: 'Intercom / Zendesk / FAQ / チャットボット',
+    label: '統計モデル',
+    detail: 'Monte Carlo / Bayesian / A/B Test',
     icon: Headphones,
   },
   {
-    label: '情シス',
-    detail: 'Google Workspace / Microsoft',
+    label: '実験配分',
+    detail: 'Bandit / Thompson Sampling / Allocation',
     icon: Settings2,
   },
 ]
@@ -67,8 +67,8 @@ const careerItems = [
   },
   {
     label: 'Career 03',
-    title: 'エンジニア出身のAI/DX設計',
-    body: '業務要件を聞き、SaaS・AI・運用設計まで実装へ落とし込む。',
+    title: 'エンジニア出身の実験基盤設計',
+    body: '業務要件を聞き、データ収集・分析・運用設計まで実装へ落とし込む。',
   },
 ]
 
@@ -102,12 +102,12 @@ export const FounderProfile = () => (
           <h2 className="mt-4 font-display text-[2.1rem] font-bold leading-[1.04] tracking-[-0.025em] md:text-[2.75rem]">
             <span className="fo-gradient-text">現場を聞き、</span>
             <br />
-            <span className="fo-gradient-text-soft">実装までつなぐ。</span>
+            <span className="fo-gradient-text-soft">実験までつなぐ。</span>
           </h2>
         </div>
         <p className="max-w-2xl text-sm leading-7 text-[#bdbac3] md:text-[0.92rem] lg:pb-1">
-          営業・マーケティング・CSの業務を聞き、AIとSaaSを会社ごとの売上インフラへ。
-          ヒアリングした本人が、設計・構築・運用改善まで一気通貫で担当します。
+          営業・マーケティングの現場を聞き、データ収集から仮説検証、配分改善までを売上実験の仕組みへ。
+          ヒアリングした本人が、設計・実装・運用改善まで一気通貫で担当します。
         </p>
       </div>
 
@@ -132,7 +132,7 @@ export const FounderProfile = () => (
                 </h3>
                 <div className="mt-2 inline-flex items-center gap-1.5 text-[0.64rem] font-semibold text-[#8dffc9]">
                   <BadgeCheck className="h-3.5 w-3.5" aria-hidden="true" />
-                  Founder / FDE Architect
+                  Founder / Revenue Experiment Architect
                 </div>
               </div>
             </div>
@@ -224,7 +224,7 @@ export const FounderProfile = () => (
                     <div className="text-[0.76rem] font-bold leading-5 text-[#f2f0f5]">
                       {item.title}
                     </div>
-                    <div className="whitespace-nowrap text-[0.6rem] leading-5 text-[#9f9ca6]">
+                    <div className="text-[0.6rem] leading-5 text-[#9f9ca6] sm:whitespace-nowrap">
                       {item.body}
                     </div>
                   </div>

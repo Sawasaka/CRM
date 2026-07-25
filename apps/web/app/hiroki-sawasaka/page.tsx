@@ -20,7 +20,7 @@ import {
 } from '@/lib/public-site'
 
 const title = `${operatorName}｜${serviceSearchName}・${companyName}代表`
-const description = `${operatorName}の公式プロフィール。元・香川オリーブガイナーズ内野手。現在は${companyName}代表として、${serviceSearchName}（${serviceName}）のAI/DX設計・実装を支援しています。`
+const description = `${operatorName}の公式プロフィール。元・香川オリーブガイナーズ内野手。現在は${companyName}代表として、${serviceSearchName}の売上実験インフラを設計・実装しています。`
 
 export const metadata: Metadata = {
   metadataBase: new URL(publicSiteUrl),
@@ -36,18 +36,18 @@ export const metadata: Metadata = {
     serviceSearchName,
     ...serviceAlternateNames,
     'FDE',
-    'Forward Deployed CRM',
+    'Revenue Experiment Infrastructure',
     '株式会社ルーキースマートジャパン 代表',
-    'FDE CRM 代表',
+    'Revenue Experiment Architect',
     '香川オリーブガイナーズ 沢坂弘樹',
     '沢坂弘樹 野球',
     `${operatorName} ${serviceName}`,
     `${operatorName} ${companyName}`,
-    '営業実行',
-    'FDE開発',
-    'CRM構築',
-    'Call AI',
-    '企業データベース',
+    'レベニューインフラ設計',
+    '確率モデル',
+    'データ収集インフラ',
+    'ベイズ統計',
+    'バンディットアルゴリズム',
   ],
   alternates: {
     canonical: operatorProfilePath,
@@ -79,12 +79,12 @@ const profileJsonLd = {
   alternateName: [operatorNameWithSpace, operatorRomanName, operatorNameHiragana, 'さわさかひろき'],
   url: operatorProfileUrl,
   image: `${publicSiteUrl}/founder-icon.png`,
-  jobTitle: `${companyName}代表 / ${serviceSearchName} AI/DX設計・実装支援`,
+  jobTitle: `${companyName}代表 / Revenue Experiment Architect`,
   description,
   identifier: `${companyName}代表:${operatorName}`,
   sameAs: operatorExternalProfiles,
   mainEntityOfPage: operatorProfileUrl,
-  disambiguatingDescription: `${companyName}代表。元・香川オリーブガイナーズ内野手の沢坂弘樹。現在は${serviceSearchName}のAI/DX設計・実装を支援しています。`,
+  disambiguatingDescription: `${companyName}代表。元・香川オリーブガイナーズ内野手。現在は営業・マーケティング領域のデータ収集、統計分析、実験基盤を設計しています。`,
   alumniOf: {
     '@type': 'CollegeOrUniversity',
     name: '亜細亜大学',
@@ -110,24 +110,30 @@ const profileJsonLd = {
       url,
     })),
   ],
-  knowsAbout: [serviceSearchName, serviceName, 'AI/DXインフラ設計', 'FDE開発', '営業実行', 'CRM構築', 'Call AI', 'AI CRM', '企業データベース'],
+  knowsAbout: [
+    serviceSearchName,
+    serviceName,
+    'レベニューインフラ設計',
+    '確率モデル',
+    'データ収集インフラ',
+    'ベイズ統計',
+    'バンディットアルゴリズム',
+  ],
 }
 
 const profileFaqItems = [
   {
     question: '沢坂弘樹は誰ですか？',
-    answer:
-      `沢坂弘樹は、${companyName}の代表です。${serviceName}を通じて、営業実行とCRM構築を同時に支援しています。`,
+    answer: `沢坂弘樹は、${companyName}の代表です。${serviceName}を通じて、売上導線の計測、仮説検証、配分改善を支援しています。`,
   },
   {
     question: '沢坂弘樹はどのような支援をしていますか？',
     answer:
-      '営業組織の立ち上げ、インサイドセールス設計、CRM構築、企業データベースと部署直通番号を活用した営業活動の実装を支援しています。',
+      '営業・マーケティングの導線設計、データ収集基盤、確率シミュレーション、ベイズ統計、バンディット配分の実装を支援しています。',
   },
   {
-    question: '沢坂弘樹とルキスマCRMの関係は何ですか？',
-    answer:
-      `沢坂弘樹は、${companyName}代表として${serviceName}を提供し、営業データを活用した営業実行とCRM構築を支援しています。`,
+    question: '沢坂弘樹とルキスマLABの関係は何ですか？',
+    answer: `沢坂弘樹は、${companyName}代表として${serviceName}を設計し、現場のヒアリングから実装・運用改善まで担当しています。`,
   },
 ]
 
@@ -139,7 +145,15 @@ const profilePageJsonLd = {
   headline: `${operatorName}の公式プロフィール`,
   url: operatorProfileUrl,
   description,
-  keywords: [operatorName, companyName, serviceSearchName, serviceName, 'FDE', '沢坂弘樹 代表', `沢坂弘樹 ${serviceSearchName}`],
+  keywords: [
+    operatorName,
+    companyName,
+    serviceSearchName,
+    serviceName,
+    'FDE',
+    '沢坂弘樹 代表',
+    `沢坂弘樹 ${serviceSearchName}`,
+  ],
   inLanguage: 'ja-JP',
   isPartOf: {
     '@id': `${publicSiteUrl}/#website`,
@@ -190,10 +204,10 @@ const careerItems = [
 ]
 
 const supportItems = [
-  '営業戦略と実行体制の設計',
-  'インサイドセールス、フィールドセールス、CSをつなぐCRM構築',
-  '企業データベースと部署直通番号を活用したターゲット選定',
-  '議事録、メール、商談データを営業アクションへ変える運用設計',
+  '広告・Web・CRM・受注をつなぐレベニューインフラ設計',
+  'CVR・商談化率・受注率・CAC・LTVの計測設計',
+  '確率シミュレーションとベイズ統計による仮説検証',
+  'バンディットアルゴリズムによる予算・営業工数の配分改善',
 ]
 
 export default function HirokiSawasakaPage() {
@@ -201,7 +215,9 @@ export default function HirokiSawasakaPage() {
     <main className="min-h-screen bg-obsidian text-[#e7e5ea]">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify([profileJsonLd, profilePageJsonLd, profileFaqJsonLd]) }}
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify([profileJsonLd, profilePageJsonLd, profileFaqJsonLd]),
+        }}
       />
 
       <section className="relative overflow-hidden">
@@ -217,7 +233,7 @@ export default function HirokiSawasakaPage() {
             href="/"
             className="inline-flex text-xs font-semibold tracking-[0.12em] text-aurora/80 hover:text-aurora"
           >
-            FDE CRM 公式HPへ
+            ルキスマLAB 公式HPへ
           </Link>
 
           <div className="mt-10 grid gap-10 md:grid-cols-[1fr_220px] md:items-end">
@@ -229,7 +245,7 @@ export default function HirokiSawasakaPage() {
                 沢坂弘樹
               </h1>
               <p className="mt-5 max-w-2xl text-base leading-8 text-[#c7c5c9] md:text-lg">
-                株式会社ルーキースマートジャパン代表。FDE CRMの営業実行、CRM構築、FDE開発を同時に支援します。
+                株式会社ルーキースマートジャパン代表。営業現場と開発実装の両方を理解し、売上実験インフラを設計します。
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link
@@ -242,7 +258,7 @@ export default function HirokiSawasakaPage() {
                   href="/"
                   className="inline-flex rounded-full bg-aurora px-5 py-2 text-sm font-semibold text-[#07101f] transition-transform hover:-translate-y-0.5"
                 >
-                  FDE CRMを見る
+                  サービスを見る
                 </Link>
               </div>
             </div>
@@ -263,7 +279,10 @@ export default function HirokiSawasakaPage() {
         <div className="grid gap-6 md:grid-cols-3">
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
             <p className="text-[10px] uppercase tracking-[0.14em] text-[#7e7c83]">会社</p>
-            <Link href={companyProfilePath} className="mt-2 block text-sm font-semibold hover:text-aurora">
+            <Link
+              href={companyProfilePath}
+              className="mt-2 block text-sm font-semibold hover:text-aurora"
+            >
               {companyName}
             </Link>
           </div>
@@ -273,7 +292,7 @@ export default function HirokiSawasakaPage() {
           </div>
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
             <p className="text-[10px] uppercase tracking-[0.14em] text-[#7e7c83]">領域</p>
-            <p className="mt-2 text-sm font-semibold">営業実行 / FDE開発 / CRM構築</p>
+            <p className="mt-2 text-sm font-semibold">売上実験 / 統計分析 / FDE実装</p>
           </div>
         </div>
 
@@ -281,17 +300,20 @@ export default function HirokiSawasakaPage() {
           <h2 className="font-display text-2xl font-bold tracking-[-0.01em]">プロフィール</h2>
           <div className="mt-5 space-y-4 text-sm leading-8 text-[#c7c5c9]">
             <p>
-              沢坂弘樹は、株式会社ルーキースマートジャパン代表として、ルキスマCRMの営業実行とCRM構築を支援しています。
-              営業データ、商談、メール、議事録、企業データベースをつなぎ、次の営業アクションを引き出す仕組みづくりを行っています。
+              沢坂弘樹は、株式会社ルーキースマートジャパン代表として、営業・マーケティング領域の売上実験インフラを設計しています。
+              広告、Web、CRM、商談、受注データをつなぎ、仮説検証と配分改善を繰り返せる仕組みづくりを行っています。
             </p>
             <p>
               外資SaaS日本法人の立ち上げ、ITスタートアップでのCRO経験、IT法人営業とDX/AIX業務コンサルティングの経験をもとに、
-              事業設計から営業現場の実装、CRM運用までを一気通貫で支援します。
+              現場のヒアリングからデータ設計、統計モデル、実装、運用改善までを一気通貫で支援します。
             </p>
           </div>
           <dl className="mt-6 space-y-4">
             {careerItems.map(([label, value]) => (
-              <div key={label} className="grid gap-1 border-t border-white/10 pt-4 md:grid-cols-[150px_1fr]">
+              <div
+                key={label}
+                className="grid gap-1 border-t border-white/10 pt-4 md:grid-cols-[150px_1fr]"
+              >
                 <dt className="text-[10px] uppercase tracking-[0.12em] text-[#7e7c83]">{label}</dt>
                 <dd className="text-sm leading-7 text-[#c7c5c9]">{value}</dd>
               </div>

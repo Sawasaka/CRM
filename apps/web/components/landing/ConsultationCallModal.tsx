@@ -263,7 +263,7 @@ export function ConsultationCallModal({
             value={values.message}
             onChange={update('message')}
             rows={3}
-            placeholder="営業戦略、CRM構築、問い合わせ対応など、相談したいテーマを簡単に入力してください。"
+            placeholder="集客、データ計測、仮説検証など、相談したいテーマを簡単に入力してください。"
             className="mt-1.5 w-full resize-y rounded-[10px] px-3 py-2.5 text-[13px] leading-relaxed outline-none"
             style={FIELD_INPUT_STYLE}
           />

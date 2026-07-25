@@ -1,10 +1,10 @@
 import type { MetadataRoute } from 'next'
-import { publicSiteDescription, publicSiteUrl, serviceName } from '@/lib/public-site'
+import { publicSiteDescription, publicSiteUrl, serviceSearchName } from '@/lib/public-site'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: `${serviceName} - 株式会社ルーキースマートジャパン`,
-    short_name: serviceName,
+    name: `${serviceSearchName} - 株式会社ルーキースマートジャパン`,
+    short_name: serviceSearchName,
     description: publicSiteDescription,
     start_url: publicSiteUrl,
     scope: publicSiteUrl,

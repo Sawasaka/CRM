@@ -20,7 +20,7 @@ export const Footer = () => (
               Contact
             </span>
             <h3 className="font-display font-bold tracking-[-0.01em] text-[1.5rem] md:text-[1.7rem] text-[#e7e5ea] mt-1.5 leading-tight">
-              無料相談の日程を選ぶ
+              売上実験のテーマを相談する
             </h3>
           </div>
           <div className="mt-3 flex items-center md:mt-0">

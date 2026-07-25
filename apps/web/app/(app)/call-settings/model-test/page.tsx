@@ -716,6 +716,8 @@ export default function CallModelTestPage() {
     geminiSilentGainRef.current = silentGain
   }
 
+  void startGeminiMicrophoneStreaming
+
   const handleGeminiLocalSpeechActivity = (input: Float32Array, relay: WebSocket) => {
     const rms = calculateRms(input)
     const assistantPlaying = hasGeminiPlayback()

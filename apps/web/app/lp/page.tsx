@@ -1,12 +1,8 @@
-/**
- * FDE CRM Landing Page (/lp)
- */
-
 import { HomeView } from '@/components/landing/HomeView'
 import { Nav } from '@/components/landing/Nav'
 import { publicSiteStructuredData } from '@/lib/public-site'
 
-export default function FDECRMLandingPage() {
+export default function RevenueExperimentLandingPage() {
   return (
     <>
       <script

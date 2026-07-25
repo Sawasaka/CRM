@@ -11,14 +11,22 @@ function isLocalUrl(value: string | undefined) {
 }
 
 export const publicSiteUrl =
-  normalizeUrl(!isLocalUrl(process.env.NEXT_PUBLIC_SITE_URL) ? process.env.NEXT_PUBLIC_SITE_URL : undefined) ??
+  normalizeUrl(
+    !isLocalUrl(process.env.NEXT_PUBLIC_SITE_URL) ? process.env.NEXT_PUBLIC_SITE_URL : undefined
+  ) ??
   normalizeUrl(!isLocalUrl(process.env.SITE_URL) ? process.env.SITE_URL : undefined) ??
   PUBLIC_SITE_FALLBACK_URL
 
 export const companyName = '株式会社ルーキースマートジャパン'
-export const serviceName = 'FDE AI/DX'
+export const serviceName = 'Revenue Experiment Infrastructure'
 export const serviceSearchName = 'ルキスマLAB'
-export const serviceAlternateNames = ['ルキスマラボ', 'Rukisuma LAB', serviceName, 'Revenue AI/DX Infrastructure']
+export const serviceAlternateNames = [
+  'ルキスマラボ',
+  'Rukisuma LAB',
+  serviceName,
+  '売上実験インフラ',
+  'レベニュー実験基盤',
+]
 export const operatorName = '沢坂弘樹'
 export const operatorNameWithSpace = '沢坂 弘樹'
 export const operatorRomanName = 'Hiroki Sawasaka'
@@ -34,10 +42,9 @@ export const operatorProfilePath = '/hiroki-sawasaka'
 export const operatorProfileUrl = `${publicSiteUrl}${operatorProfilePath}`
 export const operatorPersonId = `${operatorProfileUrl}#person`
 
-export const publicSiteTitle = `【公式】${serviceSearchName}｜${companyName}`
+export const publicSiteTitle = `【公式】${serviceSearchName}｜売上実験インフラ`
 
-export const publicSiteDescription =
-  `${serviceSearchName}は、営業・マーケティング領域のAI/DXインフラを設計・実装する${companyName}のサービスです。既存ツールとAIを組み合わせ、代表の${operatorName}が支援します。`
+export const publicSiteDescription = `${serviceSearchName}は、広告・Web・CRM・商談・受注を接続し、確率モデル、データ計測、ベイズ統計、バンディット配分で売上改善を繰り返せる${companyName}のRevenue Experiment Infrastructureです。`
 
 export const publicSiteKeywords = [
   companyName,
@@ -48,38 +55,26 @@ export const publicSiteKeywords = [
   'ルーキースマートジャパン',
   serviceSearchName,
   ...serviceAlternateNames,
-  'AI/DXインフラ設計',
-  'レベニュー基盤',
-  '営業インフラ設計',
-  'マーケティングDX',
+  '売上実験',
+  'レベニューインフラ設計',
+  'データ収集インフラ',
+  'マーケティング分析',
+  'インサイドセールス分析',
+  '確率モデル',
+  'モンテカルロシミュレーション',
+  'ベイズ統計',
+  'バンディットアルゴリズム',
+  'A/Bテスト',
+  'CAC',
+  'LTV',
+  'CVR',
   'FDE',
-  'Revenue AI/DX Infrastructure',
-  'Forward Deployed DX',
   'Forward Deployed Engineer',
-  'FDE AI/DX',
-  'RookieSmart Japan',
-  'RookieSmart',
-  'CRM',
-  'AIインフラ',
-  'Obsidian',
-  'チャットボット',
-  'オウンドメディア',
   'HubSpot',
   'Salesforce',
-  'Notion',
-  'Google Workspace',
-  'Microsoft 365',
-  'Zoom',
-  'チャットCRM',
-  '営業DX',
-  '営業支援',
-  '営業実行',
-  'CRM構築',
-  '営業データ',
-  '商談管理',
-  '議事録AI',
-  'RAG',
-  '社内ナレッジ',
+  'GA4',
+  'Google Ads',
+  'Search Console',
 ]
 
 export const googleSiteVerification =
@@ -90,45 +85,35 @@ export const googleAnalyticsMeasurementId = process.env.NEXT_PUBLIC_GA_MEASUREME
 export const publicSiteFaqItems = [
   {
     question: 'ルキスマLABとは何ですか？',
-    answer:
-      `${serviceSearchName}は、${companyName}が提供するAI/DXインフラ設計・実装サービスです。営業・マーケティング領域を中心に、既存SaaSとAIを組み合わせ、会社独自の業務基盤を構築します。`,
+    answer: `${serviceSearchName}は、${companyName}が提供する売上実験インフラ設計サービスです。広告・Web・CRM・商談・受注のデータを接続し、仮説検証と配分改善を繰り返せる仕組みを構築します。`,
   },
   {
-    question: 'FDE AI/DXとは何ですか？',
+    question: 'Revenue Experiment Infrastructureとは何ですか？',
     answer:
-      `${companyName}が提供する、営業・マーケティングのレベニュー領域に特化したAI/DXインフラ設計サービスです。Obsidian・Notion・Google Workspace・Microsoft・Zoomなどの既存ツールにAIを組み合わせ、会社独自のAIインフラを設計します。`,
+      '売上導線の可視化、確率シミュレーション、データ計測、ベイズ統計による並行検証、バンディットによる資源配分を一つのサイクルとして運用する基盤です。',
+  },
+  {
+    question: 'どのような企業に向いていますか？',
+    answer:
+      '広告、SEO、インサイドセールスを行っているものの、どの施策が商談や受注につながったか見えにくい企業に適しています。',
   },
   {
     question: 'FDEとは何を意味しますか？',
     answer:
-      'Forward Deployedの考え方をもとに、営業現場に入り込み、AI・CRM・データ活用を成果に接続する実装思想を指します。',
+      'Forward Deployed Engineerの考え方をもとに、現場を直接ヒアリングした担当者が、要件整理からデータ設計、実装、運用改善まで一気通貫で進める支援形式です。',
   },
   {
-    question: '株式会社ルーキースマートジャパンはどのサービスを提供していますか？',
+    question: '既存のCRMやアクセス解析ツールは使えますか？',
     answer:
-      `${companyName}は、営業・マーケティングの売上基盤を再設計する${serviceName}を提供しています。FDE形式でヒアリングし、既存SaaSとAIを組み合わせた会社独自のAI/DXインフラを設計します。`,
+      'はい。HubSpot、Salesforce、GA4、Search Console、広告媒体、Google Workspaceなど、現在の環境を活かして接続・計測設計を行います。',
   },
   {
     question: '株式会社ルーキースマートジャパンの代表は誰ですか？',
-    answer:
-      `${companyName}の代表は${operatorName}です。${operatorName}が${serviceName}のAI/DXインフラ設計、CRM構築、営業・マーケティングDXを支援しています。`,
-  },
-  {
-    question: '沢坂弘樹とFDE AI/DXの関係は何ですか？',
-    answer:
-      `${operatorName}は、${companyName}の代表として、${serviceName}のAI/DXインフラ設計、CRM構築、営業・マーケティングDXを支援しています。`,
-  },
-  {
-    question: '沢坂弘樹の公式プロフィールはどこで確認できますか？',
-    answer:
-      `${operatorName}の公式プロフィールは、${operatorProfileUrl}で確認できます。${companyName}代表として${serviceName}のAI/DXインフラ設計、CRM構築、営業・マーケティングDXを支援しています。`,
-  },
-  {
-    question: 'FDE AI/DXはどのような検索キーワードに関係するサービスですか？',
-    answer:
-      'AI/DXインフラ設計、営業DX、マーケティングDX、FDE、Obsidian、Notion、Google Workspace、Microsoft 365、Zoom、チャットボット、オウンドメディアに関係するサービスです。',
+    answer: `${companyName}の代表は${operatorName}です。営業・マーケティング現場の理解と開発経験をもとに、${serviceSearchName}の設計・実装を担当します。`,
   },
 ]
+
+const serviceId = `${publicSiteUrl}/#service`
 
 export const publicSiteStructuredData = [
   {
@@ -137,71 +122,80 @@ export const publicSiteStructuredData = [
     '@id': `${publicSiteUrl}/#organization`,
     name: companyName,
     legalName: companyName,
-    alternateName: ['RookieSmart Japan', 'RookieSmart', 'ルーキースマートジャパン', serviceSearchName],
+    alternateName: [
+      'RookieSmart Japan',
+      'RookieSmart',
+      'ルーキースマートジャパン',
+      serviceSearchName,
+    ],
     url: companyProfileUrl,
     logo: `${publicSiteUrl}/icon.svg`,
     sameAs: [publicSiteUrl, companyProfileUrl],
-    mainEntityOfPage: companyProfileUrl,
-    founder: {
-      '@id': operatorPersonId,
-    },
-    employee: {
-      '@id': operatorPersonId,
-    },
-    member: {
-      '@id': operatorPersonId,
-    },
-    brand: {
-      '@id': `${publicSiteUrl}/#software`,
-    },
+    founder: { '@id': operatorPersonId },
+    employee: { '@id': operatorPersonId },
+    brand: { '@id': serviceId },
   },
   {
     '@context': 'https://schema.org',
     '@type': 'Person',
     '@id': operatorPersonId,
     name: operatorName,
-    alternateName: [operatorNameWithSpace, operatorRomanName, operatorNameHiragana, 'さわさかひろき'],
-    jobTitle: `代表 / ${serviceSearchName} AI/DXインフラ設計支援`,
-    description: `${operatorName}は、${companyName}の代表として、${serviceSearchName}（${serviceName}）のAI/DXインフラ設計、CRM構築、営業・マーケティングDXを支援しています。`,
+    alternateName: [
+      operatorNameWithSpace,
+      operatorRomanName,
+      operatorNameHiragana,
+      'さわさかひろき',
+    ],
+    jobTitle: `代表 / Revenue Experiment Architect`,
+    description: `${operatorName}は、${companyName}の代表として、売上実験インフラの設計・実装を支援しています。`,
     url: operatorProfileUrl,
     identifier: `${companyName}代表:${operatorName}`,
     sameAs: operatorExternalProfiles,
     mainEntityOfPage: operatorProfileUrl,
-    disambiguatingDescription: `${companyName}代表。元・香川オリーブガイナーズ内野手の沢坂弘樹。現在は${serviceSearchName}のAI/DX設計・実装を支援しています。`,
-    alumniOf: {
-      '@type': 'CollegeOrUniversity',
-      name: '亜細亜大学',
-    },
-    subjectOf: operatorSubjectUrls.map((url) => ({
-      '@type': 'Article',
-      url,
-    })),
-    worksFor: {
-      '@id': `${publicSiteUrl}/#organization`,
-    },
-    affiliation: {
-      '@id': `${publicSiteUrl}/#organization`,
-    },
-    knowsAbout: [serviceSearchName, serviceName, 'AI/DXインフラ設計', '営業DX', 'マーケティングDX', 'FDE', 'Obsidian', 'Notion', 'Google Workspace', 'Microsoft 365', 'Zoom', 'チャットボット', 'オウンドメディア'],
+    disambiguatingDescription: `${companyName}代表。元・香川オリーブガイナーズ内野手。現在は営業・マーケティング領域のデータ収集、統計分析、実験基盤を設計しています。`,
+    alumniOf: { '@type': 'CollegeOrUniversity', name: '亜細亜大学' },
+    subjectOf: operatorSubjectUrls.map((url) => ({ '@type': 'Article', url })),
+    worksFor: { '@id': `${publicSiteUrl}/#organization` },
+    knowsAbout: [
+      serviceSearchName,
+      serviceName,
+      'レベニューインフラ設計',
+      '確率モデル',
+      'データ収集インフラ',
+      'ベイズ統計',
+      'バンディットアルゴリズム',
+      'マーケティング分析',
+    ],
   },
   {
     '@context': 'https://schema.org',
-    '@type': 'SoftwareApplication',
-    '@id': `${publicSiteUrl}/#software`,
-    name: serviceSearchName,
-    alternateName: serviceAlternateNames,
-    applicationCategory: 'BusinessApplication',
-    applicationSubCategory: 'CRM',
-    operatingSystem: 'Web',
+    '@type': 'Service',
+    '@id': serviceId,
+    name: serviceName,
+    alternateName: [serviceSearchName, ...serviceAlternateNames],
+    serviceType: '売上実験インフラ設計・実装支援',
     url: publicSiteUrl,
     description: publicSiteDescription,
-    inLanguage: 'ja-JP',
-    areaServed: 'JP',
+    areaServed: { '@type': 'Country', name: 'Japan' },
     provider: {
       '@type': 'Organization',
       '@id': `${publicSiteUrl}/#organization`,
       name: companyName,
       url: publicSiteUrl,
+    },
+    hasOfferCatalog: {
+      '@type': 'OfferCatalog',
+      name: 'Revenue Experiment Infrastructure',
+      itemListElement: [
+        'レベニューインフラ設計',
+        '確率モデル設計',
+        'データ収集インフラ設計',
+        'ベイズ統計モデル設計',
+        'バンディット配分エンジン設計',
+      ].map((name) => ({
+        '@type': 'Offer',
+        itemOffered: { '@type': 'Service', name },
+      })),
     },
   },
   {
@@ -212,11 +206,7 @@ export const publicSiteStructuredData = [
     alternateName: [serviceSearchName, ...serviceAlternateNames],
     url: publicSiteUrl,
     inLanguage: 'ja-JP',
-    publisher: {
-      '@type': 'Organization',
-      '@id': `${publicSiteUrl}/#organization`,
-      name: companyName,
-    },
+    publisher: { '@id': `${publicSiteUrl}/#organization` },
   },
   {
     '@context': 'https://schema.org',
@@ -226,28 +216,10 @@ export const publicSiteStructuredData = [
     url: publicSiteUrl,
     description: publicSiteDescription,
     inLanguage: 'ja-JP',
-    isPartOf: {
-      '@id': `${publicSiteUrl}/#website`,
-    },
-    about: {
-      '@id': `${publicSiteUrl}/#software`,
-    },
-    author: {
-      '@id': operatorPersonId,
-    },
+    isPartOf: { '@id': `${publicSiteUrl}/#website` },
+    about: { '@id': serviceId },
+    author: { '@id': operatorPersonId },
     primaryImageOfPage: `${publicSiteUrl}/icon.svg`,
-  },
-  {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      {
-        '@type': 'ListItem',
-        position: 1,
-        name: serviceName,
-        item: publicSiteUrl,
-      },
-    ],
   },
   {
     '@context': 'https://schema.org',
@@ -255,10 +227,7 @@ export const publicSiteStructuredData = [
     mainEntity: publicSiteFaqItems.map((item) => ({
       '@type': 'Question',
       name: item.question,
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: item.answer,
-      },
+      acceptedAnswer: { '@type': 'Answer', text: item.answer },
     })),
   },
 ]

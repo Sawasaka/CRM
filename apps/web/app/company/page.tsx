@@ -14,7 +14,7 @@ import {
 } from '@/lib/public-site'
 
 const title = `${companyName}｜${serviceSearchName}公式`
-const description = `${companyName}は、${serviceSearchName}を提供するAI/DX設計・実装支援会社です。代表は${operatorName}。${serviceName}として営業・マーケティングの業務基盤を構築します。`
+const description = `${companyName}は、営業・マーケティング領域の売上実験インフラを設計・実装する会社です。代表の${operatorName}が、データ収集、確率モデル、ベイズ統計、実験配分までを支援します。`
 
 export const metadata: Metadata = {
   metadataBase: new URL(publicSiteUrl),
@@ -26,37 +26,25 @@ export const metadata: Metadata = {
     'RookieSmart Japan',
     serviceSearchName,
     ...serviceAlternateNames,
-    'FDE',
-    'Forward Deployed CRM',
     operatorName,
-    `${companyName} 公式`,
-    `${companyName} 代表`,
-    '営業実行',
-    'FDE開発',
-    'CRM構築',
-    'Call AI',
-    '企業データベース',
+    'レベニューインフラ設計',
+    'マーケティング分析',
+    'データ収集基盤',
+    'ベイズ統計',
+    'バンディットアルゴリズム',
+    'FDE',
   ],
-  alternates: {
-    canonical: companyProfilePath,
-  },
+  alternates: { canonical: companyProfilePath },
   openGraph: {
     title,
     description,
     url: companyProfilePath,
-    siteName: serviceName,
+    siteName: serviceSearchName,
     type: 'website',
     locale: 'ja_JP',
   },
-  twitter: {
-    card: 'summary',
-    title,
-    description,
-  },
-  robots: {
-    index: true,
-    follow: true,
-  },
+  twitter: { card: 'summary', title, description },
+  robots: { index: true, follow: true },
 }
 
 const companyJsonLd = {
@@ -65,139 +53,97 @@ const companyJsonLd = {
   '@id': `${publicSiteUrl}/#organization`,
   name: companyName,
   legalName: companyName,
-  alternateName: ['ルーキースマートジャパン', 'RookieSmart Japan', 'RookieSmart', serviceSearchName],
+  alternateName: ['ルーキースマートジャパン', 'RookieSmart Japan', serviceSearchName],
   url: companyProfileUrl,
   logo: `${publicSiteUrl}/icon.svg`,
   description,
-  founder: {
-    '@id': operatorPersonId,
-  },
-  employee: {
-    '@id': operatorPersonId,
-  },
-  brand: {
-    '@type': 'SoftwareApplication',
-    '@id': `${publicSiteUrl}/#software`,
-    name: serviceSearchName,
-    alternateName: serviceAlternateNames,
-    applicationCategory: 'BusinessApplication',
-    applicationSubCategory: 'CRM',
-    url: publicSiteUrl,
-  },
+  founder: { '@id': operatorPersonId },
+  brand: { '@id': `${publicSiteUrl}/#service` },
   mainEntityOfPage: companyProfileUrl,
-}
-
-const aboutPageJsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'AboutPage',
-  '@id': `${companyProfileUrl}#about-page`,
-  name: title,
-  url: companyProfileUrl,
-  description,
-  inLanguage: 'ja-JP',
-  isPartOf: {
-    '@id': `${publicSiteUrl}/#website`,
-  },
-  about: {
-    '@id': `${publicSiteUrl}/#organization`,
-  },
-  mainEntity: {
-    '@id': `${publicSiteUrl}/#organization`,
-  },
-  breadcrumb: {
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      {
-        '@type': 'ListItem',
-        position: 1,
-        name: serviceName,
-        item: publicSiteUrl,
-      },
-      {
-        '@type': 'ListItem',
-        position: 2,
-        name: companyName,
-        item: companyProfileUrl,
-      },
-    ],
-  },
 }
 
 const companyFacts = [
   ['会社名', companyName],
-  ['提供サービス', serviceName],
+  ['サービス', serviceName],
   ['代表', operatorName],
   ['所在地', '東京都 中央区'],
-  ['事業領域', '営業実行 / FDE開発 / CRM構築 / Call AI / 企業データベース'],
+  ['事業領域', '売上実験インフラ / データ収集 / 統計分析 / FDE実装'],
+]
+
+const serviceSteps = [
+  'レベニューインフラ設計',
+  '確率モデル設計',
+  'データ収集インフラ設計',
+  'ベイズ統計モデル設計',
+  'バンディット配分エンジン設計',
 ]
 
 export default function CompanyPage() {
   return (
-    <main className="min-h-screen bg-obsidian text-[#e7e5ea]">
+    <main className="min-h-screen bg-[#0b0f15] text-[#e7ecf3]">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify([companyJsonLd, aboutPageJsonLd]) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(companyJsonLd) }}
       />
 
-      <section className="relative overflow-hidden">
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background:
-              'radial-gradient(circle at 18% 16%, rgba(171,199,255,0.17), transparent 34%), radial-gradient(circle at 84% 8%, rgba(0,113,227,0.12), transparent 28%)',
-          }}
-        />
-        <div className="relative mx-auto max-w-5xl px-6 py-16 md:py-24">
+      <section className="border-b border-white/[0.08]">
+        <div className="mx-auto max-w-5xl px-6 py-16 md:py-24">
           <Link
             href="/"
-            className="inline-flex text-xs font-semibold tracking-[0.12em] text-aurora/80 hover:text-aurora"
+            className="text-xs font-semibold tracking-[0.12em] text-[#72b5ff] hover:text-white"
           >
-            FDE CRM 公式HPへ
+            ルキスマLABへ戻る
           </Link>
-
-          <div className="mt-10 max-w-3xl">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#9b99a0]">
-              Official Company Profile
-            </p>
-            <h1 className="mt-4 font-display text-[2.6rem] font-bold leading-tight tracking-[-0.02em] md:text-[4.2rem]">
-              株式会社ルーキースマートジャパン
-            </h1>
-            <p className="mt-5 text-base leading-8 text-[#c7c5c9] md:text-lg">
-              株式会社ルーキースマートジャパンは、FDE CRMを提供する営業実行・FDE開発支援会社です。
-              代表の沢坂弘樹が、CRM・Call AI・企業データベース・部署直通番号を組み合わせた営業活動を支援します。
-            </p>
-          </div>
+          <p className="mt-12 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[#67dfb0]">
+            Official company profile
+          </p>
+          <h1 className="mt-4 max-w-4xl font-display text-[2.45rem] font-bold leading-tight md:text-[4rem]">
+            株式会社ルーキースマートジャパン
+          </h1>
+          <p className="mt-6 max-w-3xl text-base leading-8 text-[#b7c0cc]">
+            営業・マーケティングの現場とデータをつなぎ、仮説を試し、正しく測り、
+            勝ち筋へ資源を配分できるRevenue Experiment Infrastructureを設計・実装します。
+          </p>
         </div>
       </section>
 
-      <section className="mx-auto max-w-5xl px-6 pb-20">
-        <div className="grid gap-4 md:grid-cols-2">
+      <section className="mx-auto max-w-5xl px-6 py-16">
+        <div className="grid gap-3 md:grid-cols-2">
           {companyFacts.map(([label, value]) => (
-            <div key={label} className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-              <p className="text-[10px] uppercase tracking-[0.14em] text-[#7e7c83]">{label}</p>
-              <p className="mt-2 text-sm font-semibold leading-7 text-[#e7e5ea]">{value}</p>
+            <div key={label} className="rounded-lg border border-white/[0.09] bg-white/[0.025] p-5">
+              <p className="text-[0.58rem] uppercase tracking-[0.14em] text-[#737d8c]">{label}</p>
+              <p className="mt-2 text-sm font-semibold leading-7">{value}</p>
             </div>
           ))}
         </div>
 
-        <div className="mt-10 rounded-3xl border border-white/10 bg-[#121216] p-6 md:p-8">
-          <h2 className="font-display text-2xl font-bold tracking-[-0.01em]">
-            {companyName}が提供する{serviceName}
-          </h2>
-          <p className="mt-4 text-sm leading-8 text-[#c7c5c9]">
-            {serviceName}は、CRM・Call AI・企業データベースを統合し、営業実行とFDE開発を同時に進めるAI CRMです。
-            営業データ、商談、メール、議事録、企業DBを横断し、次の営業アクションを引き出します。
+        <div className="mt-8 rounded-lg border border-white/[0.1] bg-[#0f141c] p-6 md:p-8">
+          <p className="text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-[#72b5ff]">
+            What we build
           </p>
-          <div className="mt-6 flex flex-wrap gap-3">
+          <h2 className="mt-3 font-display text-2xl font-bold">{serviceName}</h2>
+          <p className="mt-4 max-w-3xl text-sm leading-8 text-[#aeb7c4]">
+            広告、Web解析、CRM、商談、受注・継続データを一つの意思決定サイクルへ接続します。
+            レポート作成で終わらず、次の実験と配分変更まで運用できる状態を目指します。
+          </p>
+          <div className="mt-7 grid gap-2 sm:grid-cols-5">
+            {serviceSteps.map((step, index) => (
+              <div key={step} className="rounded-lg border border-white/[0.08] p-3">
+                <span className="text-[0.56rem] font-bold text-[#67dfb0]">0{index + 1}</span>
+                <p className="mt-2 text-[0.66rem] font-semibold leading-5">{step}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-7 flex flex-wrap gap-3">
             <Link
               href="/"
-              className="inline-flex rounded-full bg-aurora px-5 py-2 text-sm font-semibold text-[#07101f] transition-transform hover:-translate-y-0.5"
+              className="rounded-lg bg-[#72b5ff] px-5 py-2.5 text-sm font-bold text-[#07111f]"
             >
-              FDE CRMを見る
+              サービスを見る
             </Link>
             <Link
               href={operatorProfilePath}
-              className="inline-flex rounded-full border border-white/15 px-5 py-2 text-sm font-semibold text-[#e7e5ea] transition-colors hover:border-aurora/60 hover:text-aurora"
+              className="rounded-lg border border-white/15 px-5 py-2.5 text-sm font-semibold"
             >
               代表プロフィールを見る
             </Link>
