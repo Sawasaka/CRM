@@ -19,6 +19,7 @@ type PortfolioShellProps = {
   accent: string
   icon: LucideIcon
   tools: string[]
+  deliverable: string
   children: ReactNode
 }
 
@@ -30,6 +31,7 @@ const PortfolioShell = ({
   accent,
   icon: Icon,
   tools,
+  deliverable,
   children,
 }: PortfolioShellProps) => (
   <article className="overflow-hidden rounded-[30px] bg-pitch p-[1px] fo-glass-rim">
@@ -38,42 +40,77 @@ const PortfolioShell = ({
         className="absolute right-8 top-8 h-52 w-52 rounded-full opacity-70 blur-3xl"
         style={{ background: `radial-gradient(circle, ${accent}24, transparent 64%)` }}
       />
-      <div className="relative grid gap-6 p-5 md:p-6 xl:grid-cols-[0.52fr_1fr]">
-        <div className="flex min-w-0 flex-col justify-between gap-6">
-          <div className="flex items-start gap-4">
+      <div className="relative grid gap-6 p-5 md:p-6 xl:grid-cols-[0.58fr_1fr]">
+        <div className="flex min-w-0 flex-col xl:pr-2">
+          <div className="flex items-center gap-3">
             <div
-              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
               style={{ background: `${accent}16`, boxShadow: `inset 0 0 0 1px ${accent}44` }}
             >
-              <Icon size={21} color={accent} />
+              <Icon size={19} color={accent} />
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <div
-                className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em]"
+                className="flex items-center gap-2.5 text-[10px] font-semibold uppercase tracking-[0.18em]"
                 style={{ color: accent }}
               >
-                <span className="font-mono">{index}</span>
+                <span
+                  className="flex h-5 min-w-7 items-center justify-center rounded-md px-1.5 font-mono tracking-normal"
+                  style={{ background: `${accent}12`, boxShadow: `inset 0 0 0 1px ${accent}2e` }}
+                >
+                  {index}
+                </span>
                 <span>{eyebrow}</span>
               </div>
-              <h3 className="mt-2 font-display text-[1.45rem] font-bold leading-tight text-[#e7e5ea] md:text-[1.75rem]">
-                {title}
-              </h3>
-              <p className="mt-3 text-sm leading-relaxed text-[#9b99a0]">{body}</p>
+              <p className="mt-1 text-[9px] font-medium uppercase tracking-[0.16em] text-[#66636d]">
+                Revenue design process
+              </p>
             </div>
           </div>
 
-          <div className="grid gap-2 text-[12px] text-[#c7c5c9] sm:grid-cols-2 xl:grid-cols-1">
-            {tools.map((label, stepIndex) => (
-              <div
-                key={label}
-                className="flex min-w-0 items-center gap-3 rounded-2xl bg-black/30 px-3 py-2 fo-glass-rim"
-              >
-                <span className="shrink-0 font-mono text-[10px]" style={{ color: accent }}>
-                  {String(stepIndex + 1).padStart(2, '0')}
-                </span>
-                <span className="min-w-0">{label}</span>
-              </div>
-            ))}
+          <h3 className="mt-5 max-w-[22rem] font-display text-[1.5rem] font-bold leading-[1.24] text-[#eceaf0] md:text-[1.7rem]">
+            {title}
+          </h3>
+          <p className="mt-3 max-w-[23rem] text-[13px] leading-[1.85] text-[#9b99a0]">{body}</p>
+
+          <div className="mt-6 border-t border-white/[0.08] pt-4">
+            <div className="mb-1.5 text-[9px] font-semibold uppercase tracking-[0.2em] text-[#66636d]">
+              Design flow
+            </div>
+            <div className="text-[12px] text-[#cfccd4]">
+              {tools.map((label, stepIndex) => (
+                <div
+                  key={label}
+                  className="group grid min-w-0 grid-cols-[2rem_1fr] items-center border-b border-white/[0.06] py-2.5 last:border-b-0"
+                >
+                  <span className="relative flex h-full items-center font-mono text-[9px] text-[#66636d]">
+                    <span
+                      className="relative z-10 h-1.5 w-1.5 rounded-full"
+                      style={{ background: accent, boxShadow: `0 0 12px ${accent}80` }}
+                    />
+                    {stepIndex < tools.length - 1 && (
+                      <span className="absolute left-[3px] top-[calc(50%+6px)] h-[calc(100%-2px)] w-px bg-white/[0.08]" />
+                    )}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="mr-2 font-mono text-[9px]" style={{ color: accent }}>
+                      {String(stepIndex + 1).padStart(2, '0')}
+                    </span>
+                    {label}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-auto border-t border-white/[0.08] pt-4">
+            <div className="text-[9px] font-semibold uppercase tracking-[0.2em] text-[#66636d]">
+              Output
+            </div>
+            <div className="mt-2 flex items-center gap-2 text-[11px] font-medium text-[#bdbac3]">
+              <span className="h-px w-5 shrink-0" style={{ background: accent }} />
+              <span>{deliverable}</span>
+            </div>
           </div>
         </div>
 
@@ -113,6 +150,7 @@ export const PortfolioDemos = () => (
           accent="#abc7ff"
           icon={Network}
           tools={['流入から受注まで接続', 'ボトルネックを発見', '実験テーマを定義']}
+          deliverable="売上導線図 / ボトルネック一覧"
         >
           <RevenueInfrastructureVault />
         </PortfolioShell>
@@ -125,6 +163,7 @@ export const PortfolioDemos = () => (
           accent="#ffcf4a"
           icon={FlaskConical}
           tools={['CVR・CAC・LTVを仮定', 'シナリオを反復試算', '小さな実験へ接続']}
+          deliverable="確率シナリオ / 検証優先順位"
         >
           <ProbabilityModelVault />
         </PortfolioShell>
@@ -137,6 +176,7 @@ export const PortfolioDemos = () => (
           accent="#8dffc9"
           icon={Database}
           tools={['計測指標を定義', 'ID・イベントを統一', '欠損と重複を防止']}
+          deliverable="KPI定義書 / 計測データ辞書"
         >
           <MeasurementVault />
         </PortfolioShell>
@@ -149,6 +189,7 @@ export const PortfolioDemos = () => (
           accent="#c8b9ff"
           icon={Binary}
           tools={['複数案を同時比較', '成功確率を更新', '継続・停止を判断']}
+          deliverable="成功確率 / 継続・停止基準"
         >
           <BayesianVault />
         </PortfolioShell>
@@ -161,6 +202,7 @@ export const PortfolioDemos = () => (
           accent="#ff8dcf"
           icon={Gauge}
           tools={['配分ルールを設計', '探索枠を維持', '次の実験へ学習を継承']}
+          deliverable="配分ルール / 学習ログ"
         >
           <AllocationVault />
         </PortfolioShell>
