@@ -101,9 +101,9 @@ https://app.example.com/api/slack/oauth-callback
 
 - 公開URL: `https://www.rookiesmart-jp.com/`
 - apex: `https://rookiesmart-jp.com/` から `www` へ301リダイレクト
-- 本番デプロイ: `https://rookiesmart-bytmt2xu2-sawasakas-projects.vercel.app`
-- Vercel deployment ID: `dpl_B2fmP2EkrC6fKqca6WuPMECAS7sD`
-- 直前の本番ロールバック先: `https://rookiesmart-helmjfm2z-sawasakas-projects.vercel.app`
+- 本番デプロイ: `https://rookiesmart-aqphl1iy8-sawasakas-projects.vercel.app`
+- Vercel deployment ID: `dpl_Zp7fMfkFWaFTf1rtwBiXTXuL6vkE`
+- 直前の本番ロールバック先: `https://rookiesmart-bytmt2xu2-sawasakas-projects.vercel.app`
 - 旧サイトの本番ロールバック先: `https://rookiesmart-lrc5l8bnq-sawasakas-projects.vercel.app`
 - CRM: `https://crm.rookiesmart-jp.com/` の機能と `noindex, nofollow, noarchive` を維持
 
