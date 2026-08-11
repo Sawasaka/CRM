@@ -86,10 +86,26 @@ function ServiceAchievements({ service }: { service: BusinessService }) {
               <h4 className="min-w-0 text-[9px] font-bold leading-5 tracking-[0.1em] text-[#6b8797]">{achievement.title}</h4>
               <p className="col-start-2 mt-1 min-w-0 text-sm font-bold leading-6 tracking-[-0.01em] text-[#123b59] [font-variant-numeric:tabular-nums] sm:col-start-3 sm:row-start-1 sm:mt-0 sm:text-right">{achievement.metric}</p>
             </div>
-            {achievement.description ? (
-              <p className="mt-3 border-l border-[#88bdd8] pl-3 text-[11px] leading-5 text-[#587383] sm:ml-12 sm:mt-2 sm:truncate">
-                {achievement.description}
-              </p>
+            {achievement.description || achievement.target ? (
+              <div className="mt-3 flex flex-col gap-2 sm:ml-12 sm:mt-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                {achievement.description ? (
+                  <p className="min-w-0 flex-1 border-l border-[#88bdd8] pl-3 text-[11px] leading-5 text-[#587383] sm:truncate">
+                    {achievement.description}
+                  </p>
+                ) : null}
+                {achievement.target ? (
+                  <a
+                    href={achievement.target.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`${achievement.cta ?? achievement.title}を新しいタブで開く`}
+                    className="inline-flex shrink-0 items-center gap-1.5 self-start text-[10px] font-bold leading-5 text-[#0b6fb7] underline decoration-[#88bdd8] underline-offset-4 transition hover:text-[#084f82] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0b6fb7] sm:self-auto"
+                  >
+                    {achievement.cta ?? '詳しく見る'}
+                    <ArrowUpRight size={12} aria-hidden="true" />
+                  </a>
+                ) : null}
+              </div>
             ) : null}
           </article>
         ))}

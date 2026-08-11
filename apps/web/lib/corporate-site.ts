@@ -35,6 +35,8 @@ export type BusinessService = {
     metric: string
     title: string
     description?: string
+    target?: ExternalLinkTarget
+    cta?: string
   }[]
   highlight?: {
     eyebrow: string
@@ -187,6 +189,8 @@ export const businessServices: BusinessService[] = [
         metric: '検索1位 5キーワード',
         title: 'オウンドメディアSEO',
         description: '競合・検索意図・データベース設計を一貫して実行。',
+        target: { kind: 'external', href: 'https://koshikibase.jp/' },
+        cta: 'コーシキベースを見る',
       },
     ],
     points: [],
