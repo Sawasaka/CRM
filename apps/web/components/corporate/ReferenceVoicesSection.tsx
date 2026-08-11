@@ -118,8 +118,8 @@ const referenceVoices: readonly ReferenceVoice[] = [
     year: '導入事例',
     source: '導入企業',
     context: '営業・マーケティング基盤設計 / 売上インフラ',
-    title: '散らばった商談情報を、次の行動が見える売上基盤へ。',
-    excerpt: '既存ツールとAIを組み合わせ、売上インフラとしてまとめて設計できる点に魅力を感じ、導入を決定しました。',
+    title: '商談情報を、次の行動が見える売上基盤へ。',
+    excerpt: '既存ツールとAIをつなぎ、次の行動が見える売上基盤を設計できる点が魅力です。',
     paragraphs: [
       '営業活動を拡大していく中で、商談情報や顧客接点、提案内容が個別のツールやメモに分散し、案件状況や次に取るべき行動を把握しづらい課題がありました。',
       '少人数体制でも営業の再現性を高め、見込み顧客へのアプローチ精度を上げるため、Notion・Google Workspace・Zoom・CRMにAIを組み合わせ、売上インフラとしてまとめて設計できる点に魅力を感じ、導入を決定しました。',
@@ -187,7 +187,7 @@ export function ReferenceVoicesSection() {
                 onClick={() => setActiveReference(item)}
                 className="group flex h-full min-h-[27rem] w-full flex-col border border-[#c9dfe9] bg-white p-7 text-left shadow-[0_18px_60px_rgba(18,59,89,0.06)] transition-all hover:-translate-y-1 hover:border-[#6eb3d9] hover:shadow-[0_22px_70px_rgba(18,59,89,0.11)] sm:p-8"
               >
-                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-5">
+                <div className="grid min-h-[4.5rem] grid-cols-[minmax(0,1fr)_auto] items-start gap-x-5">
                   <p className="text-[9px] font-bold tracking-[0.2em] text-[#0b6fb7]">{item.kind === 'customer' ? 'CUSTOMER STORY' : 'REFERENCE'} {item.number}</p>
                   {item.kind === 'customer' && item.logo ? (
                     <span className="flex h-[22px] w-24 shrink-0 items-start justify-end">
@@ -211,7 +211,7 @@ export function ReferenceVoicesSection() {
                   </p>
                 </div>
                 <p className="mt-7 text-[10px] font-semibold leading-5 tracking-[0.08em] text-[#638194]">{item.context}</p>
-                <h3 className="mt-4 [font-family:'Yu_Mincho','Hiragino_Mincho_ProN',serif] text-[1.45rem] font-semibold leading-[1.65] tracking-[-0.02em] text-[#123b59]">{item.title}</h3>
+                <h3 className="mt-4 [font-family:'Yu_Mincho','Hiragino_Mincho_ProN',serif] text-[1.45rem] font-semibold leading-[1.65] tracking-[-0.02em] text-[#123b59] md:min-h-[4.8rem]">{item.title}</h3>
                 <blockquote className="mt-5 border-l-2 border-[#72b8dc] pl-4 text-sm leading-7 text-[#587383]">「{item.excerpt}」</blockquote>
                 <span className="mt-auto flex items-center justify-between border-t border-[#dceaf1] pt-6 text-xs font-bold text-[#0b6fb7]">
                   {item.kind === 'customer' ? '導入事例の全文を読む' : '推薦文の全文を読む'}
