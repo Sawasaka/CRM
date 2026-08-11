@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-labelledby="title">
+  <title id="title">開いた本の中をRでくり抜いたルーキースマートジャパンのロゴ</title>
+  <path d="M3 6.5c7.2.4 14.1 2.7 19 6.5v29C16.5 37.7 10 35.2 3 34Z" fill="#123b59"/>
+  <path d="M45 6.5c-7.2.4-14.1 2.7-19 6.5v29c5.5-4.3 12-6.8 19-8Z" fill="#123b59"/>
+  <path d="M8.5 30.8c5.1.7 9.6 3 13.5 7.2v4c-4.3-3.6-8.8-5.5-13.5-6.2Z" fill="#0b6fb7"/>
+  <text x="24" y="37.5" text-anchor="middle" fill="#fff" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="38.5" font-weight="800" letter-spacing="-1.5">R</text>
+</svg>

@@ -96,3 +96,16 @@ https://app.example.com/api/slack/oauth-callback
 ## 初回公開時の注意
 
 現状の `apps/web` には既存の TypeScript / App Router export エラーが残っています。初回公開を優先するため、`apps/web/next.config.mjs` では `ignoreBuildErrors` と `ignoreDuringBuilds` を有効にしています。公開後、型エラーを潰したらこの設定は外します。
+
+## コーポレートサイト v2 本番公開記録（2026-08-11）
+
+- 公開URL: `https://www.rookiesmart-jp.com/`
+- apex: `https://rookiesmart-jp.com/` から `www` へ301リダイレクト
+- 本番デプロイ: `https://rookiesmart-ihqgyzu32-sawasakas-projects.vercel.app`
+- Vercel deployment ID: `dpl_DyJUtemFUhp74YKKUzDcb4HdGvbb`
+- 旧本番ロールバック先: `https://rookiesmart-lrc5l8bnq-sawasakas-projects.vercel.app`
+- CRM: `https://crm.rookiesmart-jp.com/` の機能と `noindex, nofollow, noarchive` を維持
+
+公開後に、会社名・代表名を含むmetadataとJSON-LD、canonical、robots.txt、sitemap.xml、資料PDF、フォームの入力検証を実ドメインで確認した。レスポンシブ表示は1440px、1280px、768px、390px、320pxで確認し、横スクロールと画像破損がないことを確認した。
+
+緊急時はVercelのDeploymentsから旧本番ロールバック先をPromote to Productionし、公開後にコーポレートドメインとCRMの両方を再確認する。

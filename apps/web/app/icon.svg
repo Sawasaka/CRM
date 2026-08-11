@@ -1,24 +1,3 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <title>Rookie Smart Japan premium favicon 02</title>
-  <desc>Dark enterprise tile favicon for product and browser usage.</desc>
-  <defs>
-    <linearGradient id="rsj-premium-02-bg" x1="52" y1="46" x2="972" y2="980" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#111827"/>
-      <stop offset="0.58" stop-color="#172338"/>
-      <stop offset="1" stop-color="#0b1020"/>
-    </linearGradient>
-    <linearGradient id="rsj-premium-02-edge" x1="70" y1="52" x2="952" y2="980" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#5d8ee8"/>
-      <stop offset="0.5" stop-color="#22395c"/>
-      <stop offset="1" stop-color="#2f8cff"/>
-    </linearGradient>
-    <linearGradient id="rsj-premium-02-r" x1="248" y1="214" x2="762" y2="780" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#ffffff"/>
-      <stop offset="0.52" stop-color="#d9e7ff"/>
-      <stop offset="1" stop-color="#68a9ff"/>
-    </linearGradient>
-  </defs>
-  <text x="512" y="808" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="930" font-weight="900" fill="url(#rsj-premium-02-r)">R</text>
-  <rect x="176" y="858" width="672" height="58" rx="29" fill="#2f8cff"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <image href="/brand/rookie-smart-japan/rsj-corporate-cat-favicon-512.png?v=20260811-max-zoom" width="512" height="512"/>
 </svg>

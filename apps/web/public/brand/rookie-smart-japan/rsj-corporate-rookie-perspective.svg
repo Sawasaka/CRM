@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title description">
+  <title id="title">ルーキースマートジャパン ロゴ</title>
+  <desc id="description">新しい視点を表すRと、科学的根拠と学びを表す開いた本を組み合わせたロゴ</desc>
+  <path d="M4.5 38.5c9.8-.2 18.1 2.7 27.5 10.1V60C23.4 53.4 14.4 50.2 4.5 51Z" fill="#eaf5fb" stroke="#0b6fb7" stroke-linejoin="round" stroke-width="2"/>
+  <path d="M59.5 38.5c-9.8-.2-18.1 2.7-27.5 10.1V60c8.6-6.6 17.6-9.8 27.5-9Z" fill="#eaf5fb" stroke="#0b6fb7" stroke-linejoin="round" stroke-width="2"/>
+  <path d="M18 4h19.2C48.7 4 56 10.7 56 21.1c0 7.2-3.8 12.7-10.4 15.4L58 55H45.7L35.1 39.1H29V55H18V4Zm11 9.8v15.7h7.4c5.4 0 8.5-3 8.5-7.9 0-4.9-3.1-7.8-8.5-7.8H29Z" fill="#123b59"/>
+  <path d="M32 48.6V60" fill="none" stroke="#0b6fb7" stroke-linecap="round" stroke-width="2"/>
+</svg>

@@ -4,11 +4,11 @@ import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics'
 import { AppProviders } from '@/components/app-providers'
 import {
   googleSiteVerification,
+  companyName,
   publicSiteDescription,
   publicSiteKeywords,
   publicSiteTitle,
   publicSiteUrl,
-  serviceName,
 } from '@/lib/public-site'
 import './globals.css'
 
@@ -48,14 +48,16 @@ export const metadata: Metadata = {
     title: publicSiteTitle,
     description: publicSiteDescription,
     url: '/',
-    siteName: serviceName,
+    siteName: companyName,
     type: 'website',
     locale: 'ja_JP',
+    images: [{ url: '/corporate-og.svg', width: 1200, height: 630, alt: companyName }],
   },
   twitter: {
-    card: 'summary',
+    card: 'summary_large_image',
     title: publicSiteTitle,
     description: publicSiteDescription,
+    images: ['/corporate-og.svg'],
   },
   verification: googleSiteVerification
     ? {
@@ -64,11 +66,24 @@ export const metadata: Metadata = {
     : undefined,
   icons: {
     icon: [
-      { url: '/service-icon.svg?v=unified-service-favicon-20260611', type: 'image/svg+xml' },
-      { url: '/service-favicon.ico?v=unified-service-favicon-20260611', sizes: '32x32' },
+      {
+        url: '/brand/rookie-smart-japan/rsj-corporate-cat-favicon-16.png?v=20260811-max-zoom',
+        sizes: '16x16',
+        type: 'image/png',
+      },
+      {
+        url: '/brand/rookie-smart-japan/rsj-corporate-cat-favicon-32.png?v=20260811-max-zoom',
+        sizes: '32x32',
+        type: 'image/png',
+      },
+      {
+        url: '/brand/rookie-smart-japan/rsj-corporate-cat-favicon-48.png?v=20260811-max-zoom',
+        sizes: '48x48',
+        type: 'image/png',
+      },
     ],
-    shortcut: '/service-icon.svg?v=unified-service-favicon-20260611',
-    apple: '/service-icon.svg?v=unified-service-favicon-20260611',
+    shortcut: '/brand/rookie-smart-japan/rsj-corporate-cat-favicon-32.png?v=20260811-max-zoom',
+    apple: '/brand/rookie-smart-japan/rsj-corporate-cat-favicon-180.png?v=20260811-max-zoom',
   },
   manifest: '/manifest.webmanifest',
 }
