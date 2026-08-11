@@ -317,7 +317,7 @@ export function TrackRecordSection() {
               PROJECT TRACK RECORD
             </div>
             <h2 className="mt-7 [font-family:'Yu_Mincho','Hiragino_Mincho_ProN',serif] text-[clamp(1.35rem,6.75vw,2.15rem)] font-semibold leading-[1.45] tracking-[-0.03em] text-[#123b59] sm:text-5xl sm:leading-[1.4]">
-              事業成長を、<br />3ステージで再現する。
+              事業成長を、<br />3ステージで再現化する。
             </h2>
           </div>
           <p className="max-w-2xl text-sm leading-8 text-[#587383] sm:text-[15px]">
