@@ -46,9 +46,9 @@ export const operatorProfilePath = '/#representative'
 export const operatorProfileUrl = `${publicSiteUrl}${operatorProfilePath}`
 export const operatorPersonId = `${operatorProfileUrl}#person`
 
-export const publicSiteTitle = `${companyName}｜代表 沢坂弘樹｜GTM・マーケティング基盤`
+export const publicSiteTitle = `${companyName}｜${operatorName}`
 
-export const publicSiteDescription = `${companyName}（代表：${operatorName}）は、中学硬式野球メディア「コーシキベース」の運営と、Go-to-Market（GTM）設計・マーケティング基盤設計を通じて、事業成長を再現するインフラを構築します。`
+export const publicSiteDescription = `${companyName}（代表：${operatorName}）は、Go-to-Market（GTM）設計とマーケティング基盤設計を通じて、データ・営業・顧客獲得をつなぎ、事業成長を再現するインフラを構築します。`
 
 export const publicSiteKeywords = [
   companyName,
@@ -60,9 +60,9 @@ export const publicSiteKeywords = [
   operatorNameHiragana,
   'コーシキベース',
   '中学硬式野球',
-  serviceSearchName,
-  ...serviceAlternateNames,
   'Go-to-Market',
+  'GTM設計',
+  'マーケティング基盤設計',
   'GTM戦略',
   '新規事業',
   '日本市場参入',
@@ -87,8 +87,8 @@ export const publicSiteFaqItems = [
     answer: `${companyName}は、中学硬式野球メディア「コーシキベース」を運営し、法人向けにGo-to-Market設計とマーケティング基盤設計を提供しています。`,
   },
   {
-    question: 'ルキスマLABとは何ですか？',
-    answer: `${serviceSearchName}は、Go-to-Market設計とマーケティング基盤設計を束ねる${companyName}の法人向けサービスブランドです。`,
+    question: '法人向けにはどのようなサービスを提供していますか？',
+    answer: `${companyName}は、法人向けにGo-to-Market設計とマーケティング基盤設計を提供しています。`,
   },
   {
     question: 'Go-to-Market設計では何を支援しますか？',
@@ -133,7 +133,11 @@ export const publicSiteStructuredData = [
     employee: { '@id': operatorPersonId },
     brand: [
       { '@type': 'Brand', name: 'コーシキベース', url: 'https://koshikibase.jp' },
-      { '@type': 'Brand', name: serviceSearchName, url: `${publicSiteUrl}/services` },
+      {
+        '@type': 'Brand',
+        name: 'GTM・マーケティング基盤設計',
+        url: `${publicSiteUrl}/services`,
+      },
     ],
   },
   {
