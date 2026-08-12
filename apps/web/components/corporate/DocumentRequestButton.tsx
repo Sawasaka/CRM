@@ -40,9 +40,13 @@ const INITIAL_VALUES: FormValues = {
 export function DocumentRequestButton({
   documentType,
   variant = 'light',
+  modalTitle,
+  modalDescription,
 }: {
   documentType: CorporateDocumentType
   variant?: 'light' | 'navy'
+  modalTitle?: string
+  modalDescription?: string
 }) {
   const [open, setOpen] = useState(false)
   const requestHash = `#${documentType}-document-request`
@@ -88,16 +92,27 @@ export function DocumentRequestButton({
         <span className="text-center">内容を確認する</span>
         <ArrowRight size={15} className="justify-self-end transition-transform group-hover/document:translate-x-1" />
       </button>
-      {open ? <DocumentRequestModal documentType={documentType} onClose={close} /> : null}
+      {open ? (
+        <DocumentRequestModal
+          documentType={documentType}
+          title={modalTitle}
+          description={modalDescription}
+          onClose={close}
+        />
+      ) : null}
     </>
   )
 }
 
 function DocumentRequestModal({
   documentType,
+  title,
+  description,
   onClose,
 }: {
   documentType: CorporateDocumentType
+  title?: string
+  description?: string
   onClose: () => void
 }) {
   const [values, setValues] = useState<FormValues>(INITIAL_VALUES)
@@ -206,10 +221,10 @@ function DocumentRequestModal({
           id="document-request-title"
           className="mt-3 [font-family:'Yu_Mincho','Hiragino_Mincho_ProN',serif] text-xl font-semibold leading-[1.55] text-[#123b59] sm:pr-12 sm:text-[1.65rem] sm:leading-[1.45]"
         >
-          {documentConfig.title}
+          {title ?? documentConfig.title}
         </h2>
         <p className="mt-3 text-sm leading-7 text-[#587383]">
-          ダウンロード後、相談日程の予約画面が開きます。
+          {description ?? 'ダウンロード後、相談日程の予約画面が開きます。'}
         </p>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2">

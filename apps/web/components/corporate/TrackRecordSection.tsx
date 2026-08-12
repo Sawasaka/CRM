@@ -262,9 +262,24 @@ function GrowthStage({ stage }: { stage: (typeof growthStages)[number] }) {
               <p className={`mt-2 text-[11px] font-semibold leading-5 ${styles.body}`}>{stage.approach.purpose}</p>
             </div>
           ) : null}
+          {stage.key === 'launch' ? (
+            <div className="relative z-[1] mt-6 max-w-[220px]">
+              <DocumentRequestButton documentType="gtm" />
+            </div>
+          ) : null}
+          {stage.key === 'infrastructure' ? (
+            <div className="relative z-[1] mt-6 max-w-[220px]">
+              <DocumentRequestButton documentType="marketing" />
+            </div>
+          ) : null}
           {stage.key === 'growth' ? (
             <div className="relative z-[1] mt-6 max-w-[220px]">
-              <DocumentRequestButton documentType="gtm" variant="navy" />
+              <DocumentRequestButton
+                documentType="gtm"
+                variant="navy"
+                modalTitle="売上を仕組みで再現する3ステージ設計"
+                modalDescription="「識学 × 自己決定理論」を軸に、役割・実行・改善をつなぎ、売上の再現性を高める組織設計をご紹介します。"
+              />
             </div>
           ) : null}
         </div>
