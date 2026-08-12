@@ -277,8 +277,7 @@ function GrowthStage({ stage }: { stage: (typeof growthStages)[number] }) {
               <DocumentRequestButton
                 documentType="gtm"
                 variant="navy"
-                modalTitle="売上を仕組みで再現する3ステージ設計"
-                modalDescription="「識学 × 自己決定理論」を軸に、役割・実行・改善をつなぎ、売上の再現性を高める組織設計をご紹介します。"
+                modalTitle="識学 × 自己決定理論"
               />
             </div>
           ) : null}
