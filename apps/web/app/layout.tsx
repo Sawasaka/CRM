@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { DM_Sans, Inter, Plus_Jakarta_Sans } from 'next/font/google'
+import localFont from 'next/font/local'
 import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics'
 import { AppProviders } from '@/components/app-providers'
 import {
@@ -12,28 +12,27 @@ import {
 } from '@/lib/public-site'
 import './globals.css'
 
-// Legacy（既存UI互換）
-const dmSans = DM_Sans({
-  subsets: ['latin'],
+// Keep the current typography while making production builds independent
+// from Google Fonts network availability.
+const dmSans = localFont({
+  src: './fonts/DMSans-Latin-Variable.woff2',
   variable: '--font-sans-legacy',
   display: 'swap',
-  weight: ['300', '400', '500', '600', '700'],
+  weight: '300 700',
 })
 
-// Liquid Obsidian — body/UI
-const inter = Inter({
-  subsets: ['latin'],
+const inter = localFont({
+  src: './fonts/Inter-Latin-Variable.woff2',
   variable: '--font-body',
   display: 'swap',
-  weight: ['400', '500', '600', '700'],
+  weight: '400 700',
 })
 
-// Liquid Obsidian — display/headline
-const plusJakarta = Plus_Jakarta_Sans({
-  subsets: ['latin'],
+const plusJakarta = localFont({
+  src: './fonts/PlusJakartaSans-Latin-Variable.woff2',
   variable: '--font-display',
   display: 'swap',
-  weight: ['500', '600', '700', '800'],
+  weight: '500 800',
 })
 
 export const metadata: Metadata = {

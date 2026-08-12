@@ -63,8 +63,6 @@
   --color-obs-low:    #7ec6ff;
 
   /* Fonts */
-  --font-display: 'Plus Jakarta Sans', -apple-system, 'Hiragino Sans', 'Yu Gothic UI', sans-serif;
-  --font-body:    'Inter', -apple-system, 'Hiragino Sans', 'Yu Gothic UI', sans-serif;
   --font-sans: var(--font-body);
 
   /* Radius（xl for cards, md for nested） */
@@ -396,7 +394,7 @@ textarea:focus-visible,
 /* recharts text */
 .fo-recharts .recharts-text {
   fill: #c7c5c9 !important;
-  font-family: Inter, sans-serif;
+  font-family: var(--font-body);
   font-size: 12px;
 }
 .fo-recharts .recharts-cartesian-axis-line,
