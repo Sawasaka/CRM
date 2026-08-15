@@ -110,3 +110,15 @@ https://app.example.com/api/slack/oauth-callback
 公開後に、会社名・代表名を含むmetadataとJSON-LD、canonical、robots.txt、sitemap.xml、資料PDF、フォームの入力検証を実ドメインで確認した。レスポンシブ表示は1440px、1280px、768px、390px、320pxで確認し、横スクロールと画像破損がないことを確認した。
 
 緊急時はVercelのDeploymentsから旧本番ロールバック先をPromote to Productionし、公開後にコーポレートドメインとCRMの両方を再確認する。
+
+## 代表者SEO強化 本番公開記録（2026-08-15）
+
+- 公開URL: `https://www.rookiesmart-jp.com/`
+- 代表プロフィール: `https://www.rookiesmart-jp.com/hiroki-sawasaka`
+- 本番デプロイ: `https://rookiesmart-h0t359k70-sawasakas-projects.vercel.app`
+- Vercel deployment ID: `dpl_8NaNvrT1MtTSvrWJSkqiGKiu1KvD`
+- 直前の本番ロールバック先: `https://rookiesmart-aqphl1iy8-sawasakas-projects.vercel.app`
+- 旧サイトの本番ロールバック先: `https://rookiesmart-lrc5l8bnq-sawasakas-projects.vercel.app`
+- Git commit: `834984e` (`Strengthen Hiroki Sawasaka profile SEO`)
+
+公開後に、代表プロフィールのHTTP 200、title、canonical、`ProfilePage`・`Person`構造化データ、sitemap掲載を実ドメインで確認した。コーポレートサイトはindex可能な状態を維持し、`https://crm.rookiesmart-jp.com/`では`noindex, nofollow, noarchive`が継続していることを確認した。PC 1440px・スマートフォン390pxでトップと代表プロフィールを確認し、横スクロールがないことを確認した。
