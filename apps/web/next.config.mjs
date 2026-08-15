@@ -44,7 +44,6 @@ const nextConfig = {
     return [
       { source: '/services/gtm', destination: '/#gtm-download', permanent: true },
       { source: '/services/marketing-infrastructure', destination: '/#marketing-download', permanent: true },
-      { source: '/hiroki-sawasaka', destination: '/#representative', permanent: true },
       { source: '/company', destination: '/#company', permanent: true },
     ]
   },

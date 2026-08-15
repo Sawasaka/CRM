@@ -23,6 +23,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.95,
     },
     {
+      url: `${publicSiteUrl}/hiroki-sawasaka`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.9,
+    },
+    {
       url: `${publicSiteUrl}/legal`,
       lastModified: new Date('2026-05-17'),
       changeFrequency: 'monthly',

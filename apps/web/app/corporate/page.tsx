@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import Link from 'next/link'
 import { BusinessCards } from '@/components/corporate/BusinessCards'
 import { Container, CorporateShell, FinalCallToAction, SectionHeading } from '@/components/corporate/CorporateShell'
 import { HeroCarousel } from '@/components/corporate/HeroCarousel'
@@ -28,7 +29,7 @@ export default function CorporateHomePage() {
         <section id="representative" className="scroll-mt-24 py-16 sm:py-24 lg:py-28">
           <Container>
             <div className="grid gap-12 lg:grid-cols-[1fr_1fr] lg:items-center lg:gap-20">
-              <div className="relative">
+              <Link href="/hiroki-sawasaka" className="relative block" aria-label="沢坂弘樹の代表プロフィールを見る">
                 <div className="relative aspect-[4/3] overflow-hidden bg-[#dceef7]">
                   <Image src="/founder-corporate.jpeg" alt="株式会社ルーキースマートジャパン代表 沢坂弘樹" fill sizes="(max-width: 1024px) 100vw, 50vw" className="object-cover object-center" />
                 </div>
@@ -36,7 +37,7 @@ export default function CorporateHomePage() {
                   <p className="text-[9px] font-bold tracking-[0.18em] text-[#8dc8ea]">FOUNDER / CEO</p>
                   <p className="mt-1 text-lg font-bold">沢坂 弘樹</p>
                 </div>
-              </div>
+              </Link>
               <div className="pt-8 lg:pt-0">
                 <SectionHeading
                   eyebrow="FOUNDER STORY"

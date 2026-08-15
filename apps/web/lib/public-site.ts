@@ -35,14 +35,18 @@ export const operatorName = '沢坂弘樹'
 export const operatorNameWithSpace = '沢坂 弘樹'
 export const operatorRomanName = 'Hiroki Sawasaka'
 export const operatorNameHiragana = 'さわさか ひろき'
-export const operatorExternalProfiles = ['https://crowdworks.jp/public/employees/6733727']
+export const operatorExternalProfiles = [
+  'https://www.wantedly.com/id/hiroki_sawasaka_b',
+  'https://crowdworks.jp/public/employees/6733727',
+  'https://www.facebook.com/hiroki.sawasaka',
+]
 export const operatorSubjectUrls = [
   'https://www.daily.co.jp/baseball/shikoku/2016/08/22/0009412721.shtml',
   'https://www.iblj.co.jp/news/5501/',
 ]
 export const companyProfilePath = '/#company'
 export const companyProfileUrl = `${publicSiteUrl}${companyProfilePath}`
-export const operatorProfilePath = '/#representative'
+export const operatorProfilePath = '/hiroki-sawasaka'
 export const operatorProfileUrl = `${publicSiteUrl}${operatorProfilePath}`
 export const operatorPersonId = `${operatorProfileUrl}#person`
 
@@ -149,6 +153,7 @@ export const publicSiteStructuredData = [
     jobTitle: `${companyName} 代表`,
     description: `${operatorName}は、野球で培った現場感覚と、開発・営業・マーケティングの実務経験をもとに、事業の仕組み化を支援しています。`,
     url: operatorProfileUrl,
+    image: `${publicSiteUrl}/founder-corporate.jpeg`,
     sameAs: operatorExternalProfiles,
     mainEntityOfPage: operatorProfileUrl,
     alumniOf: { '@type': 'CollegeOrUniversity', name: '亜細亜大学' },

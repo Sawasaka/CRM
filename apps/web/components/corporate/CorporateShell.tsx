@@ -166,7 +166,9 @@ export function CorporateFooter() {
               <p className="font-bold text-white">{companyName}</p>
               <dl className="mt-4 grid grid-cols-[4.5rem_minmax(0,1fr)] gap-x-3 gap-y-2 text-xs leading-5">
                 <dt className="text-[#8fb1c4]">代表</dt>
-                <dd className="font-semibold text-white">{operatorName}</dd>
+                <dd className="font-semibold text-white">
+                  <Link href="/hiroki-sawasaka" className="hover:text-[#8dc8ea]">{operatorName}</Link>
+                </dd>
                 <dt className="text-[#8fb1c4]">連絡先</dt>
                 <dd className="min-w-0">
                   <a href={`mailto:${companyEmail}`} className="break-all hover:text-white">{companyEmail}</a>
