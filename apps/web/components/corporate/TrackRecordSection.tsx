@@ -142,7 +142,7 @@ const growthStages = [
     description: undefined,
     approach: {
       model: 'Sales-led GTM × Wedgeモデル',
-      purpose: 'グロースシグナル獲得戦略に採用',
+      purpose: 'グロースシグナル獲得モデルとして採用',
     },
     tone: 'blue',
   },
@@ -154,7 +154,7 @@ const growthStages = [
     description: undefined,
     approach: {
       model: 'ベイズ × バンディット戦略',
-      purpose: '施策ウェイトの最適化モデルとして採用',
+      purpose: '施策ウェイト最適化モデルとして採用',
     },
     tone: 'sage',
   },
@@ -165,8 +165,8 @@ const growthStages = [
     title: ['売上を、', '仕組みで再現する。'],
     description: undefined,
     approach: {
-      model: '識学 × 自己決定理論',
-      purpose: '売上再現型・組織運営方式として採用',
+      model: 'データ基盤 × 意思決定システム',
+      purpose: 'データに基づく経営判断モデルとして採用',
     },
     tone: 'navy',
   },
@@ -277,7 +277,7 @@ function GrowthStage({ stage }: { stage: (typeof growthStages)[number] }) {
               <DocumentRequestButton
                 documentType="gtm"
                 variant="navy"
-                modalTitle="識学 × 自己決定理論"
+                modalTitle="データ基盤 × 意思決定システム"
               />
             </div>
           ) : null}
