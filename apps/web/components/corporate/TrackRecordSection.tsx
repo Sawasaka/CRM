@@ -165,8 +165,8 @@ const growthStages = [
     title: ['売上を、', '仕組みで再現する。'],
     description: undefined,
     approach: {
-      model: 'データインフラ × 意思決定システム',
-      purpose: 'データに基づく経営判断モデルとして採用',
+      model: 'データインフラ × グロースシステム',
+      purpose: 'データに基づく事業成長モデルとして採用',
     },
     tone: 'navy',
   },
@@ -277,7 +277,7 @@ function GrowthStage({ stage }: { stage: (typeof growthStages)[number] }) {
               <DocumentRequestButton
                 documentType="gtm"
                 variant="navy"
-                modalTitle="データインフラ × 意思決定システム"
+                modalTitle="データインフラ × グロースシステム"
               />
             </div>
           ) : null}
