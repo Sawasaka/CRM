@@ -124,7 +124,7 @@ export function CorporateFooter() {
           <div>
             <CorporateLogo inverted />
             <p className="mt-6 max-w-md text-sm leading-7 text-[#c8dce8]">
-              Go-to-Market・マーケティング基盤設計を通じて、事業成長を継続的に支えるマーケティングインフラと、持続的な成果を生み出す営業基盤を構築します。
+              Go-to-Market・マーケティング基盤設計を通じて、顧客体験を高める営業UXを設計し、事業成長を継続的に支える営業基盤を構築します。
             </p>
           </div>
           <div>

@@ -2,7 +2,6 @@ import Image from 'next/image'
 import { ArrowRight, ArrowUpRight } from 'lucide-react'
 import { businessServices, type BusinessService } from '@/lib/corporate-site'
 import { CorporateLink } from './CorporateShell'
-import { DocumentRequestButton } from './DocumentRequestButton'
 
 function ServiceVisual({ service, featured = false }: { service: BusinessService; featured?: boolean }) {
   if (service.id === 'koshikibase') {
@@ -115,16 +114,11 @@ function ServiceAchievements({ service }: { service: BusinessService }) {
 }
 
 function ServiceCard({ service, featured = false }: { service: BusinessService; featured?: boolean }) {
-  const documentType = service.id === 'gtm'
-    ? 'gtm'
-    : service.id === 'marketing-infrastructure'
-      ? 'marketing'
-      : null
-  const downloadId = documentType === 'gtm'
+  const sectionId = service.id === 'gtm'
     ? 'gtm-download'
-    : documentType === 'marketing'
+    : service.id === 'marketing-infrastructure'
       ? 'marketing-download'
-      : undefined
+      : null
   const baseClassName = `group flex h-full flex-col border border-[#cfe0e9] bg-white ${featured ? 'lg:grid lg:grid-cols-[1.15fr_0.85fr]' : ''}`
   const cardContent = (
     <>
@@ -135,7 +129,7 @@ function ServiceCard({ service, featured = false }: { service: BusinessService; 
             <p className="text-[9px] font-bold tracking-[0.2em] text-[#0b6fb7]">{service.number} / {service.audience}</p>
             <h3 className="mt-3 [font-family:'Yu_Mincho','Hiragino_Mincho_ProN',serif] text-2xl font-semibold leading-[1.45] text-[#123b59]">{service.title}</h3>
             {service.achievements ? (
-              <div className={`mt-2 min-h-11 ${documentType ? 'flex flex-col gap-3' : 'flex items-center'}`}>
+              <div className="mt-2 flex min-h-11 items-center">
                 {service.strategy ? (
                   <p className="min-w-0 text-[11px] font-semibold leading-6 tracking-[-0.025em] lg:whitespace-nowrap">
                     <span className="font-bold text-[#0b6fb7]">{service.strategy.label}</span>
@@ -151,11 +145,6 @@ function ServiceCard({ service, featured = false }: { service: BusinessService; 
                     ))}
                   </ul>
                 )}
-                {documentType ? (
-                  <div id={downloadId} className="w-full scroll-mt-24 sm:ml-auto sm:w-[164px]">
-                    <DocumentRequestButton documentType={documentType} />
-                  </div>
-                ) : null}
               </div>
             ) : service.englishTitle ? (
               <p className="mt-1 text-[9px] font-bold tracking-[0.14em] text-[#7c95a4]">{service.englishTitle}</p>
@@ -188,8 +177,8 @@ function ServiceCard({ service, featured = false }: { service: BusinessService; 
     </>
   )
 
-  if (documentType) {
-    return <div className={baseClassName}>{cardContent}</div>
+  if (sectionId) {
+    return <div id={sectionId} className={`${baseClassName} scroll-mt-24`}>{cardContent}</div>
   }
 
   return (

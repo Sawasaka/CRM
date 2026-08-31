@@ -10,7 +10,6 @@ import {
   ShoppingCart,
   UsersRound,
 } from 'lucide-react'
-import { DocumentRequestButton } from './DocumentRequestButton'
 
 type GrowthStageKey = 'launch' | 'growth' | 'infrastructure'
 
@@ -260,25 +259,6 @@ function GrowthStage({ stage }: { stage: (typeof growthStages)[number] }) {
               <p className={`text-[8px] font-bold tracking-[0.24em] ${styles.approachLabel}`}>STRATEGIC MODEL</p>
               <p className="mt-3 text-[13px] font-bold leading-6 tracking-[0.01em] sm:text-sm">「{stage.approach.model}」</p>
               <p className={`mt-2 text-[11px] font-semibold leading-5 ${styles.body}`}>{stage.approach.purpose}</p>
-            </div>
-          ) : null}
-          {stage.key === 'launch' ? (
-            <div className="relative z-[1] mt-6 max-w-[220px]">
-              <DocumentRequestButton documentType="gtm" />
-            </div>
-          ) : null}
-          {stage.key === 'infrastructure' ? (
-            <div className="relative z-[1] mt-6 max-w-[220px]">
-              <DocumentRequestButton documentType="marketing" />
-            </div>
-          ) : null}
-          {stage.key === 'growth' ? (
-            <div className="relative z-[1] mt-6 max-w-[220px]">
-              <DocumentRequestButton
-                documentType="gtm"
-                variant="navy"
-                modalTitle="データインフラ × グロースシステム"
-              />
             </div>
           ) : null}
         </div>

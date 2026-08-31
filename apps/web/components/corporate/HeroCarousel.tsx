@@ -24,14 +24,14 @@ export function HeroCarousel() {
       <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#0d3551]/20 to-transparent sm:hidden" />
 
       <div className="relative mx-auto flex min-h-[690px] max-w-[1240px] items-center px-5 py-20 sm:min-h-[720px] sm:px-8 lg:min-h-[760px]">
-        <div className="max-w-[720px] pt-4 sm:max-w-[660px] lg:max-w-[720px]">
+        <div className="max-w-[720px] pt-4 sm:max-w-[660px] lg:max-w-[800px]">
           <p className="flex items-center gap-4 text-[10px] font-bold tracking-[0.23em] text-[#0b6fb7]">
             <span className="h-px w-11 bg-[#0b6fb7]" />
-            CRITICAL THINKING
+            REVENUE DESIGN
           </p>
-          <h1 className="mt-6 [font-family:'Yu_Mincho','Hiragino_Mincho_ProN','Noto_Serif_JP',serif] text-[2.25rem] font-semibold leading-[1.3] tracking-[-0.045em] text-[#123b59] sm:text-[3.6rem] lg:text-[4.35rem]">
-            科学的エビデンスを、
-            <span className="block text-[#0b6fb7]">事業戦略に。</span>
+          <h1 className="mt-6 [font-family:'Yu_Mincho','Hiragino_Mincho_ProN','Noto_Serif_JP',serif] text-[2.25rem] font-semibold leading-[1.3] tracking-[-0.045em] text-[#123b59] sm:text-[3.6rem] lg:text-[4rem]">
+            <span className="lg:whitespace-nowrap">マーケティングから始まる、</span>
+            <span className="block text-[#0b6fb7]">営業UX。</span>
           </h1>
           <p className="mt-7 max-w-2xl text-sm font-medium leading-8 text-[#35586d] sm:text-lg sm:leading-9">
             科学とAIで、最少人数・最大成果を目指す事業インフラを設計します。
